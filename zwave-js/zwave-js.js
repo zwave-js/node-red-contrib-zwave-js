@@ -1,25 +1,23 @@
 module.exports = function (RED) {
+
     const SP = require("serialport");
     const ZW = require('zwave-js')
-
-
-
-
+    
     function Init(config) {
+
         const node = this;
         RED.nodes.createNode(this, config);
 
         node.status({ fill: "yellow", shape: "dot", text: "Starting ZWave Driver..." });
 
         let DriverOptions = {};
-
         if (config.encryptionKey != null && config.encryptionKey.length == 16) {
+
             DriverOptions.networkKey = Buffer.from(config.encryptionKey);
         }
 
         const Driver = new ZW.Driver(config.serialPort, DriverOptions);
-
-
+        
         Driver.on("error", (e) => {
             node.status({ fill: "red", shape: "dot", text: e.message });
         });
@@ -61,8 +59,6 @@ module.exports = function (RED) {
             let Node = msg.payload.node;
             let Param = msg.payload.operation_vars
 
-            var Response;
-
             switch (OP) {
 
                 // MGMT
@@ -94,35 +90,35 @@ module.exports = function (RED) {
 
                 // GETS
                 case "GetBattery":
-                    Resonse = await Driver.controller.nodes.get(Node).commandClasses.Battery.get();
+                    Driver.controller.nodes.get(Node).commandClasses.Battery.get();
                     break;
 
                 case "GetConfiguration":
-                    Response = await Driver.controller.nodes.get(Node).commandClasses.Configuration.get(Param[0])
+                    Driver.controller.nodes.get(Node).commandClasses.Configuration.get(Param[0])
                     break;
 
                 case "GetBasic":
-                    Response = await Driver.controller.nodes.get(Node).commandClasses.Basic.get()
+                    Driver.controller.nodes.get(Node).commandClasses.Basic.get()
                     break;
 
                 case "GetBinary":
-                    Response = await Driver.controller.nodes.get(Node).commandClasses["Binary Switch"].get()
+                    Driver.controller.nodes.get(Node).commandClasses["Binary Switch"].get()
                     break;
 
                 case "GetWakeInterval":
-                    Response = await Driver.controller.nodes.get(Node).commandClasses["Wake Up"].getInterval();
+                    Driver.controller.nodes.get(Node).commandClasses["Wake Up"].getInterval();
                     break;
 
                 case "GetMultiLevelSwitch":
-                    Response = await Driver.controller.nodes.get(Node).commandClasses["Multilevel Switch"].get();
+                    Driver.controller.nodes.get(Node).commandClasses["Multilevel Switch"].get();
                     break;
 
                 case "GetThermostatMode":
-                    Response = await Driver.controller.nodes.get(Node).commandClasses["Thermostat Mode"].get()
-                     break;
+                    Driver.controller.nodes.get(Node).commandClasses["Thermostat Mode"].get()
+                    break;
 
                 case "GetThermostatSetPoint":
-                    Response = await Driver.controller.nodes.get(Node).commandClasses["Thermostat Setpoint"].get(Param[0]);
+                    Driver.controller.nodes.get(Node).commandClasses["Thermostat Setpoint"].get(Param[0]);
                     break;
 
 
@@ -177,11 +173,6 @@ module.exports = function (RED) {
 
             }
 
-            if (Response != null) {
-                Send(Driver.controller.nodes.get(Node), Response);
-            }
-
-
         });
 
         function Send(Node, Value) {
@@ -195,8 +186,6 @@ module.exports = function (RED) {
         }
 
         Driver.start()
-
-
 
     }
 
