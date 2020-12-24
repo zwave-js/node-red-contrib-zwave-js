@@ -1,6 +1,8 @@
 # node-red-contrib-zwave-js
 An extremely easy to use, zero dependency and feature rich ZWave node for node-red. Based on ZWave-JS.
 
+[Image](./ReadMe.png)
+
 This implementation is 100% javascript. it is therefore:  
   - Very fast
   - Does not require a build of openzwave or any other library
