@@ -62,24 +62,7 @@ module.exports = function (RED) {
             let Params = msg.payload.params
             let Node = msg.payload.node;
 
-            if (!FMaps.hasOwnProperty(Class)) {
-                node.status({ fill: "red", shape: "dot", text: "Class, " + Class + " not supported." });
-                return;
-            }
-
-            let Map = FMaps["Basic"]; // CLass
-
-            if (!Map.Operations.hasOwnProperty(Operation)) {
-                node.status({ fill: "red", shape: "dot", text: "Unsupported operation : " + Operation + " for class " + Class });
-                return;
-            }
-
-            let Func = Map.Operations["Get"]; // Operation
-
-            if (Params.length != Func.ParamsRequired || Params.length != (Func.ParamsOptional + Func.ParamsRequired)) {
-                node.status({ fill: "red", shape: "dot", text: "Incorrect number of parameters specified for " + Operation });
-                return;
-            }
+           
 
             switch (Class) {
 
@@ -112,6 +95,26 @@ module.exports = function (RED) {
                     break;
 
                 default:
+
+                    if (!FMaps.hasOwnProperty(Class)) {
+                        node.status({ fill: "red", shape: "dot", text: "Class, " + Class + " not supported." });
+                        return;
+                    }
+        
+                    let Map = FMaps[Class]; // CLass
+        
+                    if (!Map.Operations.hasOwnProperty(Operation)) {
+                        node.status({ fill: "red", shape: "dot", text: "Unsupported operation : " + Operation + " for class " + Class });
+                        return;
+                    }
+        
+                    let Func = Map.Operations[Operation]; // Operation
+        
+                    if (Params.length != Func.ParamsRequired || Params.length != (Func.ParamsOptional + Func.ParamsRequired)) {
+                        node.status({ fill: "red", shape: "dot", text: "Incorrect number of parameters specified for " + Operation });
+                        return;
+                    }
+
                     Driver.controller.nodes.get(Node).commandClasses[Map.MapsToClass][Func.MapsToFunc].apply(Params);
                     break;
 
