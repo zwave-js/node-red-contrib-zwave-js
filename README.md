@@ -51,12 +51,12 @@ let Report = {
   notificationEvent: 0x16
 }
 
-{
+let MessageToNode = {
   payload:{
     node: 2,
     class: "Notification",
     operation:"SendReport",
-    params: [Report] // Notification Type, Notification Event (i.e. sending  Access Control -> Window/Door Open, to a zwave siren)
+    params: [Report]
   }
 }
 ```
