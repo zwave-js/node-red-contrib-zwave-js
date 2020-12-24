@@ -1,8 +1,13 @@
+const { ThermostatSetpointType, ThermostatMode } = require("zwave-js");
+
 module.exports = function (RED) {
 
+    // Refs
     const SP = require("serialport");
     const ZW = require('zwave-js')
-    
+    const FMaps = require('./FunctionMaps.json')
+
+
     function Init(config) {
 
         const node = this;
@@ -17,7 +22,7 @@ module.exports = function (RED) {
         }
 
         const Driver = new ZW.Driver(config.serialPort, DriverOptions);
-        
+
         Driver.on("error", (e) => {
             node.status({ fill: "red", shape: "dot", text: e.message });
         });
@@ -50,130 +55,74 @@ module.exports = function (RED) {
 
         });
 
-        
+        node.on('input', (msg) => {
 
-
-        node.on('input', async (msg) => {
-
-            let OP = msg.payload.operation;
+            let Class = msg.payload.class;
+            let Operation = msg.payload.operation
+            let Params = msg.payload.params
             let Node = msg.payload.node;
-            let Param = msg.payload.operation_vars
 
-            switch (OP) {
+            if (!FMaps.hasOwnProperty(Class)) {
+                node.status({ fill: "red", shape: "dot", text: "Class, " + Class + " not supported." });
+                return;
+            }
 
-                // MGMT
-                case "StartHealNetwork":
-                    Driver.controller.beginHealingNetwork();
-                    break;
+            let Map = FMaps["Basic"]; // CLass
 
-                case "StopHealNetwork":
-                    Driver.controller.stopHealingNetwork();
-                    break;
+            if (!Map.Operations.hasOwnProperty(Operation)) {
+                node.status({ fill: "red", shape: "dot", text: "Unsupported operation : " + Operation + " for class " + Class });
+                return;
+            }
 
-                case "StartInclusion":
-                    Driver.controller.beginInclusion(Param[0]);
-                    break;
+            let Func = Map.Operations["Get"]; // Operation
 
-                case "StopInclusion":
-                    Driver.controller.stopInclusion();
-                    break;
+            if (Params.length != Func.ParamsRequired || Params.length != (Func.ParamsOptional + Func.ParamsRequired)) {
+                node.status({ fill: "red", shape: "dot", text: "Incorrect number of parameters specified for " + Operation });
+                return;
+            }
 
-                case "StartExclusion":
-                    Driver.controller.beginExclusion();
-                    break;
-    
-                case "StopExclusion":
-                    Driver.controller.stopExclusion();
-                    break;
+            switch (Class) {
 
+                case "Controller":
+                    switch (Operation) {
+                        case "StartHealNetwork":
+                            Driver.controller.beginHealingNetwork();
+                            break;
 
+                        case "StopHealNetwork":
+                            Driver.controller.stopHealingNetwork();
+                            break;
 
-                // GETS
-                case "GetBattery":
-                    Driver.controller.nodes.get(Node).commandClasses.Battery.get();
-                    break;
+                        case "StartInclusion":
+                            Driver.controller.beginInclusion(Param[0]);
+                            break;
 
-                case "GetConfiguration":
-                    Driver.controller.nodes.get(Node).commandClasses.Configuration.get(Param[0])
-                    break;
+                        case "StopInclusion":
+                            Driver.controller.stopInclusion();
+                            break;
 
-                case "GetBasic":
-                    Driver.controller.nodes.get(Node).commandClasses.Basic.get()
-                    break;
+                        case "StartExclusion":
+                            Driver.controller.beginExclusion();
+                            break;
 
-                case "GetBinary":
-                    Driver.controller.nodes.get(Node).commandClasses["Binary Switch"].get()
-                    break;
-
-                case "GetWakeInterval":
-                    Driver.controller.nodes.get(Node).commandClasses["Wake Up"].getInterval();
-                    break;
-
-                case "GetMultiLevelSwitch":
-                    Driver.controller.nodes.get(Node).commandClasses["Multilevel Switch"].get();
-                    break;
-
-                case "GetThermostatMode":
-                    Driver.controller.nodes.get(Node).commandClasses["Thermostat Mode"].get()
-                    break;
-
-                case "GetThermostatSetPoint":
-                    Driver.controller.nodes.get(Node).commandClasses["Thermostat Setpoint"].get(Param[0]);
-                    break;
-
-
-
-                // SETS
-                case "SetConfiguration":
-                    Driver.controller.nodes.get(Node).commandClasses.Configuration.set(Param[0], Param[1], Param[2])
-                    break;
-
-                case "SetThermostatMode":
-                    Driver.controller.nodes.get(Node).commandClasses["Thermostat Mode"].set(Param[0])
-                    break;
-
-                case "SetThermostatSetPoint":
-                    Driver.controller.nodes.get(Node).commandClasses["Thermostat Setpoint"].set(Param[0],Param[1],Param[2])
-                    break;
-
-                case "SetBasic":
-                    Driver.controller.nodes.get(Node).commandClasses.Basic.set(Param[0])
-                    break;
-
-                case "SetBinary":
-                    if (Param.length > 1) {
-                        Driver.controller.nodes.get(Node).commandClasses["Binary Switch"].set(Param[0], Param[1]);
-                    }
-                    else {
-                        Driver.controller.nodes.get(Node).commandClasses["Binary Switch"].set(Param[0])
+                        case "StopExclusion":
+                            Driver.controller.stopExclusion();
+                            break;
                     }
                     break;
 
-                case "SetWakeInterval":
-                    Driver.controller.nodes.get(Node).commandClasses["Wake Up"].setInterval(Param[0], 1)
-                    break;
-
-                case "SetMultiLevelSwitch":
-                    if (Param.length > 1) {
-                        Driver.controller.nodes.get(Node).commandClasses["Multilevel Switch"].set(Param[0], Param[1])
-                    }
-                    else {
-                        Driver.controller.nodes.get(Node).commandClasses["Multilevel Switch"].set(Param[0])
-                    }
-                    break;
-
-                case "SendNotificationReport":
-                    let OPS = {
-                        "notificationType": Param[0],
-                        "notificationEvent": Param[1]
-                    }
-                    Driver.controller.nodes.get(Node).commandClasses.Notification.sendReport(OPS)
+                default:
+                    Driver.controller.nodes.get(Node).commandClasses[Map.MapsToClass][Func.MapsToFunc].apply(Params);
                     break;
 
 
             }
 
+
+
         });
+
+
 
         function Send(Node, Value) {
             let PL = {

@@ -66,36 +66,46 @@ the payload below will also be emitted whenever you use any of the **Get\*** com
 }
 ```
 
-## Supported Command List
+## Supported Command List  
 
-| operation              | operation_vars                      |
-| ---------------------- | ----------------------------------- |
-| StartHealNetwork       | -                                   |
-| StopHealNetwork        | -                                   |
-| StartInclusion         | [Include Non-Secure]                |
-| StopInclusion          | -                                   |
-| StartExclusion         | -                                   |
-| StopExclusion          | -                                   |
-| ---------------------- | ----------------------------------- |
-| GetBattery             | -                                   |
-| GetConfiguration       | [Param ID]                          |
-| SetConfiguration       | [Param ID, Value, Value Size]       |
-| GetBasic               | -                                   |
-| SetBasic               | [Value]                             |
-| GetBinary              | -                                   |
-| SetBinary              | [Value, Duration (optional)]        |
-| GetWakeInterval        | -                                   |
-| SetWakeInterval        | [Value]                             |
-| GetMultiLevelSwitch    | -                                   |
-| SetMultiLevelSwitch    | [Value, Duration (optional)]        |
-| SendNotificationReport | [Type, Event]                       |
-| SetThermostatMode      | [Thermostat Mode]                   |
-| GetThermostatMode      | -                                   |
-| SetThermostatSetPoint  | [Thermostat Mode, Value, Scale]     |
-| GetThermostatSetPoint  | [Thermostat Mode]                   |
+The **Controller** class does not require a **node** id.  
 
-## Duration
-The duration value should be an object formatted like below.  
+| class                     | operation                           | params                                            |
+| ------------------------- | ----------------------------------- | ------------------------------------------------- |
+| Controller                | StartHealNetwork                    | -                                                 |
+|                           | StopHealNetwork                     | -                                                 |
+|                           | StartInclusion                      | [BOOL Include Non-Secure]                         |
+|                           | StopInclusion                       | -                                                 |
+|                           | StartExclusion                      | -                                                 |
+|                           | StopExclusion                       | -                                                 |
+| Basic                     | Set                                 | [INTEGER]                                         |
+|                           | Get                                 | -                                                 |
+| Battery                   | Get                                 | -                                                 |
+| BinarySwitch              | Set                                 | [BOOL, DURATION (Optional)]                       |
+|                           | Get                                 | -                                                 |
+| Configuration             | Set                                 | [BYTE ParamID, BYTE Value, INTEGER Value Length]  |
+|                           | Get                                 | [BYTE ParamID]                                    |
+| MultiLevelSwitch          | Set                                 | [INTEGER, DURATION (Optional)]                    |
+|                           | Get                                 | -                                                 |
+| Notification              | SendReport                          | [EVENT]                                           |
+| ThermostatMode            | Set                                 | [THERMOSTAT MODE]                                 |
+|                           | Get                                 | -                                                 |
+| ThermostatSetPoint        | Set                                 | [SET POINT TYPE, INTEGER Value, INTEGER Scale]    |
+|                           | Get                                 | [SET POINT TYPE]                                  | 
+| WakeInterval              | Set                                 | [INTEGER Seconds, BYTE Controller Node ID]        |
+|                           | Get                                 | -                                                 | 
+
+## EVENT
+The EVENT value should be an object formatted like below.  
+```
+{
+  notificationType: 0x06,
+  notificationEvent: 0x16
+}
+```
+
+## DURATION
+The DURATION value should be an object formatted like below.  
 ```
 {
   unit: "seconds" | "minutes",
@@ -103,7 +113,25 @@ The duration value should be an object formatted like below.
 }
 ```
 
-## Thermostat Mode  
+## SET POINT TYPE
+
+| Set Point Type        |
+| --------------------- |
+| N/A                   |
+| Heating               |
+| Cooling               |
+| Furnace               |
+| Dry Air               |
+| Moist Air             |
+| Auto Changeover       |
+| Energy Save Heating   |
+| Energy Save Cooling   |
+| Away Heating          |
+| Away Cooling          |
+| Full power            |
+
+
+## THERMOSTAT MODE
 
 | Thermostate Mode      |
 | --------------------- |
@@ -122,3 +150,4 @@ The duration value should be an object formatted like below.
 | Away                  |
 | Full power            |
 | Manufacturer specific |
+

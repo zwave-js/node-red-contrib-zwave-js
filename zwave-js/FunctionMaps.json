@@ -1,0 +1,127 @@
+{
+    "Configuration": {
+        "MapsToClass": "Configuration",
+        "Operations": {
+            "Get": {
+                "MapsToFunc": "get",
+                "ParamsRequired": 1,
+                "ParamsOptional": 0
+            },
+            "Set": {
+                "MapsToFunc": "set",
+                "ParamsRequired": 3,
+                "ParamsOptional": 0
+            }
+        }
+    },
+    "Battery": {
+        "MapsToClass": "Battery",
+        "Operations": {
+            "Get": {
+                "MapsToFunc": "get",
+                "ParamsRequired": 0,
+                "ParamsOptional": 0
+            }
+        }
+    },
+    "Basic": {
+        "MapsToClass": "Basic",
+        "Operations": {
+            "Get": {
+                "MapsToFunc": "get",
+                "ParamsRequired": 0,
+                "ParamsOptional": 0
+            },
+            "Set": {
+                "MapsToFunc": "set",
+                "ParamsRequired": 1,
+                "ParamsOptional": 0
+            }
+        }
+    },
+    "BinarySwitch": {
+        "MapsToClass": "Binary Switch",
+        "Operations": {
+            "Get": {
+                "MapsToFunc": "get",
+                "ParamsRequired": 0,
+                "ParamsOptional": 0
+            },
+            "Set": {
+                "MapsToFunc": "set",
+                "ParamsRequired": 1,
+                "ParamsOptional": 1
+            }
+        }
+    },
+    "WakeInterval": {
+        "MapsToClass": "Wake Up",
+        "Operations": {
+            "Get": {
+                "MapsToFunc": "getInterval",
+                "ParamsRequired": 0,
+                "ParamsOptional": 0
+            },
+            "Set": {
+                "MapsToFunc": "setInterval",
+                "ParamsRequired": 2,
+                "ParamsOptional": 0
+            }
+        }
+    },
+    "ThermostatMode": {
+        "MapsToClass": "Thermostat Mode",
+        "Operations": {
+            "Get": {
+                "MapsToFunc": "get",
+                "ParamsRequired": 0,
+                "ParamsOptional": 0
+            },
+            "Set": {
+                "MapsToFunc": "set",
+                "ParamsRequired": 1,
+                "ParamsOptional": 0
+            }
+        }
+    },
+    "ThermostatSetPoint": {
+        "MapsToClass": "Thermostat Setpoint",
+        "Operations": {
+            "Get": {
+                "MapsToFunc": "get",
+                "ParamsRequired": 1,
+                "ParamsOptional": 0
+            },
+            "Set": {
+                "MapsToFunc": "set",
+                "ParamsRequired": 3,
+                "ParamsOptional": 0
+            }
+        }
+    },
+    "MultiLevelSwitch": {
+        "MapsToClass": "Multilevel Switch",
+        "Operations": {
+            "Get": {
+                "MapsToFunc": "get",
+                "ParamsRequired": 0,
+                "ParamsOptional": 0
+            },
+            "Set": {
+                "MapsToFunc": "set",
+                "ParamsRequired": 1,
+                "ParamsOptional": 1
+            }
+        }
+    },
+    "Notification": {
+        "MapsToClass": "Notification",
+        "Operations": {
+            "SendReport": {
+                "MapsToFunc": "sendReport",
+                "ParamsRequired": 1,
+                "ParamsOptional": 0
+            }
+        }
+    }
+}
