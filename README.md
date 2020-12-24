@@ -74,9 +74,9 @@ the payload below will also be emitted whenever you use any of the **Get\*** com
 }
 ```
 
-## Supported Command List  
+## Supported Class/Operation List  
 
-The **Controller** class does not require a **node** id.  
+The **Controller** class does not require a **node** ID.  
 
 | class                     | operation                           | params                                            |
 | ------------------------- | ----------------------------------- | ------------------------------------------------- |
