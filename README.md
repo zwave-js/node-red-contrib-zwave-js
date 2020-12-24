@@ -24,8 +24,9 @@ Send a command to a zwave device - encpsulate all your commands within a **paylo
 {
   payload:{
     node: 2,
-    operation: "SetConfiguration",
-    operation_vars: [0x18, 0x03, 1] // Config Param, Config Value, Value Size
+    class: "Configuration",
+    operation:"Set"
+    params: [0x18, 0x03, 1] // Config Param, Config Value, Value Size
   }
 }
 ```
@@ -36,19 +37,26 @@ Send a command to a zwave device - encpsulate all your commands within a **paylo
 {
   payload:{
     node: 2,
-    operation: "GetConfiguration",
-    operation_vars: [0x18] // Config Param
+    class: "Configuration",
+    operation:"Get"
+    params: [0x18] // Config Param
   }
 }
 ```
 
 ```
 /* Issue a notification report */
+let Report = {
+  notificationType: 0x06,
+  notificationEvent: 0x16
+}
+
 {
   payload:{
     node: 2,
-    operation: "SendNotificationReport",
-    operation_vars: [0x06,0x16] // Notification Type, Notification Event (i.e. sending  Access Control -> Window/Door Open, to a zwave siren)
+    class: "Notification",
+    operation:"SendReport",
+    params: [Report] // Notification Type, Notification Event (i.e. sending  Access Control -> Window/Door Open, to a zwave siren)
   }
 }
 ```
