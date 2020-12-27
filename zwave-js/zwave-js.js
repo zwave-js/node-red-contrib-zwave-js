@@ -110,6 +110,18 @@ module.exports = function (RED) {
                         Send(ND, "NOTIFICATION", VL);
                     }
                 })
+
+                N1.on("wake up", (ND) => {
+                    if (NodesReady.indexOf(ND.id) > -1) {
+                        Send(ND, "WAKE_UP");
+                    }
+                })
+
+                N1.on("sleep", (ND) => {
+                    if (NodesReady.indexOf(ND.id) > -1) {
+                        Send(ND, "SLEEP");
+                    }
+                })
             });
 
         });

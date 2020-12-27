@@ -79,6 +79,26 @@ the payload below will also be emitted whenever you use any of the **Get** opera
 }
 ```
 
+The **event** table is below. 
+
+| event                     | node                                | object                          | Meaning                     |
+| ------------------------- | ----------------------------------- | ------------------------------- | --------------------------  |  
+| NODE_ADDED                | The ID of the added node            | -                               | A Node Was Added            |
+| NODE_REMOVED              | The ID of the removed node          | -                               | A Node Was Removed          |
+| INCLUSION_STARTED         | -                                   | BOOL Only secure devices        | Include Mode Started        |
+| INCLUSION_STOPPED         | -                                   | -                               | include Mode Stopped        |
+| EXCLUSION_STARTED         | -                                   | -                               | Exclude Mode Started        |
+| EXCLUSION_STOPPED         | -                                   | -                               | Exclude Mode Stopped        |
+| NETWORK_HEAL_DONE         | -                                   | -                               | Done Healing Network        |
+| NETWORK_HEAL_STARTED      | -                                   | -                               | Started Healing Network     |
+| NETWORK_HEAL_STOPPED      | -                                   | -                               | Stopped Healing Network     |
+| VALUE_UPDATED             | The source Node ID                  | The objects command content     | A Value Was Updated         |
+| NOTIFICATION              | The source Node ID                  | The objects command content     | A Notification Was Sent     |
+| WAKE_UP                   | The source Node ID                  | -                               | A Node Has Woken Up         |
+| SLEEP                     | The source Node ID                  | -                               | A Node Has Gone To Sleep    |
+
+
+
 ## Supported Class/Operation List  
 
 The **Controller** class does not require a **node** ID.  
