@@ -3,13 +3,13 @@
 # node-red-contrib-zwave-js
 An extremely easy to use, zero dependency and feature rich ZWave node for node-red. Based on ZWave-JS
 
-This implementation is 100% javascript. it is therefore:  
+The implementation is 100% javascript. it is therefore:  
   - Very fast
   - Does not require a build of openzwave or any other library
   - Stable
 
 Install this node via the Node-Red pallet menu, and you have zwave abilities.  
-The node is streignt forward to use, and removes all the compleixity that you woul otherwise need to deal with.
+The node is straightforward to use, and removes all the complexities that you would otherwise need to deal with.
 
   - Add the node into your flow
   - Select the serial port that represents your USB Zwave radio.
@@ -64,8 +64,8 @@ let MessageToNode = {
 ```
 
 Receiving commands is also trivial. Whenever your controller has been notified of something. the node will inject the payload accodingly. 
-the **object** property can be various values, Integers, Decimals, complex structures, ... - it depnds on the command class that was used in the transmission  
-the payload below will also be emitted whenever you use any of the **Get\*** commands.
+the **object** property can be various values, Integers, Decimals, complex structures, ... - it depends on the command class that was used in the transmission  
+the payload below will also be emitted whenever you use any of the **Get** operations.
 ```
 {
   payload:{

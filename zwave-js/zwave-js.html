@@ -10,6 +10,10 @@
                 serialPort: { value: "Select Port" },
                 name: { value: "ZWave-JS Controller" },
                 encryptionKey : {value:""},
+                ackTimeout:{value:1000},
+                controllerTimeout:{value:1600},
+                sendResponseTimeout:{value:10000},
+                awakeTime:{value:10000}
                
             },
             inputs: 1,
@@ -54,18 +58,11 @@
 
 <script type="text/x-red" data-template-name="zwave-js">
     <p>
-        Configure the details below.<br /><br />
-        <strong>Name :</strong> Node name<br />
-        <strong>Serial Port :</strong> The serial port that the .Net process will use to connect to the USB zwave adapter.<br />
+        Configure the details below.
     </p>
-    <br />
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Zwave Controller">
-    </div>
-    <div class="form-row">
-        <label for="node-input-encryptionKey"><i class="icon-tag"></i> ZWave Encryption Key (16 characters)</label>
-        <input type="text" id="node-input-encryptionKey" placeholder="">
     </div>
     <div class="form-row">
         <label for="node-input-serialPort"><i class="icon-tag"></i> Serial Port</label>
@@ -74,35 +71,61 @@
         </select>
         
     </div>
+    <div class="form-row">
+        <label for="node-input-encryptionKey"><i class="icon-tag"></i> Encryption Key</label>
+        <input type="text" id="node-input-encryptionKey" placeholder="(16 characters)">
+    </div>
+    <br />
+    <p>
+        Timeouts (ms).
+    </p>
+    <div class="form-row">
+        <label  for="node-input-ackTimeout"><i class="icon-tag"></i> ACK</label>
+        <input type="text" id="node-input-ackTimeout" placeholder="">
+    </div>
+    <div class="form-row">
+        <label  for="node-input-controllerTimeout"><i class="icon-tag"></i> Controller</label>
+        <input type="text" id="node-input-controllerTimeout" placeholder="">
+    </div>
+    <div class="form-row">
+        <label  for="node-input-sendResponseTimeout"><i class="icon-tag"></i> Req -> Res</label>
+        <input type="text" id="node-input-sendResponseTimeout" placeholder="">
+    </div>
+    <div class="form-row">
+        <label  for="node-input-awakeTime"><i class="icon-tag"></i> Awake Time</label>
+        <input type="text" id="node-input-awakeTime" placeholder="">
+    </div>
 </script>
 
 <script type="text/x-red" data-help-name="zwave-js">
     <p>A Zwave Controller for node red.</p>
 
     <p>
-        <strong>Input:</strong><br />
+        <code>Input:</code><br />
         A <strong>payload</strong> object containing a command to send to a ZWave device.<br />
-
-        <pre>{
-  "node": 2,
-  "operation": "SetConfiguration",
-  "operation_vars":[0x7,0]
-}</pre>
-    </p>
+        <strong>params</strong> will be dependant on the <strong>class</strong> and <strong>operation</strong> being performed.
+<pre>
+{
+   node: 2,
+   class: "Configuration",
+   operation: "Set",
+   params: [0x18,0x03,1]
+}
+</pre>
+</p>
    
     <p>
-        <strong>Output:</strong><br />
-        A <strong>payload</strong> object containing an event that has occured within the zwave network.<br />
-        The example below is the response received, when sendng a <strong>GetConfiguration</strong> request. All responses bare the same format.
-        in this case - <strong>index</strong> represents the Configuration parameter.<br />
-        <strong>value</strong> can be simple types (ints, strings) or complex structures depending on the <strong>class</strong> that the event is associated.
-        <pre>{
-  "node": 2,
-  "class": "Configuration",
-  "index": 31,
-  "value": 6,
-  "timestamp": "2019-12-15T21:14:34.3885835Z"
-}</pre>
+        <code>Output:</code><br />
+        A <strong>payload</strong> containing an event that has occured within the zwave network.<br />
+        The contents of <strong>object</strong> is dependant on the event.
+<pre>
+{
+   node: 2,
+   event: "VALUE_UPDATED" 
+   timestamp: "23-12-2020T12:23:23+000",
+   object: ...
+}
+</pre>
     </p>
 
 

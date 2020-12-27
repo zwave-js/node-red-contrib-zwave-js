@@ -5,7 +5,7 @@
   "description": "An extremely easy to use, zero dependency and feature rich ZWave node for node-red. Based on ZWave-JS",
   "dependencies": {
     "serialport": "9.0.2",
-    "zwave-js": "5.4.0"
+    "zwave-js": "5.7.0"
   },
   "keywords": [
     "node-red",
