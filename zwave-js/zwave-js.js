@@ -135,6 +135,20 @@ module.exports = function (RED) {
                         switch (Operation) {
 
                             case "ProprietaryFunc":
+
+                                let ZWMessage = new Message(Driver,{
+
+                                    type:MessageType.Request,
+                                    functionType:Params[0],
+                                    payload:Buffer.from(params[1])
+                                });
+
+                                let Settings = {
+                                    priority:MessagePriority.Controller,
+                                    supportCheck:false
+                                }
+                        
+                                await Driver.sendMessage(ZWMessage,Settings)
                                 break;
 
                             case "StartHealNetwork":
