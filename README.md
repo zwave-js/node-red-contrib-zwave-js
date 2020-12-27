@@ -79,7 +79,7 @@ the payload below will also be emitted whenever you use any of the **Get** opera
 }
 ```
 
-The **event** table is below. 
+## event table.
 
 | event                     | node                                | object                          | Meaning                     |
 | ------------------------- | ----------------------------------- | ------------------------------- | --------------------------  |  
