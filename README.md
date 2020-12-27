@@ -207,3 +207,7 @@ The DURATION value should be an object formatted like below.
 | Full power            |
 | Manufacturer specific |
 
+## Version History
+  - 1.0.0
+    - Initial Release
+
