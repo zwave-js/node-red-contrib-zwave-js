@@ -16,6 +16,8 @@ The node is straightforward to use, and removes all the complexities that you wo
   - Set an encryption key (if you want to use Secure devices)
   - Listen for, or send commands using the node.
 
+  ![Image](./Demo.png)  
+
 **node-red-contrib-zwave-js** is based on  [ZWave-JS](https://zwave-js.github.io/node-zwave-js/#/).  
 ZWave-JS is actively  maintained, fast and supports the security command class.
 
