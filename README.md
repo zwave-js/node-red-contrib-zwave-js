@@ -122,8 +122,8 @@ disables the LED on the GEN 5 Z-Stick  breaking it down we have:
 0x01 - ??  
 0x51 - Serial API Checksum  
 
-This mean we pass [0xF2,[0x51,0x01,0x00,0x51,0x01]] as the **params** argument to turn of the LED  
-And for good measure, to turn it on  [0xF2,[0x51,0x01,0x01,0x51,0x01]]  
+This mean we pass **[0xF2,[0x51,0x01,0x00,0x51,0x01]]** as the **params** argument to turn of the LED  
+And for good measure, to turn it on  **[0xF2,[0x51,0x01,0x01,0x51,0x01]]**  
 
 **SOF**, **Total Length**, **REQ** & the **Serial API Checksum** will be provided for you.
 
