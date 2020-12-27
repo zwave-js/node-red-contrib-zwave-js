@@ -3,6 +3,7 @@ module.exports = function (RED) {
     // Refs
     const SP = require("serialport");
     const ZW = require('zwave-js')
+    const {Message} = require("zwave-js/build/lib/message/Message");
     const FMaps = require('./FunctionMaps.json')
     const Path = require('path')
 
@@ -137,18 +138,17 @@ module.exports = function (RED) {
                             case "ProprietaryFunc":
 
                                 let ZWMessage = new Message(Driver,{
-
-                                    type:MessageType.Request,
+                                    type:0x00,
                                     functionType:Params[0],
-                                    payload:Buffer.from(params[1])
+                                    payload:Buffer.from(Params[1])
                                 });
-
-                                let Settings = {
-                                    priority:MessagePriority.Controller,
+                                
+                                let MessageSettings = {
+                                    priority:2,
                                     supportCheck:false
                                 }
                         
-                                await Driver.sendMessage(ZWMessage,Settings)
+                                await Driver.sendMessage(ZWMessage,MessageSettings)
                                 break;
 
                             case "StartHealNetwork":
