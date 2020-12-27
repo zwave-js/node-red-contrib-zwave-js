@@ -109,7 +109,7 @@ The **Controller** class does not require a **node** ID.
 ## Notes on ProprietaryFunc
 The **Data** argument, must ONLY contain the data portion of the request  
 As an example, this byte array **[0x01, 0x08, 0x00, 0xF2, 0x51, 0x01, 0x00, 0x05, 0x01, 0x51]**  
-disables the LED on the GEN 5 Z-Stick  breaking it down we have:  
+disables the LED on the GEN 5 Z-Stick, breaking it down we have:  
 
 0x01 - SOF  
 0x08 - Total Length  
