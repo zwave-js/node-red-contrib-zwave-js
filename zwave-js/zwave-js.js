@@ -4,6 +4,7 @@ module.exports = function (RED) {
     const SP = require("serialport");
     const ZW = require('zwave-js')
     const FMaps = require('./FunctionMaps.json')
+    const Path = require('path')
 
 
     function Init(config) {
@@ -11,9 +12,12 @@ module.exports = function (RED) {
         const node = this;
         RED.nodes.createNode(this, config);
 
-        node.status({ fill: "yellow", shape: "dot", text: "Starting ZWave Driver..." });
+        node.status({ fill: "red", shape: "dot", text: "Starting ZWave Driver..." });
 
         let DriverOptions = {};
+
+        // Cache Dir
+        DriverOptions.cacheDir = Path.join(RED.settings.userDir,"zwave-js-cache");
 
         // Timeout (Configurable via UI)
         DriverOptions.timeouts = {};
@@ -43,10 +47,10 @@ module.exports = function (RED) {
         });
 
 
-        Driver.on("all nodes ready",()=>{
+        Driver.on("all nodes ready", async () => {
             node.status({ fill: "green", shape: "dot", text: "All Nodes Ready!" });
         })
-        
+
         Driver.once("driver ready", () => {
 
             // Add, Remove
@@ -60,27 +64,27 @@ module.exports = function (RED) {
 
             // Include, Exclude Started
             Driver.controller.on("inclusion started", (Secure) => {
-                Send({id:"Controller"}, "INCLUSION_STARTED", {SecureDevicesOnly:Secure})
+                Send({ id: "Controller" }, "INCLUSION_STARTED", { SecureDevicesOnly: Secure })
             })
 
             Driver.controller.on("exclusion started", () => {
-                Send({id:"Controller"}, "EXCLUSION_STARTED")
+                Send({ id: "Controller" }, "EXCLUSION_STARTED")
             })
 
             // Include, Exclude Stopped
             Driver.controller.on("inclusion stopped", () => {
-                Send({id:"Controller"}, "INCLUSION_STOPPED")
+                Send({ id: "Controller" }, "INCLUSION_STOPPED")
             })
 
             Driver.controller.on("exclusion stopped", () => {
-                Send({id:"Controller"}, "EXCLUSION_STOPPED")
+                Send({ id: "Controller" }, "EXCLUSION_STOPPED")
             })
 
             // Network Heal
             Driver.controller.on("heal network done", () => {
-                Send({id:"Controller"}, "NETWORK_HEAL_DONE")
+                Send({ id: "Controller" }, "NETWORK_HEAL_DONE")
             })
-            
+
             let NodesReady = []
             node.status({ fill: "yellow", shape: "dot", text: "Interviewing Nodes..." });
 
@@ -91,25 +95,20 @@ module.exports = function (RED) {
                         return;
                     }
                     NodesReady.push(N2.id);
-                    node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
+                    node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });       
                 })
 
                 N1.on("value updated", (ND, VL) => {
-                    if(NodesReady.indexOf(ND.id) > -1)
-                    {
+                    if (NodesReady.indexOf(ND.id) > -1) {
                         Send(ND, "VALUE_UPDATED", VL);
                     }
                 })
 
                 N1.on("notification", (ND, L, V) => {
-                    if(NodesReady.indexOf(ND.id) > -1)
-                    {
+                    if (NodesReady.indexOf(ND.id) > -1) {
                         Send(ND, "NOTIFICATION", V);
                     }
                 })
-
-
-
             });
 
         });
@@ -122,103 +121,116 @@ module.exports = function (RED) {
 
         node.on('input', async (msg, send, done) => {
 
-            let Class = msg.payload.class;
-            let Operation = msg.payload.operation
-            let Params = msg.payload.params
-            let Node = msg.payload.node;
+            try {
+                let Class = msg.payload.class;
+                let Operation = msg.payload.operation
+                let Params = msg.payload.params
+                let Node = msg.payload.node;
 
 
 
-            switch (Class) {
+                switch (Class) {
 
-                case "Controller":
-                    switch (Operation) {
-                        case "StartHealNetwork":
-                            await Driver.controller.beginHealingNetwork();
-                            Send("Controller", "NETWORK_HEAL_STARTED")
-                            break;
+                    case "Controller":
+                        switch (Operation) {
 
-                        case "StopHealNetwork":
-                            await Driver.controller.stopHealingNetwork();
-                            Send("Controller", "NETWORK_HEAL_STOPPED")
-                            break;
+                            case "ProprietaryFunc":
+                                break;
 
-                        case "StartInclusion":
-                            await Driver.controller.beginInclusion(Params[0]);
-                            break;
+                            case "StartHealNetwork":
+                                await Driver.controller.beginHealingNetwork();
+                                Send({ id: "Controller" }, "NETWORK_HEAL_STARTED")
+                                break;
 
-                        case "StopInclusion":
-                            await Driver.controller.stopInclusion();
-                            break;
+                            case "StopHealNetwork":
+                                await Driver.controller.stopHealingNetwork();
+                                Send({ id: "Controller" }, "NETWORK_HEAL_STOPPED")
+                                break;
 
-                        case "StartExclusion":
-                            await Driver.controller.beginExclusion();
-                            break;
+                            case "StartInclusion":
+                                await Driver.controller.beginInclusion(Params[0]);
+                                break;
 
-                        case "StopExclusion":
-                            await Driver.controller.stopExclusion();
-                            break;
-                    }
-                    break;
+                            case "StopInclusion":
+                                await Driver.controller.stopInclusion();
+                                break;
 
-                default:
+                            case "StartExclusion":
+                                await Driver.controller.beginExclusion();
+                                break;
 
-                    if (!FMaps.hasOwnProperty(Class)) {
-                        let ErrorMSG = "Class, " + Class + " not supported.";
-                        let Er = new Error(ErrorMSG);
+                            case "StopExclusion":
+                                await Driver.controller.stopExclusion();
+                                break;
+                        }
+                        break;
+
+                    default:
+
+                        if (!FMaps.hasOwnProperty(Class)) {
+                            let ErrorMSG = "Class, " + Class + " not supported.";
+                            let Er = new Error(ErrorMSG);
+                            if (done) {
+                                done(Er);
+                            }
+                            else {
+                                node.error(Er);
+                            }
+                            return;
+                        }
+
+                        let Map = FMaps[Class]; // CLass
+
+                        if (!Map.Operations.hasOwnProperty(Operation)) {
+                            let ErrorMSG = "Unsupported operation : " + Operation + " for class " + Class;
+                            let Er = new Error(ErrorMSG);
+                            if (done) {
+                                done(Er);
+                            }
+                            else {
+                                node.error(Er);
+                            }
+                            return;
+                        }
+
+                        let Func = Map.Operations[Operation]; // Operation
+
+                        if (Params.length != Func.ParamsRequired || Params.length != (Func.ParamsOptional + Func.ParamsRequired)) {
+                            let ErrorMSG = "Incorrect number of parameters specified for " + Operation;
+                            let Er = new Error(ErrorMSG);
+                            if (done) {
+                                done(Er);
+                            }
+                            else {
+                                node.error(Er);
+                            }
+                            return;
+                        }
+
+
+                        let ZWJSC = Driver.controller.nodes.get(Node).commandClasses[Map.MapsToClass];
+                        await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
+
                         if (done) {
-                            done(Er);
+                            done();
                         }
-                        else {
-                            node.error(Er);
-                        }
-                        return;
-                    }
 
-                    let Map = FMaps[Class]; // CLass
-
-                    if (!Map.Operations.hasOwnProperty(Operation)) {
-                        let ErrorMSG = "Unsupported operation : " + Operation + " for class " + Class;
-                        let Er = new Error(ErrorMSG);
-                        if (done) {
-                            done(Er);
-                        }
-                        else {
-                            node.error(Er);
-                        }
-                        return;
-                    }
-
-                    let Func = Map.Operations[Operation]; // Operation
-
-                    if (Params.length != Func.ParamsRequired || Params.length != (Func.ParamsOptional + Func.ParamsRequired)) {
-                        let ErrorMSG = "Incorrect number of parameters specified for " + Operation;
-                        let Er = new Error(ErrorMSG);
-                        if (done) {
-                            done(Er);
-                        }
-                        else {
-                            node.error(Er);
-                        }
-                        return;
-                    }
-
-                    let ZWJSC = Driver.controller.nodes.get(Node).commandClasses[Map.MapsToClass];
-                    await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
-
-                    if (done) {
-                        done();
-                    }
-                    break;
-
-
+                        break;
+                }
+            }
+            catch (e) {
+                if (done) {
+                    done(e);
+                }
+                else {
+                    node.error(e);
+                }
             }
 
+         
 
 
         });
-
-
 
         function Send(Node, Subject, Value) {
             let PL = {

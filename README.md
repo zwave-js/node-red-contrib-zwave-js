@@ -88,6 +88,7 @@ The **Controller** class does not require a **node** ID.
 |                           | StopInclusion                       | -                                                 |
 |                           | StartExclusion                      | -                                                 |
 |                           | StopExclusion                       | -                                                 |
+|                           | ProprietaryFunc                     | [BYTE Serial Function ID, BYTE[] Data]            |
 | Basic                     | Set                                 | [INTEGER]                                         |
 |                           | Get                                 | -                                                 |
 | Battery                   | Get                                 | -                                                 |
@@ -104,6 +105,28 @@ The **Controller** class does not require a **node** ID.
 |                           | Get                                 | [SET POINT TYPE]                                  | 
 | WakeInterval              | Set                                 | [INTEGER Seconds, BYTE Controller Node ID]        |
 |                           | Get                                 | -                                                 | 
+
+## Notes on ProprietaryFunc
+The **Data** argument, must ONLY contain the data portion of the request  
+As an example, this byte array [0x01, 0x08, 0x00, 0xF2, 0x51, 0x01, 0x00, 0x05, 0x01, 0x51]  
+disables the LED on the GEN 5 Z-Stick  breaking it down we have:  
+
+0x01 - SOF
+0x08 - Total Length
+0x00 - REQ
+0xF2 - Aeotec Set Configuration Function
+0x51 - LED Configuration
+0x01 - Configuration Value Size
+0x00 - Value
+0x05 - ??
+0x01 - ??
+0x51 - Serial API Checksum  
+
+This mean we pass [0xF2,[0x51,0x01,0x00,0x51,0x01]] as the **params** argument to turn of the LED  
+And for good measure, to turn it on  [0xF2,[0x51,0x01,0x01,0x51,0x01]]  
+
+**SOF**, **Total Length**, **REQ** & the **Serial API Checksum** will be provided for you.
+
 
 ## EVENT
 The EVENT value should be an object formatted like below.  
