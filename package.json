@@ -10,11 +10,12 @@
   "keywords": [
     "node-red",
     "zwave",
-    "zwave.js",
+    "zwave-js",
     "controller",
     "smart",
     "automation",
-    "home automation"
+    "home-automation",
+    "home"
   ],
   "node-red": {
     "nodes": {
