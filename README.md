@@ -63,15 +63,16 @@ let MessageToNode = {
 }
 ```
 
-Receiving commands is also trivial. Whenever your controller has been notified of something. the node will inject the payload accodingly. 
-the **object** property can be various values, Integers, Decimals, complex structures, ... - it depends on the command class that was used in the transmission  
+Receiving commands is also trivial. Whenever your controller has been notified of something, the node will inject the payload accodingly. 
+The **object** property can be various values, Integers, Decimals, complex structures, ... - it depends on the command class that was used in the transmission  
 the payload below will also be emitted whenever you use any of the **Get** operations.
 ```
 {
-  payload:{
+  payload: {
     node: 2,
-    object: ... ,
-    timestamp: "23-12-2020T12:23:23+000"
+    event: "VALUE_UPDATED",
+    timestamp: "23-12-2020T12:23:23+000",
+    object: ...
   }
 }
 ```
