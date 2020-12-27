@@ -23,7 +23,7 @@ module.exports = function (RED) {
         // Timeout (Configurable via UI)
         DriverOptions.timeouts = {};
         DriverOptions.timeouts.ack = config.ackTimeout;
-        DriverOptions.timeouts.byte = config.ackTimeout;
+        DriverOptions.timeouts.byte = 150
         DriverOptions.timeouts.response = config.controllerTimeout;
         DriverOptions.timeouts.sendDataCallback = 65000
         DriverOptions.timeouts.report = config.sendResponseTimeout;
@@ -105,9 +105,9 @@ module.exports = function (RED) {
                     }
                 })
 
-                N1.on("notification", (ND, L, V) => {
+                N1.on("notification", (ND, L, VL) => {
                     if (NodesReady.indexOf(ND.id) > -1) {
-                        Send(ND, "NOTIFICATION", V);
+                        Send(ND, "NOTIFICATION", VL);
                     }
                 })
             });
