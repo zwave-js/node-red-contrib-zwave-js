@@ -215,3 +215,6 @@ The DURATION value should be an object formatted like below.
   - 1.0.0
     - Initial Release
 
+  - 1.0.1
+    - Fixed typo in package.json.
+
