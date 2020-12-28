@@ -111,7 +111,7 @@ The **Controller** class does not require a **node** ID.
 |                           | StopInclusion                       | -                                                 |
 |                           | StartExclusion                      | -                                                 |
 |                           | StopExclusion                       | -                                                 |
-|                           | ProprietaryFunc                     | [BYTE Serial Function ID, BYTE[] Data]            |
+|                           | ProprietaryFunc (See Notes)         | [BYTE Serial Function ID, BYTE[] Data]            |
 | Basic                     | Set                                 | [INTEGER]                                         |
 |                           | Get                                 | -                                                 |
 | Battery                   | Get                                 | -                                                 |
@@ -126,8 +126,12 @@ The **Controller** class does not require a **node** ID.
 |                           | Get                                 | -                                                 |
 | ThermostatSetPoint        | Set                                 | [SET POINT TYPE, INTEGER Value, INTEGER Scale]    |
 |                           | Get                                 | [SET POINT TYPE]                                  | 
-| WakeInterval              | Set                                 | [INTEGER Seconds, BYTE Controller Node ID]        |
+| WakeInterval              | Set (see Notes)                     | [INTEGER Seconds, BYTE Controller Node ID]        |
 |                           | Get                                 | -                                                 | 
+
+## Notes on WakeInterval  
+When setting the interval, the **Controller Node ID** parameter will almost certainly be 0x01 (1) - unless you have multiple controllers,
+and you want the wake up to be recieved by a different controller. 
 
 ## Notes on ProprietaryFunc
 The **Data** argument, must ONLY contain the data portion of the request  
