@@ -23,25 +23,25 @@ module.exports = function (RED) {
         // Timeout (Configurable via UI)
         DriverOptions.timeouts = {};
         DriverOptions.timeouts.ack = config.ackTimeout;
-        DriverOptions.timeouts.byte = 150
         DriverOptions.timeouts.response = config.controllerTimeout;
-        DriverOptions.timeouts.sendDataCallback = 65000
         DriverOptions.timeouts.report = config.sendResponseTimeout;
-        DriverOptions.timeouts.nonce = 5000;
         DriverOptions.timeouts.nodeAwake = config.awakeTime;
-
-        // Attemps (currently not user Configurable)
-        DriverOptions.attempts = {};
-        DriverOptions.attempts.controller = 3;
-        DriverOptions.attempts.sendData = 3;
-        DriverOptions.attempts.retryAfterTransmitReport = false;
-        DriverOptions.attempts.nodeInterview = 5;
 
         if (config.encryptionKey != null && config.encryptionKey.length == 16) {
             DriverOptions.networkKey = Buffer.from(config.encryptionKey);
         }
 
-        const Driver = new ZW.Driver(config.serialPort, DriverOptions);
+        var Driver;
+        try
+        {
+            Driver = new ZW.Driver(config.serialPort, DriverOptions);
+        }
+        catch(e)
+        {
+            node.error(e);
+            return;
+        }
+        
 
         Driver.on("error", (e) => {
             node.error(e);
@@ -233,8 +233,14 @@ module.exports = function (RED) {
                             return;
                         }
 
+                        let EP = 0;
 
-                        let ZWJSC = Driver.controller.nodes.get(Node).commandClasses[Map.MapsToClass];
+                        if(msg.payload.hasOwnProperty("endPoint"))
+                        {
+                            EP = parseInt(msg.payload.endPoint)
+                        }
+                        
+                        let ZWJSC = Driver.controller.nodes.get(Node).getEndpoint(EP).commandClasses[Map.MapsToClass];
                         await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
 
                         if (done) {

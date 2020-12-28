@@ -65,6 +65,10 @@ let MessageToNode = {
 }
 ```
 
+## Optional endPoint parameter
+Zwave devices such as sockets, may have, say 2 outlets. if this is the case, you can provide an optional  **endPoint**  
+parameter. By default - this is set to 0.  
+
 Receiving commands is also trivial. Whenever your controller has been notified of something, the node will inject the payload accodingly. 
 The **object** property can be various values, Integers, Decimals, complex structures, ... - it depends on the command class that was used in the transmission  
 the payload below will also be emitted whenever you use any of the **Get** operations.
@@ -217,4 +221,9 @@ The DURATION value should be an object formatted like below.
 
   - 1.0.1
     - Fixed typo in package.json.
+
+  - 1.0.2
+    - Potential erros during initialising are now handled.  
+    - Added the ability to supply an **endPoint** parameter within the payload to target a specific channel (i.e multiple sockets for an outlet)  
+    - Optimisations to driver configurarion.
 
