@@ -3,10 +3,9 @@ module.exports = function (RED) {
     // Refs
     const SP = require("serialport");
     const ZW = require('zwave-js')
-    const {Message} = require("zwave-js/build/lib/message/Message");
+    const { Message } = require("zwave-js/build/lib/message/Message");
     const FMaps = require('./FunctionMaps.json')
     const Path = require('path')
-
 
     function Init(config) {
 
@@ -18,7 +17,7 @@ module.exports = function (RED) {
         let DriverOptions = {};
 
         // Cache Dir
-        DriverOptions.cacheDir = Path.join(RED.settings.userDir,"zwave-js-cache");
+        DriverOptions.cacheDir = Path.join(RED.settings.userDir, "zwave-js-cache");
 
         // Timeout (Configurable via UI)
         DriverOptions.timeouts = {};
@@ -32,16 +31,14 @@ module.exports = function (RED) {
         }
 
         var Driver;
-        try
-        {
+        
+        try {
             Driver = new ZW.Driver(config.serialPort, DriverOptions);
         }
-        catch(e)
-        {
+        catch (e) {
             node.error(e);
             return;
         }
-        
 
         Driver.on("error", (e) => {
             node.error(e);
@@ -96,7 +93,7 @@ module.exports = function (RED) {
                         return;
                     }
                     NodesReady.push(N2.id);
-                    node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });       
+                    node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
                 })
 
                 N1.on("value updated", (ND, VL) => {
@@ -140,27 +137,30 @@ module.exports = function (RED) {
                 let Params = msg.payload.params
                 let Node = msg.payload.node;
 
-
-
                 switch (Class) {
 
                     case "Controller":
                         switch (Operation) {
 
+                            case "HardReset":
+                                await Driver.hardReset();
+                                Send({ id: "Controller" }, "CONTROLLER_RESET_COMPLETE")
+                                break;
+
                             case "ProprietaryFunc":
 
-                                let ZWMessage = new Message(Driver,{
-                                    type:0x00,
-                                    functionType:Params[0],
-                                    payload:Buffer.from(Params[1])
+                                let ZWMessage = new Message(Driver, {
+                                    type: 0x00,
+                                    functionType: Params[0],
+                                    payload: Buffer.from(Params[1])
                                 });
-                                
+
                                 let MessageSettings = {
-                                    priority:2,
-                                    supportCheck:false
+                                    priority: 2,
+                                    supportCheck: false
                                 }
-                        
-                                await Driver.sendMessage(ZWMessage,MessageSettings)
+
+                                await Driver.sendMessage(ZWMessage, MessageSettings)
                                 break;
 
                             case "StartHealNetwork":
@@ -235,11 +235,10 @@ module.exports = function (RED) {
 
                         let EP = 0;
 
-                        if(msg.payload.hasOwnProperty("endPoint"))
-                        {
+                        if (msg.payload.hasOwnProperty("endPoint")) {
                             EP = parseInt(msg.payload.endPoint)
                         }
-                        
+
                         let ZWJSC = Driver.controller.nodes.get(Node).getEndpoint(EP).commandClasses[Map.MapsToClass];
                         await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
 
@@ -258,10 +257,6 @@ module.exports = function (RED) {
                     node.error(e);
                 }
             }
-
-         
-
-
         });
 
         function Send(Node, Subject, Value) {
@@ -275,12 +270,8 @@ module.exports = function (RED) {
             }
             node.send({ "payload": PL });
         }
-
         Driver.start()
-
     }
-
-
 
     RED.nodes.registerType("zwave-js", Init);
 
