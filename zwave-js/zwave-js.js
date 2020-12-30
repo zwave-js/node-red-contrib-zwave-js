@@ -165,13 +165,13 @@ module.exports = function (RED) {
                 let Params = msg.payload.params
                 var Node = msg.payload.node;
 
-                if(Params == null)
-                {
+                if (Params == null) {
                     Params = []
                 }
 
-                if(Class == "Controller" && Operation == "InterviewNode")
-                {
+                // hack to ensure we can capture exceptions on re-interview request
+                // when the node is invalid
+                if (Class == "Controller" && Operation == "InterviewNode") {
                     Node = Params[0];
                 }
 
@@ -196,9 +196,24 @@ module.exports = function (RED) {
                         switch (Operation) {
 
                             case "GetNodes":
-                                let Nodes = Driver.controller.nodes;
-                                Send({ id: "Controller" }, "NODE_LIST",Nodes)
+                                let Nodes = {}
+                                Driver.controller.nodes.forEach((V, K) => {
+
+                                    Nodes[K] = {
+                                        nodeId: V.id,
+                                        interviewStage: NodeInterviewStage[V.interviewStage],
+                                        isSecure: V.isSecure,
+                                        manufacturerId: V.manufacturerId,
+                                        productId: V.productId,
+                                        productType: V.productType,
+                                        neighbors: V.neighbors
+
+                                    }
+
+                                });
+                                Send({ id: "Controller" }, "NODE_LIST", Nodes);
                                 break;
+
 
                             case "InterviewNode":
 
