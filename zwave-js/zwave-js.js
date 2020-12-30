@@ -163,7 +163,12 @@ module.exports = function (RED) {
                 let Class = msg.payload.class;
                 let Operation = msg.payload.operation
                 let Params = msg.payload.params
-                let Node = msg.payload.node;
+                var Node = msg.payload.node;
+
+                if(Class == "Controller" && Operation == "InterviewNode")
+                {
+                    Node = Params[0];
+                }
 
                 if (Node != null) {
                     if (Driver.controller.nodes.get(Node) == null) {
