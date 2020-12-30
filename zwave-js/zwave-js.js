@@ -274,6 +274,7 @@ module.exports = function (RED) {
     }
 
     RED.nodes.registerType("zwave-js", Init);
+    
 
     RED.httpAdmin.get("/zwjsgetports", RED.auth.needsPermission('serial.read'), function (req, res) {
         SP.list().then(
