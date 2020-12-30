@@ -31,7 +31,7 @@ module.exports = function (RED) {
         }
 
         var Driver;
-        
+
         try {
             Driver = new ZW.Driver(config.serialPort, DriverOptions);
         }
@@ -119,6 +119,29 @@ module.exports = function (RED) {
                         Send(ND, "SLEEP");
                     }
                 })
+
+                N1.on("interview completed", (ND) => {
+                    if (NodesReady.indexOf(ND.id) > -1) {
+                        Send(ND, "INTERVIEW_COMPLETE");
+                    }
+                })
+
+                N1.on("interview failed", (ND, P1, P2) => {
+                    if (NodesReady.indexOf(ND.id) > -1) {
+
+                        // Future prep for P1 being removed
+                        // We want the more detailed explanation in all cases.
+                        var ParamToUse;
+                        if (P2 != null) {
+                            ParamToUse = P2
+                        }
+                        else {
+                            ParamToUse = P1
+                        }
+
+                        Send(ND, "INTERVIEW_FAILED", ParamToUse);
+                    }
+                })
             });
 
         });
@@ -137,10 +160,45 @@ module.exports = function (RED) {
                 let Params = msg.payload.params
                 let Node = msg.payload.node;
 
+                if (Node != null) {
+                    if (Driver.controller.nodes.get(Node) == null) {
+                        let ErrorMSG = "Node " + Node + " does not exist.";
+                        let Er = new Error(ErrorMSG);
+                        if (done) {
+                            done(Er);
+                        }
+                        else {
+                            node.error(Er);
+                        }
+
+                        return;
+                    }
+                }
+
                 switch (Class) {
 
                     case "Controller":
                         switch (Operation) {
+
+                            case "InterviewNode":
+                                if (Driver.controller.nodes.get(Node).interviewStage != "Complete") {
+                                    let ErrorMSG = "Node " + Node + " is already being interviewed. Current Interview Stage : " + Driver.controller.nodes.get(Node).interviewStage + "";
+                                    let Er = new Error(ErrorMSG);
+                                    if (done) {
+                                        done(Er);
+                                    }
+                                    else {
+                                        node.error(Er);
+                                    }
+
+                                    return;
+                                }
+                                else {
+                                    await Driver.controller.nodes.get(Node).refreshInfo();
+                                    Send({ id: Node }, "INTERVIEW_STARTED")
+                                }
+
+                                break;
 
                             case "HardReset":
                                 await Driver.hardReset();
@@ -274,7 +332,7 @@ module.exports = function (RED) {
     }
 
     RED.nodes.registerType("zwave-js", Init);
-    
+
 
     RED.httpAdmin.get("/zwjsgetports", RED.auth.needsPermission('serial.read'), function (req, res) {
         SP.list().then(
