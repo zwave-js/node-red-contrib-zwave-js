@@ -244,6 +244,7 @@ The DURATION value should be an object formatted like below.
     - Ability to re-interview the nodes about their offerings
     - Added INTERVIEW_STARTED, INTERVIEW_COMPLETE and INTERVIEW_FAILED events.
     - Added exception handling for invalid node ID's.
+    - Minor bug fixes.
 
   - 1.0.3
     - Controller HardReset method added.  

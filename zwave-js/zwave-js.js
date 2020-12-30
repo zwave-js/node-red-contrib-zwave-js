@@ -94,7 +94,10 @@ module.exports = function (RED) {
                     if (N2.id < 2) {
                         return;
                     }
-                    NodesReady.push(N2.id);
+                    if (NodesReady.indexOf(ND.id) < 0) {
+                        NodesReady.push(N2.id);
+                    }
+
                     node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
                 })
 
