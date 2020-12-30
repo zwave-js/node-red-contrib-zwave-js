@@ -7,6 +7,8 @@ module.exports = function (RED) {
     const FMaps = require('./FunctionMaps.json')
     const Path = require('path')
 
+    const NodeInterviewStage = ["None", "ProtocolInfo", "NodeInfo", "RestartFromCache", "CommandClasses", "OverwriteConfig", "Neighbors", "Complete"]
+
     function Init(config) {
 
         const node = this;
@@ -181,8 +183,11 @@ module.exports = function (RED) {
                         switch (Operation) {
 
                             case "InterviewNode":
-                                if (Driver.controller.nodes.get(Node).interviewStage != "Complete") {
-                                    let ErrorMSG = "Node " + Node + " is already being interviewed. Current Interview Stage : " + Driver.controller.nodes.get(Node).interviewStage + "";
+
+                                let Stage = NodeInterviewStage[Driver.controller.nodes.get(Node).interviewStage];
+
+                                if (Stage != "Complete") {
+                                    let ErrorMSG = "Node " + Node + " is already being interviewed. Current Interview Stage : " + Stage + "";
                                     let Er = new Error(ErrorMSG);
                                     if (done) {
                                         done(Er);
