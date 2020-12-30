@@ -7,6 +7,8 @@ module.exports = function (RED) {
     const FMaps = require('./FunctionMaps.json')
     const Path = require('path')
 
+    const NodeInterviewStage = ["None", "ProtocolInfo", "NodeInfo", "RestartFromCache", "CommandClasses", "OverwriteConfig", "Neighbors", "Complete"]
+
     function Init(config) {
 
         const node = this;
@@ -31,7 +33,7 @@ module.exports = function (RED) {
         }
 
         var Driver;
-        
+
         try {
             Driver = new ZW.Driver(config.serialPort, DriverOptions);
         }
@@ -92,7 +94,10 @@ module.exports = function (RED) {
                     if (N2.id < 2) {
                         return;
                     }
-                    NodesReady.push(N2.id);
+                    if (NodesReady.indexOf(N2.id) < 0) {
+                        NodesReady.push(N2.id);
+                    }
+
                     node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
                 })
 
@@ -119,6 +124,29 @@ module.exports = function (RED) {
                         Send(ND, "SLEEP");
                     }
                 })
+
+                N1.on("interview completed", (ND) => {
+                    if (NodesReady.indexOf(ND.id) > -1) {
+                        Send(ND, "INTERVIEW_COMPLETE");
+                    }
+                })
+
+                N1.on("interview failed", (ND, P1, P2) => {
+                    if (NodesReady.indexOf(ND.id) > -1) {
+
+                        // Future prep for P1 being removed
+                        // We want the more detailed explanation in all cases.
+                        var ParamToUse;
+                        if (P2 != null) {
+                            ParamToUse = P2
+                        }
+                        else {
+                            ParamToUse = P1
+                        }
+
+                        Send(ND, "INTERVIEW_FAILED", ParamToUse);
+                    }
+                })
             });
 
         });
@@ -135,12 +163,80 @@ module.exports = function (RED) {
                 let Class = msg.payload.class;
                 let Operation = msg.payload.operation
                 let Params = msg.payload.params
-                let Node = msg.payload.node;
+                var Node = msg.payload.node;
+
+                if (Params == null) {
+                    Params = []
+                }
+
+                // hack to ensure we can capture exceptions on re-interview request
+                // when the node is invalid
+                if (Class == "Controller" && Operation == "InterviewNode") {
+                    Node = Params[0];
+                }
+
+                if (Node != null) {
+                    if (Driver.controller.nodes.get(Node) == null) {
+                        let ErrorMSG = "Node " + Node + " does not exist.";
+                        let Er = new Error(ErrorMSG);
+                        if (done) {
+                            done(Er);
+                        }
+                        else {
+                            node.error(Er);
+                        }
+
+                        return;
+                    }
+                }
 
                 switch (Class) {
 
                     case "Controller":
                         switch (Operation) {
+
+                            case "GetNodes":
+                                let Nodes = {}
+                                Driver.controller.nodes.forEach((V, K) => {
+
+                                    Nodes[K] = {
+                                        nodeId: V.id,
+                                        interviewStage: NodeInterviewStage[V.interviewStage],
+                                        isSecure: V.isSecure,
+                                        manufacturerId: V.manufacturerId,
+                                        productId: V.productId,
+                                        productType: V.productType,
+                                        neighbors: V.neighbors
+
+                                    }
+
+                                });
+                                Send({ id: "Controller" }, "NODE_LIST", Nodes);
+                                break;
+
+
+                            case "InterviewNode":
+
+                                let Stage = NodeInterviewStage[Driver.controller.nodes.get(Node).interviewStage];
+
+                                if (Stage != "Complete") {
+                                    let ErrorMSG = "Node " + Node + " is already being interviewed. Current Interview Stage : " + Stage + "";
+                                    let Er = new Error(ErrorMSG);
+                                    if (done) {
+                                        done(Er);
+                                    }
+                                    else {
+                                        node.error(Er);
+                                    }
+
+                                    return;
+                                }
+                                else {
+                                    await Driver.controller.nodes.get(Node).refreshInfo();
+                                    Send({ id: Node }, "INTERVIEW_STARTED")
+                                }
+
+                                break;
 
                             case "HardReset":
                                 await Driver.hardReset();
@@ -274,7 +370,7 @@ module.exports = function (RED) {
     }
 
     RED.nodes.registerType("zwave-js", Init);
-    
+
 
     RED.httpAdmin.get("/zwjsgetports", RED.auth.needsPermission('serial.read'), function (req, res) {
         SP.list().then(

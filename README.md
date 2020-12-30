@@ -98,22 +98,26 @@ the payload below will also be emitted whenever you use any of the **Get** opera
 
 ## event Table.
 
-| event                     | node                                | object                          | Meaning                     |
-| ------------------------- | ----------------------------------- | ------------------------------- | --------------------------  |  
-| NODE_ADDED                | The ID of the added node            | -                               | A Node Was Added            |
-| NODE_REMOVED              | The ID of the removed node          | -                               | A Node Was Removed          |
-| INCLUSION_STARTED         | -                                   | BOOL Only secure devices        | Include Mode Started        |
-| INCLUSION_STOPPED         | -                                   | -                               | include Mode Stopped        |
-| EXCLUSION_STARTED         | -                                   | -                               | Exclude Mode Started        |
-| EXCLUSION_STOPPED         | -                                   | -                               | Exclude Mode Stopped        |
-| NETWORK_HEAL_DONE         | -                                   | -                               | Done Healing Network        |
-| NETWORK_HEAL_STARTED      | -                                   | -                               | Started Healing Network     |
-| NETWORK_HEAL_STOPPED      | -                                   | -                               | Stopped Healing Network     |
-| CONTROLLER_RESET_COMPLETE | -                                   | -                               | The controller was reset    |
-| VALUE_UPDATED             | The source Node ID                  | The objects command content     | A Value Was Updated         |
-| NOTIFICATION              | The source Node ID                  | The objects command content     | A Notification Was Sent     |
-| WAKE_UP                   | The source Node ID                  | -                               | A Node Has Woken Up         |
-| SLEEP                     | The source Node ID                  | -                               | A Node Has Gone To Sleep    |
+| event                     | node                                | object                          | Meaning                       |
+| ------------------------- | ----------------------------------- | ------------------------------- | ----------------------------- |  
+| NODE_ADDED                | The ID of the added node            | -                               | A Node Was Added              |
+| NODE_REMOVED              | The ID of the removed node          | -                               | A Node Was Removed            |
+| INCLUSION_STARTED         | -                                   | BOOL Only secure devices        | Include Mode Started          |
+| INCLUSION_STOPPED         | -                                   | -                               | include Mode Stopped          |
+| EXCLUSION_STARTED         | -                                   | -                               | Exclude Mode Started          |
+| EXCLUSION_STOPPED         | -                                   | -                               | Exclude Mode Stopped          |
+| NETWORK_HEAL_DONE         | -                                   | -                               | Done Healing Network          |
+| NETWORK_HEAL_STARTED      | -                                   | -                               | Started Healing Network       |
+| NETWORK_HEAL_STOPPED      | -                                   | -                               | Stopped Healing Network       |
+| CONTROLLER_RESET_COMPLETE | -                                   | -                               | The controller was reset      |
+| VALUE_UPDATED             | The source Node ID                  | The objects command content     | A Value Was Updated           |
+| NOTIFICATION              | The source Node ID                  | The objects command content     | A Notification Was Sent       |
+| WAKE_UP                   | The source Node ID                  | -                               | A Node Has Woken Up           |
+| SLEEP                     | The source Node ID                  | -                               | A Node Has Gone To Sleep      |
+| INTERVIEW_COMPLETE        | The source Node ID                  | -                               | The node has been interviewed |
+| INTERVIEW_FAILED          | The source Node ID                  | Detailed Error Info             | Could not interview node      |
+| INTERVIEW_STARTED         | The source Node ID                  | -                               | Node interview started        |
+| NODE_LIST                 |                                     | An Array of ZWave nodes         | Response to GetNodes          | 
 
 
 
@@ -131,6 +135,8 @@ The **Controller** class does not require a **node** ID.
 |                           | StopExclusion                       | -                                                 |
 |                           | HardReset (see Notes)               | -                                                 |
 |                           | ProprietaryFunc (See Notes)         | [BYTE Serial Function ID, BYTE[] Data]            |
+|                           | InterviewNode                       | [BYTE Node ID]                                    |
+|                           | GetNodes                            | -                                                 |
 | Basic                     | Set                                 | [INTEGER]                                         |
 |                           | Get                                 | -                                                 |
 | Battery                   | Get                                 | -                                                 |
@@ -235,6 +241,13 @@ The DURATION value should be an object formatted like below.
 | Manufacturer specific |
 
 ## Version History  
+
+  - 1.0.4
+    - Ability to re-interview the nodes about their offerings.  
+    - Added INTERVIEW_STARTED, INTERVIEW_COMPLETE and INTERVIEW_FAILED events.  
+    - Added exception handling for invalid node ID's.  
+    - Added a GetNodes function to the Controller class.  
+    - Minor bug fixes.  
 
   - 1.0.3
     - Controller HardReset method added.  
