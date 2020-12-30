@@ -165,6 +165,11 @@ module.exports = function (RED) {
                 let Params = msg.payload.params
                 var Node = msg.payload.node;
 
+                if(Params == null)
+                {
+                    Params = []
+                }
+
                 if(Class == "Controller" && Operation == "InterviewNode")
                 {
                     Node = Params[0];
@@ -189,6 +194,11 @@ module.exports = function (RED) {
 
                     case "Controller":
                         switch (Operation) {
+
+                            case "GetNodes":
+                                let Nodes = Driver.controller.nodes;
+                                Send({ id: "Controller" }, "NODE_LIST",Nodes)
+                                break;
 
                             case "InterviewNode":
 

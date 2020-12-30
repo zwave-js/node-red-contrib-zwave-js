@@ -117,6 +117,7 @@ the payload below will also be emitted whenever you use any of the **Get** opera
 | INTERVIEW_COMPLETE        | The source Node ID                  | -                               | The node has been interviewed |
 | INTERVIEW_FAILED          | The source Node ID                  | Detailed Error Info             | Could not interview node      |
 | INTERVIEW_STARTED         | The source Node ID                  | -                               | Node interview started        |
+| NODE_LIST                 |                                     | An Array of ZWave nodes         | Response to GetNodes          | 
 
 
 
@@ -135,6 +136,7 @@ The **Controller** class does not require a **node** ID.
 |                           | HardReset (see Notes)               | -                                                 |
 |                           | ProprietaryFunc (See Notes)         | [BYTE Serial Function ID, BYTE[] Data]            |
 |                           | InterviewNode                       | [BYTE Node ID]                                    |
+|                           | GetNodes                            | -                                                 |
 | Basic                     | Set                                 | [INTEGER]                                         |
 |                           | Get                                 | -                                                 |
 | Battery                   | Get                                 | -                                                 |
@@ -241,10 +243,11 @@ The DURATION value should be an object formatted like below.
 ## Version History  
 
   - 1.0.4
-    - Ability to re-interview the nodes about their offerings
-    - Added INTERVIEW_STARTED, INTERVIEW_COMPLETE and INTERVIEW_FAILED events.
-    - Added exception handling for invalid node ID's.
-    - Minor bug fixes.
+    - Ability to re-interview the nodes about their offerings.  
+    - Added INTERVIEW_STARTED, INTERVIEW_COMPLETE and INTERVIEW_FAILED events.  
+    - Added exception handling for invalid node ID's.  
+    - Added a GetNodes function to the Controller class.  
+    - Minor bug fixes.  
 
   - 1.0.3
     - Controller HardReset method added.  
