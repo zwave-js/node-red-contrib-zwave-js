@@ -23,10 +23,10 @@ module.exports = function (RED) {
 
         // Timeout (Configurable via UI)
         DriverOptions.timeouts = {};
-        DriverOptions.timeouts.ack = config.ackTimeout;
-        DriverOptions.timeouts.response = config.controllerTimeout;
-        DriverOptions.timeouts.report = config.sendResponseTimeout;
-        DriverOptions.timeouts.nodeAwake = config.awakeTime;
+        DriverOptions.timeouts.ack = parseInt(config.ackTimeout);
+        DriverOptions.timeouts.response = parseInt(config.controllerTimeout);
+        DriverOptions.timeouts.report = parseInt(config.sendResponseTimeout);
+        DriverOptions.timeouts.nodeAwake = parseInt(config.awakeTime);
 
         if (config.encryptionKey != null && config.encryptionKey.length == 16) {
             DriverOptions.networkKey = Buffer.from(config.encryptionKey);

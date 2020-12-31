@@ -242,6 +242,10 @@ The DURATION value should be an object formatted like below.
 
 ## Version History  
 
+  - 1.0.5
+    - Fixed mis-configured timeout defaults  
+      If you're affected by this bug, remove, then re-add the node after the update.
+
   - 1.0.4
     - Ability to re-interview the nodes about their offerings.  
     - Added INTERVIEW_STARTED, INTERVIEW_COMPLETE and INTERVIEW_FAILED events.  
