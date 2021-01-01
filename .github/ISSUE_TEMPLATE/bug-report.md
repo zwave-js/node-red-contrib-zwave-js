@@ -10,6 +10,9 @@ assignees: marcus-j-davies
 **Version**
 What version of the plugin are you using.
 
+**Platform**
+What platform is the plugin hosted on (Win, OSX, Linux, RPI).
+
 **Describe the bug**
 A clear and concise description of what the bug is.
 
