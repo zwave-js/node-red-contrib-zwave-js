@@ -1,7 +1,7 @@
 ---
 name: Bug Report
 about: Submit a bug report for us to investigate and fix.
-title: dfgfdgfg [BUG]
+title: ''
 labels: bug
 assignees: marcus-j-davies
 
