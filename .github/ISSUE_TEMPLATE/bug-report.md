@@ -2,7 +2,7 @@
 name: Bug Report
 about: Submit a bug report for us to investigate and fix.
 title: ''
-labels: bug
+labels: ''
 assignees: marcus-j-davies
 
 ---
