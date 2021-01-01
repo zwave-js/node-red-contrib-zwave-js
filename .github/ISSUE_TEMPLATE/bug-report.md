@@ -1,6 +1,6 @@
 ---
-name: ":beatle: Bug report"
-about: Submit a bug report for us to fix.
+name: Bug Report
+about: Submit a bug report for us to investigate and fix.
 title: ''
 labels: bug
 assignees: marcus-j-davies
