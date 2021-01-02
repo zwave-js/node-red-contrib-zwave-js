@@ -124,7 +124,7 @@ the payload below will also be emitted whenever you use any of the **Get** opera
 ## Supported Class/Operation List  
 
 The **Controller** class does not require a **node** ID.  
-
+| ------------------------- | ----------------------------------- | ------------------------------------------------- |
 | class                     | operation                           | params                                            |
 | ------------------------- | ----------------------------------- | ------------------------------------------------- |
 | Controller                | StartHealNetwork                    | -                                                 |
@@ -137,7 +137,9 @@ The **Controller** class does not require a **node** ID.
 | Controller                | ProprietaryFunc (See Notes)         | [BYTE Serial Function ID, BYTE[] Data]            |
 | Controller                | InterviewNode                       | [NUMBER Node ID]                                  |
 | Controller                | GetNodes                            | -                                                 |
+| ------------------------- | ----------------------------------- | ------------------------------------------------- |
 | **class**                 | **operation**                       | **params**                                        |
+| ------------------------- | ----------------------------------- | ------------------------------------------------- |
 | Association               | GetGroup                            | [NUMBER Group ID]                                 |
 | Association               | AddNodes                            | [NUMBER Group ID, NUMBER[] NodeID's]              |
 | Association               | RemoveNodes                         | [NUMBER Group ID, NUMBER[] NodeID's]              |
