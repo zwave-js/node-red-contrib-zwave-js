@@ -5,7 +5,8 @@
             "GetGroup": {
                 "MapsToFunc": "getGroup",
                 "ParamsRequired": 1,
-                "ParamsOptional": 0
+                "ParamsOptional": 0,
+                "ResponseThroughEvent":false
             },
             "AddNodes": {
                 "MapsToFunc": "addNodeIds",
@@ -15,17 +16,18 @@
             "RemoveNodesFromAllGroups": {
                 "MapsToFunc": "removeNodeIdsFromAllGroups",
                 "ParamsRequired": 1,
-                "ParamsOptional": 0
+                "ParamsOptional": 0   
             },
             "RemoveNodes": {
                 "MapsToFunc": "removeNodeIds",
                 "ParamsRequired": 2,
-                "ParamsOptional": 0
+                "ParamsOptional": 0    
             },
             "GetGroupCount": {
                 "MapsToFunc": "getGroupCount",
                 "ParamsRequired": 0,
-                "ParamsOptional": 0
+                "ParamsOptional": 0,
+                "ResponseThroughEvent":false
             }
         }
     },
@@ -35,7 +37,8 @@
             "GetGroupName": {
                 "MapsToFunc": "getGroupName",
                 "ParamsRequired": 1,
-                "ParamsOptional": 0
+                "ParamsOptional": 0,
+                "ResponseThroughEvent" : false
             }
         }
     },
