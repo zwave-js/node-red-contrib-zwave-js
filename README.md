@@ -135,23 +135,31 @@ The **Controller** class does not require a **node** ID.
 |                           | StopExclusion                       | -                                                 |
 |                           | HardReset (see Notes)               | -                                                 |
 |                           | ProprietaryFunc (See Notes)         | [BYTE Serial Function ID, BYTE[] Data]            |
-|                           | InterviewNode                       | [BYTE Node ID]                                    |
+|                           | InterviewNode                       | [NUMBER Node ID]                                  |
 |                           | GetNodes                            | -                                                 |
-| Basic                     | Set                                 | [INTEGER]                                         |
+| Association               | GetGroup                            | [NUMBER Group ID]                                 |
+|                           | AddNodes                            | [NUMBER Group ID, NUMBER[] NodeID's]              |
+|                           | RemoveNodes                         | [NUMBER Group ID, NUMBER[] NodeID's]              |
+|                           | RemoveNodesFromAllGroups            | [NUMBER[] NodeID's]                               |
+|                           | GetGroupCount                       | -                                                 |
+| AssociationGroupInfo      | GetGroupName                        | [NUMBER Group ID]                                 |
+| Basic                     | Set                                 | [NUMBER]                                          |
 |                           | Get                                 | -                                                 |
 | Battery                   | Get                                 | -                                                 |
 | BinarySwitch              | Set                                 | [BOOL, DURATION (Optional)]                       |
 |                           | Get                                 | -                                                 |
-| Configuration             | Set                                 | [BYTE ParamID, BYTE Value, INTEGER Value Length]  |
+| Configuration             | Set                                 | [BYTE ParamID, BYTE Value, NUMBER Value Length]   |
 |                           | Get                                 | [BYTE ParamID]                                    |
-| MultiLevelSwitch          | Set                                 | [INTEGER, DURATION (Optional)]                    |
+| DoorLock                  | Set                                 | [DOOR LOCK MODE]                                  |
+|                           | Get                                 | -                                                 |
+| MultiLevelSwitch          | Set                                 | [NUMBER, DURATION (Optional)]                     |
 |                           | Get                                 | -                                                 |
 | Notification              | SendReport                          | [EVENT]                                           |
 | ThermostatMode            | Set                                 | [THERMOSTAT MODE]                                 |
 |                           | Get                                 | -                                                 |
-| ThermostatSetPoint        | Set                                 | [SET POINT TYPE, INTEGER Value, INTEGER Scale]    |
+| ThermostatSetPoint        | Set                                 | [SET POINT TYPE, NUMBER Value, NUMBER Scale]      |
 |                           | Get                                 | [SET POINT TYPE]                                  | 
-| WakeInterval              | Set (see Notes)                     | [INTEGER Seconds, BYTE Controller Node ID]        |
+| WakeInterval              | Set (see Notes)                     | [NUMBER Seconds, NUMBER Controller Node ID]       |
 |                           | Get                                 | -                                                 | 
 
 ## Notes on HardReset  
@@ -188,8 +196,10 @@ and you want the wake up to be recieved by a different controller.
 The EVENT value should be an object formatted like below.  
 ```
 {
-  notificationType: 0x06,
-  notificationEvent: 0x16
+  notificationType: BYTE,
+  notificationEvent: BYTE,
+  eventParameters:BYTE[] (Optional),
+  sequenceNumber:NUMBER (Optional)
 }
 ```
 
@@ -197,14 +207,29 @@ The EVENT value should be an object formatted like below.
 The DURATION value should be an object formatted like below.  
 ```
 {
-  unit: "seconds" | "minutes",
-  value: 60
+  Duration: {
+    value: 60,
+    unit: "seconds" | "minutes",
+  }
 }
 ```
+## DOOR LOCK MODE
+
+| Door Lock Mode Values       |  
+| --------------------------- |
+| Unsecured                   |
+| UnsecuredWithTimeout        |
+| InsideUnsecured             |
+| InsideUnsecuredWithTimeout  |
+| OutsideUnsecured            |
+| OutsideUnsecuredWithTimeout |
+| Unknown                     |
+| Secured                     |
+
 
 ## SET POINT TYPE
 
-| Set Point Type        |
+| Set Point Type Values |
 | --------------------- |
 | N/A                   |
 | Heating               |
@@ -222,25 +247,36 @@ The DURATION value should be an object formatted like below.
 
 ## THERMOSTAT MODE
 
-| Thermostate Mode      |
-| --------------------- |
-| Off                   |
-| Heat                  |
-| Cool                  |
-| Auto                  |
-| Auxiliary             |
-| Fan                   |
-| Furnace               |
-| Dry                   |
-| Moist                 |
-| Auto changeover       |
-| Energy heat           |
-| Energy cool           |
-| Away                  |
-| Full power            |
-| Manufacturer specific |
+| Thermostate Mode Values |
+| ----------------------- |
+| Off                     |
+| Heat                    |
+| Cool                    |
+| Auto                    |
+| Auxiliary               |
+| Fan                     |
+| Furnace                 |
+| Dry                     |
+| Moist                   |
+| Auto changeover         |
+| Energy heat             |
+| Energy cool             |
+| Away                    |
+| Full power              |
+| Manufacturer specific   |
 
 ## Version History  
+
+  - 1.1.0 **Possible Breaking Change**  
+    - Added Door Lock CC  
+    - Added Association CC
+    - Added Group Info CC
+    - Fixed potential exception with operations that require a string value,
+      They are now converted to their respective ZWave-JS numericle counterparts
+    - Duration object structure has been updated to correct a potential exception
+      Initially, the Duration object did not call the ZWave-JS Duration constructor - this has now been fixed.
+    - Improvements to notification objects. **eventParameters** and **sequenceNumber** can now be provided
+
 
   - 1.0.5
     - Fixed mis-configured timeout defaults  

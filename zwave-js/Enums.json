@@ -1,0 +1,44 @@
+{
+    "ThermostatMode":{
+        "Off" :0,
+        "Heat" : 1,
+        "Cool" : 2,
+        "Auto" : 3,
+        "Auxiliary" : 4,
+        "Resume (on)" : 5,
+        "Fan" : 6,
+        "Furnace" : 7,
+        "Dry" : 8,
+        "Moist" : 9,
+        "Auto changeover" : 10,
+        "Energy heat" : 11,
+        "Energy cool" : 12,
+        "Away" : 13,
+        "Full power" : 15,
+        "Manufacturer specific" : 31
+    },
+    "ThermostatSetpointType":{
+        "N/A" : 0,
+        "Heating" : 1,
+        "Cooling" : 2,
+        "Furnace" : 7,
+        "Dry Air" : 8,
+        "Moist Air" : 9,
+        "Auto Changeover" : 10,
+        "Energy Save Heating" : 11,
+        "Energy Save Cooling" : 12,
+        "Away Heating" : 13,
+        "Away Cooling" : 14,
+        "Full Power" : 15
+    },
+    "DoorLockMode":{
+        "Unsecured" : 0,
+        "UnsecuredWithTimeout" : 1,
+        "InsideUnsecured" : 16,
+        "InsideUnsecuredWithTimeout" : 17,
+        "OutsideUnsecured" : 32,
+        "OutsideUnsecuredWithTimeout" : 33,
+        "Unknown" : 254,
+        "Secured" : 255
+    }
+}

@@ -1,4 +1,44 @@
 {
+    "Association":{
+        "MapsToClass": "Association",
+        "Operations": {
+            "GetGroup": {
+                "MapsToFunc": "getGroup",
+                "ParamsRequired": 1,
+                "ParamsOptional": 0
+            },
+            "AddNodes": {
+                "MapsToFunc": "addNodeIds",
+                "ParamsRequired": 2,
+                "ParamsOptional": 0
+            },
+            "RemoveNodesFromAllGroups": {
+                "MapsToFunc": "removeNodeIdsFromAllGroups",
+                "ParamsRequired": 1,
+                "ParamsOptional": 0
+            },
+            "RemoveNodes": {
+                "MapsToFunc": "removeNodeIds",
+                "ParamsRequired": 2,
+                "ParamsOptional": 0
+            },
+            "GetGroupCount": {
+                "MapsToFunc": "getGroupCount",
+                "ParamsRequired": 0,
+                "ParamsOptional": 0
+            }
+        }
+    },
+    "AssociationGroupInfo":{
+        "MapsToClass": "Association Group Information",
+        "Operations": {
+            "GetGroupName": {
+                "MapsToFunc": "getGroupName",
+                "ParamsRequired": 1,
+                "ParamsOptional": 0
+            }
+        }
+    },
     "Configuration": {
         "MapsToClass": "Configuration",
         "Operations": {
@@ -54,6 +94,24 @@
             }
         }
     },
+    "DoorLock": {
+        "MapsToClass": "Door Lock",
+        "Operations": {
+            "Get": {
+                "MapsToFunc": "get",
+                "ParamsRequired": 0,
+                "ParamsOptional": 0
+            },
+            "Set": {
+                "MapsToFunc": "set",
+                "ParamsRequired": 1,
+                "ParamsOptional": 0,
+                "ParamEnumDependency":{
+                    "0":"DoorLockMode"
+                }
+            }
+        }
+    },
     "WakeInterval": {
         "MapsToClass": "Wake Up",
         "Operations": {
@@ -80,7 +138,10 @@
             "Set": {
                 "MapsToFunc": "set",
                 "ParamsRequired": 1,
-                "ParamsOptional": 0
+                "ParamsOptional": 0,
+                "ParamEnumDependency":{
+                    "0":"ThermostatMode"
+                }
             }
         }
     },
@@ -90,12 +151,18 @@
             "Get": {
                 "MapsToFunc": "get",
                 "ParamsRequired": 1,
-                "ParamsOptional": 0
+                "ParamsOptional": 0,
+                "ParamEnumDependency":{
+                    "0":"ThermostatSetpointType"
+                }
             },
             "Set": {
                 "MapsToFunc": "set",
                 "ParamsRequired": 3,
-                "ParamsOptional": 0
+                "ParamsOptional": 0,
+                "ParamEnumDependency":{
+                    "0":"ThermostatSetpointType"
+                }
             }
         }
     },
