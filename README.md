@@ -273,7 +273,7 @@ The DURATION value should be an object formatted like below.
     - Added Group Info CC
     - Fixed potential exception with operations that require a string value,
       They are now converted to their respective ZWave-JS numericle counterparts
-    - Duration object structure has been updated to correct a potential exception
+    - Duration object structure has been updated to correct a potential exception  
       Initially, the Duration object did not call the ZWave-JS Duration constructor - this has now been fixed.
     - Improvements to notification objects. **eventParameters** and **sequenceNumber** can now be provided
 
