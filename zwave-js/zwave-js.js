@@ -319,7 +319,7 @@ module.exports = function (RED) {
 
                         let Func = Map.Operations[Operation]; // Operation
 
-                        if (Params.length != Func.ParamsRequired || Params.length != (Func.ParamsOptional + Func.ParamsRequired)) {
+                        if (Params.length != Func.ParamsRequired && Params.length != (Func.ParamsOptional + Func.ParamsRequired)) {
                             let ErrorMSG = "Incorrect number of parameters specified for " + Operation;
                             let Er = new Error(ErrorMSG);
                             if (done) {
@@ -360,9 +360,15 @@ module.exports = function (RED) {
                             }
                         }
 
-
                         let ZWJSC = Driver.controller.nodes.get(Node).getEndpoint(EP).commandClasses[Map.MapsToClass];
-                        await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
+
+                        if (Func.hasOwnProperty("ResponseThroughEvent") && !Func.ResponseThroughEvent) {
+                            let Result = await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
+                            Send({ id: Node }, "VALUE_UPDATED", Result)
+                        }
+                        else {
+                            await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
+                        }
 
                         if (done) {
                             done();
