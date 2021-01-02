@@ -3,8 +3,10 @@ module.exports = function (RED) {
     // Refs
     const SP = require("serialport");
     const ZW = require('zwave-js')
-    const { Message } = require("zwave-js/build/lib/message/Message");
+    const {Message} = require("zwave-js/build/lib/message/Message");
+    const {Duration} = require("@zwave-js/core");
     const FMaps = require('./FunctionMaps.json')
+    const EnumLookup = require('./Enums.json')
     const Path = require('path')
 
     const NodeInterviewStage = ["None", "ProtocolInfo", "NodeInfo", "RestartFromCache", "CommandClasses", "OverwriteConfig", "Neighbors", "Complete"]
@@ -334,6 +336,37 @@ module.exports = function (RED) {
                         if (msg.payload.hasOwnProperty("endPoint")) {
                             EP = parseInt(msg.payload.endPoint)
                         }
+
+                        // convert string value to Enum integer value
+                        if(Func.hasOwnProperty("ParamEnumDependency"))
+                        {
+                            for(let i=0;i<Params.length;i++)
+                            {
+                                if(Func.ParamEnumDependency.hasOwnProperty(i))
+                                {
+                                    let Enum = Func.ParamEnumDependency[i];
+                                    Params[i] = EnumLookup[Enum][Params[i]]
+                                }
+                            }
+                        }
+
+                        // Convert duration to ZWave-JS Duration Object
+                        if(Params.length > 0)
+                        {
+                            for(let i = 0;i<Params.length;i++)
+                            {
+                                if(typeof Params[i] == 'object')
+                                {
+                                    if(Params[i].hasOwnProperty("Duration"))
+                                    {
+                                        let D = new Duration(Params[i].Duration.value,Params[i].Duration.unit)
+                                        Params[i] = D;
+
+                                    }
+                                }
+                            }
+                        }
+                        
 
                         let ZWJSC = Driver.controller.nodes.get(Node).getEndpoint(EP).commandClasses[Map.MapsToClass];
                         await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
