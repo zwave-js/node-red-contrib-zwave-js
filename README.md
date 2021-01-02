@@ -128,39 +128,39 @@ The **Controller** class does not require a **node** ID.
 | class                     | operation                           | params                                            |
 | ------------------------- | ----------------------------------- | ------------------------------------------------- |
 | Controller                | StartHealNetwork                    | -                                                 |
-|                           | StopHealNetwork                     | -                                                 |
-|                           | StartInclusion                      | [BOOL Include Non-Secure]                         |
-|                           | StopInclusion                       | -                                                 |
-|                           | StartExclusion                      | -                                                 |
-|                           | StopExclusion                       | -                                                 |
-|                           | HardReset (see Notes)               | -                                                 |
-|                           | ProprietaryFunc (See Notes)         | [BYTE Serial Function ID, BYTE[] Data]            |
-|                           | InterviewNode                       | [NUMBER Node ID]                                  |
-|                           | GetNodes                            | -                                                 |
+| Controller                | StopHealNetwork                     | -                                                 |
+| Controller                | StartInclusion                      | [BOOL Include Non-Secure]                         |
+| Controller                | StopInclusion                       | -                                                 |
+| Controller                | StartExclusion                      | -                                                 |
+| Controller                | StopExclusion                       | -                                                 |
+| Controller                | HardReset (see Notes)               | -                                                 |
+| Controller                | ProprietaryFunc (See Notes)         | [BYTE Serial Function ID, BYTE[] Data]            |
+| Controller                | InterviewNode                       | [NUMBER Node ID]                                  |
+| Controller                | GetNodes                            | -                                                 |
 | Association               | GetGroup                            | [NUMBER Group ID]                                 |
-|                           | AddNodes                            | [NUMBER Group ID, NUMBER[] NodeID's]              |
-|                           | RemoveNodes                         | [NUMBER Group ID, NUMBER[] NodeID's]              |
-|                           | RemoveNodesFromAllGroups            | [NUMBER[] NodeID's]                               |
-|                           | GetGroupCount                       | -                                                 |
+| Association               | AddNodes                            | [NUMBER Group ID, NUMBER[] NodeID's]              |
+| Association               | RemoveNodes                         | [NUMBER Group ID, NUMBER[] NodeID's]              |
+| Association               | RemoveNodesFromAllGroups            | [NUMBER[] NodeID's]                               |
+| Association               | GetGroupCount                       | -                                                 |
 | AssociationGroupInfo      | GetGroupName                        | [NUMBER Group ID]                                 |
 | Basic                     | Set                                 | [NUMBER]                                          |
-|                           | Get                                 | -                                                 |
+| Basic                     | Get                                 | -                                                 |
 | Battery                   | Get                                 | -                                                 |
 | BinarySwitch              | Set                                 | [BOOL, DURATION (Optional)]                       |
-|                           | Get                                 | -                                                 |
+| BinarySwitch              | Get                                 | -                                                 |
 | Configuration             | Set                                 | [BYTE ParamID, BYTE Value, NUMBER Value Length]   |
-|                           | Get                                 | [BYTE ParamID]                                    |
+| Configuration             | Get                                 | [BYTE ParamID]                                    |
 | DoorLock                  | Set                                 | [DOOR LOCK MODE]                                  |
-|                           | Get                                 | -                                                 |
+| DoorLock                  | Get                                 | -                                                 |
 | MultiLevelSwitch          | Set                                 | [NUMBER, DURATION (Optional)]                     |
-|                           | Get                                 | -                                                 |
+| MultiLevelSwitch          | Get                                 | -                                                 |
 | Notification              | SendReport                          | [EVENT]                                           |
 | ThermostatMode            | Set                                 | [THERMOSTAT MODE]                                 |
-|                           | Get                                 | -                                                 |
+| ThermostatMode            | Get                                 | -                                                 |
 | ThermostatSetPoint        | Set                                 | [SET POINT TYPE, NUMBER Value, NUMBER Scale]      |
-|                           | Get                                 | [SET POINT TYPE]                                  | 
+| ThermostatSetPoint        | Get                                 | [SET POINT TYPE]                                  | 
 | WakeInterval              | Set (see Notes)                     | [NUMBER Seconds, NUMBER Controller Node ID]       |
-|                           | Get                                 | -                                                 | 
+| WakeInterval              | Get                                 | -                                                 | 
 
 ## Notes on HardReset  
 A one-way ticket for wiping out all the configuration on the controller.  
