@@ -159,7 +159,7 @@ The **Controller** class does not require a **node** ID.
 | Notification              | SendReport                          | [**EVENT**]                                           |
 | ThermostatMode            | Set                                 | [**THERMOSTAT MODE**]                                 |
 | ThermostatMode            | Get                                 |                                                       |
-| ThermostatSetPoint        | Set                                 | [**SET POINT TYPE**, Number : Value, Number : Scale   |
+| ThermostatSetPoint        | Set                                 | [**SET POINT TYPE**, Number : Value, Number : Scale]  |
 | ThermostatSetPoint        | Get                                 | [**SET POINT TYPE**]                                  | 
 | WakeInterval              | Set (see Notes)                     | [Number : Seconds, Number : Controller Node ID]       |
 | WakeInterval              | Get                                 |                                                       | 
