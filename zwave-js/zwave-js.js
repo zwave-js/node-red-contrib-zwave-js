@@ -219,7 +219,7 @@ module.exports = function (RED) {
                                     }
 
                                 });
-                                Send({ id: "Controller" }, "NODE_LIST", Nodes);
+                                Send({ id: "Controller" }, "NODE_LIST", Nodes, send);
                                 break;
 
 
@@ -241,14 +241,14 @@ module.exports = function (RED) {
                                 }
                                 else {
                                     await Driver.controller.nodes.get(Node).refreshInfo();
-                                    Send({ id: Node }, "INTERVIEW_STARTED")
+                                    Send({ id: Node }, "INTERVIEW_STARTED", send)
                                 }
 
                                 break;
 
                             case "HardReset":
                                 await Driver.hardReset();
-                                Send({ id: "Controller" }, "CONTROLLER_RESET_COMPLETE")
+                                Send({ id: "Controller" }, "CONTROLLER_RESET_COMPLETE", send)
                                 break;
 
                             case "ProprietaryFunc":
@@ -269,12 +269,12 @@ module.exports = function (RED) {
 
                             case "StartHealNetwork":
                                 await Driver.controller.beginHealingNetwork();
-                                Send({ id: "Controller" }, "NETWORK_HEAL_STARTED")
+                                Send({ id: "Controller" }, "NETWORK_HEAL_STARTED", send)
                                 break;
 
                             case "StopHealNetwork":
                                 await Driver.controller.stopHealingNetwork();
-                                Send({ id: "Controller" }, "NETWORK_HEAL_STOPPED")
+                                Send({ id: "Controller" }, "NETWORK_HEAL_STOPPED", send)
                                 break;
 
                             case "StartInclusion":
@@ -369,8 +369,9 @@ module.exports = function (RED) {
                         let ZWJSC = Driver.controller.nodes.get(Node).getEndpoint(EP).commandClasses[Map.MapsToClass];
 
                         if (Func.hasOwnProperty("ResponseThroughEvent") && !Func.ResponseThroughEvent) {
+
                             let Result = await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
-                            Send({ id: Node }, "VALUE_UPDATED", Result)
+                            Send({ id: Node }, "VALUE_UPDATED", Result, send)
                         }
                         else {
                             await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
@@ -393,16 +394,24 @@ module.exports = function (RED) {
             }
         });
 
-        function Send(Node, Subject, Value) {
+        function Send(Node, Subject, Value, send) {
             let PL = {
                 "node": Node.id,
                 "event": Subject,
                 "timestamp": new Date(),
             }
+
             if (Value != null) {
                 PL.object = Value;
             }
-            node.send({ "payload": PL });
+
+            if (send) {
+                send({ "payload": PL })
+            }
+            else {
+                node.send({ "payload": PL });
+            }
+
         }
         Driver.start()
     }

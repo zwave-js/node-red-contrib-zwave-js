@@ -286,6 +286,11 @@ The DURATION value should be an object formatted like below.
 
 ## Version History  
 
+  - 1.1.1
+    - Tidy up read me  
+    - Optimisations to red event management
+    - Broader range of events to capture value updates implemented.
+
   - 1.1.0 **Possible Breaking Change**  
     - Added Door Lock CC  
     - Added Association CC
