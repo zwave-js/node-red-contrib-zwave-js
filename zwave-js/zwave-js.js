@@ -250,7 +250,7 @@ module.exports = function (RED) {
                                 let ZWMessage = new Message(Driver, {
                                     type: 0x00,
                                     functionType: Params[0],
-                                    payload: Buffer.from(Params[1])
+                                    payload: Params[1]
                                 });
 
                                 let MessageSettings = {
