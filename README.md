@@ -146,19 +146,19 @@ The **Controller** class does not require a **node** ID.
 | Basic                     | Set                                 | [Number]                                              |
 | Basic                     | Get                                 | -                                                     |
 | Battery                   | Get                                 | -                                                     |
-| BinarySwitch              | Set                                 | [Bool, DURATION (Optional)]                           |
+| BinarySwitch              | Set                                 | [Bool, **DURATION** (Optional)]                       |
 | BinarySwitch              | Get                                 | -                                                     |
 | Configuration             | Set                                 | [Byte : ParamID, Byte : Value, Number : Value Length] |
 | Configuration             | Get                                 | [Byte : ParamID]                                      |
-| DoorLock                  | Set                                 | [DOOR LOCK MODE]                                      |
+| DoorLock                  | Set                                 | [**DOOR LOCK MODE**]                                  |
 | DoorLock                  | Get                                 | -                                                     |
-| MultiLevelSwitch          | Set                                 | [Number, DURATION (Optional)]                         |
+| MultiLevelSwitch          | Set                                 | [Number, **DURATION** (Optional)]                     |
 | MultiLevelSwitch          | Get                                 | -                                                     |
-| Notification              | SendReport                          | [EVENT]                                               |
-| ThermostatMode            | Set                                 | [THERMOSTAT MODE]                                     |
+| Notification              | SendReport                          | [**EVENT**]                                           |
+| ThermostatMode            | Set                                 | [**THERMOSTAT MODE**]                                 |
 | ThermostatMode            | Get                                 | -                                                     |
-| ThermostatSetPoint        | Set                                 | [SET POINT TYPE, Number : Value, Number : Scale]      |
-| ThermostatSetPoint        | Get                                 | [SET POINT TYPE]                                      | 
+| ThermostatSetPoint        | Set                                 | [**SET POINT TYPE**, Number : Value, Number : Scale   |
+| ThermostatSetPoint        | Get                                 | [**SET POINT TYPE**]                                  | 
 | WakeInterval              | Set (see Notes)                     | [Number : Seconds, Number : Controller Node ID]       |
 | WakeInterval              | Get                                 | -                                                     | 
 
@@ -185,7 +185,12 @@ disables the LED on the GEN 5 Z-Stick, breaking it down we have:
 This means we do:
 
 ```
-let _Buf = Buffer.from([0x51,0x01,0x00,0x51,0x01]) // LED Configuration, Configuration Value Size, Value, ??, ??
+let _Buf = Buffer.from([0x51,0x01,0x00,0x51,0x01]) /*  LED Configuration
+                                                    *  Configuration Value Size
+                                                    *  Value
+                                                    *  ??
+                                                    *  ??
+                                                    */
 
 {
   payload:{
