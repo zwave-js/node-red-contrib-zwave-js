@@ -217,8 +217,8 @@ The EVENT value should be an object formatted like below.
 {
   notificationType: Byte,
   notificationEvent: Byte,
-  eventParameters:Buffer (Optional),
-  sequenceNumber:Number (Optional)
+  eventParameters: Buffer (Optional),
+  sequenceNumber: Number (Optional)
 }
 ```
 
