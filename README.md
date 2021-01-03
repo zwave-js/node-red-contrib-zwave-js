@@ -197,8 +197,8 @@ let _Buf = Buffer.from([0x51,0x01,0x00,0x51,0x01]) /*  LED Configuration
 {
   payload:{
     node: 2,
-    class: "Configuration",
-    operation:"Set",
+    class: "Controller",
+    operation:"ProprietaryFunc",
     params: [0xF2, _Buf]
   }
 }
