@@ -196,7 +196,6 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])   *  Configuration Value S
                                                         *  ??
                                                         *  ??
                                                         */
-
 {
   payload:{
     node: 2,
