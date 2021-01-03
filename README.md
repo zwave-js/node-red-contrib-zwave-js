@@ -122,8 +122,10 @@ the payload below will also be emitted whenever you use any of the **Get** opera
 
 
 ## Supported Class/Operation List  
-Listed below are the outgoing CC's that are supported.   
-in reality, ZWave-JS supports a much larger range, and you should receive these as and when they occur.  
+Listed below are the outgoing CC's that are supported by this node.   
+In reality, ZWave-JS supports a much larger range, and you should receive these regadless of the below list.
+
+The supported CC's within this node, will gradually increase, to mirror what ZWave-JS supports.
 
 The **Controller** class does not require a **node** ID.  
 
