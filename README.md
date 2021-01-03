@@ -205,7 +205,7 @@ let _Buf = Buffer.from([0x51,0x01,0x00,0x51,0x01]) /*  LED Configuration
 **SOF**, **Total Length**, **REQ** & the **Serial API Checksum** will be provided for you.
 
 ## Notes on WakeInterval  
-When setting the interval, the **Controller Node ID** parameter will almost certainly be 0x01 (1) - unless you have multiple controllers,
+When setting the interval, the **Controller Node ID** parameter will almost certainly be 1 - unless you have multiple controllers,
 and you want the wake up to be recieved by a different controller. 
 
 
@@ -225,7 +225,7 @@ The DURATION value should be an object formatted like below.
 ```
 {
   Duration: {
-    value: 60,
+    value: Number,
     unit: "seconds" | "minutes",
   }
 }
