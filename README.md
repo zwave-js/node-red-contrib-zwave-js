@@ -100,67 +100,72 @@ the payload below will also be emitted whenever you use any of the **Get** opera
 
 | event                     | node                                | object                          | Meaning                       |
 | ------------------------- | ----------------------------------- | ------------------------------- | ----------------------------- |  
-| NODE_ADDED                | The ID of the added node            | -                               | A Node Was Added              |
-| NODE_REMOVED              | The ID of the removed node          | -                               | A Node Was Removed            |
-| INCLUSION_STARTED         | -                                   | BOOL Only secure devices        | Include Mode Started          |
-| INCLUSION_STOPPED         | -                                   | -                               | include Mode Stopped          |
-| EXCLUSION_STARTED         | -                                   | -                               | Exclude Mode Started          |
-| EXCLUSION_STOPPED         | -                                   | -                               | Exclude Mode Stopped          |
-| NETWORK_HEAL_DONE         | -                                   | -                               | Done Healing Network          |
-| NETWORK_HEAL_STARTED      | -                                   | -                               | Started Healing Network       |
-| NETWORK_HEAL_STOPPED      | -                                   | -                               | Stopped Healing Network       |
-| CONTROLLER_RESET_COMPLETE | -                                   | -                               | The controller was reset      |
+| NODE_ADDED                | The ID of the added node            |                                 | A Node Was Added              |
+| NODE_REMOVED              | The ID of the removed node          |                                 | A Node Was Removed            |
+| INCLUSION_STARTED         |                                     | Bool : Only secure devices      | Include Mode Started          |
+| INCLUSION_STOPPED         |                                     |                                 | include Mode Stopped          |
+| EXCLUSION_STARTED         |                                     |                                 | Exclude Mode Started          |
+| EXCLUSION_STOPPED         |                                     |                                 | Exclude Mode Stopped          |
+| NETWORK_HEAL_DONE         |                                     |                                 | Done Healing Network          |
+| NETWORK_HEAL_STARTED      |                                     |                                 | Started Healing Network       |
+| NETWORK_HEAL_STOPPED      |                                     |                                 | Stopped Healing Network       |
+| CONTROLLER_RESET_COMPLETE |                                     |                                 | The controller was reset      |
 | VALUE_UPDATED             | The source Node ID                  | The objects command content     | A Value Was Updated           |
 | NOTIFICATION              | The source Node ID                  | The objects command content     | A Notification Was Sent       |
-| WAKE_UP                   | The source Node ID                  | -                               | A Node Has Woken Up           |
-| SLEEP                     | The source Node ID                  | -                               | A Node Has Gone To Sleep      |
-| INTERVIEW_COMPLETE        | The source Node ID                  | -                               | The node has been interviewed |
+| WAKE_UP                   | The source Node ID                  |                                 | A Node Has Woken Up           |
+| SLEEP                     | The source Node ID                  |                                 | A Node Has Gone To Sleep      |
+| INTERVIEW_COMPLETE        | The source Node ID                  |                                 | The node has been interviewed |
 | INTERVIEW_FAILED          | The source Node ID                  | Detailed Error Info             | Could not interview node      |
-| INTERVIEW_STARTED         | The source Node ID                  | -                               | Node interview started        |
-| NODE_LIST                 |                                     | An Array of ZWave nodes         | Response to GetNodes          | 
+| INTERVIEW_STARTED         | The source Node ID                  |                                 | Node interview started        |
+| NODE_LIST                 |                                     | ZWaveNode[]                     | Response to GetNodes          | 
 
 
 
 ## Supported Class/Operation List  
+Listed below are the outgoing CC's that are supported by this node.   
+In reality, ZWave-JS supports a much larger range, and you should receive these regadless of the below list.  
+i.e you can't interreact with them, but you will still receive the associated events.
+
+The supported CC's within this node, will gradually increase, to mirror what ZWave-JS supports.
 
 The **Controller** class does not require a **node** ID.  
 
-| class                     | operation                           | params                                            |
-| ------------------------- | ----------------------------------- | ------------------------------------------------- |
-| Controller                | StartHealNetwork                    | -                                                 |
-| Controller                | StopHealNetwork                     | -                                                 |
-| Controller                | StartInclusion                      | [BOOL Include Non-Secure]                         |
-| Controller                | StopInclusion                       | -                                                 |
-| Controller                | StartExclusion                      | -                                                 |
-| Controller                | StopExclusion                       | -                                                 |
-| Controller                | HardReset (see Notes)               | -                                                 |
-| Controller                | ProprietaryFunc (See Notes)         | [BYTE Serial Function ID, BYTE[] Data]            |
-| Controller                | InterviewNode                       | [NUMBER Node ID]                                  |
-| Controller                | GetNodes                            | -                                                 |
-| Association               | GetGroup                            | [NUMBER Group ID]                                 |
-| Association               | AddNodes                            | [NUMBER Group ID, NUMBER[] NodeID's]              |
-| Association               | RemoveNodes                         | [NUMBER Group ID, NUMBER[] NodeID's]              |
-| Association               | RemoveNodesFromAllGroups            | [NUMBER[] NodeID's]                               |
-| Association               | GetGroupCount                       | -                                                 |
-| AssociationGroupInfo      | GetGroupName                        | [NUMBER Group ID]                                 |
-| Basic                     | Set                                 | [NUMBER]                                          |
-| Basic                     | Get                                 | -                                                 |
-| Battery                   | Get                                 | -                                                 |
-| BinarySwitch              | Set                                 | [BOOL, DURATION (Optional)]                       |
-| BinarySwitch              | Get                                 | -                                                 |
-| Configuration             | Set                                 | [BYTE ParamID, BYTE Value, NUMBER Value Length]   |
-| Configuration             | Get                                 | [BYTE ParamID]                                    |
-| DoorLock                  | Set                                 | [DOOR LOCK MODE]                                  |
-| DoorLock                  | Get                                 | -                                                 |
-| MultiLevelSwitch          | Set                                 | [NUMBER, DURATION (Optional)]                     |
-| MultiLevelSwitch          | Get                                 | -                                                 |
-| Notification              | SendReport                          | [EVENT]                                           |
-| ThermostatMode            | Set                                 | [THERMOSTAT MODE]                                 |
-| ThermostatMode            | Get                                 | -                                                 |
-| ThermostatSetPoint        | Set                                 | [SET POINT TYPE, NUMBER Value, NUMBER Scale]      |
-| ThermostatSetPoint        | Get                                 | [SET POINT TYPE]                                  | 
-| WakeInterval              | Set (see Notes)                     | [NUMBER Seconds, NUMBER Controller Node ID]       |
-| WakeInterval              | Get                                 | -                                                 | 
+| class                     | operation                           | params                                                |
+| ------------------------- | ----------------------------------- | ----------------------------------------------------- |
+| Controller                | StartHealNetwork                    |                                                       |
+| Controller                | StopHealNetwork                     |                                                       |
+| Controller                | StartInclusion                      | [Bool : Include Non-Secure]                           |
+| Controller                | StopInclusion                       |                                                       |
+| Controller                | StartExclusion                      |                                                       |
+| Controller                | StopExclusion                       |                                                       |
+| Controller                | HardReset (see Notes)               |                                                       |
+| Controller                | ProprietaryFunc (See Notes)         | [Byte : Serial Function ID, Buffer : Data]            |
+| Controller                | InterviewNode                       | [Number : Node ID]                                    |
+| Controller                | GetNodes                            |                                                       |
+| Association               | GetGroup                            | [Number : Group ID]                                   |
+| Association               | AddNodes                            | [Number : Group ID, Number[] : NodeID's]              |
+| Association               | RemoveNodes                         | [Number : Group ID, Number[] : NodeID's]              |
+| Association               | RemoveNodesFromAllGroups            | [Number[] : NodeID's]                                 |
+| Association               | GetGroupCount                       |                                                       |
+| AssociationGroupInfo      | GetGroupName                        | [Number : Group ID]                                   |
+| Basic                     | Set                                 | [Number]                                              |
+| Basic                     | Get                                 |                                                       |
+| Battery                   | Get                                 |                                                       |
+| BinarySwitch              | Set                                 | [Bool, **DURATION** (Optional)]                       |
+| BinarySwitch              | Get                                 |                                                       |
+| Configuration             | Set                                 | [Byte : ParamID, Byte : Value, Number : Value Length] |
+| Configuration             | Get                                 | [Byte : ParamID]                                      |
+| DoorLock                  | Set                                 | [**DOOR LOCK MODE**]                                  |
+| DoorLock                  | Get                                 |                                                       |
+| MultiLevelSwitch          | Set                                 | [Number, **DURATION** (Optional)]                     |
+| MultiLevelSwitch          | Get                                 |                                                       |
+| Notification              | SendReport                          | [**EVENT**]                                           |
+| ThermostatMode            | Set                                 | [**THERMOSTAT MODE**]                                 |
+| ThermostatMode            | Get                                 |                                                       |
+| ThermostatSetPoint        | Set                                 | [**SET POINT TYPE**, Number : Value, Number : Scale]  |
+| ThermostatSetPoint        | Get                                 | [**SET POINT TYPE**]                                  | 
+| WakeInterval              | Set (see Notes)                     | [Number : Seconds, Number : Controller Node ID]       |
+| WakeInterval              | Get                                 |                                                       | 
 
 ## Notes on HardReset  
 A one-way ticket for wiping out all the configuration on the controller.  
@@ -182,13 +187,29 @@ disables the LED on the GEN 5 Z-Stick, breaking it down we have:
 0x01 - ??  
 0x51 - Serial API Checksum  
 
-This mean we pass **[0xF2,[0x51,0x01,0x00,0x51,0x01]]** as the **params** argument to turn of the LED  
-And for good measure, to turn it on  **[0xF2,[0x51,0x01,0x01,0x51,0x01]]**  
+This means we do:
+
+```
+let _Buf_OFF = Buffer.from([0x51,0x01,0x00,0x05,0x01]) /*  LED Configuration
+let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])   *  Configuration Value Size
+                                                        *  Value
+                                                        *  ??
+                                                        *  ??
+                                                        */
+{
+  payload:{
+    node: 2,
+    class: "Controller",
+    operation:"ProprietaryFunc",
+    params: [0xF2, _Buf_OFF]
+  }
+}
+```
 
 **SOF**, **Total Length**, **REQ** & the **Serial API Checksum** will be provided for you.
 
 ## Notes on WakeInterval  
-When setting the interval, the **Controller Node ID** parameter will almost certainly be 0x01 (1) - unless you have multiple controllers,
+When setting the interval, the **Controller Node ID** parameter will almost certainly be 1 - unless you have multiple controllers,
 and you want the wake up to be recieved by a different controller. 
 
 
@@ -196,10 +217,10 @@ and you want the wake up to be recieved by a different controller.
 The EVENT value should be an object formatted like below.  
 ```
 {
-  notificationType: BYTE,
-  notificationEvent: BYTE,
-  eventParameters:BYTE[] (Optional),
-  sequenceNumber:NUMBER (Optional)
+  notificationType: Byte,
+  notificationEvent: Byte,
+  eventParameters: Buffer (Optional),
+  sequenceNumber: Number (Optional)
 }
 ```
 
@@ -208,7 +229,7 @@ The DURATION value should be an object formatted like below.
 ```
 {
   Duration: {
-    value: 60,
+    value: Number,
     unit: "seconds" | "minutes",
   }
 }
@@ -266,6 +287,11 @@ The DURATION value should be an object formatted like below.
 | Manufacturer specific   |
 
 ## Version History  
+
+  - 1.1.1
+    - Tidy up read me  
+    - Optimisations to red event management
+    - Broader range of events to capture value updates implemented.
 
   - 1.1.0 **Possible Breaking Change**  
     - Added Door Lock CC  
