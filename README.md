@@ -190,19 +190,19 @@ disables the LED on the GEN 5 Z-Stick, breaking it down we have:
 This means we do:
 
 ```
-let _Buf = Buffer.from([0x51,0x01,0x00,0x51,0x01]) /*  LED Configuration
-                                                    *  Configuration Value Size
-                                                    *  Value
-                                                    *  ??
-                                                    *  ??
-                                                    */
+let _Buf_OFF = Buffer.from([0x51,0x01,0x00,0x05,0x01]) /*  LED Configuration
+let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])   *  Configuration Value Size
+                                                        *  Value
+                                                        *  ??
+                                                        *  ??
+                                                        */
 
 {
   payload:{
     node: 2,
     class: "Controller",
     operation:"ProprietaryFunc",
-    params: [0xF2, _Buf]
+    params: [0xF2, _Buf_OFF]
   }
 }
 ```
