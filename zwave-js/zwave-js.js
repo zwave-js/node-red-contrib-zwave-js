@@ -109,6 +109,12 @@ module.exports = function (RED) {
                     }
                 })
 
+                N1.on("value added", (ND, VL) => {
+                    if (NodesReady.indexOf(ND.id) > -1) {
+                        Send(ND, "VALUE_UPDATED", VL);
+                    }
+                })
+
                 N1.on("notification", (ND, L, VL) => {
                     if (NodesReady.indexOf(ND.id) > -1) {
                         Send(ND, "NOTIFICATION", VL);
