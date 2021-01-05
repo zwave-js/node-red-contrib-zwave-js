@@ -151,12 +151,15 @@ The **Controller** class does not require a **node** ID.
 | Basic                     | Set                                 | [Number]                                              |
 | Basic                     | Get                                 |                                                       |
 | Battery                   | Get                                 |                                                       |
+| BinarySensor              | Get                                 | [**BINARY SENSOR TYPE**]                              |
 | BinarySwitch              | Set                                 | [Bool, **DURATION** (Optional)]                       |
 | BinarySwitch              | Get                                 |                                                       |
 | Configuration             | Set                                 | [Byte : ParamID, Byte : Value, Number : Value Length] |
 | Configuration             | Get                                 | [Byte : ParamID]                                      |
 | DoorLock                  | Set                                 | [**DOOR LOCK MODE**]                                  |
 | DoorLock                  | Get                                 |                                                       |
+| Lock                      | Set                                 | [Bool]                                                |
+| Lock                      | Get                                 |                                                       |
 | MultiLevelSwitch          | Set                                 | [Number, **DURATION** (Optional)]                     |
 | MultiLevelSwitch          | Get                                 |                                                       |
 | Notification              | SendReport                          | [**EVENT**]                                           |
@@ -234,9 +237,9 @@ The DURATION value should be an object formatted like below.
   }
 }
 ```
-## DOOR LOCK MODE
 
-| Door Lock Mode Values       |  
+## DOOR LOCK MODE
+| Values                      |  
 | --------------------------- |
 | Unsecured                   |
 | UnsecuredWithTimeout        |
@@ -249,8 +252,7 @@ The DURATION value should be an object formatted like below.
 
 
 ## SET POINT TYPE
-
-| Set Point Type Values |
+| Values                |
 | --------------------- |
 | N/A                   |
 | Heating               |
@@ -267,8 +269,7 @@ The DURATION value should be an object formatted like below.
 
 
 ## THERMOSTAT MODE
-
-| Thermostate Mode Values |
+| Values                  |
 | ----------------------- |
 | Off                     |
 | Heat                    |
@@ -286,7 +287,29 @@ The DURATION value should be an object formatted like below.
 | Full power              |
 | Manufacturer specific   |
 
+## BINARY SENSOR TYPE
+| Values             |
+| ------------------ |
+| General Purpose    |
+| Smoke              |
+| CO                 |
+| CO2                |
+| Heat               |
+| Water              |
+| Freeze             |
+| Tamper             |
+| Aux                |
+| Door/Window        |
+| Tilt               |
+| Motion             |
+| Glass Break        |
+| Any                |
+
 ## Version History  
+
+  - 1.1.2
+    - Added Binary Sensor CC support  
+    - Added Lock CC support
 
   - 1.1.1
     - Tidy up read me  
