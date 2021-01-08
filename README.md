@@ -175,6 +175,7 @@ The **Controller** class does not require a **node** ID.
 ## Unmanaged Mode Examples
 
 The combinations in the above table, use a managed approach, that is, the command classes are statically made available via the plugin.  
+  
 There is another way however, that allows you to target command classes that are not natively supported by the plugin, but are supported by ZWave-JS.  
 
 **setValue**, **getValue** and **getDefinedValueIDs**    
