@@ -201,8 +201,8 @@ The ValueID interface uniquely identifies to which CC, endpoint and property a v
     node: 2,
     unmanaged: {
       method: "SetValue",
-	  valueID: **One of the value ID's returned from GetDefinedValueIDs**,
-	  value:**You desired value**
+	  valueID: One of the value ID's returned from GetDefinedValueIDs,
+	  value:Your desired value
     }
   }
 }
@@ -215,7 +215,7 @@ The ValueID interface uniquely identifies to which CC, endpoint and property a v
     node: 2,
     unmanaged: {
       method: "GetValue",
-	  valueID: **One of the value ID's returned from GetDefinedValueIDs**
+	  valueID: One of the value ID's returned from GetDefinedValueIDs
     }
   }
 }
