@@ -130,20 +130,8 @@ i.e you can't interreact with them, but you will still receive the associated ev
 
 The supported CC's within this node, will gradually increase, to mirror what ZWave-JS supports.
 
-The **Controller** class does not require a **node** ID.  
-
 | class                     | operation                           | params                                                |
 | ------------------------- | ----------------------------------- | ----------------------------------------------------- |
-| Controller                | StartHealNetwork                    |                                                       |
-| Controller                | StopHealNetwork                     |                                                       |
-| Controller                | StartInclusion                      | [Bool : Include Non-Secure]                           |
-| Controller                | StopInclusion                       |                                                       |
-| Controller                | StartExclusion                      |                                                       |
-| Controller                | StopExclusion                       |                                                       |
-| Controller                | HardReset (see Notes)               |                                                       |
-| Controller                | ProprietaryFunc (See Notes)         | [Byte : Serial Function ID, Buffer : Data]            |
-| Controller                | InterviewNode                       | [Number : Node ID]                                    |
-| Controller                | GetNodes                            |                                                       |
 | Association               | GetGroup                            | [Number : Group ID]                                   |
 | Association               | AddNodes                            | [Number : Group ID, Number[] : NodeID's]              |
 | Association               | RemoveNodes                         | [Number : Group ID, Number[] : NodeID's]              |
@@ -227,6 +215,22 @@ Encpsulate all your commands within a **payload** object.
   }
 }
 ```
+
+## Controller based operations
+The **Controller** class does not require a **node** ID.  
+
+| class                     | operation                           | params                                                |
+| ------------------------- | ----------------------------------- | ----------------------------------------------------- |
+| Controller                | StartHealNetwork                    |                                                       |
+| Controller                | StopHealNetwork                     |                                                       |
+| Controller                | StartInclusion                      | [Bool : Include Non-Secure]                           |
+| Controller                | StopInclusion                       |                                                       |
+| Controller                | StartExclusion                      |                                                       |
+| Controller                | StopExclusion                       |                                                       |
+| Controller                | HardReset (see Notes)               |                                                       |
+| Controller                | ProprietaryFunc (See Notes)         | [Byte : Serial Function ID, Buffer : Data]            |
+| Controller                | InterviewNode                       | [Number : Node ID]                                    |
+| Controller                | GetNodes                            |                                                       |
 
 
 ## Notes on HardReset  
