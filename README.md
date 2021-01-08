@@ -82,12 +82,6 @@ let Report = {
 }
 ```
 
-The above uses a managed approach, that is, the command classes are statically made available via the plugin.  
-There is another way, that allows you to target command classes that are not natively supported by the plugin.
-
-**setValue**, **getValue** and **getDefinedValueIDs**
-
-
 Receiving commands is also trivial. Whenever your controller has been notified of an event, the node will inject the payload accodingly. 
 The **object** will vary - it depends on the command class that was used in the transmission  
 the payload below will also be emitted whenever you use any of the **Get** operations.
@@ -175,6 +169,17 @@ The **Controller** class does not require a **node** ID.
 | ThermostatSetPoint        | Get                                 | [**SET POINT TYPE**]                                  | 
 | WakeInterval              | Set (see Notes)                     | [Number : Seconds, Number : Controller Node ID]       |
 | WakeInterval              | Get                                 |                                                       | 
+
+## setValue, getValue & getDefinedValueIDs
+
+The combinations in the above table, use a managed approach, that is, the command classes are statically made available via the plugin.  
+There is another way, that allows you to target command classes that are not natively supported by the plugin,  
+but are supported by ZWave-JS.
+
+**setValue**, **getValue** and **getDefinedValueIDs**
+
+The difference with this apparch is that you supply a **ValueID**  
+The ValueID interface uniquely identifies to which CC, endpoint and property a value belongs to.
 
 ## Notes on HardReset  
 A one-way ticket for wiping out all the configuration on the controller.  
