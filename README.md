@@ -82,6 +82,12 @@ let Report = {
 }
 ```
 
+The above uses a managed approach, that is, the command classes are statically made available via the plugin.  
+There is another way, that allows you to target command classes that are not natively supported by the plugin.
+
+**setValue**, **getValue** and **getDefinedValueIDs**
+
+
 Receiving commands is also trivial. Whenever your controller has been notified of an event, the node will inject the payload accodingly. 
 The **object** will vary - it depends on the command class that was used in the transmission  
 the payload below will also be emitted whenever you use any of the **Get** operations.
@@ -309,7 +315,8 @@ The DURATION value should be an object formatted like below.
 
   - 1.1.2
     - Added Binary Sensor CC support  
-    - Added Lock CC support
+    - Added Lock CC support  
+	- Added Support for **getDefinedValueIDs**, **setValue** and **getValue** methods
 
   - 1.1.1
     - Tidy up read me  
