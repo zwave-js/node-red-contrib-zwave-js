@@ -192,8 +192,8 @@ The ValueID interface uniquely identifies to which CC, endpoint and property a v
 {
   payload: {
     node: 2,
-	class: "Unmanaged",
-	operation:"GetDefinedValueIDs"
+    class: "Unmanaged",
+    operation: "GetDefinedValueIDs"
   }
 }
 ```
@@ -205,9 +205,9 @@ The ValueID interface uniquely identifies to which CC, endpoint and property a v
 {
   payload: {
     node: 2,
-	class: "Unmanaged",
-	operation:"SetValue",
-	params:[ValueID,Value]
+    class: "Unmanaged",
+    operation: "SetValue",
+    params: [ValueID,Value]
   }
 }
 ```
@@ -218,9 +218,9 @@ The ValueID interface uniquely identifies to which CC, endpoint and property a v
 {
   payload: {
     node: 2,
-	class: "Unmanaged",
-	operation:"GetValue",
-	params:[ValueID]
+    class: "Unmanaged",
+    operation: "GetValue",
+    params: [ValueID]
   }
 }
 ```
