@@ -179,7 +179,9 @@ but are supported by ZWave-JS.
 **setValue**, **getValue** and **getDefinedValueIDs**  
 
 The difference with this approach, is that you supply a [ValueID](https://zwave-js.github.io/node-zwave-js/#/api/valueid)  
-The ValueID interface uniquely identifies to which CC, endpoint and property a value belongs to.
+The ValueID interface uniquely identifies to which CC, endpoint and property a value belongs to.  
+
+Note : If you supply an **unmanaged** object in your payload - it will take priority over the Managed mode.   
 
 ```
 /* Get all ValueID's for a node */
