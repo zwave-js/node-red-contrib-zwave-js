@@ -195,7 +195,7 @@ The ValueID interface uniquely identifies to which CC, endpoint and property a v
 
 ```
 /* Set a value */
-/* NOTE : setValue only supports providng 1 value, the ValueID its self, is responsible for correctly using the value as intended. 
+/* NOTE : setValue only supports providing 1 value, the ValueID its self, is responsible for correctly using the value as intended. 
 {
   payload: {
     node: 2,
