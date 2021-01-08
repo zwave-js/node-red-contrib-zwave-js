@@ -21,7 +21,7 @@ The node is straightforward to use, and removes all the complexities that you wo
 **node-red-contrib-zwave-js** is based on  [ZWave-JS](https://zwave-js.github.io/node-zwave-js/#/).  
 ZWave-JS is actively  maintained, fast and supports the security command class.
 
-## Example Usage
+## Example Usage (Managed Mode)
 Send a command to a zwave device - encpsulate all your commands within a **payload** object.
 ```
 /* Set a configuration value for a zwave node */
@@ -122,7 +122,7 @@ the payload below will also be emitted whenever you use any of the **Get** opera
 
 
 ## Supported Class/Operation List  
-Listed below are the outgoing CC's that are supported by this node.   
+Listed below are the outgoing, Managed CC's that are supported by this node.   
 In reality, ZWave-JS supports a much larger range, and you should receive these regadless of the below list.  
 i.e you can't interreact with them, but you will still receive the associated events.
 
@@ -180,6 +180,47 @@ but are supported by ZWave-JS.
 
 The difference with this apparch is that you supply a **ValueID**  
 The ValueID interface uniquely identifies to which CC, endpoint and property a value belongs to.
+
+```
+/* Get all ValueID's for a node */
+{
+  payload: {
+    node: 2,
+    unmanaged: {
+      method: "GetDefinedValueIDs"
+    }
+  }
+}
+```
+
+```
+/* Set a value */
+/* NOTE : setValue only supports providng 1 value, the ValueID its self, is responsible for correctly using the value as intended. 
+{
+  payload: {
+    node: 2,
+    unmanaged: {
+      method: "SetValue",
+	  valueID: **One of the value ID's returned from GetDefinedValueIDs**,
+	  value:**You desired value**
+    }
+  }
+}
+```
+
+```
+/* Get a value */
+{
+  payload: {
+    node: 2,
+    unmanaged: {
+      method: "GetValue",
+	  valueID: **One of the value ID's returned from GetDefinedValueIDs**
+    }
+  }
+}
+```
+
 
 ## Notes on HardReset  
 A one-way ticket for wiping out all the configuration on the controller.  
