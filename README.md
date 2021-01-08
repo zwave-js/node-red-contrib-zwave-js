@@ -366,7 +366,8 @@ The DURATION value should be an object formatted like below.
   - 1.1.2
     - Added Binary Sensor CC support  
     - Added Lock CC support  
-	- Added Support for **getDefinedValueIDs**, **setValue** and **getValue** methods
+	  - Added Support for **getDefinedValueIDs**, **setValue** and **getValue** methods
+    - Restructured core code.
 
   - 1.1.1
     - Tidy up read me  
