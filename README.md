@@ -84,6 +84,43 @@ let Report = {
 }
 ```
 
+## Supported Class/Operation List  
+Listed below are the outgoing, Managed CC's that are supported by this node.   
+In reality, ZWave-JS supports a much larger range, and you should receive these regadless of the below list.  
+i.e you can't interreact with them, but you will still receive the associated events.
+
+The supported CC's within this node, will gradually increase, to mirror what ZWave-JS supports.
+
+| class                     | operation                           | params                                                |
+| ------------------------- | ----------------------------------- | ----------------------------------------------------- |
+| Association               | GetGroup                            | [Number : Group ID]                                   |
+| Association               | AddNodes                            | [Number : Group ID, Number[] : NodeID's]              |
+| Association               | RemoveNodes                         | [Number : Group ID, Number[] : NodeID's]              |
+| Association               | RemoveNodesFromAllGroups            | [Number[] : NodeID's]                                 |
+| Association               | GetGroupCount                       |                                                       |
+| AssociationGroupInfo      | GetGroupName                        | [Number : Group ID]                                   |
+| Basic                     | Set                                 | [Number]                                              |
+| Basic                     | Get                                 |                                                       |
+| Battery                   | Get                                 |                                                       |
+| BinarySensor              | Get                                 | [**BINARY SENSOR TYPE**]                              |
+| BinarySwitch              | Set                                 | [Bool, **DURATION** (Optional)]                       |
+| BinarySwitch              | Get                                 |                                                       |
+| Configuration             | Set                                 | [Byte : ParamID, Byte : Value, Number : Value Length] |
+| Configuration             | Get                                 | [Byte : ParamID]                                      |
+| DoorLock                  | Set                                 | [**DOOR LOCK MODE**]                                  |
+| DoorLock                  | Get                                 |                                                       |
+| Lock                      | Set                                 | [Bool]                                                |
+| Lock                      | Get                                 |                                                       |
+| MultiLevelSwitch          | Set                                 | [Number, **DURATION** (Optional)]                     |
+| MultiLevelSwitch          | Get                                 |                                                       |
+| Notification              | SendReport                          | [**EVENT**]                                           |
+| ThermostatMode            | Set                                 | [**THERMOSTAT MODE**]                                 |
+| ThermostatMode            | Get                                 |                                                       |
+| ThermostatSetPoint        | Set                                 | [**SET POINT TYPE**, Number : Value, Number : Scale]  |
+| ThermostatSetPoint        | Get                                 | [**SET POINT TYPE**]                                  | 
+| WakeInterval              | Set (see Notes)                     | [Number : Seconds, Number : Controller Node ID]       |
+| WakeInterval              | Get                                 |                                                       | 
+
 Receiving commands is also trivial. Whenever your controller has been notified of an event, the node will inject the payload accodingly. 
 The **object** will vary - it depends on the command class that was used in the transmission  
 the payload below will also be emitted whenever you use any of the **Get** operations.
@@ -121,44 +158,6 @@ the payload below will also be emitted whenever you use any of the **Get** opera
 | INTERVIEW_STARTED         | The source Node ID                  |                                 | Node interview started        |
 | NODE_LIST                 |                                     | ZWaveNode[]                     | Response to GetNodes          | 
 
-
-
-## Supported Class/Operation List  
-Listed below are the outgoing, Managed CC's that are supported by this node.   
-In reality, ZWave-JS supports a much larger range, and you should receive these regadless of the below list.  
-i.e you can't interreact with them, but you will still receive the associated events.
-
-The supported CC's within this node, will gradually increase, to mirror what ZWave-JS supports.
-
-| class                     | operation                           | params                                                |
-| ------------------------- | ----------------------------------- | ----------------------------------------------------- |
-| Association               | GetGroup                            | [Number : Group ID]                                   |
-| Association               | AddNodes                            | [Number : Group ID, Number[] : NodeID's]              |
-| Association               | RemoveNodes                         | [Number : Group ID, Number[] : NodeID's]              |
-| Association               | RemoveNodesFromAllGroups            | [Number[] : NodeID's]                                 |
-| Association               | GetGroupCount                       |                                                       |
-| AssociationGroupInfo      | GetGroupName                        | [Number : Group ID]                                   |
-| Basic                     | Set                                 | [Number]                                              |
-| Basic                     | Get                                 |                                                       |
-| Battery                   | Get                                 |                                                       |
-| BinarySensor              | Get                                 | [**BINARY SENSOR TYPE**]                              |
-| BinarySwitch              | Set                                 | [Bool, **DURATION** (Optional)]                       |
-| BinarySwitch              | Get                                 |                                                       |
-| Configuration             | Set                                 | [Byte : ParamID, Byte : Value, Number : Value Length] |
-| Configuration             | Get                                 | [Byte : ParamID]                                      |
-| DoorLock                  | Set                                 | [**DOOR LOCK MODE**]                                  |
-| DoorLock                  | Get                                 |                                                       |
-| Lock                      | Set                                 | [Bool]                                                |
-| Lock                      | Get                                 |                                                       |
-| MultiLevelSwitch          | Set                                 | [Number, **DURATION** (Optional)]                     |
-| MultiLevelSwitch          | Get                                 |                                                       |
-| Notification              | SendReport                          | [**EVENT**]                                           |
-| ThermostatMode            | Set                                 | [**THERMOSTAT MODE**]                                 |
-| ThermostatMode            | Get                                 |                                                       |
-| ThermostatSetPoint        | Set                                 | [**SET POINT TYPE**, Number : Value, Number : Scale]  |
-| ThermostatSetPoint        | Get                                 | [**SET POINT TYPE**]                                  | 
-| WakeInterval              | Set (see Notes)                     | [Number : Seconds, Number : Controller Node ID]       |
-| WakeInterval              | Get                                 |                                                       | 
 
 ## Unmanaged Mode Examples
 
