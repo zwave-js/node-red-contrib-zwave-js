@@ -174,51 +174,53 @@ The **Controller** class does not require a **node** ID.
 
 The combinations in the above table, use a managed approach, that is, the command classes are statically made available via the plugin.  
 There is another way, that allows you to target command classes that are not natively supported by the plugin,  
-but are supported by ZWave-JS.
+but are supported by ZWave-JS.  
 
-**setValue**, **getValue** and **getDefinedValueIDs**  
+**setValue**, **getValue** and **getDefinedValueIDs**    
+
+| class                     | operation                           | params                                                |
+| ------------------------- | ----------------------------------- | ----------------------------------------------------- |
+| Unmanaged                 | GetDefinedValueIDs                  | -                                                     | 
+| Unmanaged                 | SetValue                            | [ValueID, Value]                                      |
+| Unmanaged                 | GetValue                            | [ValueID]                                             |  
 
 The difference with this approach, is that you supply a [ValueID](https://zwave-js.github.io/node-zwave-js/#/api/valueid)  
 The ValueID interface uniquely identifies to which CC, endpoint and property a value belongs to.  
-
-Note : If you supply an **unmanaged** object in your payload - it will take priority over the Managed mode.   
 
 ```
 /* Get all ValueID's for a node */
 {
   payload: {
     node: 2,
-    unmanaged: {
-      method: "GetDefinedValueIDs"
-    }
+	class: "Unmanaged",
+	operation:"GetDefinedValueIDs"
   }
 }
 ```
 
 ```
 /* Set a value */
-/* NOTE : setValue only supports providing 1 value, the ValueID its self, is responsible for correctly using the value as intended. 
+/* NOTE : setValue only supports providing 2 params, the ValueID its self, and the value to set. */  
+/* ValueID will be one of the ValueIDs returned from GetDefinedValueIDs */
 {
   payload: {
     node: 2,
-    unmanaged: {
-      method: "SetValue",  
-      valueID: One of the valueID's returned from GetDefinedValueIDs,  
-      value: Your desired value  
-    }
+	class: "Unmanaged",
+	operation:"SetValue",
+	params:[ValueID,Value]
   }
 }
 ```
 
 ```
 /* Get a value */
+/* ValueID will be one of the ValueIDs returned from GetDefinedValueIDs */
 {
   payload: {
     node: 2,
-    unmanaged: {
-      method: "GetValue",
-      valueID: One of the valueID's returned from GetDefinedValueIDs
-    }
+	class: "Unmanaged",
+	operation:"GetValue",
+	params:[ValueID]
   }
 }
 ```
