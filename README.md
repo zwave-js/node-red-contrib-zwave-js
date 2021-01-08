@@ -177,6 +177,8 @@ Encpsulate all your commands within a **payload** object.
 }
 ```
 
+## Receiving Events
+
 The node will also inject events into your flow, that occur within your zwave network 
 The **object** will vary - it depends on the command class that was used in the transmission  
 the payload below is also the payload you get when using any of the **Get** operations.
