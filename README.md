@@ -170,13 +170,13 @@ The **Controller** class does not require a **node** ID.
 | WakeInterval              | Set (see Notes)                     | [Number : Seconds, Number : Controller Node ID]       |
 | WakeInterval              | Get                                 |                                                       | 
 
-## setValue, getValue & getDefinedValueIDs
+## setValue, getValue & getDefinedValueIDs  (Unmanaged Mode)  
 
 The combinations in the above table, use a managed approach, that is, the command classes are statically made available via the plugin.  
 There is another way, that allows you to target command classes that are not natively supported by the plugin,  
 but are supported by ZWave-JS.
 
-**setValue**, **getValue** and **getDefinedValueIDs**
+**setValue**, **getValue** and **getDefinedValueIDs**  
 
 The difference with this approach, is that you supply a [ValueID](https://zwave-js.github.io/node-zwave-js/#/api/valueid)  
 The ValueID interface uniquely identifies to which CC, endpoint and property a value belongs to.
