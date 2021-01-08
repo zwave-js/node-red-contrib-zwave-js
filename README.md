@@ -121,44 +121,6 @@ The supported CC's within this node, will gradually increase, to mirror what ZWa
 | WakeInterval              | Set (see Notes)                     | [Number : Seconds, Number : Controller Node ID]       |
 | WakeInterval              | Get                                 |                                                       | 
 
-Receiving commands is also trivial. Whenever your controller has been notified of an event, the node will inject the payload accodingly. 
-The **object** will vary - it depends on the command class that was used in the transmission  
-the payload below will also be emitted whenever you use any of the **Get** operations.
-```
-{
-  payload: {
-    node: 2,
-    event: "VALUE_UPDATED",
-    timestamp: "23-12-2020T12:23:23+000",
-    object: ...
-  }
-}
-```
-
-## event Table.
-
-| event                     | node                                | object                          | Meaning                       |
-| ------------------------- | ----------------------------------- | ------------------------------- | ----------------------------- |  
-| NODE_ADDED                | The ID of the added node            |                                 | A Node Was Added              |
-| NODE_REMOVED              | The ID of the removed node          |                                 | A Node Was Removed            |
-| INCLUSION_STARTED         |                                     | Bool : Only secure devices      | Include Mode Started          |
-| INCLUSION_STOPPED         |                                     |                                 | include Mode Stopped          |
-| EXCLUSION_STARTED         |                                     |                                 | Exclude Mode Started          |
-| EXCLUSION_STOPPED         |                                     |                                 | Exclude Mode Stopped          |
-| NETWORK_HEAL_DONE         |                                     |                                 | Done Healing Network          |
-| NETWORK_HEAL_STARTED      |                                     |                                 | Started Healing Network       |
-| NETWORK_HEAL_STOPPED      |                                     |                                 | Stopped Healing Network       |
-| CONTROLLER_RESET_COMPLETE |                                     |                                 | The controller was reset      |
-| VALUE_UPDATED             | The source Node ID                  | The objects command content     | A Value Was Updated           |
-| NOTIFICATION              | The source Node ID                  | The objects command content     | A Notification Was Sent       |
-| WAKE_UP                   | The source Node ID                  |                                 | A Node Has Woken Up           |
-| SLEEP                     | The source Node ID                  |                                 | A Node Has Gone To Sleep      |
-| INTERVIEW_COMPLETE        | The source Node ID                  |                                 | The node has been interviewed |
-| INTERVIEW_FAILED          | The source Node ID                  | Detailed Error Info             | Could not interview node      |
-| INTERVIEW_STARTED         | The source Node ID                  |                                 | Node interview started        |
-| NODE_LIST                 |                                     | ZWaveNode[]                     | Response to GetNodes          | 
-
-
 ## Unmanaged Mode Examples
 
 The combinations in the above table, use a managed approach, that is, the command classes are statically made available via the plugin.  
@@ -214,6 +176,46 @@ Encpsulate all your commands within a **payload** object.
   }
 }
 ```
+
+The node will also inject events into your flow, that occur within your zwave network 
+The **object** will vary - it depends on the command class that was used in the transmission  
+the payload below is also the payload you get when using any of the **Get** operations.
+```
+{
+  payload: {
+    node: 2,
+    event: "VALUE_UPDATED",
+    timestamp: "23-12-2020T12:23:23+000",
+    object: ...
+  }
+}
+```
+
+## event Table.
+
+| event                     | node                                | object                          | Meaning                       |
+| ------------------------- | ----------------------------------- | ------------------------------- | ----------------------------- |  
+| NODE_ADDED                | The ID of the added node            |                                 | A Node Was Added              |
+| NODE_REMOVED              | The ID of the removed node          |                                 | A Node Was Removed            |
+| INCLUSION_STARTED         |                                     | Bool : Only secure devices      | Include Mode Started          |
+| INCLUSION_STOPPED         |                                     |                                 | include Mode Stopped          |
+| EXCLUSION_STARTED         |                                     |                                 | Exclude Mode Started          |
+| EXCLUSION_STOPPED         |                                     |                                 | Exclude Mode Stopped          |
+| NETWORK_HEAL_DONE         |                                     |                                 | Done Healing Network          |
+| NETWORK_HEAL_STARTED      |                                     |                                 | Started Healing Network       |
+| NETWORK_HEAL_STOPPED      |                                     |                                 | Stopped Healing Network       |
+| CONTROLLER_RESET_COMPLETE |                                     |                                 | The controller was reset      |
+| VALUE_UPDATED             | The source Node ID                  | The objects command content     | A Value Was Updated           |
+| NOTIFICATION              | The source Node ID                  | The objects command content     | A Notification Was Sent       |
+| WAKE_UP                   | The source Node ID                  |                                 | A Node Has Woken Up           |
+| SLEEP                     | The source Node ID                  |                                 | A Node Has Gone To Sleep      |
+| INTERVIEW_COMPLETE        | The source Node ID                  |                                 | The node has been interviewed |
+| INTERVIEW_FAILED          | The source Node ID                  | Detailed Error Info             | Could not interview node      |
+| INTERVIEW_STARTED         | The source Node ID                  |                                 | Node interview started        |
+| NODE_LIST                 |                                     | ZWaveNode[]                     | Response to GetNodes          | 
+
+
+
 
 ## Controller based operations
 The **Controller** class does not require a **node** ID.  
