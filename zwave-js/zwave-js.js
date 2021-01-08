@@ -11,7 +11,6 @@ module.exports = function (RED)
 
     function Init(config)
     {
-
         const node = this;
         RED.nodes.createNode(this, config);
         
@@ -132,7 +131,6 @@ module.exports = function (RED)
                         Send(ND, "VALUE_UPDATED", VL);
                     }
                 })
-
 
                 N1.on("value notification", (ND, VL) =>
                 {
@@ -331,7 +329,6 @@ module.exports = function (RED)
             }
 
             return;
-
         }
 
         // Unmanaged
@@ -360,7 +357,6 @@ module.exports = function (RED)
                     let V = Driver.controller.nodes.get(Node).getValue(Params[0]);
                     Send(ReturnNode, "VALUE_UPDATED", V, send);
                     break;
-
             }
 
             return;
