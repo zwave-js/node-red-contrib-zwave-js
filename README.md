@@ -21,8 +21,10 @@ The node is straightforward to use, and removes all the complexities that you wo
 **node-red-contrib-zwave-js** is based on  [ZWave-JS](https://zwave-js.github.io/node-zwave-js/#/).  
 ZWave-JS is actively  maintained, fast and supports the security command class.
 
-## Example Usage (Managed Mode)
-Send a command to a zwave device - encpsulate all your commands within a **payload** object.
+The node operates in 2 ways : **Managed** and **Unmanaged**
+
+## Managed Mode Examples
+Encpsulate all your commands within a **payload** object.
 ```
 /* Set a configuration value for a zwave node */
 
@@ -170,7 +172,7 @@ The **Controller** class does not require a **node** ID.
 | WakeInterval              | Set (see Notes)                     | [Number : Seconds, Number : Controller Node ID]       |
 | WakeInterval              | Get                                 |                                                       | 
 
-## setValue, getValue & getDefinedValueIDs  (Unmanaged Mode)  
+## Unmanaged Mode Examples
 
 The combinations in the above table, use a managed approach, that is, the command classes are statically made available via the plugin.  
 There is another way however, that allows you to target command classes that are not natively supported by the plugin,  
@@ -186,6 +188,7 @@ but are supported by ZWave-JS.
 
 The difference with this approach, is that you supply a [ValueID](https://zwave-js.github.io/node-zwave-js/#/api/valueid)  
 The ValueID interface uniquely identifies to which CC, endpoint and property a value belongs to.  
+Encpsulate all your commands within a **payload** object.
 
 ```
 /* Get all ValueID's for a node */
