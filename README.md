@@ -21,7 +21,9 @@ The node is straightforward to use, and removes all the complexities that you wo
 **node-red-contrib-zwave-js** is based on  [ZWave-JS](https://zwave-js.github.io/node-zwave-js/#/).  
 ZWave-JS is actively  maintained, fast and supports the security command class.
 
-The node operates in 2 ways : **Managed** and **Unmanaged**
+The node operates in 2 ways : **Managed** and **Unmanaged**  
+Managed Mode is easier, less cumbersome to use, but Command Classes need to be proactvely developed in the plugin.  
+Unmanaged Mode is more involved, cumbersome, but Command Class support is only limited by ZWave-JS.
 
 ## Managed Mode Examples
 Encpsulate all your commands within a **payload** object.
