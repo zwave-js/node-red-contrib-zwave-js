@@ -22,9 +22,12 @@ The node is straightforward to use, and removes all the complexities that you wo
 ZWave-JS is actively  maintained, fast and supports the security command class.
 
 The node operates in 2 ways : **Managed** and **Unmanaged**  
-Managed Mode is easier, less cumbersome to use, but Command Classes  
-need to be proactvely developed in the plugin.  
-Unmanaged Mode is more involved, cumbersome, but Command Class support is only limited by ZWave-JS.
+
+Managed Mode is where the plugin it's self, manages the routine to the correct command class  
+and device channel. It is easier to undestand.  
+
+Unmanaged Mode, is where the heavy lifting is done by ZWave-JS, it is a little more involved,  
+but command class support os only limited by ZWave-JS
 
 ## Managed Mode Examples
 Encpsulate all your commands within a **payload** object.
