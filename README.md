@@ -159,7 +159,7 @@ Encpsulate all your commands within a **payload** object.
 ```
 /* Set a value */
 /* NOTE : setValue only supports providing 2 params, the ValueID its self, and the value to set. */  
-/* ValueID will be one of the ValueIDs returned from GetDefinedValueIDs */
+/* ValueID will be one of the ValueIDs returned from GetDefinedValueIDs                          */
 {
   payload: {
     node: 2,
@@ -172,7 +172,8 @@ Encpsulate all your commands within a **payload** object.
 
 ```
 /* Get a value */
-/* ValueID will be one of the ValueIDs returned from GetDefinedValueIDs */
+/* NOTE : using getValue will return the cached value, and may not represent the current value. */
+/*        getValue should not be used for poling the device                                     */  
 {
   payload: {
     node: 2,
