@@ -464,6 +464,11 @@ module.exports = function (RED)
         }
 
         Driver.start()
+        .catch((e)=>
+        {
+            node.error(e);
+            
+        })
     }
 
     RED.nodes.registerType("zwave-js", Init);
