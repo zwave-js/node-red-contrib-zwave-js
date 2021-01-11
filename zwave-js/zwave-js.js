@@ -260,6 +260,8 @@ module.exports = function (RED)
 
             let ReturnNode = { id: Node };
 
+            NodeCheck(Node);
+
             if (!FMaps.hasOwnProperty(Class))
             {
                 let ErrorMSG = "Class, " + Class + " not supported.";
