@@ -251,7 +251,7 @@ module.exports = function (RED)
         }
 
         // Node
-        function NodeFunction(msg, send)
+        async function NodeFunction(msg, send)
         {
             let Operation = msg.payload.operation
             let Class = msg.payload.class;
@@ -332,7 +332,7 @@ module.exports = function (RED)
         }
 
         // Unmanaged
-        function Unmanaged(msg, send)
+        async function Unmanaged(msg, send)
         {
             let Operation = msg.payload.operation
             let Node = msg.payload.node;
@@ -363,7 +363,7 @@ module.exports = function (RED)
         }
 
         // Controller
-        function Controller(msg, send)
+        async function Controller(msg, send)
         {
             let Operation = msg.payload.operation
             let Node = msg.payload.node;
