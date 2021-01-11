@@ -211,15 +211,15 @@ module.exports = function (RED)
                 switch (Class)
                 {
                     case "Controller":
-                        Controller(msg, send);
+                        await Controller(msg, send)
                         break;
 
                     case "Unmanaged":
-                        Unmanaged(msg, send);
+                        await Unmanaged(msg, send);
                         break;
 
                     default:
-                        NodeFunction(msg, send);
+                        await NodeFunction(msg, send);
                         break;
                 }
 
