@@ -375,6 +375,7 @@ module.exports = function (RED)
             switch (Operation)
             {
                 case "GetNodes":
+                    let Nodes = [];
                     Driver.controller.nodes.forEach((V, K) =>
                     {
                         Nodes[K] =
