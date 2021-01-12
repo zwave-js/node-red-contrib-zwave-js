@@ -312,17 +312,23 @@ module.exports = function (RED) {
             switch (Operation) {
                 case "GetNodes":
                     let Nodes = [];
-                    Driver.controller.nodes.forEach((V, K) => {
-                        Nodes[K] =
+                    Driver.controller.nodes.forEach((C, CK) => {
+
+                        let CParams = []
+                        V.deviceConfig.paramInformation.forEach((P,PK) =>{
+                            CParams[PK] = P;
+                        })
+
+                        Nodes[CK] =
                         {
-                            nodeId: V.id,
-                            interviewStage: ZW.InterviewStage[V.interviewStage],
-                            isSecure: V.isSecure,
-                            manufacturerId: V.manufacturerId,
-                            productId: V.productId,
-                            productType: V.productType,
-                            neighbors: V.neighbors,
-                            config: V.deviceConfig
+                            nodeId: C.id,
+                            interviewStage: ZW.InterviewStage[C.interviewStage],
+                            isSecure: C.isSecure,
+                            manufacturerId: C.manufacturerId,
+                            productId: C.productId,
+                            productType: C.productType,
+                            neighbors: C.neighbors,
+                            config: CParams
                         }
                     });
                     Send(ReturnController, "NODE_LIST", Nodes, send);
