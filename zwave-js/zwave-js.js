@@ -331,7 +331,7 @@ module.exports = function (RED) {
                             config: C.deviceConfig,
                         }
                         delete Nodes[CK].config.paramInformation
-                        Nodes[CK].config.paramInformation = CParams;
+                        Nodes[CK].config["paramInformation"] = CParams;
 
                     });
                     Send(ReturnController, "NODE_LIST", Nodes, send);
