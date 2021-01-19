@@ -314,11 +314,6 @@ module.exports = function (RED) {
                     let Nodes = [];
                     Driver.controller.nodes.forEach((C, CK) => {
 
-                        let CParams = []
-                        C.deviceConfig.paramInformation.forEach((P,PK) =>{
-                            CParams[PK] = P;
-                        })
-
                         Nodes[CK] =
                         {
                             nodeId: C.id,
@@ -327,12 +322,18 @@ module.exports = function (RED) {
                             manufacturerId: C.manufacturerId,
                             productId: C.productId,
                             productType: C.productType,
-                            neighbors: C.neighbors,
-                            config: C.deviceConfig,
+                            neighbors: C.neighbors
                         }
-                        delete Nodes[CK].config.paramInformation
-                        Nodes[CK].config["paramInformation"] = CParams;
 
+                        if (C.deviceConfig != null) {
+
+                            Nodes[CK].config = C.deviceConfig;
+                            let CParams = []
+                            C.deviceConfig.paramInformation.forEach((P, PK) => {
+                                CParams[PK] = P;
+                            })
+                            Nodes[CK].config.paramInformation = CParams;
+                        }
                     });
                     Send(ReturnController, "NODE_LIST", Nodes, send);
                     break;
