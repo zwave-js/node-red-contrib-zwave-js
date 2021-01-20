@@ -101,7 +101,7 @@ The supported CC's within this node, will gradually increase, to mirror what ZWa
 | ------------------------- | ----------------------------------- | ----------------------------------------------------- |
 | Association               | GetGroup                            | [Number : Group ID]                                   |
 | Association               | AddNodes                            | [Number : Group ID, Number[] : NodeID's]              |
-| Association               | RemoveNodes                         | [Number : Group ID, Number[] : NodeID's]              |
+| Association               | RemoveNodes                         | [**REMOVE OPTIONS**]                                  |
 | Association               | RemoveNodesFromAllGroups            | [Number[] : NodeID's]                                 |
 | Association               | GetGroupCount                       |                                                       |
 | AssociationGroupInfo      | GetGroupName                        | [Number : Group ID]                                   |
@@ -300,6 +300,15 @@ The EVENT value should be an object formatted like below.
 }
 ```
 
+## REMOVE OPTIONS  
+The REMOVE OPTIONS value should be an object formatted like below.  
+```
+{
+  groupId: Number,
+  nodeIds: Number[]
+}
+```
+
 ## DURATION
 The DURATION value should be an object formatted like below.  
 ```
@@ -380,12 +389,17 @@ The DURATION value should be an object formatted like below.
 
 ## Version History  
 
+  - 1.2.1
+    - Customer serial ports can now be provided. ([#7](https://github.com/zwave-js/node-red-contrib-zwave-js/pull/7)) 
+    - Bumped Z-Wave JS to 6.0.0  
+    - Fixed incorrect method signature for  **RemoveNodes** 
+
   - 1.2.0
     - Added Binary Sensor CC support  
     - Added Lock CC support
     - Added Support for **getDefinedValueIDs**, **setValue** and **getValue** methods
     - Restructured core code.  
-    - Encryption key can now be a hex array [#5](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/5).
+    - Encryption key can now be a hex array ([#5](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/5)).
 
   - 1.1.1
     - Tidy up read me  
