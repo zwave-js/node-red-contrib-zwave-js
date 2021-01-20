@@ -380,11 +380,12 @@ The DURATION value should be an object formatted like below.
 
 ## Version History  
 
-  - 1.1.2
+  - 1.2.0
     - Added Binary Sensor CC support  
     - Added Lock CC support
     - Added Support for **getDefinedValueIDs**, **setValue** and **getValue** methods
-    - Restructured core code.
+    - Restructured core code.  
+    - Encryption key can now be a hex array [#5](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/5).
 
   - 1.1.1
     - Tidy up read me  

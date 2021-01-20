@@ -23,11 +23,11 @@
                 return this.name;
             },
 
-            oneditprepare:ListPorts
+            oneditprepare:SortUI
         });
 
 
-    function ListPorts(Current) {
+    function SortUI(Current) {
         Current = Current || this.serialPort;
 
         $.getJSON("zwjsgetports", function (data) {
@@ -51,7 +51,7 @@
                 .change(function (event) {
                     if (event.target.value === customLabel) {
                         var customPort = (prompt('Input your custom serial port', '') || '').trim();
-                        ListPorts(customPort || selectLabel);
+                        SortUI(customPort || selectLabel);
                     }
                 });
         });
@@ -78,7 +78,7 @@
     </div>
     <div class="form-row">
         <label for="node-input-encryptionKey"><i class="icon-tag"></i> Encryption Key</label>
-        <input type="text" id="node-input-encryptionKey" placeholder="(16 characters)">
+        <input type="text" id="node-input-encryptionKey" placeholder="[0x01,0x02,..] or string">
     </div>
     <br />
     <p>

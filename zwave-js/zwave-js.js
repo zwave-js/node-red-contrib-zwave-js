@@ -8,6 +8,8 @@ module.exports = function (RED) {
     const EnumLookup = require('./Enums.json')
     const Path = require('path')
 
+    const NodeInterviewStage = ["None", "ProtocolInfo", "NodeInfo", "RestartFromCache", "CommandClasses", "OverwriteConfig", "Neighbors", "Complete"]
+
     function Init(config) {
         const node = this;
         RED.nodes.createNode(this, config);
@@ -26,7 +28,20 @@ module.exports = function (RED) {
         DriverOptions.timeouts.report = parseInt(config.sendResponseTimeout);
         DriverOptions.timeouts.nodeAwake = parseInt(config.awakeTime);
 
-        if (config.encryptionKey != null && config.encryptionKey.length == 16) {
+        if (config.encryptionKey != null && config.encryptionKey.length > 0 &&  config.encryptionKey.startsWith('[') && config.encryptionKey.endsWith(']')) {
+
+            let RemoveBrackets = config.encryptionKey.replace("[", "").replace("]", "");
+            let _Array = RemoveBrackets.split(",");
+
+            let _Buffer = [];
+            for (let i = 0; i < _Array.length; i++) {
+                _Buffer.push(parseInt(_Array[i]));
+            }
+
+            DriverOptions.networkKey = Buffer.from(_Buffer);
+
+        }
+        else if (config.encryptionKey != null && config.encryptionKey.length > 0) {
             DriverOptions.networkKey = Buffer.from(config.encryptionKey);
         }
 
@@ -148,7 +163,6 @@ module.exports = function (RED) {
                         else {
                             ParamToUse = P1
                         }
-
                         Send(ND, "INTERVIEW_FAILED", ParamToUse);
                     }
                 })
@@ -303,11 +317,10 @@ module.exports = function (RED) {
         // Controller
         async function Controller(msg, send) {
             let Operation = msg.payload.operation
-            let Node = msg.payload.node;
             let Params = msg.payload.params;
 
             let ReturnController = { id: "Controller" };
-            let ReturnNode = { id: Node };
+            let ReturnNode = { id: "" };
 
             switch (Operation) {
                 case "GetNodes":
@@ -317,22 +330,12 @@ module.exports = function (RED) {
                         Nodes[CK] =
                         {
                             nodeId: C.id,
-                            interviewStage: ZW.InterviewStage[C.interviewStage],
+                            interviewStage: NodeInterviewStage[C.interviewStage],
                             isSecure: C.isSecure,
                             manufacturerId: C.manufacturerId,
                             productId: C.productId,
                             productType: C.productType,
                             neighbors: C.neighbors
-                        }
-
-                        if (C.deviceConfig != null) {
-
-                            Nodes[CK].config = C.deviceConfig;
-                            let CParams = []
-                            C.deviceConfig.paramInformation.forEach((P, PK) => {
-                                CParams[PK] = P;
-                            })
-                            Nodes[CK].config.paramInformation = CParams;
                         }
                     });
                     Send(ReturnController, "NODE_LIST", Nodes, send);
@@ -340,13 +343,14 @@ module.exports = function (RED) {
 
                 case "InterviewNode":
                     NodeCheck(Params[0]);
-                    let Stage = ZW.InterviewStage[Driver.controller.nodes.get(Params[0]).interviewStage];
+                    let Stage = NodeInterviewStage[Driver.controller.nodes.get(Params[0]).interviewStage];
                     if (Stage != "Complete") {
                         let ErrorMSG = "Node " + Params[0] + " is already being interviewed. Current Interview Stage : " + Stage + "";
                         throw new Error(ErrorMSG);
                     }
                     else {
-                        await Driver.controller.nodes.get(Node).refreshInfo();
+                        await Driver.controller.nodes.get(Params[0]).refreshInfo();
+                        ReturnNode.id = Params[0];
                         Send(ReturnNode, "INTERVIEW_STARTED", null, send)
                     }
                     break;
@@ -380,6 +384,22 @@ module.exports = function (RED) {
 
                 case "StopExclusion":
                     await Driver.controller.stopExclusion();
+                    break;
+
+                case "ProprietaryFunc":
+
+                    let ZWMessage = new Message(Driver, {
+                        type: 0x00,
+                        functionType: Params[0],
+                        payload: Params[1]
+                    });
+
+                    let MessageSettings = {
+                        priority: 2,
+                        supportCheck: false
+                    }
+
+                    await Driver.sendMessage(ZWMessage, MessageSettings)
                     break;
             }
 
