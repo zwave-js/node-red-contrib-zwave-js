@@ -1,12 +1,12 @@
 {
-    "Association":{
+    "Association": {
         "MapsToClass": "Association",
         "Operations": {
             "GetGroup": {
                 "MapsToFunc": "getGroup",
                 "ParamsRequired": 1,
                 "ParamsOptional": 0,
-                "ResponseThroughEvent":false
+                "ResponseThroughEvent": false
             },
             "AddNodes": {
                 "MapsToFunc": "addNodeIds",
@@ -16,29 +16,57 @@
             "RemoveNodesFromAllGroups": {
                 "MapsToFunc": "removeNodeIdsFromAllGroups",
                 "ParamsRequired": 1,
-                "ParamsOptional": 0   
+                "ParamsOptional": 0
             },
             "RemoveNodes": {
                 "MapsToFunc": "removeNodeIds",
                 "ParamsRequired": 2,
-                "ParamsOptional": 0    
+                "ParamsOptional": 0
             },
             "GetGroupCount": {
                 "MapsToFunc": "getGroupCount",
                 "ParamsRequired": 0,
                 "ParamsOptional": 0,
-                "ResponseThroughEvent":false
+                "ResponseThroughEvent": false
             }
         }
     },
-    "AssociationGroupInfo":{
+    "AssociationGroupInfo": {
         "MapsToClass": "Association Group Information",
         "Operations": {
             "GetGroupName": {
                 "MapsToFunc": "getGroupName",
                 "ParamsRequired": 1,
                 "ParamsOptional": 0,
-                "ResponseThroughEvent" : false
+                "ResponseThroughEvent": false
+            }
+        }
+    },
+    "BinarySensor": {
+        "MapsToClass": "Binary Sensor",
+        "Operations": {
+            "Get": {
+                "MapsToFunc":"get",
+                "ParamsOptional":0,
+                "ParamsRequired":1,
+                "ParamEnumDependency": {
+                    "0": "BinarySensorType"
+                }
+            }
+        }
+    },
+    "Lock": {
+        "MapsToClass": "Lock",
+        "Operations": {
+            "Get": {
+                "MapsToFunc":"get",
+                "ParamsOptional":0,
+                "ParamsRequired":0
+            },
+            "Set": {
+                "MapsToFunc":"set",
+                "ParamsOptional":0,
+                "ParamsRequired":1
             }
         }
     },
@@ -109,8 +137,8 @@
                 "MapsToFunc": "set",
                 "ParamsRequired": 1,
                 "ParamsOptional": 0,
-                "ParamEnumDependency":{
-                    "0":"DoorLockMode"
+                "ParamEnumDependency": {
+                    "0": "DoorLockMode"
                 }
             }
         }
@@ -142,8 +170,8 @@
                 "MapsToFunc": "set",
                 "ParamsRequired": 1,
                 "ParamsOptional": 0,
-                "ParamEnumDependency":{
-                    "0":"ThermostatMode"
+                "ParamEnumDependency": {
+                    "0": "ThermostatMode"
                 }
             }
         }
@@ -155,16 +183,16 @@
                 "MapsToFunc": "get",
                 "ParamsRequired": 1,
                 "ParamsOptional": 0,
-                "ParamEnumDependency":{
-                    "0":"ThermostatSetpointType"
+                "ParamEnumDependency": {
+                    "0": "ThermostatSetpointType"
                 }
             },
             "Set": {
                 "MapsToFunc": "set",
                 "ParamsRequired": 3,
                 "ParamsOptional": 0,
-                "ParamEnumDependency":{
-                    "0":"ThermostatSetpointType"
+                "ParamEnumDependency": {
+                    "0": "ThermostatSetpointType"
                 }
             }
         }

@@ -1,5 +1,4 @@
 module.exports = function (RED) {
-
     // Refs
     const SP = require("serialport");
     const ZW = require('zwave-js')
@@ -12,7 +11,6 @@ module.exports = function (RED) {
     const NodeInterviewStage = ["None", "ProtocolInfo", "NodeInfo", "RestartFromCache", "CommandClasses", "OverwriteConfig", "Neighbors", "Complete"]
 
     function Init(config) {
-
         const node = this;
         RED.nodes.createNode(this, config);
 
@@ -30,7 +28,20 @@ module.exports = function (RED) {
         DriverOptions.timeouts.report = parseInt(config.sendResponseTimeout);
         DriverOptions.timeouts.nodeAwake = parseInt(config.awakeTime);
 
-        if (config.encryptionKey != null && config.encryptionKey.length == 16) {
+        if (config.encryptionKey != null && config.encryptionKey.length > 0 &&  config.encryptionKey.startsWith('[') && config.encryptionKey.endsWith(']')) {
+
+            let RemoveBrackets = config.encryptionKey.replace("[", "").replace("]", "");
+            let _Array = RemoveBrackets.split(",");
+
+            let _Buffer = [];
+            for (let i = 0; i < _Array.length; i++) {
+                _Buffer.push(parseInt(_Array[i]));
+            }
+
+            DriverOptions.networkKey = Buffer.from(_Buffer);
+
+        }
+        else if (config.encryptionKey != null && config.encryptionKey.length > 0) {
             DriverOptions.networkKey = Buffer.from(config.encryptionKey);
         }
 
@@ -48,12 +59,12 @@ module.exports = function (RED) {
             node.error(e);
         });
 
-
-        Driver.on("all nodes ready", async () => {
+        Driver.on("all nodes ready", () => {
             node.status({ fill: "green", shape: "dot", text: "All Nodes Ready!" });
         })
 
         Driver.once("driver ready", () => {
+            let ReturnController = { id: "Controller" };
 
             // Add, Remove
             Driver.controller.on("node added", (N) => {
@@ -66,32 +77,30 @@ module.exports = function (RED) {
 
             // Include, Exclude Started
             Driver.controller.on("inclusion started", (Secure) => {
-                Send({ id: "Controller" }, "INCLUSION_STARTED", { SecureDevicesOnly: Secure })
+                Send(ReturnController, "INCLUSION_STARTED", { SecureDevicesOnly: Secure })
             })
 
             Driver.controller.on("exclusion started", () => {
-                Send({ id: "Controller" }, "EXCLUSION_STARTED")
+                Send(ReturnController, "EXCLUSION_STARTED")
             })
 
             // Include, Exclude Stopped
             Driver.controller.on("inclusion stopped", () => {
-                Send({ id: "Controller" }, "INCLUSION_STOPPED")
+                Send(ReturnController, "INCLUSION_STOPPED")
             })
 
             Driver.controller.on("exclusion stopped", () => {
-                Send({ id: "Controller" }, "EXCLUSION_STOPPED")
+                Send(ReturnController, "EXCLUSION_STOPPED")
             })
 
             // Network Heal
             Driver.controller.on("heal network done", () => {
-                Send({ id: "Controller" }, "NETWORK_HEAL_DONE")
+                Send(ReturnController, "NETWORK_HEAL_DONE")
             })
 
             let NodesReady = []
             node.status({ fill: "yellow", shape: "dot", text: "Interviewing Nodes..." });
-
             Driver.controller.nodes.forEach((N1) => {
-
                 N1.on("ready", (N2) => {
                     if (N2.id < 2) {
                         return;
@@ -110,6 +119,12 @@ module.exports = function (RED) {
                 })
 
                 N1.on("value added", (ND, VL) => {
+                    if (NodesReady.indexOf(ND.id) > -1) {
+                        Send(ND, "VALUE_UPDATED", VL);
+                    }
+                })
+
+                N1.on("value notification", (ND, VL) => {
                     if (NodesReady.indexOf(ND.id) > -1) {
                         Send(ND, "VALUE_UPDATED", VL);
                     }
@@ -141,9 +156,6 @@ module.exports = function (RED) {
 
                 N1.on("interview failed", (ND, P1, P2) => {
                     if (NodesReady.indexOf(ND.id) > -1) {
-
-                        // Future prep for P1 being removed
-                        // We want the more detailed explanation in all cases.
                         var ParamToUse;
                         if (P2 != null) {
                             ParamToUse = P2
@@ -151,7 +163,6 @@ module.exports = function (RED) {
                         else {
                             ParamToUse = P1
                         }
-
                         Send(ND, "INTERVIEW_FAILED", ParamToUse);
                     }
                 })
@@ -161,245 +172,242 @@ module.exports = function (RED) {
 
         node.on('close', (done) => {
             Driver.destroy();
-            done();
-
+            if (done) {
+                done();
+            }
         });
 
         node.on('input', async (msg, send, done) => {
-
             try {
                 let Class = msg.payload.class;
-                let Operation = msg.payload.operation
-                let Params = msg.payload.params
-                var Node = msg.payload.node;
-
-                if (Params == null) {
-                    Params = []
-                }
-
-                // hack to ensure we can capture exceptions on re-interview request
-                // when the node is invalid
-                if (Class == "Controller" && Operation == "InterviewNode") {
-                    Node = Params[0];
-                }
-
-                if (Node != null) {
-                    if (Driver.controller.nodes.get(Node) == null) {
-                        let ErrorMSG = "Node " + Node + " does not exist.";
-                        let Er = new Error(ErrorMSG);
-                        if (done) {
-                            done(Er);
-                        }
-                        else {
-                            node.error(Er);
-                        }
-
-                        return;
-                    }
-                }
 
                 switch (Class) {
-
                     case "Controller":
-                        switch (Operation) {
+                        await Controller(msg, send)
+                        break;
 
-                            case "GetNodes":
-                                let Nodes = {}
-                                Driver.controller.nodes.forEach((V, K) => {
-
-                                    Nodes[K] = {
-                                        nodeId: V.id,
-                                        interviewStage: NodeInterviewStage[V.interviewStage],
-                                        isSecure: V.isSecure,
-                                        manufacturerId: V.manufacturerId,
-                                        productId: V.productId,
-                                        productType: V.productType,
-                                        neighbors: V.neighbors
-
-                                    }
-
-                                });
-                                Send({ id: "Controller" }, "NODE_LIST", Nodes, send);
-                                break;
-
-
-                            case "InterviewNode":
-
-                                let Stage = NodeInterviewStage[Driver.controller.nodes.get(Node).interviewStage];
-
-                                if (Stage != "Complete") {
-                                    let ErrorMSG = "Node " + Node + " is already being interviewed. Current Interview Stage : " + Stage + "";
-                                    let Er = new Error(ErrorMSG);
-                                    if (done) {
-                                        done(Er);
-                                    }
-                                    else {
-                                        node.error(Er);
-                                    }
-
-                                    return;
-                                }
-                                else {
-                                    await Driver.controller.nodes.get(Node).refreshInfo();
-                                    Send({ id: Node }, "INTERVIEW_STARTED", send)
-                                }
-
-                                break;
-
-                            case "HardReset":
-                                await Driver.hardReset();
-                                Send({ id: "Controller" }, "CONTROLLER_RESET_COMPLETE", send)
-                                break;
-
-                            case "ProprietaryFunc":
-
-                                let ZWMessage = new Message(Driver, {
-                                    type: 0x00,
-                                    functionType: Params[0],
-                                    payload: Params[1]
-                                });
-
-                                let MessageSettings = {
-                                    priority: 2,
-                                    supportCheck: false
-                                }
-
-                                await Driver.sendMessage(ZWMessage, MessageSettings)
-                                break;
-
-                            case "StartHealNetwork":
-                                await Driver.controller.beginHealingNetwork();
-                                Send({ id: "Controller" }, "NETWORK_HEAL_STARTED", send)
-                                break;
-
-                            case "StopHealNetwork":
-                                await Driver.controller.stopHealingNetwork();
-                                Send({ id: "Controller" }, "NETWORK_HEAL_STOPPED", send)
-                                break;
-
-                            case "StartInclusion":
-                                await Driver.controller.beginInclusion(Params[0]);
-                                break;
-
-                            case "StopInclusion":
-                                await Driver.controller.stopInclusion();
-                                break;
-
-                            case "StartExclusion":
-                                await Driver.controller.beginExclusion();
-                                break;
-
-                            case "StopExclusion":
-                                await Driver.controller.stopExclusion();
-                                break;
-                        }
+                    case "Unmanaged":
+                        await Unmanaged(msg, send);
                         break;
 
                     default:
-
-                        if (!FMaps.hasOwnProperty(Class)) {
-                            let ErrorMSG = "Class, " + Class + " not supported.";
-                            let Er = new Error(ErrorMSG);
-                            if (done) {
-                                done(Er);
-                            }
-                            else {
-                                node.error(Er);
-                            }
-                            return;
-                        }
-
-                        let Map = FMaps[Class]; // CLass
-
-                        if (!Map.Operations.hasOwnProperty(Operation)) {
-                            let ErrorMSG = "Unsupported operation : " + Operation + " for class " + Class;
-                            let Er = new Error(ErrorMSG);
-                            if (done) {
-                                done(Er);
-                            }
-                            else {
-                                node.error(Er);
-                            }
-                            return;
-                        }
-
-                        let Func = Map.Operations[Operation]; // Operation
-
-                        if (Params.length != Func.ParamsRequired && Params.length != (Func.ParamsOptional + Func.ParamsRequired)) {
-                            let ErrorMSG = "Incorrect number of parameters specified for " + Operation;
-                            let Er = new Error(ErrorMSG);
-                            if (done) {
-                                done(Er);
-                            }
-                            else {
-                                node.error(Er);
-                            }
-                            return;
-                        }
-
-                        let EP = 0;
-
-                        if (msg.payload.hasOwnProperty("endPoint")) {
-                            EP = parseInt(msg.payload.endPoint)
-                        }
-
-                        // convert string value to Enum integer value
-                        if (Func.hasOwnProperty("ParamEnumDependency")) {
-                            for (let i = 0; i < Params.length; i++) {
-                                if (Func.ParamEnumDependency.hasOwnProperty(i)) {
-                                    let Enum = Func.ParamEnumDependency[i];
-                                    Params[i] = EnumLookup[Enum][Params[i]]
-                                }
-                            }
-                        }
-
-                        // Convert duration to ZWave-JS Duration Object
-                        if (Params.length > 0) {
-                            for (let i = 0; i < Params.length; i++) {
-                                if (typeof Params[i] == 'object') {
-                                    if (Params[i].hasOwnProperty("Duration")) {
-                                        let D = new Duration(Params[i].Duration.value, Params[i].Duration.unit)
-                                        Params[i] = D;
-
-                                    }
-                                }
-                            }
-                        }
-
-                        let ZWJSC = Driver.controller.nodes.get(Node).getEndpoint(EP).commandClasses[Map.MapsToClass];
-
-                        if (Func.hasOwnProperty("ResponseThroughEvent") && !Func.ResponseThroughEvent) {
-
-                            let Result = await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
-                            Send({ id: Node }, "VALUE_UPDATED", Result, send)
-                        }
-                        else {
-                            await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
-                        }
-
-                        if (done) {
-                            done();
-                        }
-
+                        await NodeFunction(msg, send);
                         break;
                 }
-            }
-            catch (e) {
+
                 if (done) {
-                    done(e);
+                    done()
+                }
+            }
+            catch (er) {
+                if (done) {
+                    done(er);
                 }
                 else {
-                    node.error(e);
+                    node.error(er);
                 }
             }
         });
 
-        function Send(Node, Subject, Value, send) {
-            let PL = {
-                "node": Node.id,
-                "event": Subject,
-                "timestamp": new Date(),
+        function NodeCheck(ID) {
+            if (Driver.controller.nodes.get(ID) == null) {
+                let ErrorMSG = "Node " + ID + " does not exist.";
+                throw new Error(ErrorMSG);
             }
+        }
+
+        // Node
+        async function NodeFunction(msg, send) {
+            let Operation = msg.payload.operation
+            let Class = msg.payload.class;
+            let Node = msg.payload.node;
+            let Params = msg.payload.params;
+
+            let ReturnNode = { id: Node };
+
+            NodeCheck(Node);
+
+            if (!FMaps.hasOwnProperty(Class)) {
+                let ErrorMSG = "Class, " + Class + " not supported.";
+                throw new Error(ErrorMSG);
+            }
+
+            let Map = FMaps[Class];
+
+            if (!Map.Operations.hasOwnProperty(Operation)) {
+                let ErrorMSG = "Unsupported operation : " + Operation + " for class " + Class;
+                throw new Error(ErrorMSG);
+            }
+
+            let Func = Map.Operations[Operation];
+
+            if (Params.length != Func.ParamsRequired && Params.length != (Func.ParamsOptional + Func.ParamsRequired)) {
+                let ErrorMSG = "Incorrect number of parameters specified for " + Operation;
+                throw new Error(ErrorMSG);
+            }
+
+            let EP = 0;
+
+            if (msg.payload.hasOwnProperty("endPoint")) {
+                EP = parseInt(msg.payload.endPoint)
+            }
+
+            if (Func.hasOwnProperty("ParamEnumDependency")) {
+                for (let i = 0; i < Params.length; i++) {
+                    if (Func.ParamEnumDependency.hasOwnProperty(i)) {
+                        let Enum = Func.ParamEnumDependency[i];
+                        Params[i] = EnumLookup[Enum][Params[i]]
+                    }
+                }
+            }
+
+            if (Params.length > 0) {
+                for (let i = 0; i < Params.length; i++) {
+                    if (typeof Params[i] == 'object') {
+                        if (Params[i].hasOwnProperty("Duration")) {
+                            let D = new Duration(Params[i].Duration.value, Params[i].Duration.unit)
+                            Params[i] = D;
+                        }
+                    }
+                }
+            }
+
+            let ZWJSC = Driver.controller.nodes.get(Node).getEndpoint(EP).commandClasses[Map.MapsToClass];
+
+            if (Func.hasOwnProperty("ResponseThroughEvent") && !Func.ResponseThroughEvent) {
+                let Result = await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
+                Send(ReturnNode, "VALUE_UPDATED", Result, send)
+            }
+            else {
+                await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
+            }
+
+            return;
+        }
+
+        // Unmanaged
+        async function Unmanaged(msg, send) {
+            let Operation = msg.payload.operation
+            let Node = msg.payload.node;
+            let Params = msg.payload.params;
+
+            let ReturnNode = { id: Node };
+
+            NodeCheck(Node);
+
+            switch (Operation) {
+                case "GetDefinedValueIDs":
+                    const VIDs = Driver.controller.nodes.get(Node).getDefinedValueIDs();
+                    Send(ReturnNode, "VALUE_ID_LIST", VIDs, send);
+                    break;
+
+                case "SetValue":
+                    Driver.controller.nodes.get(Node).setValue(Params[0], Params[1]);
+                    break;
+
+                case "GetValue":
+                    let V = Driver.controller.nodes.get(Node).getValue(Params[0]);
+                    Send(ReturnNode, "VALUE_UPDATED", V, send);
+                    break;
+            }
+
+            return;
+        }
+
+        // Controller
+        async function Controller(msg, send) {
+            let Operation = msg.payload.operation
+            let Params = msg.payload.params;
+
+            let ReturnController = { id: "Controller" };
+            let ReturnNode = { id: "" };
+
+            switch (Operation) {
+                case "GetNodes":
+                    let Nodes = [];
+                    Driver.controller.nodes.forEach((C, CK) => {
+
+                        Nodes[CK] =
+                        {
+                            nodeId: C.id,
+                            interviewStage: NodeInterviewStage[C.interviewStage],
+                            isSecure: C.isSecure,
+                            manufacturerId: C.manufacturerId,
+                            productId: C.productId,
+                            productType: C.productType,
+                            neighbors: C.neighbors
+                        }
+                    });
+                    Send(ReturnController, "NODE_LIST", Nodes, send);
+                    break;
+
+                case "InterviewNode":
+                    NodeCheck(Params[0]);
+                    let Stage = NodeInterviewStage[Driver.controller.nodes.get(Params[0]).interviewStage];
+                    if (Stage != "Complete") {
+                        let ErrorMSG = "Node " + Params[0] + " is already being interviewed. Current Interview Stage : " + Stage + "";
+                        throw new Error(ErrorMSG);
+                    }
+                    else {
+                        await Driver.controller.nodes.get(Params[0]).refreshInfo();
+                        ReturnNode.id = Params[0];
+                        Send(ReturnNode, "INTERVIEW_STARTED", null, send)
+                    }
+                    break;
+
+                case "HardReset":
+                    await Driver.hardReset();
+                    Send(ReturnController, "CONTROLLER_RESET_COMPLETE", null, send)
+                    break;
+
+                case "StartHealNetwork":
+                    await Driver.controller.beginHealingNetwork();
+                    Send(ReturnController, "NETWORK_HEAL_STARTED", null, send)
+                    break;
+
+                case "StopHealNetwork":
+                    await Driver.controller.stopHealingNetwork();
+                    Send(ReturnController, "NETWORK_HEAL_STOPPED", null, send)
+                    break;
+
+                case "StartInclusion":
+                    await Driver.controller.beginInclusion(Params[0]);
+                    break;
+
+                case "StopInclusion":
+                    await Driver.controller.stopInclusion();
+                    break;
+
+                case "StartExclusion":
+                    await Driver.controller.beginExclusion();
+                    break;
+
+                case "StopExclusion":
+                    await Driver.controller.stopExclusion();
+                    break;
+
+                case "ProprietaryFunc":
+
+                    let ZWMessage = new Message(Driver, {
+                        type: 0x00,
+                        functionType: Params[0],
+                        payload: Params[1]
+                    });
+
+                    let MessageSettings = {
+                        priority: 2,
+                        supportCheck: false
+                    }
+
+                    await Driver.sendMessage(ZWMessage, MessageSettings)
+                    break;
+            }
+
+            return;
+        }
+
+        function Send(Node, Subject, Value, send) {
+            let PL = { "node": Node.id, "event": Subject, "timestamp": new Date() }
 
             if (Value != null) {
                 PL.object = Value;
@@ -411,13 +419,16 @@ module.exports = function (RED) {
             else {
                 node.send({ "payload": PL });
             }
-
         }
+
         Driver.start()
+            .catch((e) => {
+                node.error(e);
+
+            })
     }
 
     RED.nodes.registerType("zwave-js", Init);
-
 
     RED.httpAdmin.get("/zwjsgetports", RED.auth.needsPermission('serial.read'), function (req, res) {
         SP.list().then(

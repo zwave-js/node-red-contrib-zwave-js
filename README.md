@@ -21,8 +21,16 @@ The node is straightforward to use, and removes all the complexities that you wo
 **node-red-contrib-zwave-js** is based on  [ZWave-JS](https://zwave-js.github.io/node-zwave-js/#/).  
 ZWave-JS is actively  maintained, fast and supports the security command class.
 
-## Example Usage
-Send a command to a zwave device - encpsulate all your commands within a **payload** object.
+The node operates in 2 ways : **Managed** and **Unmanaged**  
+
+Managed Mode is where the plugin it's self, manages the routing to the correct command class  
+and device channel. It is easier to undestand.  
+
+Unmanaged Mode, is where the heavy lifting is done by ZWave-JS, it is a little more involved,  
+but Command Class support is only limited by ZWave-JS
+
+## Managed Mode Examples
+Encpsulate all your commands within a **payload** object.
 ```
 /* Set a configuration value for a zwave node */
 
@@ -82,9 +90,105 @@ let Report = {
 }
 ```
 
-Receiving commands is also trivial. Whenever your controller has been notified of an event, the node will inject the payload accodingly. 
+## Supported Class/Operation List  
+Listed below are the outgoing, Managed CC's that are supported by this node.   
+In reality, ZWave-JS supports a much larger range, and you should receive these regadless of the below list.  
+i.e you can't interreact with them, but you will still receive the associated events.
+
+The supported CC's within this node, will gradually increase, to mirror what ZWave-JS supports.
+
+| class                     | operation                           | params                                                |
+| ------------------------- | ----------------------------------- | ----------------------------------------------------- |
+| Association               | GetGroup                            | [Number : Group ID]                                   |
+| Association               | AddNodes                            | [Number : Group ID, Number[] : NodeID's]              |
+| Association               | RemoveNodes                         | [Number : Group ID, Number[] : NodeID's]              |
+| Association               | RemoveNodesFromAllGroups            | [Number[] : NodeID's]                                 |
+| Association               | GetGroupCount                       |                                                       |
+| AssociationGroupInfo      | GetGroupName                        | [Number : Group ID]                                   |
+| Basic                     | Set                                 | [Number]                                              |
+| Basic                     | Get                                 |                                                       |
+| Battery                   | Get                                 |                                                       |
+| BinarySensor              | Get                                 | [**BINARY SENSOR TYPE**]                              |
+| BinarySwitch              | Set                                 | [Bool, **DURATION** (Optional)]                       |
+| BinarySwitch              | Get                                 |                                                       |
+| Configuration             | Set                                 | [Byte : ParamID, Byte : Value, Number : Value Length] |
+| Configuration             | Get                                 | [Byte : ParamID]                                      |
+| DoorLock                  | Set                                 | [**DOOR LOCK MODE**]                                  |
+| DoorLock                  | Get                                 |                                                       |
+| Lock                      | Set                                 | [Bool]                                                |
+| Lock                      | Get                                 |                                                       |
+| MultiLevelSwitch          | Set                                 | [Number, **DURATION** (Optional)]                     |
+| MultiLevelSwitch          | Get                                 |                                                       |
+| Notification              | SendReport                          | [**EVENT**]                                           |
+| ThermostatMode            | Set                                 | [**THERMOSTAT MODE**]                                 |
+| ThermostatMode            | Get                                 |                                                       |
+| ThermostatSetPoint        | Set                                 | [**SET POINT TYPE**, Number : Value, Number : Scale]  |
+| ThermostatSetPoint        | Get                                 | [**SET POINT TYPE**]                                  | 
+| WakeInterval              | Set (see Notes)                     | [Number : Seconds, Number : Controller Node ID]       |
+| WakeInterval              | Get                                 |                                                       | 
+
+## Unmanaged Mode Examples
+
+The combinations in the above table, use a managed approach, that is, the command classes are statically made available via the plugin.  
+  
+There is another way however, that allows you to target command classes that are not natively supported by the plugin, but are supported by ZWave-JS.  
+
+**setValue**, **getValue** and **getDefinedValueIDs**    
+
+| class                     | operation                           | params                                                |
+| ------------------------- | ----------------------------------- | ----------------------------------------------------- |
+| Unmanaged                 | GetDefinedValueIDs                  | -                                                     | 
+| Unmanaged                 | SetValue                            | [ValueID, Value]                                      |
+| Unmanaged                 | GetValue                            | [ValueID]                                             |  
+
+The difference with this approach, is that you supply a [ValueID](https://zwave-js.github.io/node-zwave-js/#/api/valueid)  
+The ValueID interface uniquely identifies to which CC, endpoint and property a value belongs to.  
+Encpsulate all your commands within a **payload** object.
+
+```
+/* Get all ValueID's for a node */
+{
+  payload: {
+    node: 2,
+    class: "Unmanaged",
+    operation: "GetDefinedValueIDs"
+  }
+}
+```
+
+```
+/* Set a value */
+/* NOTE : setValue only supports providing 2 params, the ValueID its self, and the value to set. */  
+/* ValueID will be one of the ValueIDs returned from GetDefinedValueIDs                          */
+{
+  payload: {
+    node: 2,
+    class: "Unmanaged",
+    operation: "SetValue",
+    params: [ValueID,Value]
+  }
+}
+```
+
+```
+/* Get a value */
+/* NOTE : using getValue will return the cached value, and may not represent the current value. */
+/*        getValue should not be used for poling the device                                     */  
+{
+  payload: {
+    node: 2,
+    class: "Unmanaged",
+    operation: "GetValue",
+    params: [ValueID]
+  }
+}
+```
+
+## Receiving Events
+
+The node will also inject events into your flow, that occur within your zwave network 
 The **object** will vary - it depends on the command class that was used in the transmission  
-the payload below will also be emitted whenever you use any of the **Get** operations.
+the payload below is also the payload you get when using any of the **Get** operations.
 ```
 {
   payload: {
@@ -121,13 +225,8 @@ the payload below will also be emitted whenever you use any of the **Get** opera
 
 
 
-## Supported Class/Operation List  
-Listed below are the outgoing CC's that are supported by this node.   
-In reality, ZWave-JS supports a much larger range, and you should receive these regadless of the below list.  
-i.e you can't interreact with them, but you will still receive the associated events.
 
-The supported CC's within this node, will gradually increase, to mirror what ZWave-JS supports.
-
+## Controller based operations
 The **Controller** class does not require a **node** ID.  
 
 | class                     | operation                           | params                                                |
@@ -142,30 +241,7 @@ The **Controller** class does not require a **node** ID.
 | Controller                | ProprietaryFunc (See Notes)         | [Byte : Serial Function ID, Buffer : Data]            |
 | Controller                | InterviewNode                       | [Number : Node ID]                                    |
 | Controller                | GetNodes                            |                                                       |
-| Association               | GetGroup                            | [Number : Group ID]                                   |
-| Association               | AddNodes                            | [Number : Group ID, Number[] : NodeID's]              |
-| Association               | RemoveNodes                         | [Number : Group ID, Number[] : NodeID's]              |
-| Association               | RemoveNodesFromAllGroups            | [Number[] : NodeID's]                                 |
-| Association               | GetGroupCount                       |                                                       |
-| AssociationGroupInfo      | GetGroupName                        | [Number : Group ID]                                   |
-| Basic                     | Set                                 | [Number]                                              |
-| Basic                     | Get                                 |                                                       |
-| Battery                   | Get                                 |                                                       |
-| BinarySwitch              | Set                                 | [Bool, **DURATION** (Optional)]                       |
-| BinarySwitch              | Get                                 |                                                       |
-| Configuration             | Set                                 | [Byte : ParamID, Byte : Value, Number : Value Length] |
-| Configuration             | Get                                 | [Byte : ParamID]                                      |
-| DoorLock                  | Set                                 | [**DOOR LOCK MODE**]                                  |
-| DoorLock                  | Get                                 |                                                       |
-| MultiLevelSwitch          | Set                                 | [Number, **DURATION** (Optional)]                     |
-| MultiLevelSwitch          | Get                                 |                                                       |
-| Notification              | SendReport                          | [**EVENT**]                                           |
-| ThermostatMode            | Set                                 | [**THERMOSTAT MODE**]                                 |
-| ThermostatMode            | Get                                 |                                                       |
-| ThermostatSetPoint        | Set                                 | [**SET POINT TYPE**, Number : Value, Number : Scale]  |
-| ThermostatSetPoint        | Get                                 | [**SET POINT TYPE**]                                  | 
-| WakeInterval              | Set (see Notes)                     | [Number : Seconds, Number : Controller Node ID]       |
-| WakeInterval              | Get                                 |                                                       | 
+
 
 ## Notes on HardReset  
 A one-way ticket for wiping out all the configuration on the controller.  
@@ -234,9 +310,9 @@ The DURATION value should be an object formatted like below.
   }
 }
 ```
-## DOOR LOCK MODE
 
-| Door Lock Mode Values       |  
+## DOOR LOCK MODE
+| Values                      |  
 | --------------------------- |
 | Unsecured                   |
 | UnsecuredWithTimeout        |
@@ -249,8 +325,7 @@ The DURATION value should be an object formatted like below.
 
 
 ## SET POINT TYPE
-
-| Set Point Type Values |
+| Values                |
 | --------------------- |
 | N/A                   |
 | Heating               |
@@ -267,8 +342,7 @@ The DURATION value should be an object formatted like below.
 
 
 ## THERMOSTAT MODE
-
-| Thermostate Mode Values |
+| Values                  |
 | ----------------------- |
 | Off                     |
 | Heat                    |
@@ -286,7 +360,32 @@ The DURATION value should be an object formatted like below.
 | Full power              |
 | Manufacturer specific   |
 
+## BINARY SENSOR TYPE
+| Values             |
+| ------------------ |
+| General Purpose    |
+| Smoke              |
+| CO                 |
+| CO2                |
+| Heat               |
+| Water              |
+| Freeze             |
+| Tamper             |
+| Aux                |
+| Door/Window        |
+| Tilt               |
+| Motion             |
+| Glass Break        |
+| Any                |
+
 ## Version History  
+
+  - 1.2.0
+    - Added Binary Sensor CC support  
+    - Added Lock CC support
+    - Added Support for **getDefinedValueIDs**, **setValue** and **getValue** methods
+    - Restructured core code.  
+    - Encryption key can now be a hex array [#5](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/5).
 
   - 1.1.1
     - Tidy up read me  

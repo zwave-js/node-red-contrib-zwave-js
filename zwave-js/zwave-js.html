@@ -23,15 +23,13 @@
                 return this.name;
             },
 
-            oneditprepare:ListPorts
+            oneditprepare:SortUI
         });
 
   
-    function ListPorts()
+    function SortUI()
     {
         var Current = this.serialPort;
-       
-
         $.getJSON('zwjsgetports', function (data)
         {
             $("#node-input-serialPort").empty();
@@ -46,10 +44,6 @@
 
           
         });
-
-
-
-        
     }
 
   
@@ -73,7 +67,7 @@
     </div>
     <div class="form-row">
         <label for="node-input-encryptionKey"><i class="icon-tag"></i> Encryption Key</label>
-        <input type="text" id="node-input-encryptionKey" placeholder="(16 characters)">
+        <input type="text" id="node-input-encryptionKey" placeholder="[0x01,0x02,..] or string">
     </div>
     <br />
     <p>
