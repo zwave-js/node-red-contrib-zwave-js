@@ -380,7 +380,7 @@ The DURATION value should be an object formatted like below.
 
 ## Version History  
 
-  - 1.1.2
+  - 1.2.0
     - Added Binary Sensor CC support  
     - Added Lock CC support
     - Added Support for **getDefinedValueIDs**, **setValue** and **getValue** methods
