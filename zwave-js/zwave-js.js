@@ -203,7 +203,7 @@ module.exports = function (RED) {
             let Operation = msg.payload.operation
             let Class = msg.payload.class;
             let Node = msg.payload.node;
-            let Params = msg.payload.params;
+            let Params = msg.payload.params || [];
 
             let ReturnNode = { id: Node };
 
