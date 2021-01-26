@@ -230,8 +230,10 @@ module.exports = function (RED) {
 
             let EP = 0;
 
-            if (msg.payload.hasOwnProperty("endPoint")) {
-                EP = parseInt(msg.payload.endPoint)
+            if (msg.payload.hasOwnProperty("endpoint")) {
+              EP = parseInt(msg.payload.endpoint)
+            } else if (msg.payload.hasOwnProperty("endPoint")) {
+              EP = parseInt(msg.payload.endPoint)
             }
 
             if (Func.hasOwnProperty("ParamEnumDependency")) {

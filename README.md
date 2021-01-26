@@ -66,7 +66,7 @@ Encpsulate all your commands within a **payload** object.
     node: 2,
     class: "BinarySwitch",
     operation:"Set",
-    endPoint:1, // zero based index. 0 - First outlet, 1 - second outlet and so on.
+    endpoint:1, // zero based index. 0 - First outlet, 1 - second outlet and so on.
     params: [true]
   }
 }
