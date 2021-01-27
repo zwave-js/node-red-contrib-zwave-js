@@ -20,7 +20,7 @@
             },
             "RemoveNodes": {
                 "MapsToFunc": "removeNodeIds",
-                "ParamsRequired": 2,
+                "ParamsRequired": 1,
                 "ParamsOptional": 0
             },
             "GetGroupCount": {

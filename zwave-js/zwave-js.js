@@ -19,7 +19,8 @@ module.exports = function (RED) {
         let DriverOptions = {};
 
         // Cache Dir
-        DriverOptions.cacheDir = Path.join(RED.settings.userDir, "zwave-js-cache");
+        DriverOptions.storage = {};
+        DriverOptions.storage.cacheDir = Path.join(RED.settings.userDir, "zwave-js-cache");
 
         // Timeout (Configurable via UI)
         DriverOptions.timeouts = {};
@@ -111,19 +112,7 @@ module.exports = function (RED) {
 
                     node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
                 })
-
-                N1.on("value updated", (ND, VL) => {
-                    if (NodesReady.indexOf(ND.id) > -1) {
-                        Send(ND, "VALUE_UPDATED", VL);
-                    }
-                })
-
-                N1.on("value added", (ND, VL) => {
-                    if (NodesReady.indexOf(ND.id) > -1) {
-                        Send(ND, "VALUE_UPDATED", VL);
-                    }
-                })
-
+                
                 N1.on("value notification", (ND, VL) => {
                     if (NodesReady.indexOf(ND.id) > -1) {
                         Send(ND, "VALUE_UPDATED", VL);
@@ -133,6 +122,18 @@ module.exports = function (RED) {
                 N1.on("notification", (ND, L, VL) => {
                     if (NodesReady.indexOf(ND.id) > -1) {
                         Send(ND, "NOTIFICATION", VL);
+                    }
+                })
+
+                N1.on("value added", (ND, VL) => {
+                    if (NodesReady.indexOf(ND.id) > -1) {
+                        Send(ND, "VALUE_UPDATED", VL);
+                    }
+                })
+
+                N1.on("value updated", (ND, VL) => {
+                    if (NodesReady.indexOf(ND.id) > -1) {
+                        Send(ND, "VALUE_UPDATED", VL);
                     }
                 })
 
@@ -154,16 +155,9 @@ module.exports = function (RED) {
                     }
                 })
 
-                N1.on("interview failed", (ND, P1, P2) => {
+                N1.on("interview failed", (ND, Er) => {
                     if (NodesReady.indexOf(ND.id) > -1) {
-                        var ParamToUse;
-                        if (P2 != null) {
-                            ParamToUse = P2
-                        }
-                        else {
-                            ParamToUse = P1
-                        }
-                        Send(ND, "INTERVIEW_FAILED", ParamToUse);
+                        Send(ND, "INTERVIEW_FAILED", Er);
                     }
                 })
             });
@@ -221,7 +215,7 @@ module.exports = function (RED) {
             let Operation = msg.payload.operation
             let Class = msg.payload.class;
             let Node = msg.payload.node;
-            let Params = msg.payload.params;
+            let Params = msg.payload.params || [];
 
             let ReturnNode = { id: Node };
 
@@ -248,8 +242,10 @@ module.exports = function (RED) {
 
             let EP = 0;
 
-            if (msg.payload.hasOwnProperty("endPoint")) {
-                EP = parseInt(msg.payload.endPoint)
+            if (msg.payload.hasOwnProperty("endpoint")) {
+              EP = parseInt(msg.payload.endpoint)
+            } else if (msg.payload.hasOwnProperty("endPoint")) {
+              EP = parseInt(msg.payload.endPoint)
             }
 
             if (Func.hasOwnProperty("ParamEnumDependency")) {

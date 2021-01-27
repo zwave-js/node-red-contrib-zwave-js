@@ -13,8 +13,8 @@ The node is straightforward to use, and removes all the complexities that you wo
 
   - Add the node into your flow
   - Select the serial port that represents your USB Zwave radio.
-  - Set an encryption key (if you want to use Secure devices)
-  - Listen for, or send commands using the node.
+  - Set an encryption key (string or hex array [0x01,0x02]) if you want to use Secure devices.
+  - Listen for, and send commands using the node.
 
   ![Image](./Demo.png)  
 
@@ -66,7 +66,7 @@ Encpsulate all your commands within a **payload** object.
     node: 2,
     class: "BinarySwitch",
     operation:"Set",
-    endPoint:1, // zero based index. 0 - First outlet, 1 - second outlet and so on.
+    endpoint:1, // zero based index. 0 - First outlet, 1 - second outlet and so on.
     params: [true]
   }
 }
@@ -101,7 +101,7 @@ The supported CC's within this node, will gradually increase, to mirror what ZWa
 | ------------------------- | ----------------------------------- | ----------------------------------------------------- |
 | Association               | GetGroup                            | [Number : Group ID]                                   |
 | Association               | AddNodes                            | [Number : Group ID, Number[] : NodeID's]              |
-| Association               | RemoveNodes                         | [Number : Group ID, Number[] : NodeID's]              |
+| Association               | RemoveNodes                         | [**REMOVE OPTIONS**]                                  |
 | Association               | RemoveNodesFromAllGroups            | [Number[] : NodeID's]                                 |
 | Association               | GetGroupCount                       |                                                       |
 | AssociationGroupInfo      | GetGroupName                        | [Number : Group ID]                                   |
@@ -300,6 +300,15 @@ The EVENT value should be an object formatted like below.
 }
 ```
 
+## REMOVE OPTIONS  
+The REMOVE OPTIONS value should be an object formatted like below.  
+```
+{
+  groupId: Number,
+  nodeIds: Number[]
+}
+```
+
 ## DURATION
 The DURATION value should be an object formatted like below.  
 ```
@@ -380,12 +389,20 @@ The DURATION value should be an object formatted like below.
 
 ## Version History  
 
+  - 1.3.0
+    - Custom serial ports can now be provided. ([#7](https://github.com/zwave-js/node-red-contrib-zwave-js/pull/7))  
+    - Bumped Z-Wave JS to 6.1.0  
+    - Bumped Serial Ports to 9.0.6 
+    - Fixed incorrect method signature for **RemoveNodes**  
+    - Renamed **endPoint** to be more consistent with Z-Wave JS ([#10](https://github.com/zwave-js/node-red-contrib-zwave-js/pull/10))  
+    - Defaulted **Params** to an empty array if not provided ([#10](https://github.com/zwave-js/node-red-contrib-zwave-js/pull/10))
+
   - 1.2.0
     - Added Binary Sensor CC support  
     - Added Lock CC support
     - Added Support for **getDefinedValueIDs**, **setValue** and **getValue** methods
     - Restructured core code.  
-    - Encryption key can now be a hex array [#5](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/5).
+    - Encryption key can now be a hex array ([#5](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/5)).
 
   - 1.1.1
     - Tidy up read me  
