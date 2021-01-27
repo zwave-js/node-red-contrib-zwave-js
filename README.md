@@ -390,7 +390,7 @@ The DURATION value should be an object formatted like below.
 ## Version History  
 
   - 1.3.0
-    - Customer serial ports can now be provided. ([#7](https://github.com/zwave-js/node-red-contrib-zwave-js/pull/7))  
+    - Custom serial ports can now be provided. ([#7](https://github.com/zwave-js/node-red-contrib-zwave-js/pull/7))  
     - Bumped Z-Wave JS to 6.1.0  
     - Bumped Serial Ports to 9.0.6 
     - Fixed incorrect method signature for **RemoveNodes**  
