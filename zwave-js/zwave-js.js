@@ -125,6 +125,18 @@ module.exports = function (RED) {
                     }
                 })
 
+                N1.on("value added", (ND, VL) => {
+                    if (NodesReady.indexOf(ND.id) > -1) {
+                        Send(ND, "VALUE_UPDATED", VL);
+                    }
+                })
+
+                N1.on("value updated", (ND, VL) => {
+                    if (NodesReady.indexOf(ND.id) > -1) {
+                        Send(ND, "VALUE_UPDATED", VL);
+                    }
+                })
+
                 N1.on("wake up", (ND) => {
                     if (NodesReady.indexOf(ND.id) > -1) {
                         Send(ND, "WAKE_UP");
