@@ -203,7 +203,7 @@ module.exports = function (RED) {
             let Operation = msg.payload.operation
             let Class = msg.payload.class;
             let Node = msg.payload.node;
-            let Params = msg.payload.params;
+            let Params = msg.payload.params || [];
 
             let ReturnNode = { id: Node };
 
@@ -230,8 +230,10 @@ module.exports = function (RED) {
 
             let EP = 0;
 
-            if (msg.payload.hasOwnProperty("endPoint")) {
-                EP = parseInt(msg.payload.endPoint)
+            if (msg.payload.hasOwnProperty("endpoint")) {
+              EP = parseInt(msg.payload.endpoint)
+            } else if (msg.payload.hasOwnProperty("endPoint")) {
+              EP = parseInt(msg.payload.endPoint)
             }
 
             if (Func.hasOwnProperty("ParamEnumDependency")) {
