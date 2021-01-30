@@ -215,6 +215,7 @@ the payload below is also the payload you get when using any of the **Get** oper
 | NETWORK_HEAL_STOPPED      |                                     |                                 | Stopped Healing Network       |
 | CONTROLLER_RESET_COMPLETE |                                     |                                 | The controller was reset      |
 | VALUE_UPDATED             | The source Node ID                  | The objects command content     | A Value Was Updated           |
+| VALUE_NOTIFICATION        | The source Node ID                  | The objects command content     | A Value Notification Was Received |
 | NOTIFICATION              | The source Node ID                  | The objects command content     | A Notification Was Sent       |
 | WAKE_UP                   | The source Node ID                  |                                 | A Node Has Woken Up           |
 | SLEEP                     | The source Node ID                  |                                 | A Node Has Gone To Sleep      |
@@ -388,6 +389,9 @@ The DURATION value should be an object formatted like below.
 | Any                |
 
 ## Version History  
+
+  - 1.3.1
+    - Z-Wave JS **value notification** event, is now delivered exclusively due to a difference in its payload from normal value updates. ([#12](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/12))
 
   - 1.3.0
     - Custom serial ports can now be provided. ([#7](https://github.com/zwave-js/node-red-contrib-zwave-js/pull/7))  
