@@ -115,7 +115,7 @@ module.exports = function (RED) {
                 
                 N1.on("value notification", (ND, VL) => {
                     if (NodesReady.indexOf(ND.id) > -1) {
-                        Send(ND, "VALUE_UPDATED", VL);
+                        Send(ND, "VALUE_NOTIFICATION", VL);
                     }
                 })
 

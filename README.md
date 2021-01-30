@@ -215,6 +215,7 @@ the payload below is also the payload you get when using any of the **Get** oper
 | NETWORK_HEAL_STOPPED      |                                     |                                 | Stopped Healing Network       |
 | CONTROLLER_RESET_COMPLETE |                                     |                                 | The controller was reset      |
 | VALUE_UPDATED             | The source Node ID                  | The objects command content     | A Value Was Updated           |
+| VALUE_NOTIFICATION        | The source Node ID                  | The objects command content     | A Value Notification Was Received |
 | NOTIFICATION              | The source Node ID                  | The objects command content     | A Notification Was Sent       |
 | WAKE_UP                   | The source Node ID                  |                                 | A Node Has Woken Up           |
 | SLEEP                     | The source Node ID                  |                                 | A Node Has Gone To Sleep      |
