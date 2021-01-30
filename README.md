@@ -391,7 +391,7 @@ The DURATION value should be an object formatted like below.
 ## Version History  
 
   - 1.3.1
-    - Z-Wave JS **value notification** event, is now delivered exclusively due to a difference in its payload from normal value updates. 
+    - Z-Wave JS **value notification** event, is now delivered exclusively due to a difference in its payload from normal value updates. ([#12](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/12))
 
   - 1.3.0
     - Custom serial ports can now be provided. ([#7](https://github.com/zwave-js/node-red-contrib-zwave-js/pull/7))  
