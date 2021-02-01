@@ -223,8 +223,8 @@ the payload below is also the payload you get when using any of the **Get** oper
 | INTERVIEW_FAILED          | The source Node ID                  | Detailed Error Info             | Could not interview node      |
 | INTERVIEW_STARTED         | The source Node ID                  |                                 | Node interview started        |
 | NODE_LIST                 |                                     | ZWaveNode[]                     | Response to GetNodes          | 
-| VALUE_ID_LIST             |                                     | ValueID[]                       | Response to GetDefinedValueIDs| 
-| GET_VALUE_RESPONSE        |                                     | Value & Value ID                | Response to GetValue          | 
+| VALUE_ID_LIST             | The source Node ID                  | ValueID[]                       | Response to GetDefinedValueIDs| 
+| GET_VALUE_RESPONSE        | The source Node ID                  | Value & Value ID                | Response to GetValue          | 
 
 
 
