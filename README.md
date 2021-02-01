@@ -223,6 +223,8 @@ the payload below is also the payload you get when using any of the **Get** oper
 | INTERVIEW_FAILED          | The source Node ID                  | Detailed Error Info             | Could not interview node      |
 | INTERVIEW_STARTED         | The source Node ID                  |                                 | Node interview started        |
 | NODE_LIST                 |                                     | ZWaveNode[]                     | Response to GetNodes          | 
+| VALUE_ID_LIST             |                                     | ValueID[]                       | Response to GetDefinedValueIDs| 
+| GET_VALUE_RESPONSE        |                                     | Value & Value ID                | Response to GetValue          | 
 
 
 
@@ -389,6 +391,10 @@ The DURATION value should be an object formatted like below.
 | Any                |
 
 ## Version History  
+
+  - 1.4.0  **Possible Breaking Change**  
+    - Bump Z-Wave JS to 6.1.1
+    - The response to the Unmanaged method **GetValue** is now delivered via a **GET_VALUE_RESPONSE** event, where the **object** property contains the return value, and the Value ID
 
   - 1.3.1
     - Z-Wave JS **value notification** event, is now delivered exclusively due to a difference in its payload from normal value updates. ([#12](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/12))

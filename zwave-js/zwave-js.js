@@ -303,7 +303,12 @@ module.exports = function (RED) {
 
                 case "GetValue":
                     let V = Driver.controller.nodes.get(Node).getValue(Params[0]);
-                    Send(ReturnNode, "VALUE_UPDATED", V, send);
+                    
+                    let ReturnObject = {
+                        response:V,
+                        valueId:Params[0]
+                    }
+                    Send(ReturnNode, "GET_VALUE_RESPONSE", ReturnObject, send);
                     break;
             }
 
