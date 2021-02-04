@@ -113,6 +113,8 @@ The supported CC's within this node, will gradually increase, to mirror what ZWa
 | BinarySwitch              | Get                                 |                                                       |
 | Configuration             | Set                                 | [Byte : ParamID, Byte : Value, Number : Value Length] |
 | Configuration             | Get                                 | [Byte : ParamID]                                      |
+| ColorSwitch               | Set                                 | [**COLOR**]                                           |
+| ColorSwitch               | Get                                 | [**COLOR COMPONENT**]                                 |
 | DoorLock                  | Set                                 | [**DOOR LOCK MODE**]                                  |
 | DoorLock                  | Get                                 |                                                       |
 | Lock                      | Set                                 | [Bool]                                                |
@@ -125,8 +127,8 @@ The supported CC's within this node, will gradually increase, to mirror what ZWa
 | ThermostatSetPoint        | Set                                 | [**SET POINT TYPE**, Number : Value, Number : Scale]  |
 | ThermostatSetPoint        | Get                                 | [**SET POINT TYPE**]                                  | 
 | ThermostatOperatingState  | Get                                 |                                                       | 
-| ThermostatSetback         | Get                                 |                                                       | 
 | ThermostatSetback         | Set                                 | [**SET BACK TYPE**, **SET BACK STATE**]               | 
+| ThermostatSetback         | Get                                 |                                                       | 
 | WakeInterval              | Set (see Notes)                     | [Number : Seconds, Number : Controller Node ID]       |
 | WakeInterval              | Get                                 |                                                       | 
 
@@ -326,6 +328,14 @@ The DURATION value should be an object formatted like below.
 }
 ```
 
+## COLOR
+The COLOR value should be an object formatted like below.  
+```
+{
+  hexColor: "#000000"
+}
+```
+
 ## DOOR LOCK MODE
 | Values                      |  
 | --------------------------- |
@@ -407,6 +417,20 @@ The DURATION value should be an object formatted like below.
 | Energy Saving      |
 | Unused             |
 
+## COLOR COMPONENT
+| Values             |
+| ------------------ |
+| Warm White         |
+| Cold White         |
+| Red                |
+| Green              |
+| Blue               |
+| Amber              |
+| Cyan               |
+| Purple             |
+| Index              |
+
+
 ## Version History  
 
   - 1.4.0  **Possible Breaking Change**  
@@ -414,7 +438,8 @@ The DURATION value should be an object formatted like below.
     - The response to the Unmanaged method **GetValue** is now delivered via a **GET_VALUE_RESPONSE** event, where the **object** property contains the return value, and the Value ID
     - Fix Node Red crash on failure listing serial ports ([#18](https://github.com/zwave-js/node-red-contrib-zwave-js/pull/18))  
     - Added **Thermostat Operating State** CC  
-    - Added **Thermostat Setback** CC
+    - Added **Thermostat Setback** CC  
+    - Added **Color Switch** CC
 
   - 1.3.1
     - Z-Wave JS **value notification** event, is now delivered exclusively due to a difference in its payload from normal value updates. ([#12](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/12))
