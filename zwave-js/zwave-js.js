@@ -7,6 +7,7 @@ module.exports = function (RED) {
     const FMaps = require('./FunctionMaps.json')
     const EnumLookup = require('./Enums.json')
     const Path = require('path')
+    const FS = require('fs')
 
     const NodeInterviewStage = ["None", "ProtocolInfo", "NodeInfo", "RestartFromCache", "CommandClasses", "OverwriteConfig", "Neighbors", "Complete"]
 
@@ -65,7 +66,32 @@ module.exports = function (RED) {
         })
 
         Driver.once("driver ready", () => {
+
             let ReturnController = { id: "Controller" };
+            let NodesReady = []
+
+            /* green light already interviewed nodes, to speed up ability to receieve events */
+            let HomeID = Driver.controller.homeId;
+            let NodeStateCacheFile = Path.join(RED.settings.userDir, "zwave-js-cache",HomeID,".json");
+            let FileContent = FS.readFileSync(NodeStateCacheFile,'utf8')
+
+            let Cache = JSON.parse(FileContent);
+            let Nodes = Object.keys(Cache.nodes);
+            
+            for(let i = 0;i<Nodes.length;i++){
+
+                if(Nodes[i] < 2){
+                    cont_inue;
+                }
+                
+                let NodeState = Cache.nodes[Nodes[i]];
+                
+                if(NodeState.interviewStage == "Complete" || NodeState.interviewStage == "RestartFromCache"){
+
+                    NodesReady.push(Nodes[i]);
+                    node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
+                }
+            }
 
             // Add, Remove
             Driver.controller.on("node added", (N) => {
@@ -99,7 +125,7 @@ module.exports = function (RED) {
                 Send(ReturnController, "NETWORK_HEAL_DONE")
             })
 
-            let NodesReady = []
+            
             node.status({ fill: "yellow", shape: "dot", text: "Interviewing Nodes..." });
             Driver.controller.nodes.forEach((N1) => {
                 N1.on("ready", (N2) => {
