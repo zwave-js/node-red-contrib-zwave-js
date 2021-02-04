@@ -81,7 +81,7 @@ module.exports = function (RED) {
             for(let i = 0;i<Nodes.length;i++){
 
                 if(Nodes[i] < 2){
-                    cont_inue;
+                    continue;
                 }
                 
                 let NodeState = Cache.nodes[Nodes[i]];
