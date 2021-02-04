@@ -72,7 +72,7 @@ module.exports = function (RED) {
 
             /* green light already interviewed nodes, to speed up ability to receieve events */
             let HomeID = Driver.controller.homeId;
-            let NodeStateCacheFile = Path.join(RED.settings.userDir, "zwave-js-cache",HomeID,".json");
+            let NodeStateCacheFile = Path.join(RED.settings.userDir, "zwave-js-cache",(HomeID).toString(16),".json");
             let FileContent = FS.readFileSync(NodeStateCacheFile,'utf8')
 
             let Cache = JSON.parse(FileContent);
