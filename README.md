@@ -124,6 +124,9 @@ The supported CC's within this node, will gradually increase, to mirror what ZWa
 | ThermostatMode            | Get                                 |                                                       |
 | ThermostatSetPoint        | Set                                 | [**SET POINT TYPE**, Number : Value, Number : Scale]  |
 | ThermostatSetPoint        | Get                                 | [**SET POINT TYPE**]                                  | 
+| ThermostatOperatingState  | Get                                 |                                                       | 
+| ThermostatSetback         | Get                                 |                                                       | 
+| ThermostatSetback         | Set                                 | [**SET BACK TYPE**, **SET BACK STATE**]               | 
 | WakeInterval              | Set (see Notes)                     | [Number : Seconds, Number : Controller Node ID]       |
 | WakeInterval              | Get                                 |                                                       | 
 
@@ -390,12 +393,28 @@ The DURATION value should be an object formatted like below.
 | Glass Break        |
 | Any                |
 
+## SET BACK TYPE
+| Values             |
+| ------------------ |
+| None               |
+| Temporary          |
+| Permanent          |
+
+## SET BACK STATE
+| Values             |
+| ------------------ |
+| Frost Protection   |
+| Energy Saving      |
+| Unused             |
+
 ## Version History  
 
   - 1.4.0  **Possible Breaking Change**  
     - Bump Z-Wave JS to 6.1.1
     - The response to the Unmanaged method **GetValue** is now delivered via a **GET_VALUE_RESPONSE** event, where the **object** property contains the return value, and the Value ID
-    - Fix Node Red crash on failure listing serial ports ([#18](https://github.com/zwave-js/node-red-contrib-zwave-js/pull/18))
+    - Fix Node Red crash on failure listing serial ports ([#18](https://github.com/zwave-js/node-red-contrib-zwave-js/pull/18))  
+    - Added **Thermostat Operating State** CC  
+    - Added **Thermostat Setback** CC
 
   - 1.3.1
     - Z-Wave JS **value notification** event, is now delivered exclusively due to a difference in its payload from normal value updates. ([#12](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/12))

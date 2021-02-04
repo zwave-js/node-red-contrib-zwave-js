@@ -1,4 +1,32 @@
 {
+    "ThermostatOperatingState":{
+        "MapsToClass": "Thermostat Operating State",
+        "Operations": {
+            "Get": {
+                "MapsToFunc": "get",
+                "ParamsRequired": 0,
+                "ParamsOptional": 0
+            }
+        }
+    },
+    "ThermostatSetback":{
+        "MapsToClass": "Thermostat Setback",
+        "Operations": {
+            "Get": {
+                "MapsToFunc": "get",
+                "ParamsRequired": 0,
+                "ParamsOptional": 0
+            },
+            "Set":{
+                "MapsToFunc": "set",
+                "ParamsRequired": 2,
+                "ParamsOptional": 0,
+                "ParamEnumDependency": {
+                    "0": "SetbackType"
+                }
+            }
+        }
+    },
     "Association": {
         "MapsToClass": "Association",
         "Operations": {

@@ -1,4 +1,9 @@
 {
+    "SetbackType":{
+        "None": 0,
+        "Temporary": 1,
+        "Permanent": 2
+    },
     "BinarySensorType": {
         "General Purpose": 1,
         "Smoke": 2,
