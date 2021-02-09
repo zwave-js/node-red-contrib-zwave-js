@@ -133,10 +133,12 @@ module.exports = function (RED) {
                         return;
                     }
                     if (NodesReady.indexOf(N2.id) < 0) {
+                        
                         NodesReady.push(N2.id);
+                        node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
                     }
 
-                    node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
+                    
                 })
                 
                 N1.on("value notification", (ND, VL) => {
