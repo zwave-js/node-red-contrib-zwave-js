@@ -67,29 +67,37 @@ module.exports = function (RED) {
 
         Driver.once("driver ready", () => {
 
+            node.status({ fill: "yellow", shape: "dot", text: "Interviewing Nodes..." });
+
             let ReturnController = { id: "Controller" };
             let NodesReady = []
 
             /* green light already interviewed nodes, to speed up ability to receieve events */
             let HomeID = Driver.controller.homeId;
             let NodeStateCacheFile = Path.join(RED.settings.userDir, "zwave-js-cache", (HomeID).toString(16)+".json");
-            let FileContent = FS.readFileSync(NodeStateCacheFile,'utf8')
 
-            let Cache = JSON.parse(FileContent);
-            let Nodes = Object.keys(Cache.nodes);
-            
-            for(let i = 0;i<Nodes.length;i++){
+            /* For new installs, the file won't have been created (or this quick at least ) */
+            /* This is fine, as the full inetrview will need to take place if so - so the green light wil be given after the interview */
+            if(FS.existsSync(NodeStateCacheFile)){
 
-                if(Nodes[i] < 2){
-                    continue;
-                }
+                let FileContent = FS.readFileSync(NodeStateCacheFile,'utf8')
+
+                let Cache = JSON.parse(FileContent);
+                let Nodes = Object.keys(Cache.nodes);
                 
-                let NodeState = Cache.nodes[Nodes[i]];
-                
-                if(NodeState.interviewStage == "Complete" || NodeState.interviewStage == "RestartFromCache"){
+                for(let i = 0;i<Nodes.length;i++){
+    
+                    let NodeState = Cache.nodes[Nodes[i]];
 
-                    NodesReady.push(Nodes[i]);
-                    node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
+                    if(NodeState.id < 2){
+                        continue;
+                    }
+                    
+                    if(NodeState.interviewStage == "Complete" || NodeState.interviewStage == "RestartFromCache"){
+    
+                        NodesReady.push(NodeState.id);
+                        node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
+                    }
                 }
             }
 
@@ -126,8 +134,9 @@ module.exports = function (RED) {
             })
 
             
-            node.status({ fill: "yellow", shape: "dot", text: "Interviewing Nodes..." });
+           
             Driver.controller.nodes.forEach((N1) => {
+                
                 N1.on("ready", (N2) => {
                     if (N2.id < 2) {
                         return;
@@ -460,15 +469,17 @@ module.exports = function (RED) {
     RED.nodes.registerType("zwave-js", Init);
 
     RED.httpAdmin.get("/zwjsgetports", RED.auth.needsPermission('serial.read'), function (req, res) {
-        SP.list().then(
-            ports => {
-                const a = ports.map(p => p.path);
-                res.json(a);
-            },
-            err => {
-                RED.eventLog.log('Error listing serial ports', err)
-            }
-        )
+
+        SP.list()
+        .then(ports => {
+            const a = ports.map(p => p.path);
+            res.json(a);
+        })
+        .catch(err => {
+            RED.log.error('Error listing serial ports', err)
+            res.json([]);
+        })
+        
     });
 
 }
