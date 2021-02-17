@@ -7,6 +7,7 @@ module.exports = function (RED) {
     const FMaps = require('./FunctionMaps.json')
     const EnumLookup = require('./Enums.json')
     const Path = require('path')
+    const FS = require('fs')
 
     const NodeInterviewStage = ["None", "ProtocolInfo", "NodeInfo", "RestartFromCache", "CommandClasses", "OverwriteConfig", "Neighbors", "Complete"]
 
@@ -65,7 +66,40 @@ module.exports = function (RED) {
         })
 
         Driver.once("driver ready", () => {
+
+            node.status({ fill: "yellow", shape: "dot", text: "Interviewing Nodes..." });
+
             let ReturnController = { id: "Controller" };
+            let NodesReady = []
+
+            /* green light already interviewed nodes, to speed up ability to receieve events */
+            let HomeID = Driver.controller.homeId;
+            let NodeStateCacheFile = Path.join(RED.settings.userDir, "zwave-js-cache", (HomeID).toString(16)+".json");
+
+            /* For new installs, the file won't have been created (or this quick at least ) */
+            /* This is fine, as the full inetrview will need to take place if so - so the green light wil be given after the interview */
+            if(FS.existsSync(NodeStateCacheFile)){
+
+                let FileContent = FS.readFileSync(NodeStateCacheFile,'utf8')
+
+                let Cache = JSON.parse(FileContent);
+                let Nodes = Object.keys(Cache.nodes);
+                
+                for(let i = 0;i<Nodes.length;i++){
+    
+                    let NodeState = Cache.nodes[Nodes[i]];
+
+                    if(NodeState.id < 2){
+                        continue;
+                    }
+                    
+                    if(NodeState.interviewStage == "Complete" || NodeState.interviewStage == "RestartFromCache"){
+    
+                        NodesReady.push(NodeState.id);
+                        node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
+                    }
+                }
+            }
 
             // Add, Remove
             Driver.controller.on("node added", (N) => {
@@ -99,18 +133,21 @@ module.exports = function (RED) {
                 Send(ReturnController, "NETWORK_HEAL_DONE")
             })
 
-            let NodesReady = []
-            node.status({ fill: "yellow", shape: "dot", text: "Interviewing Nodes..." });
+            
+           
             Driver.controller.nodes.forEach((N1) => {
+                
                 N1.on("ready", (N2) => {
                     if (N2.id < 2) {
                         return;
                     }
                     if (NodesReady.indexOf(N2.id) < 0) {
+                        
                         NodesReady.push(N2.id);
+                        node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
                     }
 
-                    node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
+                    
                 })
                 
                 N1.on("value notification", (ND, VL) => {
@@ -303,7 +340,12 @@ module.exports = function (RED) {
 
                 case "GetValue":
                     let V = Driver.controller.nodes.get(Node).getValue(Params[0]);
-                    Send(ReturnNode, "VALUE_UPDATED", V, send);
+                    
+                    let ReturnObject = {
+                        response:V,
+                        valueId:Params[0]
+                    }
+                    Send(ReturnNode, "GET_VALUE_RESPONSE", ReturnObject, send);
                     break;
             }
 
@@ -427,15 +469,17 @@ module.exports = function (RED) {
     RED.nodes.registerType("zwave-js", Init);
 
     RED.httpAdmin.get("/zwjsgetports", RED.auth.needsPermission('serial.read'), function (req, res) {
-        SP.list().then(
-            ports => {
-                const a = ports.map(p => p.path);
-                res.json(a);
-            },
-            err => {
-                node.log('Error listing serial ports', err)
-            }
-        )
+
+        SP.list()
+        .then(ports => {
+            const a = ports.map(p => p.path);
+            res.json(a);
+        })
+        .catch(err => {
+            RED.log.error('Error listing serial ports', err)
+            res.json([]);
+        })
+        
     });
 
 }

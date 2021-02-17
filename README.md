@@ -119,6 +119,8 @@ The supported CC's within this node, will gradually increase, to mirror what ZWa
 | BinarySwitch              | Get                                 |                                                       |
 | Configuration             | Set                                 | [Byte : ParamID, Byte : Value, Number : Value Length] |
 | Configuration             | Get                                 | [Byte : ParamID]                                      |
+| ColorSwitch               | Set                                 | [**COLOR**]                                           |
+| ColorSwitch               | Get                                 | [**COLOR COMPONENT**]                                 |
 | DoorLock                  | Set                                 | [**DOOR LOCK MODE**]                                  |
 | DoorLock                  | Get                                 |                                                       |
 | Lock                      | Set                                 | [Bool]                                                |
@@ -130,6 +132,9 @@ The supported CC's within this node, will gradually increase, to mirror what ZWa
 | ThermostatMode            | Get                                 |                                                       |
 | ThermostatSetPoint        | Set                                 | [**SET POINT TYPE**, Number : Value, Number : Scale]  |
 | ThermostatSetPoint        | Get                                 | [**SET POINT TYPE**]                                  | 
+| ThermostatOperatingState  | Get                                 |                                                       | 
+| ThermostatSetback         | Set                                 | [**SET BACK TYPE**, **SET BACK STATE**]               | 
+| ThermostatSetback         | Get                                 |                                                       | 
 | WakeInterval              | Set (see Notes)                     | [Number : Seconds, Number : Controller Node ID]       |
 | WakeInterval              | Get                                 |                                                       | 
 
@@ -229,6 +234,8 @@ the payload below is also the payload you get when using any of the **Get** oper
 | INTERVIEW_FAILED          | The source Node ID                  | Detailed Error Info             | Could not interview node      |
 | INTERVIEW_STARTED         | The source Node ID                  |                                 | Node interview started        |
 | NODE_LIST                 |                                     | ZWaveNode[]                     | Response to GetNodes          | 
+| VALUE_ID_LIST             | The source Node ID                  | ValueID[]                       | Response to GetDefinedValueIDs| 
+| GET_VALUE_RESPONSE        | The source Node ID                  | Value & Value ID                | Response to GetValue          | 
 
 
 
@@ -327,6 +334,14 @@ The DURATION value should be an object formatted like below.
 }
 ```
 
+## COLOR
+The COLOR value should be an object formatted like below.  
+```
+{
+  hexColor: "#000000"
+}
+```
+
 ## DOOR LOCK MODE
 | Values                      |  
 | --------------------------- |
@@ -394,7 +409,44 @@ The DURATION value should be an object formatted like below.
 | Glass Break        |
 | Any                |
 
+## SET BACK TYPE
+| Values             |
+| ------------------ |
+| None               |
+| Temporary          |
+| Permanent          |
+
+## SET BACK STATE
+| Values             |
+| ------------------ |
+| Frost Protection   |
+| Energy Saving      |
+| Unused             |
+
+## COLOR COMPONENT
+| Values             |
+| ------------------ |
+| Warm White         |
+| Cold White         |
+| Red                |
+| Green              |
+| Blue               |
+| Amber              |
+| Cyan               |
+| Purple             |
+| Index              |
+
+
 ## Version History  
+
+  - 1.4.0  **Possible Breaking Change**  
+    - Bump Z-Wave JS to 6.4.0
+    - The response to the Unmanaged method **GetValue** is now delivered via a **GET_VALUE_RESPONSE** event, where the **object** property contains the return value, and the Value ID
+    - Fix Node Red crash on failure listing serial ports ([#18](https://github.com/zwave-js/node-red-contrib-zwave-js/pull/18))  
+    - Optimisations to speed up initialisation of already inetrviewed nodes ([#20](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/20))  
+    - Added **Thermostat Operating State** CC  
+    - Added **Thermostat Setback** CC  
+    - Added **Color Switch** CC
 
   - 1.3.1
     - Z-Wave JS **value notification** event, is now delivered exclusively due to a difference in its payload from normal value updates. ([#12](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/12))

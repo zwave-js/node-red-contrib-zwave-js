@@ -1,4 +1,50 @@
 {
+    "ColorSwitch": {
+        "MapsToClass": "Color Switch",
+        "Operations": {
+            "Get": {
+                "MapsToFunc": "get",
+                "ParamsRequired": 1,
+                "ParamsOptional": 0,
+                "ParamEnumDependency": {
+                    "0": "ColorComponent"
+                }
+            },
+            "Set": {
+                "MapsToFunc": "set",
+                "ParamsRequired": 1,
+                "ParamsOptional": 0
+            }
+        }
+    },
+    "ThermostatOperatingState": {
+        "MapsToClass": "Thermostat Operating State",
+        "Operations": {
+            "Get": {
+                "MapsToFunc": "get",
+                "ParamsRequired": 0,
+                "ParamsOptional": 0
+            }
+        }
+    },
+    "ThermostatSetback": {
+        "MapsToClass": "Thermostat Setback",
+        "Operations": {
+            "Get": {
+                "MapsToFunc": "get",
+                "ParamsRequired": 0,
+                "ParamsOptional": 0
+            },
+            "Set": {
+                "MapsToFunc": "set",
+                "ParamsRequired": 2,
+                "ParamsOptional": 0,
+                "ParamEnumDependency": {
+                    "0": "SetbackType"
+                }
+            }
+        }
+    },
     "Association": {
         "MapsToClass": "Association",
         "Operations": {
@@ -46,9 +92,9 @@
         "MapsToClass": "Binary Sensor",
         "Operations": {
             "Get": {
-                "MapsToFunc":"get",
-                "ParamsOptional":0,
-                "ParamsRequired":1,
+                "MapsToFunc": "get",
+                "ParamsOptional": 0,
+                "ParamsRequired": 1,
                 "ParamEnumDependency": {
                     "0": "BinarySensorType"
                 }
@@ -59,14 +105,14 @@
         "MapsToClass": "Lock",
         "Operations": {
             "Get": {
-                "MapsToFunc":"get",
-                "ParamsOptional":0,
-                "ParamsRequired":0
+                "MapsToFunc": "get",
+                "ParamsOptional": 0,
+                "ParamsRequired": 0
             },
             "Set": {
-                "MapsToFunc":"set",
-                "ParamsOptional":0,
-                "ParamsRequired":1
+                "MapsToFunc": "set",
+                "ParamsOptional": 0,
+                "ParamsRequired": 1
             }
         }
     },
