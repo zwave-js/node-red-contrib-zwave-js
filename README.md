@@ -21,6 +21,12 @@ The node is straightforward to use, and removes all the complexities that you wo
 **node-red-contrib-zwave-js** is based on  [ZWave-JS](https://zwave-js.github.io/node-zwave-js/#/).  
 ZWave-JS is actively  maintained, fast and supports the security command class.
 
+## Home Assistant Users
+Confusion has come about, with the new zwave stack for HA, which just so happens to be 
+based on the same z-wave js lib, this node-red plugin uses.  
+
+This plugin, is not designed to bridge node-red and HA, it's designed for use in node-red  only, regardless of it's host/container.
+
 The node operates in 2 ways : **Managed** and **Unmanaged**  
 
 Managed Mode is where the plugin it's self, manages the routing to the correct command class  
@@ -434,7 +440,7 @@ The COLOR value should be an object formatted like below.
 ## Version History  
 
   - 1.4.0  **Possible Breaking Change**  
-    - Bump Z-Wave JS to 6.1.1
+    - Bump Z-Wave JS to 6.4.0
     - The response to the Unmanaged method **GetValue** is now delivered via a **GET_VALUE_RESPONSE** event, where the **object** property contains the return value, and the Value ID
     - Fix Node Red crash on failure listing serial ports ([#18](https://github.com/zwave-js/node-red-contrib-zwave-js/pull/18))  
     - Optimisations to speed up initialisation of already inetrviewed nodes ([#20](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/20))  
