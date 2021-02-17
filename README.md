@@ -434,7 +434,7 @@ The COLOR value should be an object formatted like below.
 ## Version History  
 
   - 1.4.0  **Possible Breaking Change**  
-    - Bump Z-Wave JS to 6.1.3
+    - Bump Z-Wave JS to 6.4.0
     - The response to the Unmanaged method **GetValue** is now delivered via a **GET_VALUE_RESPONSE** event, where the **object** property contains the return value, and the Value ID
     - Fix Node Red crash on failure listing serial ports ([#18](https://github.com/zwave-js/node-red-contrib-zwave-js/pull/18))  
     - Optimisations to speed up initialisation of already inetrviewed nodes ([#20](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/20))  
