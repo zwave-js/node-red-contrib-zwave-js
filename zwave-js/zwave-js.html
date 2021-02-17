@@ -1,4 +1,6 @@
 ﻿
+<script src="zwave-js/client.js"></script>
+<link rel="stylesheet" href="zwave-js/styles.css">
 <script type="text/javascript">
 
     RED.nodes.registerType('zwave-js',
@@ -23,6 +25,7 @@
                 return this.name;
             },
 
+            onpaletteadd:ZwaveJsUI.init,
             oneditprepare:SortUI
         });
 

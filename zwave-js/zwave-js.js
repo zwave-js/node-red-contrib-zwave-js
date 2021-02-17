@@ -8,8 +8,12 @@ module.exports = function (RED) {
     const EnumLookup = require('./Enums.json')
     const Path = require('path')
     const FS = require('fs')
+    const mock = require('./mock')
 
     const NodeInterviewStage = ["None", "ProtocolInfo", "NodeInfo", "RestartFromCache", "CommandClasses", "OverwriteConfig", "Neighbors", "Complete"]
+
+    const UI = require('./ui/server.js')
+    UI.init(RED)
 
     function Init(config) {
         const node = this;
@@ -50,12 +54,15 @@ module.exports = function (RED) {
         var Driver;
 
         try {
-            Driver = new ZW.Driver(config.serialPort, DriverOptions);
+          Driver = mock()
+            // Driver = new ZW.Driver(config.serialPort, DriverOptions);
         }
         catch (e) {
             node.error(e);
             return;
         }
+
+        UI.register(Driver, Input)
 
         Driver.on("error", (e) => {
             node.error(e);
@@ -73,23 +80,29 @@ module.exports = function (RED) {
             /* green light already interviewed nodes, to speed up ability to receieve events */
             let HomeID = Driver.controller.homeId;
             let NodeStateCacheFile = Path.join(RED.settings.userDir, "zwave-js-cache", (HomeID).toString(16)+".json");
-            let FileContent = FS.readFileSync(NodeStateCacheFile,'utf8')
-
-            let Cache = JSON.parse(FileContent);
-            let Nodes = Object.keys(Cache.nodes);
             
-            for(let i = 0;i<Nodes.length;i++){
+            /* For new installs, the file won't have been created (or this quick at least ) */
+            /* This is fine, as the full inetrview will need to take place if so - so the green light wil be given after the interview */
+            if(FS.existsSync(NodeStateCacheFile)){
 
-                if(Nodes[i] < 2){
-                    continue;
-                }
-                
-                let NodeState = Cache.nodes[Nodes[i]];
-                
-                if(NodeState.interviewStage == "Complete" || NodeState.interviewStage == "RestartFromCache"){
+                let FileContent = FS.readFileSync(NodeStateCacheFile,'utf8')
 
-                    NodesReady.push(Nodes[i]);
-                    node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
+                let Cache = JSON.parse(FileContent);
+                let Nodes = Object.keys(Cache.nodes);
+
+                for(let i = 0;i<Nodes.length;i++){
+          
+                    let NodeState = Cache.nodes[Nodes[i]];
+
+                    if(NodeState.id < 2){
+                        continue;
+                    }
+                    
+                    if(NodeState.interviewStage == "Complete" || NodeState.interviewStage == "RestartFromCache"){
+
+                        NodesReady.push(NodeState.id);
+                        node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
+                    }
                 }
             }
 
@@ -191,13 +204,16 @@ module.exports = function (RED) {
         });
 
         node.on('close', (done) => {
+            UI.unregister(Driver.controller.homeId)
             Driver.destroy();
             if (done) {
                 done();
             }
         });
 
-        node.on('input', async (msg, send, done) => {
+        node.on('input', Input);
+        
+        async function Input(msg, send, done) {
             try {
                 let Class = msg.payload.class;
 
@@ -227,7 +243,7 @@ module.exports = function (RED) {
                     node.error(er);
                 }
             }
-        });
+        };
 
         function NodeCheck(ID) {
             if (Driver.controller.nodes.get(ID) == null) {
@@ -336,6 +352,16 @@ module.exports = function (RED) {
                     }
                     Send(ReturnNode, "GET_VALUE_RESPONSE", ReturnObject, send);
                     break;
+
+                case "GetValueMetadata":
+                    let M = Driver.controller.nodes.get(Node).getValueMetadata(Params[0]);
+                    
+                    let ReturnObjectM = {
+                        response:M,
+                        valueId:Params[0]
+                    }
+                    Send(ReturnNode, "GET_VALUE_METADATA_RESPONSE", ReturnObjectM, send);
+                    break;
             }
 
             return;
@@ -353,10 +379,11 @@ module.exports = function (RED) {
                 case "GetNodes":
                     let Nodes = [];
                     Driver.controller.nodes.forEach((C, CK) => {
-
                         Nodes[CK] =
                         {
                             nodeId: C.id,
+                            status: C.status,
+                            name: C.name,
                             interviewStage: NodeInterviewStage[C.interviewStage],
                             isSecure: C.isSecure,
                             manufacturerId: C.manufacturerId,
@@ -368,7 +395,15 @@ module.exports = function (RED) {
                     Send(ReturnController, "NODE_LIST", Nodes, send);
                     break;
 
+                case "SetNodeName":
+                    NodeCheck(Params[0])
+                    Driver.controller.nodes.get(Params[0]).name = Params[1]
+                    ReturnNode.id = Params[0]
+                    Send(ReturnNode, "NODE_NAME_SET", Params[1], send)
+                    break
+
                 case "InterviewNode":
+                    Params[0] = +Params[0]
                     NodeCheck(Params[0]);
                     let Stage = NodeInterviewStage[Driver.controller.nodes.get(Params[0]).interviewStage];
                     if (Stage != "Complete") {
@@ -468,5 +503,4 @@ module.exports = function (RED) {
             }
         )
     });
-
 }
