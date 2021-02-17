@@ -1,2 +1,6 @@
 
 .DS_Store
+node_modules
+zwave-js/mock
+.prettierignore
+.vscode
