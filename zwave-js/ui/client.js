@@ -3,11 +3,13 @@ let ZwaveJsUI = (function () {
   const AUTO_HIDE_CC = [
     'Association',
     'Association Group Information',
-    'Z-Wave Plus Info',
-    'Version',
+    'Firmware Update Meta Data',
     'Manufacturer Specific',
     'Multi Channel',
-    'Multi Channel Association'
+    'Multi Channel Association',
+    'Node Naming and Location',
+    'Version',
+    'Z-Wave Plus Info'
   ]
 
   function init() {
@@ -331,7 +333,10 @@ let ZwaveJsUI = (function () {
 
   function renderReadyIcon(stage) {
     let i = $('<i>')
-    if (stage === 'Complete' || stage === 'RestartFromCache') {
+    if (stage === 'RestartFromCache') {
+      i.addClass('fa fa-thumbs-o-up')
+      RED.popover.tooltip(i, 'Ready (From Cache)')
+    } else if (stage === 'Complete') {
       i.addClass('fa fa-thumbs-up')
       RED.popover.tooltip(i, 'Ready')
     }
@@ -391,7 +396,6 @@ let ZwaveJsUI = (function () {
   }
 
   function updateNodeFetchStatus(text) {
-    // $('#zwave-js-node-fetch-status').html(text)
     $('#zwave-js-node-properties').treeList('data', [
       {
         label: text,
@@ -512,7 +516,7 @@ let ZwaveJsUI = (function () {
       params: [valueId]
     }).then(({ node, object: { valueId, response: value } }) => {
       if (node != selectedNode) return
-      updateValue({ ...valueId, newValue: value })
+      updateValue({ ...valueId, value })
 
       // Then get meta data which will:
       // 1. translate the value if possible
@@ -532,6 +536,8 @@ let ZwaveJsUI = (function () {
   }
 
   function updateValue(valueId) {
+    // Assumes you already checked if this applies to selectedNode
+
     let propertyRow = getPropertyRow(valueId)
 
     if (!propertyRow) {
@@ -546,29 +552,34 @@ let ZwaveJsUI = (function () {
     let propertyValue = propertyRow.find('.zwave-js-node-property-value')
     let meta = propertyRow.data('meta')
 
-    // If value is not provided in arguments or in the valueId,
-    // then it will use already displayed value.
-
-    let value = valueId?.newValue ?? valueId?.value ?? propertyValue?.text() ?? ''
-
+    // Check if this is a 'value removed' event
     if (valueId.hasOwnProperty('prevValue') && !valueId.hasOwnProperty('newValue')) {
-      // This is a 'value removed' event
       propertyValue.text('')
       return
     }
 
+    // If value is not provided in arguments or in the valueId,
+    // then it will use already displayed value.
+    let value = valueId?.newValue ?? valueId?.value ?? propertyValue?.text() ?? ''
+
     // If meta found (or updated), it will translate the displayed
     // value (if not already done) and add tooltip with raw value
-
     if (meta?.states?.[value]) {
       propertyValue.text(meta?.states?.[value])
       RED.popover.tooltip(propertyValue, `Raw Value: ${value}`)
     } else {
       propertyValue.text(value)
     }
+
+    // Some formatting (don't wait for meta; just check value itself)
+    if (/^(true|false)$/.test(value)) {
+      propertyValue.addClass(`zwave-js-property-value-type-boolean`)
+    }
   }
 
   function updateMeta(valueId, meta = {}) {
+    // Assumes you already checked if this applies to selectedNode
+
     let propertyRow = getPropertyRow(valueId)
 
     propertyRow.data('meta', meta)
@@ -578,9 +589,10 @@ let ZwaveJsUI = (function () {
     if (meta.hasOwnProperty('label')) propertyName.text(meta.label)
     if (meta.hasOwnProperty('description')) RED.popover.tooltip(propertyName, meta.description)
 
-    updateValue(valueId) // Will cause current value to be
-    // translated (if not already) and add tooltip with raw value
+    // Will cause current value to be translated (if not already) and add tooltip with raw value
+    updateValue(valueId)
 
+    // Add "edit" icon, if applicable
     let icon = propertyRow.prev()
     icon.empty()
     if (meta.writeable)
@@ -659,8 +671,14 @@ let ZwaveJsUI = (function () {
       } else if (meta.type == 'boolean') {
         // BOOLEAN
         editor.append(
-          $('<div>').append(makeSetButton(true), $('<span>').text('True')),
-          $('<div>').append(makeSetButton(false), $('<span>').text('False'))
+          $('<div>').append(
+            makeSetButton(true),
+            $('<span>').addClass('zwave-js-property-value-type-boolean').text('True')
+          ),
+          $('<div>').append(
+            makeSetButton(false),
+            $('<span>').addClass('zwave-js-property-value-type-boolean').text('False')
+          )
         )
       } else if (meta.type == 'string') {
         // STRING
@@ -683,7 +701,7 @@ let ZwaveJsUI = (function () {
 
   function makeValueIdStr(valueId, ignoreKey) {
     return [
-      valueId.endpoint,
+      valueId.endpoint || '0',
       valueId.commandClass,
       valueId.property,
       ignoreKey ? '' : valueId.propertyKey
@@ -697,7 +715,7 @@ let ZwaveJsUI = (function () {
   function controllerRequest(req) {
     return $.ajax({
       url: `zwave-js/${selectedController}`,
-      type: 'POST',
+      method: 'POST',
       contentType: 'application/json',
       data: JSON.stringify(req)
     })

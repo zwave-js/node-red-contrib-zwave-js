@@ -46,7 +46,9 @@ module.exports = {
 
       Controller.request(
         { payload: req.body },
-        zwaveRes => res.send(zwaveRes.payload),
+        zwaveRes => {
+          res.send(zwaveRes.payload)
+        },
         err => err && res.status(500).send(err.message)
       )
     })
@@ -75,22 +77,24 @@ module.exports = {
         })
       })
 
-      let emitNodeStatus = status => node =>
+      let emitNodeStatus = status => node => {
         _RED.comms.publish(`/zwave-js/${homeId}`, {
           type: 'node-status',
           node: node.id,
           status
         })
+      }
       let emitNodeAsleep = emitNodeStatus(1)
       let emitNodeAwake = emitNodeStatus(2)
       let emitNodeDead = emitNodeStatus(3)
       let emitNodeAlive = emitNodeStatus(4)
 
-      let emitNodeEvent = type => (node, payload) =>
+      let emitNodeEvent = type => (node, payload) => {
         _RED.comms.publish(`/zwave-js/${homeId}/${node.id}`, {
           type,
           payload
         })
+      }
       let emitNodeInterview = emitNodeEvent('node-interview')
       let emitNodeValue = emitNodeEvent('node-value')
       let emitNodeMeta = emitNodeEvent('node-meta')

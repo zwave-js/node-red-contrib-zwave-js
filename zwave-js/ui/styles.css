@@ -54,3 +54,7 @@
   text-align: right;
   margin-right: 10px;
 }
+.zwave-js-property-value-type-boolean {
+  text-transform: uppercase;
+  font-size: smaller;
+}

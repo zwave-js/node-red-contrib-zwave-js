@@ -8,7 +8,7 @@ module.exports = function (RED) {
     const EnumLookup = require('./Enums.json')
     const Path = require('path')
     const FS = require('fs')
-    const mock = require('./mock')
+    // const mock = require('./mock')  // For Testing
 
     const NodeInterviewStage = ["None", "ProtocolInfo", "NodeInfo", "RestartFromCache", "CommandClasses", "OverwriteConfig", "Neighbors", "Complete"]
 
@@ -54,8 +54,8 @@ module.exports = function (RED) {
         var Driver;
 
         try {
-          Driver = mock()
-            // Driver = new ZW.Driver(config.serialPort, DriverOptions);
+            // Driver = mock()  // For Testing
+            Driver = new ZW.Driver(config.serialPort, DriverOptions);
         }
         catch (e) {
             node.error(e);
