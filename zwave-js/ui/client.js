@@ -628,6 +628,7 @@ let ZwaveJsUI = (function () {
           .html('Set')
           .click(() => {
             if (val == undefined) val = input.val()
+            if (meta.type == 'number') val = +val
 
             // Step 3: Send value change request and close editor
             controllerRequest({
@@ -656,7 +657,7 @@ let ZwaveJsUI = (function () {
           Object.entries(meta.states).map(([val, label]) => {
             let labelSpan = $('<span>').text(label)
             RED.popover.tooltip(labelSpan, `Raw Value: ${val}`)
-            return $('<div>').append(makeSetButton(meta.type == 'number' ? +val : val), labelSpan)
+            return $('<div>').append(makeSetButton(val), labelSpan)
           })
         )
       } else if (meta.type == 'number') {
