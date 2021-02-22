@@ -12,6 +12,30 @@ let ZwaveJsUI = (function () {
     'Z-Wave Plus Info'
   ]
 
+  function confirm(text, onYes, onCancel) {
+    $('<div>')
+      .css({ padding: 10, maxWidth: 500, wordWrap: 'break-word' })
+      .html(text)
+      .dialog({
+        draggable: false,
+        modal: true,
+        resizable: false,
+        width: 'auto',
+        title: 'Confirm',
+        minHeight: 75,
+        buttons: {
+          Yes: function () {
+            onYes?.()
+            $(this).dialog('destroy')
+          },
+          Cancel: function () {
+            onCancel?.()
+            $(this).dialog('destroy')
+          }
+        }
+      })
+  }
+
   function init() {
     // Sidebar container
 
@@ -157,25 +181,6 @@ let ZwaveJsUI = (function () {
 
     let nodeOpts = $('<div>').appendTo(nodeHeader).hide()
 
-    // -- -- -- -- Interview node
-
-    let optInterview = $('<div>').appendTo(nodeOpts)
-    $('<button>')
-      .addClass('red-ui-button red-ui-button-small')
-      .html('Interview Node')
-      .click(() => {
-        $('#zwave-js-status-box-interview').text('...')
-        controllerRequest({
-          class: 'Controller',
-          operation: 'InterviewNode',
-          params: [+selectedNode]
-        }).catch(err => alert(err.responseText))
-      })
-      .appendTo(optInterview)
-    $('<span id="zwave-js-status-box-interview">')
-      .addClass('zwave-js-status-box')
-      .appendTo(optInterview)
-
     // -- -- -- -- Set name
 
     let rename = $('<div>').appendTo(nodeOpts)
@@ -207,6 +212,45 @@ let ZwaveJsUI = (function () {
         }
       })
       .appendTo(rename)
+
+    // -- -- -- -- Interview node
+
+    let optInterview = $('<div>').appendTo(nodeOpts)
+    $('<button>')
+      .addClass('red-ui-button red-ui-button-small')
+      .html('Interview Node')
+      .click(() => {
+        $('#zwave-js-status-box-interview').text('...')
+        controllerRequest({
+          class: 'Controller',
+          operation: 'InterviewNode',
+          params: [+selectedNode]
+        }).catch(err => alert(err.responseText))
+      })
+      .appendTo(optInterview)
+    $('<span id="zwave-js-status-box-interview">')
+      .addClass('zwave-js-status-box')
+      .appendTo(optInterview)
+
+    // -- -- -- -- Remove failed node
+
+    $('<div>')
+      .appendTo(nodeOpts)
+      .append(
+        $('<button>')
+          .addClass('red-ui-button red-ui-button-small')
+          .html('Remove Failed Node')
+          .click(() =>
+            confirm('Are you sure you want to remove this node?', () => {
+              controllerRequest({
+                class: 'Controller',
+                operation: 'RemoveFailedNode',
+                params: [selectedNode]
+              })
+              selectNode(1)
+            })
+          )
+      )
 
     // -- -- -- -- Refresh property list
 

@@ -436,6 +436,10 @@ module.exports = function (RED) {
                     Send(ReturnController, "NETWORK_HEAL_STOPPED", null, send)
                     break;
 
+                case "RemoveFailedNode":
+                    await Driver.controller.removeFailedNode(Params[0]);
+                    break;
+
                 case "StartInclusion":
                     await Driver.controller.beginInclusion(Params[0]);
                     break;
