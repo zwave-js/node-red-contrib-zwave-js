@@ -4,7 +4,7 @@ let ZwaveJsUI = (function () {
     'Association',
     'Association Group Information',
     'Firmware Update Meta Data',
-    'Manufacturer Specific',
+    // 'Manufacturer Specific',
     'Multi Channel',
     'Multi Channel Association',
     'Node Naming and Location',
@@ -602,12 +602,11 @@ let ZwaveJsUI = (function () {
       return
     }
 
-    // If value is not provided in arguments or in the valueId,
-    // then it will use already displayed value.
-    let value = valueId?.newValue ?? valueId?.value ?? propertyValue?.text() ?? ''
+    // If value is not provided in arguments or in the valueId, then use the stored raw value.
+    let value = valueId?.newValue ?? valueId?.value ?? propertyValue.data('value') ?? ''
 
-    // If meta found (or updated), it will translate the displayed
-    // value (if not already done) and add tooltip with raw value
+    // If meta known, translate the value and add tooltip with raw value
+    // Otherwise just display raw value
     if (meta?.states?.[value]) {
       propertyValue.text(meta?.states?.[value])
       RED.popover.tooltip(propertyValue, `Raw Value: ${value}`)
@@ -615,16 +614,20 @@ let ZwaveJsUI = (function () {
       propertyValue.text(value)
     }
 
-    // Some formatting (don't wait for meta; just check value itself)
+    // Some formatting
     if (/^(true|false)$/.test(value)) {
       propertyValue.addClass(`zwave-js-property-value-type-boolean`)
     }
+
+    // Store raw value in data
+    propertyValue.data('value', value)
   }
 
   function updateMeta(valueId, meta = {}) {
     // Assumes you already checked if this applies to selectedNode
 
     let propertyRow = getPropertyRow(valueId)
+    let propertyValue = propertyRow.find('.zwave-js-node-property-value')
 
     propertyRow.data('meta', meta)
 
@@ -633,8 +636,12 @@ let ZwaveJsUI = (function () {
     if (meta.hasOwnProperty('label')) propertyName.text(meta.label)
     if (meta.hasOwnProperty('description')) RED.popover.tooltip(propertyName, meta.description)
 
-    // Will cause current value to be translated (if not already) and add tooltip with raw value
-    updateValue(valueId)
+    // If states are provided, translate and add tooltip with raw value
+    let value = propertyValue.data('value')
+    if (meta?.states?.[value]) {
+      propertyValue.text(meta?.states?.[value])
+      RED.popover.tooltip(propertyValue, `Raw Value: ${value}`)
+    }
 
     // Add "edit" icon, if applicable
     let icon = propertyRow.prev()
