@@ -392,7 +392,8 @@ module.exports = function (RED) {
                             manufacturerId: C.manufacturerId,
                             productId: C.productId,
                             productType: C.productType,
-                            neighbors: C.neighbors
+                            neighbors: C.neighbors,
+                            deviceConfig: C.deviceConfig
                         }
                     });
                     Send(ReturnController, "NODE_LIST", Nodes, send);

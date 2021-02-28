@@ -181,6 +181,13 @@ let ZwaveJsUI = (function () {
 
     let nodeOpts = $('<div>').appendTo(nodeHeader).hide()
 
+    // -- -- -- -- Node info
+
+    $('<div>')
+      .css({ display: 'flex', justifyContent: 'center' })
+      .append($('<span id="zwave-js-selected-node-info">').css({ fontWeight: 'normal' }))
+      .appendTo(nodeOpts)
+
     // -- -- -- -- Set name
 
     let rename = $('<div>').appendTo(nodeOpts)
@@ -355,6 +362,7 @@ let ZwaveJsUI = (function () {
       operation: 'GetNodes'
     })
       .then(({ object }) => {
+        console.log(object)
         $('#zwave-js-node-list')
           .empty()
           .append(object.filter(node => node).map(renderNode))
@@ -366,6 +374,7 @@ let ZwaveJsUI = (function () {
     return $('<div>')
       .addClass('red-ui-treeList-label zwave-js-node-row')
       .attr('data-nodeid', node.nodeId)
+      .data('info', node)
       .click(() => selectNode(node.nodeId))
       .append(
         $('<div>').html(node.nodeId).addClass('zwave-js-node-row-id'),
@@ -412,8 +421,11 @@ let ZwaveJsUI = (function () {
     let selectedEl = $(`#zwave-js-node-list [data-nodeid='${id}']`)
     selectedEl.addClass('selected')
     $('#zwave-js-selected-node-id').text(selectedNode)
-    let name = selectedEl.find('.zwave-js-node-row-name').text()
-    $('#zwave-js-selected-node-name').text(name)
+    let info = selectedEl.data('info')
+    $('#zwave-js-selected-node-name').text(info.name)
+    $('#zwave-js-selected-node-info').text(
+      `${info.deviceConfig.manufacturer} ${info.deviceConfig.label} (${info.deviceConfig.description})`
+    )
     getProperties()
     RED.comms.subscribe(`/zwave-js/${selectedController}/${selectedNode}`, handleNodeEvent)
   }
@@ -536,7 +548,7 @@ let ZwaveJsUI = (function () {
 
   function renderCommandClassElement(commandClass, commandClassName) {
     let el = $('<span>').text(commandClassName)
-    RED.popover.tooltip(el, `#${commandClass} | 0x${commandClass.toString(16)}`)
+    RED.popover.tooltip(el, hexDisplay(commandClass))
     return el
   }
 
@@ -605,12 +617,20 @@ let ZwaveJsUI = (function () {
     // If value is not provided in arguments or in the valueId, then use the stored raw value.
     let value = valueId?.newValue ?? valueId?.value ?? propertyValue.data('value') ?? ''
 
-    // If meta known, translate the value and add tooltip with raw value
-    // Otherwise just display raw value
     if (meta?.states?.[value]) {
+      // If meta known, translate the value and add tooltip with raw value
       propertyValue.text(meta?.states?.[value])
       RED.popover.tooltip(propertyValue, `Raw Value: ${value}`)
+    } else if (valueId.commandClass == 114) {
+      // If command class "Manufacturer Specific", show hex values
+      propertyValue.text(hexDisplay(value))
+      if (valueId.property == 'manufacturerId')
+        RED.popover.tooltip(
+          propertyValue,
+          $(`#zwave-js-node-list .selected`).data('info')?.deviceConfig?.manufacturer
+        )
     } else {
+      // Otherwise just display raw value
       propertyValue.text(value)
     }
 
@@ -749,6 +769,10 @@ let ZwaveJsUI = (function () {
         return
       }
     }
+  }
+
+  function hexDisplay(integer) {
+    return `#${integer} | 0x${integer.toString(16).toUpperCase().padStart(4, '0')}`
   }
 
   function makeValueIdStr(valueId, ignoreKey) {
