@@ -111,12 +111,20 @@ let ZwaveJsUI = (function () {
         )
     }
 
+    // -- -- -- -- Controller info
+
+    $('<div id="zwave-js-controller-info">').addClass('zwave-js-info-box').appendTo(controllerOpts)
+
+    // -- -- -- -- Inclusion
+
     let optInclusion = $('<div>').appendTo(controllerOpts)
     makeControllerOption('Start Inclusion', 'StartInclusion', [true]).appendTo(optInclusion)
     makeControllerOption('Stop Inclusion', 'StopInclusion').appendTo(optInclusion)
     $('<span id="zwave-js-status-box-inclusion">')
       .addClass('zwave-js-status-box')
       .appendTo(optInclusion)
+
+    // -- -- -- -- Exclusion
 
     let optExclusion = $('<div>').appendTo(controllerOpts)
     makeControllerOption('Start Exclusion', 'StartExclusion').appendTo(optExclusion)
@@ -125,10 +133,14 @@ let ZwaveJsUI = (function () {
       .addClass('zwave-js-status-box')
       .appendTo(optExclusion)
 
+    // -- -- -- -- Heal network
+
     let optHeal = $('<div>').appendTo(controllerOpts)
     makeControllerOption('Start Heal Network', 'StartHealNetwork').appendTo(optHeal)
     makeControllerOption('Stop Heal Network', 'StopHealNetwork').appendTo(optHeal)
     $('<span id="zwave-js-status-box-heal">').addClass('zwave-js-status-box').appendTo(optHeal)
+
+    // -- -- -- -- Refresh node list
 
     let optRefresh = $('<div>').appendTo(controllerOpts)
     $('<button>')
@@ -184,15 +196,7 @@ let ZwaveJsUI = (function () {
 
     // -- -- -- -- Node info
 
-    $('<div>')
-      .css({ display: 'flex', justifyContent: 'center' })
-      .append(
-        $('<span id="zwave-js-selected-node-info">').css({
-          fontWeight: 'normal',
-          textAlign: 'center'
-        })
-      )
-      .appendTo(nodeOpts)
+    $('<div id="zwave-js-selected-node-info">').addClass('zwave-js-info-box').appendTo(nodeOpts)
 
     // -- -- -- -- Set name
 
@@ -369,6 +373,9 @@ let ZwaveJsUI = (function () {
     })
       .then(({ object }) => {
         console.log(object)
+
+        makeInfo('#zwave-js-controller-info', object[1].deviceConfig) // Node 1 should be the controller
+
         $('#zwave-js-node-list')
           .empty()
           .append(object.filter(node => node).map(renderNode))
@@ -402,6 +409,15 @@ let ZwaveJsUI = (function () {
     return i
   }
 
+  function makeInfo(elId, deviceConfig = {}) {
+    $(elId)
+      .empty()
+      .append(
+        $('<span>').text(`${deviceConfig.manufacturer} ${deviceConfig.label}`),
+        $('<span>').text(`(${deviceConfig.description})`)
+      )
+  }
+
   function cancelSetName() {
     let setNameButton = $('#zwave-js-set-node-name')
     if (setNameButton.html() == 'Go') setNameButton.html('Set Name').prev().hide()
@@ -433,9 +449,7 @@ let ZwaveJsUI = (function () {
     $('#zwave-js-selected-node-id').text(selectedNode)
     let info = selectedEl.data('info')
     $('#zwave-js-selected-node-name').text(info.name)
-    $('#zwave-js-selected-node-info').text(
-      `${info.deviceConfig.manufacturer} ${info.deviceConfig.label} (${info.deviceConfig.description})`
-    )
+    makeInfo('#zwave-js-selected-node-info', info.deviceConfig)
     getProperties()
     RED.comms.subscribe(`/zwave-js/${selectedController}/${selectedNode}`, handleNodeEvent)
   }

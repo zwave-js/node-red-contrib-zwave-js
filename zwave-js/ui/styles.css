@@ -1,3 +1,11 @@
+.zwave-js-info-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  font-weight: normal;
+  text-align: center;
+  padding: 3px;
+}
 .zwave-js-node-row {
   border-bottom: dotted 1px gray;
   display: flex;
