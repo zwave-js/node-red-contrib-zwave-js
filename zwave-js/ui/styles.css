@@ -1,9 +1,8 @@
 .zwave-js-info-box {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  align-items: center;
   font-weight: normal;
-  text-align: center;
   padding: 3px;
 }
 .zwave-js-node-row {

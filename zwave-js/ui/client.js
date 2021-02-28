@@ -142,12 +142,11 @@ let ZwaveJsUI = (function () {
 
     // -- -- -- -- Refresh node list
 
-    let optRefresh = $('<div>').appendTo(controllerOpts)
     $('<button>')
       .addClass('red-ui-button red-ui-button-small')
       .html('Refresh Node List')
       .click(() => getNodes(selectedController))
-      .appendTo(optRefresh)
+      .appendTo(controllerOpts)
 
     // -- -- Controller node list
 
@@ -414,12 +413,39 @@ let ZwaveJsUI = (function () {
   }
 
   function makeInfo(elId, deviceConfig = {}) {
-    $(elId)
-      .empty()
+    let el = $(elId)
+
+    let moreInfo = $('<dl>')
+      .css({ whiteSpace: 'pre-wrap', width: '-webkit-fill-available' })
       .append(
-        $('<span>').text(`${deviceConfig.manufacturer} ${deviceConfig.label}`),
-        $('<span>').text(`(${deviceConfig.description})`)
+        ...Object.entries(deviceConfig.metadata || {}).map(([key, val]) => {
+          return [
+            $('<dt>').html(key),
+            $('<dd>').html(
+              val.replace(/http[^\s]*/g, url => `<a href="${url}">${url.slice(0, 30)}...</a>`)
+            )
+          ]
+        })
       )
+      .hide()
+
+    el.empty().append(
+      $('<span>').text(`${deviceConfig.manufacturer} ${deviceConfig.label}`),
+      $('<span>').text(`(${deviceConfig.description})`),
+      $('<button>')
+        .addClass('red-ui-button red-ui-button-small')
+        .html('More Info')
+        .click(function () {
+          if ($(this).html() == 'More Info') {
+            moreInfo.show()
+            $(this).html('Less Info')
+          } else {
+            moreInfo.hide()
+            $(this).html('More Info')
+          }
+        }),
+      moreInfo
+    )
   }
 
   function cancelSetName() {
