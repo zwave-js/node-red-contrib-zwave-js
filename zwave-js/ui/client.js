@@ -658,6 +658,11 @@ let ZwaveJsUI = (function () {
       RED.popover.tooltip(propertyValue, `Raw Value: ${value}`)
     }
 
+    // If unit is provided, add to value
+    if (meta.hasOwnProperty('unit')) {
+      propertyValue.text(value + meta.unit)
+    }
+
     // Add "edit" icon, if applicable
     let icon = propertyRow.prev()
     icon.empty()
