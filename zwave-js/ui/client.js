@@ -279,6 +279,23 @@ let ZwaveJsUI = (function () {
           .click(() => getProperties())
       )
 
+    // -- -- -- -- View in config db
+
+    $('<button>')
+      .addClass('red-ui-button red-ui-button-small')
+      .html('View in Config Database')
+      .click(() => {
+        let info = $(`.zwave-js-node-row.selected`).data('info')?.deviceConfig || {}
+        let id = [
+          '0x' + info.manufacturerId.toString(16).padStart(4, '0'),
+          info.devices[0].productType,
+          info.devices[0].productId,
+          info.firmwareVersion.min
+        ].join(':')
+        window.open(`https://devices.zwave-js.io/?jumpTo=${id}`, '_blank')
+      })
+      .appendTo(nodeOpts)
+
     // -- -- -- -- Filter by endpoint
 
     $('<div id="zwave-js-node-endpoint-filter">').appendTo(nodeOpts)
