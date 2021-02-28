@@ -168,6 +168,7 @@ let ZwaveJsUI = (function () {
       .html('Show Node Options')
       .click(function () {
         if (nodeOpts.is(':visible')) {
+          cancelSetName()
           $(this).html('Show Node Options')
           nodeOpts.hide()
         } else {
@@ -185,7 +186,12 @@ let ZwaveJsUI = (function () {
 
     $('<div>')
       .css({ display: 'flex', justifyContent: 'center' })
-      .append($('<span id="zwave-js-selected-node-info">').css({ fontWeight: 'normal' }))
+      .append(
+        $('<span id="zwave-js-selected-node-info">').css({
+          fontWeight: 'normal',
+          textAlign: 'center'
+        })
+      )
       .appendTo(nodeOpts)
 
     // -- -- -- -- Set name
@@ -396,6 +402,11 @@ let ZwaveJsUI = (function () {
     return i
   }
 
+  function cancelSetName() {
+    let setNameButton = $('#zwave-js-set-node-name')
+    if (setNameButton.html() == 'Go') setNameButton.html('Set Name').prev().hide()
+  }
+
   let selectedNode
 
   function deselectCurrentNode() {
@@ -403,8 +414,7 @@ let ZwaveJsUI = (function () {
     if (selectedNode) {
       $(`#zwave-js-node-list [data-nodeid='${selectedNode}']`).removeClass('selected')
 
-      let setNameButton = $('#zwave-js-set-node-name')
-      if (setNameButton.html() == 'Go') setNameButton.html('Set Name').prev().hide()
+      cancelSetName()
 
       $('#zwave-js-status-box-interview').text('')
 
@@ -493,42 +503,20 @@ let ZwaveJsUI = (function () {
         // Step 2: For each CC, get all associated properties
         let propsInCC = valueIdList.filter(valueId => valueId.commandClass == commandClass)
 
-        // Step 3: Make list of each unique endpoint/property combo
-        let epPropCombos = uniqBy(propsInCC, 'endpoint', 'property')
-
         return {
           element: renderCommandClassElement(commandClass, commandClassName),
           expanded: !AUTO_HIDE_CC.includes(commandClassName.replace(/\s/g, ' ')),
-          children: epPropCombos.map(({ endpoint, property, propertyName }) => {
-            // Step 4: For each endpoint/property combo, get all associated keys (if applicable)
-            let propsWithEpProp = propsInCC.filter(
-              valueId => valueId.endpoint == endpoint && valueId.property == property
-            )
-
-            // Step 5: Make list of unique property keys for this endpoint/property combo
-            // (Note in most cases there are no keys, so there will only be one property)
-            let keys = uniqBy(propsWithEpProp, 'propertyKey')
-
-            // Step 6a: Generate property element for non-keyed property
-            if (keys.length == 1) {
-              return { element: renderPropertyElement(keys[0], 'property') }
-            }
-
-            // Step 6b: Generate property element (and children elements) for keyed property
-            return {
-              element: renderPropertyElement(keys[0], 'property', true),
-              children: keys.map(valueId => ({
-                element: renderPropertyElement(valueId, 'propertyKey')
-              }))
-            }
+          children: propsInCC.map(valueId => {
+            return { element: renderPropertyElement(valueId) }
           })
         }
       })
 
+    // Step 3: Render tree
     let propertyList = $('#zwave-js-node-properties')
     propertyList.treeList('data', data)
 
-    // After tree is rendered, add endpoint numbers where applicable
+    // Step 4: Add endpoint numbers where applicable
     propertyList
       .find('.zwave-js-node-property')
       .filter(function () {
@@ -552,14 +540,21 @@ let ZwaveJsUI = (function () {
     return el
   }
 
-  function renderPropertyElement(valueId, field, hasPropertyKeys) {
+  function renderPropertyElement(valueId) {
     let el = $('<div>')
       .addClass('zwave-js-node-property')
       .attr('data-endpoint', valueId.endpoint)
-      .attr('data-valueid', makeValueIdStr(valueId, hasPropertyKeys))
-    $('<span>').addClass('zwave-js-node-property-name').text(valueId[field]).appendTo(el)
+      .attr('data-valueid', makeValueIdStr(valueId))
+    let label =
+      valueId.propertyKeyName ??
+      valueId.propertyName ??
+      valueId.property +
+        (valueId.propertyKey !== undefined
+          ? `[0x${valueId.propertyKey.toString(16).toUpperCase().padStart(2, '0')}]`
+          : '')
+    $('<span>').addClass('zwave-js-node-property-name').text(label).appendTo(el)
     $('<span>').addClass('zwave-js-node-property-value').appendTo(el)
-    if (!hasPropertyKeys) getValue(valueId)
+    getValue(valueId)
     return el
   }
 
@@ -775,12 +770,12 @@ let ZwaveJsUI = (function () {
     return `#${integer} | 0x${integer.toString(16).toUpperCase().padStart(4, '0')}`
   }
 
-  function makeValueIdStr(valueId, ignoreKey) {
+  function makeValueIdStr(valueId) {
     return [
       valueId.endpoint || '0',
       valueId.commandClass,
       valueId.property,
-      ignoreKey ? '' : valueId.propertyKey
+      valueId.propertyKey
     ].join('-')
   }
 
