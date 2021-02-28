@@ -280,6 +280,10 @@ let ZwaveJsUI = (function () {
           .click(() => getProperties())
       )
 
+    // -- -- -- -- Filter by endpoint
+
+    $('<div id="zwave-js-node-endpoint-filter">').appendTo(nodeOpts)
+
     // -- -- Node property list
 
     $('<div id="zwave-js-node-properties">')
@@ -372,7 +376,7 @@ let ZwaveJsUI = (function () {
       operation: 'GetNodes'
     })
       .then(({ object }) => {
-        console.log(object)
+        // console.log(object)
 
         makeInfo('#zwave-js-controller-info', object[1].deviceConfig) // Node 1 should be the controller
 
@@ -546,6 +550,33 @@ let ZwaveJsUI = (function () {
               .text(+$(this).attr('data-endpoint'))
           )
       })
+
+    // Step 5: Build endpoint filter buttons
+    let endpoints = uniqBy(valueIdList, 'endpoint').map(valueId => valueId.endpoint)
+    let filter = $('#zwave-js-node-endpoint-filter')
+    filter.empty()
+    if (endpoints.length > 1) {
+      filter.append(
+        'Filter by endpoint:',
+        endpoints.map(ep => {
+          return $('<button>')
+            .addClass('red-ui-button red-ui-button-small')
+            .css({ marginLeft: 1 })
+            .text(ep)
+            .click(() => {
+              $('.zwave-js-node-property').closest('li').hide()
+              $(`.zwave-js-node-property[data-endpoint="${ep}"]`).closest('li').show()
+            })
+        }),
+        $('<button>')
+          .addClass('red-ui-button red-ui-button-small')
+          .css({ marginLeft: 1 })
+          .text('ALL')
+          .click(() => {
+            $('.zwave-js-node-property').closest('li').show()
+          })
+      )
+    }
   }
 
   function renderCommandClassElement(commandClass, commandClassName) {
