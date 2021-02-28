@@ -53,8 +53,8 @@ module.exports = function (RED) {
         var Driver;
 
         try {
-            Driver = require('./mock')()  // For Testing
-            // Driver = new ZW.Driver(config.serialPort, DriverOptions);
+            // Driver = require('./mock')()  // For Testing
+            Driver = new ZW.Driver(config.serialPort, DriverOptions);
         }
         catch (e) {
             node.error(e);
