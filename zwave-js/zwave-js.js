@@ -8,6 +8,8 @@ module.exports = function (RED) {
     const EnumLookup = require('./Enums.json')
     const Path = require('path')
     const FS = require('fs')
+    const ZWJSPKG = require('zwave-js/package.json')
+    const MODPackage = require('../package.json')
 
     const NodeInterviewStage = ["None", "ProtocolInfo", "NodeInfo", "RestartFromCache", "CommandClasses", "OverwriteConfig", "Neighbors", "Complete"]
 
@@ -505,6 +507,12 @@ module.exports = function (RED) {
     }
 
     RED.nodes.registerType("zwave-js", Init);
+
+    RED.httpAdmin.get("/zwjsgetversion",function(req,res){
+
+        res.json({"zwjsversion":ZWJSPKG.version,"moduleversion":MODPackage.version})
+
+    })
 
     RED.httpAdmin.get("/zwjsgetports", RED.auth.needsPermission('serial.read'), function (req, res) {
 

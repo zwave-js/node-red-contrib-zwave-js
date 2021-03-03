@@ -449,6 +449,7 @@ The COLOR value should be an object formatted like below.
     - Bump Z-Wave JS,
     - Bump serialports
     - Driver timeouts now use defaults if not provided.
+    - Version information is now displayed in config UI.
 
   - 1.4.0  **Possible Breaking Change**  
     - Bump Z-Wave JS to 6.4.0
