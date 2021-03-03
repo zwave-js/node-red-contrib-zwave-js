@@ -15,6 +15,7 @@ module.exports = function (RED) {
     UI.init(RED)
 
     function Init(config) {
+
         const node = this;
         RED.nodes.createNode(this, config);
 
@@ -28,11 +29,17 @@ module.exports = function (RED) {
 
         // Timeout (Configurable via UI)
         DriverOptions.timeouts = {};
-        DriverOptions.timeouts.ack = parseInt(config.ackTimeout);
-        DriverOptions.timeouts.response = parseInt(config.controllerTimeout);
-        DriverOptions.timeouts.report = parseInt(config.sendResponseTimeout);
-        DriverOptions.timeouts.nodeAwake = parseInt(config.awakeTime);
-
+        if(config.ackTimeout != null && config.ackTimeout.length > 0){
+            DriverOptions.timeouts.ack = parseInt(config.ackTimeout);
+        }
+        if(config.controllerTimeout != null && config.controllerTimeout.length > 0){
+            DriverOptions.timeouts.response = parseInt(config.controllerTimeout);
+        }
+        if(config.sendResponseTimeout != null && config.sendResponseTimeout.length > 0){
+            DriverOptions.timeouts.report = parseInt(config.sendResponseTimeout);
+        }
+        
+        
         if (config.encryptionKey != null && config.encryptionKey.length > 0 &&  config.encryptionKey.startsWith('[') && config.encryptionKey.endsWith(']')) {
 
             let RemoveBrackets = config.encryptionKey.replace("[", "").replace("]", "");
@@ -53,7 +60,6 @@ module.exports = function (RED) {
         var Driver;
 
         try {
-            // Driver = require('./mock')()  // For Testing
             Driver = new ZW.Driver(config.serialPort, DriverOptions);
         }
         catch (e) {

@@ -151,6 +151,7 @@ There is another way however, that allows you to target command classes that are
 | Unmanaged                 | GetDefinedValueIDs                  | -                                                     | 
 | Unmanaged                 | SetValue                            | [ValueID, Value]                                      |
 | Unmanaged                 | GetValue                            | [ValueID]                                             |  
+| Unmanaged                 | GetValueMetadata                    | [ValueID]                                             |  
 
 The difference with this approach, is that you supply a [ValueID](https://zwave-js.github.io/node-zwave-js/#/api/valueid)  
 The ValueID interface uniquely identifies to which CC, endpoint and property a value belongs to.  
@@ -213,29 +214,30 @@ the payload below is also the payload you get when using any of the **Get** oper
 
 ## event Table.
 
-| event                     | node                                | object                          | Meaning                       |
-| ------------------------- | ----------------------------------- | ------------------------------- | ----------------------------- |  
-| NODE_ADDED                | The ID of the added node            |                                 | A Node Was Added              |
-| NODE_REMOVED              | The ID of the removed node          |                                 | A Node Was Removed            |
-| INCLUSION_STARTED         |                                     | Bool : Only secure devices      | Include Mode Started          |
-| INCLUSION_STOPPED         |                                     |                                 | include Mode Stopped          |
-| EXCLUSION_STARTED         |                                     |                                 | Exclude Mode Started          |
-| EXCLUSION_STOPPED         |                                     |                                 | Exclude Mode Stopped          |
-| NETWORK_HEAL_DONE         |                                     |                                 | Done Healing Network          |
-| NETWORK_HEAL_STARTED      |                                     |                                 | Started Healing Network       |
-| NETWORK_HEAL_STOPPED      |                                     |                                 | Stopped Healing Network       |
-| CONTROLLER_RESET_COMPLETE |                                     |                                 | The controller was reset      |
-| VALUE_UPDATED             | The source Node ID                  | The objects command content     | A Value Was Updated           |
-| VALUE_NOTIFICATION        | The source Node ID                  | The objects command content     | A Value Notification Was Received |
-| NOTIFICATION              | The source Node ID                  | The objects command content     | A Notification Was Sent       |
-| WAKE_UP                   | The source Node ID                  |                                 | A Node Has Woken Up           |
-| SLEEP                     | The source Node ID                  |                                 | A Node Has Gone To Sleep      |
-| INTERVIEW_COMPLETE        | The source Node ID                  |                                 | The node has been interviewed |
-| INTERVIEW_FAILED          | The source Node ID                  | Detailed Error Info             | Could not interview node      |
-| INTERVIEW_STARTED         | The source Node ID                  |                                 | Node interview started        |
-| NODE_LIST                 |                                     | ZWaveNode[]                     | Response to GetNodes          | 
-| VALUE_ID_LIST             | The source Node ID                  | ValueID[]                       | Response to GetDefinedValueIDs| 
-| GET_VALUE_RESPONSE        | The source Node ID                  | Value & Value ID                | Response to GetValue          | 
+| event                       | node                                | object                          | Meaning                           |
+| --------------------------- | ----------------------------------- | ------------------------------- | --------------------------------- |  
+| NODE_ADDED                  | The ID of the added node            |                                 | A Node Was Added                  |
+| NODE_REMOVED                | The ID of the removed node          |                                 | A Node Was Removed                |
+| INCLUSION_STARTED           |                                     | Bool : Only secure devices      | Include Mode Started              |
+| INCLUSION_STOPPED           |                                     |                                 | include Mode Stopped              |
+| EXCLUSION_STARTED           |                                     |                                 | Exclude Mode Started              |
+| EXCLUSION_STOPPED           |                                     |                                 | Exclude Mode Stopped              |
+| NETWORK_HEAL_DONE           |                                     |                                 | Done Healing Network              |
+| NETWORK_HEAL_STARTED        |                                     |                                 | Started Healing Network           |
+| NETWORK_HEAL_STOPPED        |                                     |                                 | Stopped Healing Network           |
+| CONTROLLER_RESET_COMPLETE   |                                     |                                 | The controller was reset          |
+| VALUE_UPDATED               | The source Node ID                  | The objects command content     | A Value Was Updated               |
+| VALUE_NOTIFICATION          | The source Node ID                  | The objects command content     | A Value Notification Was Received |
+| NOTIFICATION                | The source Node ID                  | The objects command content     | A Notification Was Sent           |
+| WAKE_UP                     | The source Node ID                  |                                 | A Node Has Woken Up               |
+| SLEEP                       | The source Node ID                  |                                 | A Node Has Gone To Sleep          |
+| INTERVIEW_COMPLETE          | The source Node ID                  |                                 | The node has been interviewed     |
+| INTERVIEW_FAILED            | The source Node ID                  | Detailed Error Info             | Could not interview node          |
+| INTERVIEW_STARTED           | The source Node ID                  |                                 | Node interview started            |
+| NODE_LIST                   |                                     | ZWaveNode[]                     | Response to GetNodes              | 
+| VALUE_ID_LIST               | The source Node ID                  | ValueID[]                       | Response to GetDefinedValueIDs    | 
+| GET_VALUE_RESPONSE          | The source Node ID                  | Value & Value ID                | Response to GetValue              | 
+| GET_VALUE_METADATA_RESPONSE | The source Node ID                  | Metadata & Value ID             | Response to GetValueMetadata      | 
 
 
 
@@ -255,6 +257,7 @@ The **Controller** class does not require a **node** ID.
 | Controller                | ProprietaryFunc (See Notes)         | [Byte : Serial Function ID, Buffer : Data]            |
 | Controller                | InterviewNode                       | [Number : Node ID]                                    |
 | Controller                | GetNodes                            |                                                       |
+| Controller                | SetNodeName                         | [Number : Node ID, String : Node Name]                |
 
 
 ## Notes on HardReset  
@@ -438,6 +441,14 @@ The COLOR value should be an object formatted like below.
 
 
 ## Version History  
+
+  - 2.0.0
+    - Added a User Interface tab, allowing control/maintenance of the zwave network. ([#22](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/22))
+    - Added an Unmanaged operation **GetValueMetadata**
+    - Added a Controller function **SetNodeName**
+    - Bump Z-Wave JS,
+    - Bump serialports
+    - Driver timeouts now use defaults if not provided.
 
   - 1.4.0  **Possible Breaking Change**  
     - Bump Z-Wave JS to 6.4.0

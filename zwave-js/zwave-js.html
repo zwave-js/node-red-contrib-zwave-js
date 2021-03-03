@@ -12,10 +12,9 @@
                 serialPort: { value: "Select Port" },
                 name: { value: "ZWave-JS Controller" },
                 encryptionKey : {value:""},
-                ackTimeout:{value:1000},
-                controllerTimeout:{value:1600},
-                sendResponseTimeout:{value:1600},
-                awakeTime:{value:10000}
+                ackTimeout:{value:""},
+                controllerTimeout:{value:""},
+                sendResponseTimeout:{value:""}
 
             },
             inputs: 1,
@@ -89,19 +88,15 @@
     </p>
     <div class="form-row">
         <label  for="node-input-ackTimeout"><i class="icon-tag"></i> ACK</label>
-        <input type="text" id="node-input-ackTimeout" placeholder="">
+        <input type="text" id="node-input-ackTimeout" placeholder="Default: 1000">
     </div>
     <div class="form-row">
         <label  for="node-input-controllerTimeout"><i class="icon-tag"></i> Controller</label>
-        <input type="text" id="node-input-controllerTimeout" placeholder="">
+        <input type="text" id="node-input-controllerTimeout" placeholder="Default: 1600">
     </div>
     <div class="form-row">
         <label  for="node-input-sendResponseTimeout"><i class="icon-tag"></i> Req -> Res</label>
-        <input type="text" id="node-input-sendResponseTimeout" placeholder="">
-    </div>
-    <div class="form-row">
-        <label  for="node-input-awakeTime"><i class="icon-tag"></i> Awake Time</label>
-        <input type="text" id="node-input-awakeTime" placeholder="">
+        <input type="text" id="node-input-sendResponseTimeout" placeholder="Default: 10000">
     </div>
 </script>
 
