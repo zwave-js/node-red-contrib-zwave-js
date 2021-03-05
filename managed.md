@@ -42,7 +42,7 @@ Secondly, let's get out the way the currently supported command classes (when us
 | ThermostatOperatingState  | Get                                 |                                                       | 
 | ThermostatSetback         | Set                                 | [**SET BACK TYPE**, **SET BACK STATE**]               | 
 | ThermostatSetback         | Get                                 |                                                       | 
-| WakeInterval              | Set (see Notes)                     | [Number : Seconds, Number : Controller Node ID]       |
+| WakeInterval              | Set                                 | [Number : Seconds, Number : Controller Node ID]       |
 | WakeInterval              | Get                                 |                                                       | 
 
 ## Just show me how to get started.
@@ -106,3 +106,139 @@ let Report = {
 }
 ```
 
+## Enums and formatted values.
+Some command classes, require a certain structure in there payload, so please refer to the below information.  
+the CC's above should tell you what is required.
+
+## Structures  
+
+The **EVENT** value should be an object formatted like below.  
+```
+{
+  notificationType: Byte,
+  notificationEvent: Byte,
+  eventParameters: Buffer (Optional),
+  sequenceNumber: Number (Optional)
+}
+```
+
+The **REMOVE OPTIONS** value should be an object formatted like below.  
+```
+{
+  groupId: Number,
+  nodeIds: Number[]
+}
+```
+
+The **DURATION** value should be an object formatted like below.  
+```
+{
+  Duration: {
+    value: Number,
+    unit: "seconds" | "minutes",
+  }
+}
+```
+
+The **COLOR** value should be an object formatted like below.  
+```
+{
+  hexColor: "#000000"
+}
+```
+
+The **INDICATOR** value should be an object formatted like below.  
+```
+{
+  indicatorId: number;
+  propertyId: number;
+  value: number | boolean;
+}
+```
+
+## ENUMS 
+
+| DOOR LOCK MODE              |  
+| --------------------------- |
+| Unsecured                   |
+| UnsecuredWithTimeout        |
+| InsideUnsecured             |
+| InsideUnsecuredWithTimeout  |
+| OutsideUnsecured            |
+| OutsideUnsecuredWithTimeout |
+| Unknown                     |
+| Secured                     |
+
+| SET POINT TYPE        |
+| --------------------- |
+| N/A                   |
+| Heating               |
+| Cooling               |
+| Furnace               |
+| Dry Air               |
+| Moist Air             |
+| Auto Changeover       |
+| Energy Save Heating   |
+| Energy Save Cooling   |
+| Away Heating          |
+| Away Cooling          |
+| Full power            |
+
+| THERMOSTAT MODE         |
+| ----------------------- |
+| Off                     |
+| Heat                    |
+| Cool                    |
+| Auto                    |
+| Auxiliary               |
+| Fan                     |
+| Furnace                 |
+| Dry                     |
+| Moist                   |
+| Auto changeover         |
+| Energy heat             |
+| Energy cool             |
+| Away                    |
+| Full power              |
+| Manufacturer specific   |
+
+| BINARY SENSOR TYPE |
+| ------------------ |
+| General Purpose    |
+| Smoke              |
+| CO                 |
+| CO2                |
+| Heat               |
+| Water              |
+| Freeze             |
+| Tamper             |
+| Aux                |
+| Door/Window        |
+| Tilt               |
+| Motion             |
+| Glass Break        |
+| Any                |
+
+| SET BACK TYPE      |
+| ------------------ |
+| None               |
+| Temporary          |
+| Permanent          |
+
+| SET BACK STATE     |
+| ------------------ |
+| Frost Protection   |
+| Energy Saving      |
+| Unused             |
+
+| COLOR COMPONENT    |
+| ------------------ |
+| Warm White         |
+| Cold White         |
+| Red                |
+| Green              |
+| Blue               |
+| Amber              |
+| Cyan               |
+| Purple             |
+| Index              |
