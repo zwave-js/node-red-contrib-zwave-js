@@ -6,7 +6,7 @@ Managed mode is where the node-red plugin it's self does a lot of the heavy lift
 Managed mode, allows easy accesss, the downside with Managed mode, is that command class support needs to be 'Bridged',  
 so that the command classes, can be used in an easy way.  
 
-Secondly, let's get out the way the currently supported command classes (when using Managed mode), the aim of course is to expose them all.
+Currently, the supported command classes are (when using Managed mode), is.
 
 | class                     | operation                           | params                                                |
 | ------------------------- | ----------------------------------- | ----------------------------------------------------- |
@@ -44,6 +44,8 @@ Secondly, let's get out the way the currently supported command classes (when us
 | ThermostatSetback         | Get                                 |                                                       | 
 | WakeInterval              | Set                                 | [Number : Seconds, Number : Controller Node ID]       |
 | WakeInterval              | Get                                 |                                                       | 
+
+The aim of course is to expose them all.
 
 ## Example 101
 See below, for examples on how to interrogate the CC's in the table above.
