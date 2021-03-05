@@ -125,7 +125,7 @@ The supported CC's within this node, will gradually increase, to mirror what ZWa
 | DoorLock                  | Get                                 |                                                       |
 | Lock                      | Set                                 | [Bool]                                                |
 | Lock                      | Get                                 |                                                       |
-| Indicator                 | Set                                 | [Number : Value] | [**INDICATOR**[]]                  |
+| Indicator                 | Set                                 | [Number : Value] OR [**INDICATOR**[]]                 |
 | Indicator                 | Get                                 | [Number : Indicator (optional)]                       |
 | MultiLevelSwitch          | Set                                 | [Number, **DURATION** (Optional)]                     |
 | MultiLevelSwitch          | Get                                 |                                                       |
