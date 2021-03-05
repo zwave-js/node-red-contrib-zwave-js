@@ -74,21 +74,6 @@ And such event(s) will look like this.
 }
 ```
 
-
-## Home Assistant Users
-Confusion has come about, with the new zwave stack for HA, which just so happens to be 
-based on the same z-wave js lib, this node-red plugin uses.  
-
-This plugin, is not designed to bridge node-red and HA, it's designed for use in node-red  only, regardless of it's host/container.
-
-The node operates in 2 ways : **Managed** and **Unmanaged**  
-
-Managed Mode is where the plugin it's self, manages the routing to the correct command class  
-and device channel. It is easier to undestand.  
-
-Unmanaged Mode, is where the heavy lifting is done by ZWave-JS, it is a little more involved,  
-but Command Class support is only limited by ZWave-JS
-
 ## Managed Mode Examples
 Encpsulate all your commands within a **payload** object.
 ```
