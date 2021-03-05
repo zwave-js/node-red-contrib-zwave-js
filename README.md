@@ -125,6 +125,8 @@ The supported CC's within this node, will gradually increase, to mirror what ZWa
 | DoorLock                  | Get                                 |                                                       |
 | Lock                      | Set                                 | [Bool]                                                |
 | Lock                      | Get                                 |                                                       |
+| Indicator                 | Set                                 | [Number : Value] | [**INDICATOR**[]]                  |
+| Indicator                 | Get                                 | [Number : Indicator (optional)]                       |
 | MultiLevelSwitch          | Set                                 | [Number, **DURATION** (Optional)]                     |
 | MultiLevelSwitch          | Get                                 |                                                       |
 | Notification              | SendReport                          | [**EVENT**]                                           |
@@ -345,6 +347,17 @@ The COLOR value should be an object formatted like below.
 }
 ```
 
+## INDICATOR
+The INDICATOR value should be an object formatted like below.  
+```
+{
+  indicatorId: number;
+  propertyId: number;
+  value: number | boolean;
+}
+```
+
+
 ## DOOR LOCK MODE
 | Values                      |  
 | --------------------------- |
@@ -450,6 +463,7 @@ The COLOR value should be an object formatted like below.
     - Bump serialports
     - Driver timeouts now use defaults if not provided.
     - Version information is now displayed in config UI.
+    - Added support for Indicator CC to Managed mode.
 
   - 1.4.0  **Possible Breaking Change**  
     - Bump Z-Wave JS to 6.4.0

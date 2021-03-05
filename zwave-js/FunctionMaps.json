@@ -1,4 +1,19 @@
 {
+    "Indicator": {
+        "MapsToClass": "Indicator",
+        "Operations": {
+            "Set": {
+                "MapsToFunc": "set",
+                "ParamsRequired": 1,
+                "ParamsOptional": 0
+            },
+            "Get": {
+                "MapsToFunc": "get",
+                "ParamsRequired": 0,
+                "ParamsOptional": 1
+            }
+        }
+    },
     "ColorSwitch": {
         "MapsToClass": "Color Switch",
         "Operations": {
