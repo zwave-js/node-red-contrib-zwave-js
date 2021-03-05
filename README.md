@@ -24,15 +24,55 @@ ZWave-JS is actively  maintained, fast and supports the security command class.
 ## Usage Modes
 node-red-contrib-zwave-js, is split into 3 different usage modes.
 
-  Managed  
-  If you're wanting to get up and running quickly, or not familar with Z-Wave JS, then this is for you.
+[Managed](managed.md)  
+If you're wanting to get up and running quickly, or not familar with Z-Wave JS, then this is for you.
 
-  Unmanaged  
-  If you're familar with Z-Wave JS, or a more hardened user, to various z-wave stack implementations, then this may be more usefull.  
+[Unmanaged](unmanaged.md)   
+If you're familar with Z-Wave JS, or a more hardened user, to various z-wave stack implementations, then this may be more usefull.  
 
-  GUI  
-  This mode comes as a node-red UI. It's more for managing your network then anything else.  
-  just open up the UI tab (on the right)
+GUI  
+This mode comes as a node-red UI. It's more for managing your network then anything else.  
+just open up the UI tab (on the right)
+
+Regardless of your poison, the node will inject the following events, into your flow.
+
+| event                       | node                                | object                          | Meaning                           |
+| --------------------------- | ----------------------------------- | ------------------------------- | --------------------------------- |  
+| NODE_ADDED                  | The ID of the added node            |                                 | A Node Was Added                  |
+| NODE_REMOVED                | The ID of the removed node          |                                 | A Node Was Removed                |
+| INCLUSION_STARTED           |                                     | Bool : Only secure devices      | Include Mode Started              |
+| INCLUSION_STOPPED           |                                     |                                 | include Mode Stopped              |
+| EXCLUSION_STARTED           |                                     |                                 | Exclude Mode Started              |
+| EXCLUSION_STOPPED           |                                     |                                 | Exclude Mode Stopped              |
+| NETWORK_HEAL_DONE           |                                     |                                 | Done Healing Network              |
+| NETWORK_HEAL_STARTED        |                                     |                                 | Started Healing Network           |
+| NETWORK_HEAL_STOPPED        |                                     |                                 | Stopped Healing Network           |
+| CONTROLLER_RESET_COMPLETE   |                                     |                                 | The controller was reset          |
+| VALUE_UPDATED               | The source Node ID                  | The objects command content     | A Value Was Updated               |
+| VALUE_NOTIFICATION          | The source Node ID                  | The objects command content     | A Value Notification Was Received |
+| NOTIFICATION                | The source Node ID                  | The objects command content     | A Notification Was Sent           |
+| WAKE_UP                     | The source Node ID                  |                                 | A Node Has Woken Up               |
+| SLEEP                       | The source Node ID                  |                                 | A Node Has Gone To Sleep          |
+| INTERVIEW_COMPLETE          | The source Node ID                  |                                 | The node has been interviewed     |
+| INTERVIEW_FAILED            | The source Node ID                  | Detailed Error Info             | Could not interview node          |
+| INTERVIEW_STARTED           | The source Node ID                  |                                 | Node interview started            |
+| NODE_LIST                   |                                     | ZWaveNode[]                     | Response to GetNodes              | 
+| VALUE_ID_LIST               | The source Node ID                  | ValueID[]                       | Response to GetDefinedValueIDs    | 
+| GET_VALUE_RESPONSE          | The source Node ID                  | Value & Value ID                | Response to GetValue              | 
+| GET_VALUE_METADATA_RESPONSE | The source Node ID                  | Metadata & Value ID             | Response to GetValueMetadata      | 
+
+And such event(s) will look like this.
+
+```
+{
+  payload: {
+    node: 2,
+    event: "VALUE_UPDATED",
+    timestamp: "23-12-2020T12:23:23+000",
+    object: ...
+  }
+}
+```
 
 
 ## Home Assistant Users
