@@ -21,6 +21,20 @@ The node is straightforward to use, and removes all the complexities that you wo
 **node-red-contrib-zwave-js** is based on  [ZWave-JS](https://zwave-js.github.io/node-zwave-js/#/).  
 ZWave-JS is actively  maintained, fast and supports the security command class.
 
+## Usage Modes
+node-red-contrib-zwave-js, is split into 3 different usage modes.
+
+  Managed  
+  If you're wanting to get up and running quickly, or not familar with Z-Wave JS, then this is for you.
+
+  Unmanaged  
+  If you're familar with Z-Wave JS, or a more hardened user, to various z-wave stack implementations, then this may be more usefull.  
+
+  GUI  
+  This mode comes as a node-red UI. It's more for managing your network then anything else.  
+  just open up the UI tab (on the right)
+
+
 ## Home Assistant Users
 Confusion has come about, with the new zwave stack for HA, which just so happens to be 
 based on the same z-wave js lib, this node-red plugin uses.  
