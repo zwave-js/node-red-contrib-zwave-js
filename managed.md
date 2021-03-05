@@ -45,7 +45,8 @@ Secondly, let's get out the way the currently supported command classes (when us
 | WakeInterval              | Set                                 | [Number : Seconds, Number : Controller Node ID]       |
 | WakeInterval              | Get                                 |                                                       | 
 
-## Just show me how to get started.
+## Example 101
+See below, for examples on how to interrogate the CC's in the table above.
 
 ```
 /* Set a configuration value for a zwave node */
