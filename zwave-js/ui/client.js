@@ -729,6 +729,9 @@ let ZwaveJsUI = (function () {
           propertyValue,
           $(`#zwave-js-node-list .selected`).data('info')?.deviceConfig?.manufacturer
         )
+    } else if (propertyValue.data('unit')) {
+      // If has units, include
+      propertyValue.text(value + propertyValue.data('unit'))
     } else {
       // Otherwise just display raw value
       propertyValue.text(value)
@@ -803,6 +806,7 @@ let ZwaveJsUI = (function () {
 
     // If unit is provided, add to value
     if (meta.hasOwnProperty('unit')) {
+      propertyValue.data('unit', meta.unit)
       propertyValue.text(value + meta.unit)
     }
 
