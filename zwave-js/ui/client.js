@@ -644,7 +644,8 @@ let ZwaveJsUI = (function () {
     let el = $('<div>')
       .addClass('zwave-js-node-property')
       .attr('data-endpoint', valueId.endpoint)
-      .attr('data-valueid', makeValueIdStr(valueId))
+      .attr('data-propertyId', makePropertyId(valueId))
+      .data('valueId', valueId)
     let label =
       valueId.propertyKeyName ??
       valueId.propertyName ??
@@ -655,6 +656,26 @@ let ZwaveJsUI = (function () {
     $('<span>').addClass('zwave-js-node-property-name').text(label).appendTo(el)
     $('<span>').addClass('zwave-js-node-property-value').appendTo(el)
     getValue(valueId)
+    el.dblclick(function () {
+      let data = $(this).data()
+      let valueData = $(this).find('.zwave-js-node-property-value').data()
+      $('<div>')
+        .css({ maxHeight: '80%' })
+        .html(`<pre>${JSON.stringify({ ...data, valueData }, null, 2)}</pre>`)
+        .dialog({
+          draggable: true,
+          modal: true,
+          resizable: false,
+          width: 'auto',
+          title: 'Information',
+          minHeight: 75,
+          buttons: {
+            Close: function () {
+              $(this).dialog('destroy')
+            }
+          }
+        })
+    })
     return el
   }
 
@@ -761,13 +782,13 @@ let ZwaveJsUI = (function () {
 
     // If value given
     if (valueId.newValue ?? valueId.value)
-      propertyRow.data(valueId.property, valueId.newValue ?? valueId.value)
+      propertyValue.data(valueId.property, valueId.newValue ?? valueId.value)
 
     // If meta.unit given
-    if (valueId.meta?.unit) propertyRow.data(valueId.property + 'Unit', valueId.meta.unit)
+    if (valueId.meta?.unit) propertyValue.data(valueId.property + 'Unit', valueId.meta.unit)
 
     // Update tooltip
-    let data = propertyRow.data()
+    let data = propertyValue.data()
     let tooltip = 'Previous value '
     if (data.previousValue != undefined) {
       tooltip += data.previousValue + (data.previousValueUnit ?? '')
@@ -922,7 +943,7 @@ let ZwaveJsUI = (function () {
     return `#${integer} | 0x${integer.toString(16).toUpperCase().padStart(4, '0')}`
   }
 
-  function makeValueIdStr(valueId) {
+  function makePropertyId(valueId) {
     return [
       valueId.endpoint || '0',
       valueId.commandClass,
@@ -932,7 +953,7 @@ let ZwaveJsUI = (function () {
   }
 
   function getPropertyRow(valueId) {
-    return $(`#zwave-js-node-properties [data-valueid="${makeValueIdStr(valueId)}"]`)
+    return $(`#zwave-js-node-properties [data-propertyId="${makePropertyId(valueId)}"]`)
   }
 
   function controllerRequest(req) {
