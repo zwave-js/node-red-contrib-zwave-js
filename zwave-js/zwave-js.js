@@ -140,7 +140,7 @@ module.exports = function (RED) {
 
             // Include, Exclude Started
             Driver.controller.on("inclusion started", (Secure) => {
-                Send(ReturnController, "INCLUSION_STARTED", { SecureDevicesOnly: Secure })
+                Send(ReturnController, "INCLUSION_STARTED", { isSecureInclude: Secure })
             })
 
             Driver.controller.on("exclusion started", () => {
@@ -458,7 +458,13 @@ module.exports = function (RED) {
                     break;
 
                 case "StartInclusion":
-                    await Driver.controller.beginInclusion(Params[0]);
+                    if(Params != null && Params.length > 0){
+                        await Driver.controller.beginInclusion(Params[0]);
+                    }
+                    else{
+                        await Driver.controller.beginInclusion(false);
+                    }
+                    
                     break;
 
                 case "StopInclusion":

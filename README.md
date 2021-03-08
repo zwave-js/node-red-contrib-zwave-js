@@ -84,7 +84,7 @@ The **Controller** class does not require a **node** ID.
 | ------------------------- | ----------------------------------- | ----------------------------------------------------- |
 | Controller                | StartHealNetwork                    |                                                       |
 | Controller                | StopHealNetwork                     |                                                       |
-| Controller                | StartInclusion                      | [Bool : Include Non-Secure]                           |
+| Controller                | StartInclusion (see Notes)          | [Bool : Include Non-Secure (optional)]                |
 | Controller                | StopInclusion                       |                                                       |
 | Controller                | StartExclusion                      |                                                       |
 | Controller                | StopExclusion                       |                                                       |
@@ -104,6 +104,9 @@ To start Inclusion, you will do.
   }
 }
 ```
+
+## Notes on StartInclusion  
+By default, the include process will only include secure devices, if you want to include non-secure devices, provide a **true** value 
 
 ## Notes on HardReset  
 A one-way ticket for wiping out all the configuration on the controller.  
@@ -164,7 +167,8 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
     - Version information is now displayed in config UI.
     - Added support for **Indicator** CC to Managed mode.
     - Added support for **Meter** CC to Managed mode.  
-    - Optimisations to param conversations, when params are in the form of a class on the Z-Wave JS side
+    - Optimisations to param conversations, when params are in the form of a class on the Z-Wave JS side  
+    - Secure include is now by default.
 
   - 1.4.0  **Possible Breaking Change**  
     - Bump Z-Wave JS to 6.4.0

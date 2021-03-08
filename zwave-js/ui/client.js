@@ -118,7 +118,8 @@ let ZwaveJsUI = (function () {
     // -- -- -- -- Inclusion
 
     let optInclusion = $('<div>').appendTo(controllerOpts)
-    makeControllerOption('Start Inclusion', 'StartInclusion', [true]).appendTo(optInclusion)
+    makeControllerOption('Start Inclusion (Non-Secure)', 'StartInclusion', [true]).appendTo(optInclusion)
+    makeControllerOption('Start Inclusion (Secure)', 'StartInclusion', [false]).appendTo(optInclusion)
     makeControllerOption('Stop Inclusion', 'StopInclusion').appendTo(optInclusion)
     $('<span id="zwave-js-status-box-inclusion">')
       .addClass('zwave-js-status-box')
