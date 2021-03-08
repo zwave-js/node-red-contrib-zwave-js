@@ -89,7 +89,7 @@ The **Controller** class does not require a **node** ID.
 | Controller                | StartExclusion                      |                                                       |
 | Controller                | StopExclusion                       |                                                       |
 | Controller                | HardReset (see Notes)               |                                                       |
-| Controller                | ProprietaryFunc (See Notes)         | [Byte : Serial Function ID, Buffer : Data]            |
+| Controller                | ProprietaryFunc (See Notes)         | [Number : Serial Function ID, Buffer : Data]          |
 | Controller                | InterviewNode                       | [Number : Node ID]                                    |
 | Controller                | GetNodes                            |                                                       |
 | Controller                | SetNodeName                         | [Number : Node ID, String : Node Name]                |
