@@ -22,8 +22,8 @@ Currently, the supported command classes are (when using Managed mode).
 | BinarySensor              | Get                                 | [**BINARY SENSOR TYPE**]                              |
 | BinarySwitch              | Set                                 | [Bool, **DURATION** (Optional)]                       |
 | BinarySwitch              | Get                                 |                                                       |
-| Configuration             | Set                                 | [Byte : ParamID, Byte : Value, Number : Value Length] |
-| Configuration             | Get                                 | [Byte : ParamID]                                      |
+| Configuration             | Set                                 | [Number : ParamID, Number : Value, Number : Value Length] |
+| Configuration             | Get                                 | [Number : ParamID]                                    |
 | ColorSwitch               | Set                                 | [**COLOR**]                                           |
 | ColorSwitch               | Get                                 | [**COLOR COMPONENT**]                                 |
 | DoorLock                  | Set                                 | [**DOOR LOCK MODE**]                                  |
