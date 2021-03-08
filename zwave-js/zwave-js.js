@@ -34,7 +34,8 @@ module.exports = function (RED) {
         */
         const CCParamConverters = {
             "BinarySwitch.Set":ProcessDurationClass,
-            "MultiLevelSwitch.Set":ProcessDurationClass
+            "MultiLevelSwitch.Set":ProcessDurationClass,
+            "Meter.Get":ParseMeterOptions
         }
 
         let DriverOptions = {};
@@ -507,8 +508,8 @@ module.exports = function (RED) {
             }
         }
 
+        // Duration Fix
         function ProcessDurationClass(Class, Operation, Params) {
-
             if (Params.length > 0) {
                 for (let i = 0; i < Params.length; i++) {
                     if (typeof Params[i] == 'object') {
@@ -522,6 +523,14 @@ module.exports = function (RED) {
                     }
                 }
 
+            }
+            return Params;
+        }
+
+        // Meter Fix
+        function ParseMeterOptions(Class, Operation, Params){
+            if (typeof Params[0] == 'object') {
+                Params[0].rateType = EnumLookup.RateType[Params[0].rateType];
             }
             return Params;
         }

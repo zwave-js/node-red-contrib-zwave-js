@@ -1,4 +1,24 @@
 {
+    "Meter":{
+        "MapsToClass": "Meter",
+        "Operations":{
+            "Get":{
+                "MapsToFunc": "get",
+                "ParamsRequired": 1,
+                "ParamsOptional": 0
+            },
+            "GetAll":{
+                "MapsToFunc": "getAll",
+                "ParamsRequired": 0,
+                "ParamsOptional": 0
+            },
+            "Reset":{
+                "MapsToFunc": "reset",
+                "ParamsRequired": 1,
+                "ParamsOptional": 0
+            }
+        }
+    },
     "Indicator": {
         "MapsToClass": "Indicator",
         "Operations": {

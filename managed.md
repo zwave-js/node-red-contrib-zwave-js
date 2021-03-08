@@ -6,7 +6,7 @@ Managed mode is where the node-red plugin it's self does a lot of the heavy lift
 Managed mode, allows easy accesss, the downside with Managed mode, is that command class support needs to be 'Bridged',  
 so that the command classes, can be used in an easy way.  
 
-Currently, the supported command classes are (when using Managed mode), is.
+Currently, the supported command classes are (when using Managed mode).
 
 | class                     | operation                           | params                                                |
 | ------------------------- | ----------------------------------- | ----------------------------------------------------- |
@@ -32,6 +32,9 @@ Currently, the supported command classes are (when using Managed mode), is.
 | Lock                      | Get                                 |                                                       |
 | Indicator                 | Set                                 | [Number : Value] OR [**INDICATOR**[]]                 |
 | Indicator                 | Get                                 | [Number : Indicator (optional)]                       |
+| Meter                     | Get                                 | [**METER OPTIONS**]                                   |
+| Meter                     | GetAll                              |                                                       |
+| Meter                     | Reset                               | [**METER RESET OPTIONS**]                             |
 | MultiLevelSwitch          | Set                                 | [Number, **DURATION** (Optional)]                     |
 | MultiLevelSwitch          | Get                                 |                                                       |
 | Notification              | SendReport                          | [**EVENT**]                                           |
@@ -42,7 +45,7 @@ Currently, the supported command classes are (when using Managed mode), is.
 | ThermostatOperatingState  | Get                                 |                                                       | 
 | ThermostatSetback         | Set                                 | [**SET BACK TYPE**, **SET BACK STATE**]               | 
 | ThermostatSetback         | Get                                 |                                                       | 
-| WakeInterval              | Set                                 | [Number : Seconds, Number : Controller Node ID]       |
+| WakeInterval              | Set (See Notes)                     | [Number : Seconds, Number : Controller Node ID]       |
 | WakeInterval              | Get                                 |                                                       | 
 
 The aim of course is to expose them all.
@@ -109,17 +112,37 @@ let Report = {
 }
 ```
 
+## Notes on WakeInterval  
+When setting the interval, the **Controller Node ID** parameter will almost certainly be 1 - unless you have multiple controllers,
+and you want the wake up to be recieved by a different controller. 
+
 ## Enums and formatted values.
 Some command classes, require a certain structure in there payload, so please refer to the below information.  
 the CC's above should tell you what is required.
 
 ## Structures  
 
+The **METER OPTIONS** value should be an object formatted like below.  
+```
+{
+  scale: Number,
+  rateType: "Unspecified" | "Consumed" | "Produced"
+}
+```
+
+The **METER RESET OPTIONS** value should be an object formatted like below.  
+```
+{
+  type: number,
+  targetValue: number
+}
+```
+
 The **EVENT** value should be an object formatted like below.  
 ```
 {
-  notificationType: Byte,
-  notificationEvent: Byte,
+  notificationType: Number,
+  notificationEvent: Number,
   eventParameters: Buffer (Optional),
   sequenceNumber: Number (Optional)
 }

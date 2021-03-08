@@ -1,16 +1,21 @@
 {
-    "ColorComponent":{
+    "RateType": {
+        "Unspecified": 0,
+        "Consumed": 1,
+        "Produced": 2
+    },
+    "ColorComponent": {
         "Warm White": 0,
         "Cold White": 1,
         "Red": 2,
         "Green": 3,
         "Blue": 4,
         "Amber": 5,
-        "Cyan":6,
-        "Purple":7,
-        "Index":8
+        "Cyan": 6,
+        "Purple": 7,
+        "Index": 8
     },
-    "SetbackType":{
+    "SetbackType": {
         "None": 0,
         "Temporary": 1,
         "Permanent": 2
