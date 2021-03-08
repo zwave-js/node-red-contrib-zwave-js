@@ -23,6 +23,20 @@ module.exports = function (RED) {
 
         node.status({ fill: "red", shape: "dot", text: "Starting ZWave Driver..." });
 
+
+        /*
+          Some Params need a little bit of magic. i.e converting to a class
+
+          Key should be Class.Operation
+          Value should be a reference to a method that is able to manipulate the params[] object,
+          and return the modifed param array.
+          the method signature should be (Class Name, Operation Name, object[])
+        */
+        const CCParamConverters = {
+            "BinarySwitch.Set":ProcessDurationClass,
+            "MultiLevelSwitch.Set":ProcessDurationClass
+        }
+
         let DriverOptions = {};
 
         // Cache Dir
@@ -268,7 +282,7 @@ module.exports = function (RED) {
             let Operation = msg.payload.operation
             let Class = msg.payload.class;
             let Node = msg.payload.node;
-            let Params = msg.payload.params || [];
+            var Params = msg.payload.params || [];
 
             let ReturnNode = { id: Node };
 
@@ -310,15 +324,9 @@ module.exports = function (RED) {
                 }
             }
 
-            if (Params.length > 0) {
-                for (let i = 0; i < Params.length; i++) {
-                    if (typeof Params[i] == 'object') {
-                        if (Params[i].hasOwnProperty("Duration")) {
-                            let D = new Duration(Params[i].Duration.value, Params[i].Duration.unit)
-                            Params[i] = D;
-                        }
-                    }
-                }
+            if(CCParamConverters.hasOwnProperty(Class+"."+Operation)){
+                let Handler = CCParamConverters[Class+"."+Operation];
+                Params = Handler(Class, Operation, Params);
             }
 
             let ZWJSC = Driver.controller.nodes.get(Node).getEndpoint(EP).commandClasses[Map.MapsToClass];
@@ -499,6 +507,28 @@ module.exports = function (RED) {
             }
         }
 
+        function ProcessDurationClass(Class, Operation, Params) {
+
+            if (Params.length > 0) {
+                for (let i = 0; i < Params.length; i++) {
+                    if (typeof Params[i] == 'object') {
+                        let Keys = Object.keys(Params[i]);
+                        if (Keys.length == 1) {
+                            if (Keys[0] = "Duration") {
+                                let D = new Duration(Params[i].Duration.value, Params[i].Duration.unit)
+                                Params[i] = D;
+                            }
+                        }
+                    }
+                }
+
+            }
+            return Params;
+        }
+
+       
+
+
         Driver.start()
             .catch((e) => {
                 node.error(e);
@@ -509,13 +539,10 @@ module.exports = function (RED) {
     RED.nodes.registerType("zwave-js", Init);
 
     RED.httpAdmin.get("/zwjsgetversion",function(req,res){
-
         res.json({"zwjsversion":ZWJSPKG.version,"moduleversion":MODPackage.version})
-
     })
 
     RED.httpAdmin.get("/zwjsgetports", RED.auth.needsPermission('serial.read'), function (req, res) {
-
         SP.list()
         .then(ports => {
             const a = ports.map(p => p.path);
