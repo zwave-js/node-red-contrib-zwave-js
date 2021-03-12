@@ -19,10 +19,10 @@ module.exports = function (RED) {
     function Init(config) {
 
         const node = this;
+        const NodesReady = [];
         RED.nodes.createNode(this, config);
-
+        
         node.status({ fill: "red", shape: "dot", text: "Starting ZWave Driver..." });
-
 
         /*
           Some Params need a little bit of magic. i.e converting to a class
@@ -126,10 +126,10 @@ module.exports = function (RED) {
             node.status({ fill: "yellow", shape: "dot", text: "Interviewing Nodes..." });
 
             let ReturnController = { id: "Controller" };
-            let NodesReady = []
 
             // Add, Remove
             Driver.controller.on("node added", (N) => {
+                WireNodeEvents(N);
                 Send(N, "NODE_ADDED")
             })
 
@@ -160,70 +160,8 @@ module.exports = function (RED) {
                 Send(ReturnController, "NETWORK_HEAL_DONE")
             })
 
-            
-           
-            Driver.controller.nodes.forEach((N1) => {
-                
-                N1.on("ready", (N2) => {
-                    if (N2.id < 2) {
-                        return;
-                    }
-                    if (NodesReady.indexOf(N2.id) < 0) {
-                        
-                        NodesReady.push(N2.id);
-                        node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
-                    }
-
-                    
-                })
-                
-                N1.on("value notification", (ND, VL) => {
-                    if (NodesReady.indexOf(ND.id) > -1) {
-                        Send(ND, "VALUE_NOTIFICATION", VL);
-                    }
-                })
-
-                N1.on("notification", (ND, L, VL) => {
-                    if (NodesReady.indexOf(ND.id) > -1) {
-                        Send(ND, "NOTIFICATION", VL);
-                    }
-                })
-
-                N1.on("value added", (ND, VL) => {
-                    if (NodesReady.indexOf(ND.id) > -1) {
-                        Send(ND, "VALUE_UPDATED", VL);
-                    }
-                })
-
-                N1.on("value updated", (ND, VL) => {
-                    if (NodesReady.indexOf(ND.id) > -1) {
-                        Send(ND, "VALUE_UPDATED", VL);
-                    }
-                })
-
-                N1.on("wake up", (ND) => {
-                    if (NodesReady.indexOf(ND.id) > -1) {
-                        Send(ND, "WAKE_UP");
-                    }
-                })
-
-                N1.on("sleep", (ND) => {
-                    if (NodesReady.indexOf(ND.id) > -1) {
-                        Send(ND, "SLEEP");
-                    }
-                })
-
-                N1.on("interview completed", (ND) => {
-                    if (NodesReady.indexOf(ND.id) > -1) {
-                        Send(ND, "INTERVIEW_COMPLETE");
-                    }
-                })
-
-                N1.on("interview failed", (ND, Er) => {
-                    if (NodesReady.indexOf(ND.id) > -1) {
-                        Send(ND, "INTERVIEW_FAILED", Er);
-                    }
-                })
+            Driver.controller.nodes.forEach((ZWN) => {
+                WireNodeEvents(ZWN);
             });
 
         });
@@ -237,6 +175,73 @@ module.exports = function (RED) {
         });
 
         node.on('input', Input);
+
+        function WireNodeEvents(Node){
+
+            Node.on("ready", (N) => {
+                if (N.id < 2) {
+                    return;
+                }
+                if (NodesReady.indexOf(N.id) < 0) {
+                    NodesReady.push(N.id);
+                    node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
+                }
+            })
+            
+            Node.on("value notification", (N, VL) => {
+                if (NodesReady.indexOf(N.id) > -1) {
+                    Send(N, "VALUE_NOTIFICATION", VL);
+                }
+            })
+
+            Node.on("notification", (N, CC, ARGS) => {
+                if (NodesReady.indexOf(N.id) > -1) {
+
+                    let OBJ = {
+                        ccId:CC,
+                        args:ARGS
+                    }
+
+                    Send(N, "NOTIFICATION", OBJ);
+                }
+            })
+
+            Node.on("value added", (N, VL) => {
+                if (NodesReady.indexOf(N.id) > -1) {
+                    Send(N, "VALUE_UPDATED", VL);
+                }
+            })
+
+            Node.on("value updated", (N, VL) => {
+                if (NodesReady.indexOf(N.id) > -1) {
+                    Send(N, "VALUE_UPDATED", VL);
+                }
+            })
+
+            Node.on("wake up", (N) => {
+                if (NodesReady.indexOf(N.id) > -1) {
+                    Send(N, "WAKE_UP");
+                }
+            })
+
+            Node.on("sleep", (N) => {
+                if (NodesReady.indexOf(N.id) > -1) {
+                    Send(N, "SLEEP");
+                }
+            })
+
+            Node.on("interview completed", (N) => {
+                if (NodesReady.indexOf(N.id) > -1) {
+                    Send(N, "INTERVIEW_COMPLETE");
+                }
+            })
+
+            Node.on("interview failed", (N, Er) => {
+                if (NodesReady.indexOf(N.id) > -1) {
+                    Send(N, "INTERVIEW_FAILED", Er);
+                }
+            })
+        }
         
         async function Input(msg, send, done) {
             try {
