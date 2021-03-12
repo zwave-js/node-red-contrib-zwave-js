@@ -16,7 +16,8 @@
                 controllerTimeout:{value:""},
                 sendResponseTimeout:{value:""},
                 loggingLevel:{value:"-1"},
-                logFile:{value:""}
+                logFile:{value:""},
+                logNodeFilter:{value:""}
 
             },
             inputs: 1,
@@ -25,7 +26,6 @@
             label: function () {
                 return this.name;
             },
-
             onpaletteadd:ZwaveJsUI.init,
             oneditprepare:SortUI
         });
@@ -124,6 +124,10 @@
     <div class="form-row">
         <label  for="node-input-logFile" style="width:130px"><i class="fa fa-pencil"></i> Log File</label>
         <input type="text" id="node-input-logFile" placeholder="Use Default">
+    </div>
+    <div class="form-row">
+        <label  for="node-input-logFile" style="width:130px"><i class="fa fa-pencil"></i> Node Filter</label>
+        <input type="text" id="node-input-logNodeFilter" placeholder="2,5,24">
     </div>
     <br />
     <p>

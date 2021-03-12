@@ -11,7 +11,7 @@ module.exports = function (RED) {
     const ZWJSPKG = require('zwave-js/package.json')
     const MODPackage = require('../package.json')
 
-    const NodeInterviewStage = ["None", "ProtocolInfo", "NodeInfo", "RestartFromCache", "CommandClasses", "OverwriteConfig", "Neighbors", "Complete"]
+    const NodeInterviewStage = ["None", "ProtocolInfo", "NodeInfo", "CommandClasses", "OverwriteConfig", "Neighbors", "Complete"]
 
     const UI = require('./ui/server.js')
     UI.init(RED)
@@ -39,6 +39,31 @@ module.exports = function (RED) {
         }
 
         let DriverOptions = {};
+
+        // Logging
+        DriverOptions.logConfig = {};
+        if(config.loggingLevel != null && parseInt(config.loggingLevel) > -1){
+
+            DriverOptions.logConfig.enabled = true;
+            DriverOptions.logConfig.level = parseInt(config.loggingLevel);
+            DriverOptions.logConfig.logToFile = true;
+
+            if(config.logFile != null && config.logFile.length > 0){
+                DriverOptions.logConfig.filename = config.logFile
+            }
+
+            if(config.logNodeFilter != null && config.logNodeFilter.length > 0){
+                let Nodes = config.logNodeFilter.split(",")
+                let NodesArray = [];
+                Nodes.forEach((N) =>{
+                    NodesArray.push(parseInt(N))
+                })
+                DriverOptions.logConfig.nodeFilter = NodesArray;
+            }
+        }
+        else{
+            DriverOptions.logConfig.enabled = false;
+        }
 
         // Cache Dir
         DriverOptions.storage = {};
@@ -100,34 +125,6 @@ module.exports = function (RED) {
 
             let ReturnController = { id: "Controller" };
             let NodesReady = []
-
-            /* green light already interviewed nodes, to speed up ability to receieve events */
-            let HomeID = Driver.controller.homeId;
-            let NodeStateCacheFile = Path.join(RED.settings.userDir, "zwave-js-cache", (HomeID).toString(16)+".json");
-            /* For new installs, the file won't have been created (or this quick at least ) */
-            /* This is fine, as the full inetrview will need to take place if so - so the green light wil be given after the interview */
-            if(FS.existsSync(NodeStateCacheFile)){
-
-                let FileContent = FS.readFileSync(NodeStateCacheFile,'utf8')
-
-                let Cache = JSON.parse(FileContent);
-                let Nodes = Object.keys(Cache.nodes);
-                
-                for(let i = 0;i<Nodes.length;i++){
-    
-                    let NodeState = Cache.nodes[Nodes[i]];
-
-                    if(NodeState.id < 2){
-                        continue;
-                    }
-                    
-                    if(NodeState.interviewStage == "Complete" || NodeState.interviewStage == "RestartFromCache"){
-    
-                        NodesReady.push(NodeState.id);
-                        node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
-                    }
-                }
-            }
 
             // Add, Remove
             Driver.controller.on("node added", (N) => {
