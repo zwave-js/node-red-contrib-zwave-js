@@ -50,6 +50,8 @@ module.exports = function (RED) {
 
             if(config.logFile != null && config.logFile.length > 0){
                 DriverOptions.logConfig.filename = config.logFile
+            }else{
+                DriverOptions.logConfig.filename =  Path.join(RED.settings.userDir, "zwave-js-log.txt");
             }
 
             if(config.logNodeFilter != null && config.logNodeFilter.length > 0){
