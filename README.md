@@ -159,6 +159,7 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
 
   - 2.1.0 **Possible Breaking Changes**
     - Bug Fixes to Management UI
+    - Controller Node, is no longer listed as a node in the UI
     - Migrated to Z-Wave JS V7
     - Logging options added to config UI
     - Some 1.4.0 optimsiations removed, as recent changes to Z-Wave JS has made them unnecessary
@@ -170,6 +171,7 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
           args: The main event data (simple or complex, hihgly dependant on the CC)
         }  
         ```  
+    - Controller operation **GetNodes** no longer returns an empty entry.
 
   - 2.0.0
     - Added a User Interface tab, allowing control/maintenance of the zwave network. ([#22](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/22))

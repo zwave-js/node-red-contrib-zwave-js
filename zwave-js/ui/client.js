@@ -393,13 +393,17 @@ let ZwaveJsUI = (function () {
       operation: 'GetNodes'
     })
       .then(({ object }) => {
-        // console.log(object)
 
-        makeInfo('#zwave-js-controller-info', object[1].deviceConfig) // Node 1 should be the controller
+        let assumedControllerID = 1
+
+        let controllerNode = object.filter(N => N.nodeId === assumedControllerID); //Node ID 1 should be the controller, this is risky, as there maybe secondry controllers at play, but it will do for now.
+        if(controllerNode.length > 0){
+          makeInfo('#zwave-js-controller-info', controllerNode[0].deviceConfig)
+        }
 
         $('#zwave-js-node-list')
           .empty()
-          .append(object.filter(node => node).map(renderNode))
+          .append(object.filter(node => node.nodeId > assumedControllerID).map(renderNode))
       })
       .catch(console.error)
   }

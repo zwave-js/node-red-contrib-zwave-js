@@ -397,20 +397,21 @@ module.exports = function (RED) {
             switch (Operation) {
                 case "GetNodes":
                     let Nodes = [];
-                    Driver.controller.nodes.forEach((C, CK) => {
-                        Nodes[CK] =
-                        {
-                            nodeId: C.id,
-                            status: C.status,
-                            name: C.name,
-                            interviewStage: NodeInterviewStage[C.interviewStage],
-                            isSecure: C.isSecure,
-                            manufacturerId: C.manufacturerId,
-                            productId: C.productId,
-                            productType: C.productType,
-                            neighbors: C.neighbors,
-                            deviceConfig: C.deviceConfig
-                        }
+                    Driver.controller.nodes.forEach((N, NI) => {
+
+                        Nodes.push({
+                            nodeId: N.id,
+                            status: N.status,
+                            name: N.name,
+                            interviewStage: NodeInterviewStage[N.interviewStage],
+                            isSecure: N.isSecure,
+                            manufacturerId: N.manufacturerId,
+                            productId: N.productId,
+                            productType: N.productType,
+                            neighbors: N.neighbors,
+                            deviceConfig: N.deviceConfig
+                        })
+                        
                     });
                     Send(ReturnController, "NODE_LIST", Nodes, send);
                     break;
