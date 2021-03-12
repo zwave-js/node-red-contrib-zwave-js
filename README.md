@@ -50,7 +50,7 @@ Regardless of your poison, the node will inject the following events, into your 
 | CONTROLLER_RESET_COMPLETE   |                                     |                                 | The controller was reset          |
 | VALUE_UPDATED               | The source Node ID                  | The objects command content     | A Value Was Updated               |
 | VALUE_NOTIFICATION          | The source Node ID                  | The objects command content     | A Value Notification Was Received |
-| NOTIFICATION                | The source Node ID                  | The objects command content     | A Notification Was Sent           |
+| NOTIFICATION                | The source Node ID                  | Command Class ID & Event Data   | A Notification Was Sent           |
 | WAKE_UP                     | The source Node ID                  |                                 | A Node Has Woken Up               |
 | SLEEP                       | The source Node ID                  |                                 | A Node Has Gone To Sleep          |
 | INTERVIEW_COMPLETE          | The source Node ID                  |                                 | The node has been interviewed     |
@@ -156,6 +156,20 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
 
 
 ## Version History  
+
+  - 2.1.0 **Possible Breaking Changes**
+    - Bug Fixes to Node-Red UI
+    - Migrated to Z-Wave JS V7
+    - Logging options added to config UI
+    - Some 1.4.0 optimsiations removed, as recent changes to Z-Wave JS has made them unnecessary
+    - Changes to the **NOTIFICATION** event.
+        The **object** component will now contain the following structure
+        ```
+        {
+          ccId: Number - The Command Class ID,
+          args: The main event data (simple or complex, hihgly dependant on the CC)
+        }  
+        ```  
 
   - 2.0.0
     - Added a User Interface tab, allowing control/maintenance of the zwave network. ([#22](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/22))

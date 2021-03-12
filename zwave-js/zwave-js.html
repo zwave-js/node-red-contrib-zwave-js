@@ -14,7 +14,9 @@
                 encryptionKey : {value:""},
                 ackTimeout:{value:""},
                 controllerTimeout:{value:""},
-                sendResponseTimeout:{value:""}
+                sendResponseTimeout:{value:""},
+                loggingLevel:{value:"-1"},
+                logFile:{value:""}
 
             },
             inputs: 1,
@@ -102,6 +104,26 @@
     <div class="form-row">
         <label  for="node-input-sendResponseTimeout" style="width:130px"><i class="fa fa-pencil"></i> Req -> Res</label>
         <input type="text" id="node-input-sendResponseTimeout" placeholder="Use Default">
+    </div>
+    <br />
+    <p>
+        <strong>Z-Wave JS Logging</strong>
+    </p>
+    <div class="form-row">
+        <label  for="node-input-loggingLevel" style="width:130px"><i class="fa fa-pencil"></i> Log Level</label>
+        <select id="node-input-loggingLevel">
+            <option value="-1">Logging Disabled</option>
+            <option value="0">Error</option>
+            <option value="1">Warn</option>
+            <option value="2">Info</option>
+            <option value="4">Verbose</option>
+            <option value="5">Debug</option>
+            <option value="6">Silly</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label  for="node-input-logFile" style="width:130px"><i class="fa fa-pencil"></i> Log File</label>
+        <input type="text" id="node-input-logFile" placeholder="Use Default">
     </div>
     <br />
     <p>
