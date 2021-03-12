@@ -68,7 +68,7 @@ module.exports = {
       CONTROLLERS[homeId] = { controller, request }
 
       /* - args caused a circular error for node added/excluded
-      
+
       CONTROLLER_EVENTS.forEach(event => {
         controller.on(event, (...args) => {
           _RED.comms.publish(`/zwave-js/${homeId}`, {
@@ -79,6 +79,7 @@ module.exports = {
         })
       })
       */
+     
       CONTROLLER_EVENTS.forEach(event => {
         controller.on(event, (...args) => {
           _RED.comms.publish(`/zwave-js/${homeId}`, {
