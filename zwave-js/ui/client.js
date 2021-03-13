@@ -445,25 +445,29 @@ let ZwaveJsUI = (function () {
   function makeInfo(elId, deviceConfig = {}) {
     let el = $(elId)
 
-    let moreInfo = $('<dl>')
-      .css({ whiteSpace: 'pre-wrap', width: '-webkit-fill-available' })
-      .append(
-        ...Object.entries(deviceConfig.metadata || {}).map(([key, val]) => {
-          return [
-            $('<dt>').html(key),
-            $('<dd>').html(
-              val.replace(/http[^\s]*/g, url => `<a href="${url}">${url.slice(0, 30)}...</a>`)
-            )
-          ]
-        })
-      )
-      .hide()
-
     el.empty().append(
       $('<span>').text(`${deviceConfig.manufacturer} ${deviceConfig.label}`),
-      $('<span>').text(`(${deviceConfig.description})`),
-      $('<button>')
+      $('<span>').text(`(${deviceConfig.description})`)
+    )
+
+    if (Object.keys(deviceConfig.metadata || {}).length) {
+      let moreInfo = $('<dl>')
+        .css({ whiteSpace: 'pre-wrap', width: '-webkit-fill-available' })
+        .append(
+          ...Object.entries(deviceConfig.metadata).map(([key, val]) => {
+            return [
+              $('<dt>').html(key),
+              $('<dd>').html(
+                val.replace(/http[^\s]*/g, url => `<a href="${url}">${url.slice(0, 30)}...</a>`)
+              )
+            ]
+          })
+        )
+        .hide()
+
+      let btn = $('<button>')
         .addClass('red-ui-button red-ui-button-small')
+        .css({ position: 'absolute', right: 5 })
         .html('More Info')
         .click(function () {
           if ($(this).html() == 'More Info') {
@@ -473,9 +477,10 @@ let ZwaveJsUI = (function () {
             moreInfo.hide()
             $(this).html('More Info')
           }
-        }),
-      moreInfo
-    )
+        })
+
+      el.append(btn, moreInfo)
+    }
   }
 
   function cancelSetName() {
