@@ -12,6 +12,7 @@ module.exports = function (RED) {
     const MODPackage = require('../package.json')
 
     const NodeInterviewStage = ["None", "ProtocolInfo", "NodeInfo", "CommandClasses", "OverwriteConfig", "Neighbors", "Complete"]
+    const NodeStatus = ['UNKNOWN', 'ASLEEP', 'AWAKE', 'DEAD', 'ALIVE']
 
     const UI = require('./ui/server.js')
     UI.init(RED)
@@ -407,16 +408,29 @@ module.exports = function (RED) {
 
                         Nodes.push({
                             nodeId: N.id,
-                            status: N.status,
                             name: N.name,
+                            location: N.location,
+                            status: NodeStatus[N.status],
                             interviewStage: NodeInterviewStage[N.interviewStage],
+                            zwavePlusVersion: N.zwavePlusVersion,
+                            zwavePlusNodeType: N.zwavePlusNodeType,
+                            zwavePlusRoleType: N.zwavePlusRoleType,
+                            isListetning: N.isListetning,
+                            isFrequentListening: N.isFrequentListening,
+                            canSleep: N.canSleep,
+                            isRouting: N.isRouting,
+                            supportedDataRates: N.supportedDataRates,
+                            maxDataRate: N.maxDataRate,
+                            supportsSecurity: N.supportsSecurity,
                             isSecure: N.isSecure,
+                            protocolVersion: N.protocolVersion,
                             manufacturerId: N.manufacturerId,
                             productId: N.productId,
                             productType: N.productType,
+                            firmwareVersion: N.firmwareVersion,
                             neighbors: N.neighbors,
                             deviceConfig: N.deviceConfig,
-                            isControllerNode:N.isControllerNode()
+                            isControllerNode: N.isControllerNode()
                         })
                         
                     });
@@ -428,6 +442,13 @@ module.exports = function (RED) {
                     Driver.controller.nodes.get(Params[0]).name = Params[1]
                     ReturnNode.id = Params[0]
                     Send(ReturnNode, "NODE_NAME_SET", Params[1], send)
+                    break
+
+                case "SetNodeLocation":
+                    NodeCheck(Params[0])
+                    Driver.controller.nodes.get(Params[0]).location = Params[1]
+                    ReturnNode.id = Params[0]
+                    Send(ReturnNode, "NODE_LOCATION_SET", Params[1], send)
                     break
 
                 case "InterviewNode":

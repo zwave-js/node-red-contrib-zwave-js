@@ -1,5 +1,4 @@
 let ZwaveJsUI = (function () {
-  const STATUSES = ['UNKNOWN', 'ASLEEP', 'AWAKE', 'DEAD', 'ALIVE']
   const AUTO_HIDE_CC = [
     'Association',
     'Association Group Information',
@@ -390,7 +389,7 @@ let ZwaveJsUI = (function () {
           nodeRow.find('.zwave-js-node-row-ready').html(renderReadyIcon(true))
         } else {
           // Normal status update
-          nodeRow.find('.zwave-js-node-row-status').html(STATUSES[data.status])
+          nodeRow.find('.zwave-js-node-row-status').html(data.status)
         }
         break
     }
