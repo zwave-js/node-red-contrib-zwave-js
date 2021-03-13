@@ -5,7 +5,7 @@ An extremely easy to use, zero dependency and feature rich ZWave node for node-r
 
 The implementation is 100% javascript. it is therefore:  
   - Very fast
-  - Does not require a build of any static libraries 
+  - Does not require a build of any static library
   - Stable
 
 Install this node via the Node-Red pallet menu, and you have zwave abilities.  
