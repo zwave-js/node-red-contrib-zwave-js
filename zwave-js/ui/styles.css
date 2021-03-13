@@ -10,19 +10,19 @@
   display: flex;
 }
 .zwave-js-node-row-id {
-  width: 33%;
+  width: 25%;
   padding-left: 10px;
 }
 .zwave-js-node-row-name {
-  width: 33%;
+  width: 25%;
 }
 .zwave-js-node-row-status {
-  width: 33%;
+  width: 25%;
   font-size: x-small;
   text-align: center;
 }
 .zwave-js-node-row-ready {
-  width: 33%;
+  width: 25%;
   text-align: center;
 }
 
