@@ -378,7 +378,7 @@ let ZwaveJsUI = (function () {
         let nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${data.node}']`)
         if (data.status == 'ready') {
           // Ready
-          nodeRow.find('.zwave-js-node-row-ready').html(renderReadyIcon('Complete'))
+          nodeRow.find('.zwave-js-node-row-ready').html(renderReadyIcon('Ready'))
         } else {
           // Normal status update
           nodeRow.find('.zwave-js-node-row-status').html(STATUSES[data.status])
@@ -419,18 +419,19 @@ let ZwaveJsUI = (function () {
         $('<div>').html(node.nodeId+ControllerLabel).addClass('zwave-js-node-row-id'),
         $('<div>').html(node.name).addClass('zwave-js-node-row-name'),
         $('<div>').html(STATUSES[node.status]).addClass('zwave-js-node-row-status'),
-        $('<div>').html(renderReadyIcon(node.interviewStage)).addClass('zwave-js-node-row-ready')
+        $('<div>').html(renderReadyIcon()).addClass('zwave-js-node-row-ready')
       )
   }
 
   function renderReadyIcon(stage) {
+
     let i = $('<i>')
-    if (stage === 'RestartFromCache') {
-      i.addClass('fa fa-thumbs-o-up')
-      RED.popover.tooltip(i, 'Ready (From Cache)')
-    } else if (stage === 'Complete') {
-      i.addClass('fa fa-thumbs-up')
-      RED.popover.tooltip(i, 'Ready')
+
+    if(stage != null){
+      if(stage == "Ready"){
+        i.addClass('fa fa-thumbs-up')
+        RED.popover.tooltip(i, 'Ready')
+      }
     }
     return i
   }

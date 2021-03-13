@@ -179,7 +179,8 @@ module.exports = function (RED) {
         function WireNodeEvents(Node){
 
             Node.on("ready", (N) => {
-                if (N.id < 2) {
+
+                if (N.isControllerNode()) {
                     return;
                 }
                 if (NodesReady.indexOf(N.id) < 0) {
