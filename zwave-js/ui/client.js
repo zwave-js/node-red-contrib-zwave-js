@@ -3,7 +3,7 @@ let ZwaveJsUI = (function () {
     'Association',
     'Association Group Information',
     'Firmware Update Meta Data',
-    // 'Manufacturer Specific',
+    'Manufacturer Specific',
     'Multi Channel',
     'Multi Channel Association',
     'Node Naming and Location',
@@ -581,18 +581,6 @@ let ZwaveJsUI = (function () {
         // Step 2: For each CC, get all associated properties
         let propsInCC = valueIdList.filter(valueId => valueId.commandClass == commandClass)
 
-        // ** Special case for `Previous Value` and `Delta Time` properties in the `Meter CC`
-        if (commandClass == 50)
-          propsInCC = propsInCC.filter(valueId => {
-            if (/previousValue|deltaTime/.test(valueId.property)) {
-              // We will display these values in a special way once they come in
-              // So fetch the values (and meta) but don't put in tree
-              getValue(valueId)
-              return false
-            }
-            return true
-          })
-
         return {
           element: renderCommandClassElement(commandClass, commandClassName),
           expanded: !AUTO_HIDE_CC.includes(commandClassName.replace(/\s/g, ' ')),
@@ -727,11 +715,6 @@ let ZwaveJsUI = (function () {
   function updateValue(valueId) {
     // Assumes you already checked if this applies to selectedNode
 
-    // Check for special case `Previous Value` or `Delta Time` properties in the `Meter CC`
-    if (valueId.commandClass == 50 && /previousValue|deltaTime/.test(valueId.property)) {
-      return updateMeter(valueId)
-    }
-
     let propertyRow = getPropertyRow(valueId)
 
     if (!propertyRow) {
@@ -784,46 +767,8 @@ let ZwaveJsUI = (function () {
     propertyValue.data('value', value)
   }
 
-  function updateMeter(valueId) {
-    // Could be a value update or meta update
-
-    // Get `value` property row that is associated with this propertyKey
-    let propertyRow = getPropertyRow({ ...valueId, property: 'value' })
-
-    if (!propertyRow) {
-      // `Value` property not yet loaded. This is weird. Shouldn't happen.
-      return
-    }
-
-    let propertyValue = propertyRow.find('.zwave-js-node-property-value')
-
-    // If value given
-    if (valueId.newValue ?? valueId.value)
-      propertyValue.data(valueId.property, valueId.newValue ?? valueId.value)
-
-    // If meta.unit given
-    if (valueId.meta?.unit) propertyValue.data(valueId.property + 'Unit', valueId.meta.unit)
-
-    // Update tooltip
-    let data = propertyValue.data()
-    let tooltip = 'Previous value '
-    if (data.previousValue != undefined) {
-      tooltip += data.previousValue + (data.previousValueUnit ?? '')
-      if (data.deltaTime != undefined)
-        tooltip += ' from ' + data.deltaTime + (data.deltaTimeUnit ?? '') + ' ago'
-    } else {
-      tooltip += 'unknown'
-    }
-    RED.popover.tooltip(propertyValue, tooltip)
-  }
-
   function updateMeta(valueId, meta = {}) {
     // Assumes you already checked if this applies to selectedNode
-
-    // Check for special case `Previous Value` or `Delta Time` properties in the `Meter CC`
-    if (valueId.commandClass == 50 && /previousValue|deltaTime/.test(valueId.property)) {
-      return updateMeter({ ...valueId, meta })
-    }
 
     let propertyRow = getPropertyRow(valueId)
     let propertyValue = propertyRow.find('.zwave-js-node-property-value')
