@@ -422,7 +422,7 @@ let ZwaveJsUI = (function () {
       .append(
         $('<div>').html(node.nodeId).addClass('zwave-js-node-row-id'),
         $('<div>').html(node.name).addClass('zwave-js-node-row-name'),
-        $('<div>').html(STATUSES[node.status]).addClass('zwave-js-node-row-status'),
+        $('<div>').html(node.status).addClass('zwave-js-node-row-status'),
         $('<div>')
           .html(renderReadyIcon(node.interviewStage == 'Complete'))
           .addClass('zwave-js-node-row-ready')
