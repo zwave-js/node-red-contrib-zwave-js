@@ -40,7 +40,9 @@ Whatever your poison, the node will inject the following events, into your flow.
 | --------------------------- | ----------------------------------- | ------------------------------- | --------------------------------- |  
 | NODE_ADDED                  | The ID of the added node            |                                 | A Node Was Added                  |
 | NODE_REMOVED                | The ID of the removed node          |                                 | A Node Was Removed                |
-| INCLUSION_STARTED           |                                     | Bool : Only secure devices      | Include Mode Started              |
+| NODE_NAME_SET               | The ID of the affected node         |                                 | Node name was set                 |
+| NODE_LOCATION_SET           | The ID of the affected node         |                                 | Node location was set             |
+| INCLUSION_STARTED           |                                     | Bool : Secure Include           | Include Mode Started              |
 | INCLUSION_STOPPED           |                                     |                                 | include Mode Stopped              |
 | EXCLUSION_STARTED           |                                     |                                 | Exclude Mode Started              |
 | EXCLUSION_STOPPED           |                                     |                                 | Exclude Mode Stopped              |
@@ -93,6 +95,7 @@ The **Controller** class does not require a **node** ID.
 | Controller                | InterviewNode                       | [Number : Node ID]                                    |
 | Controller                | GetNodes                            |                                                       |
 | Controller                | SetNodeName                         | [Number : Node ID, String : Node Name]                |
+| Controller                | SetNodeLocation                     | [Number : Node ID, String : Node Location]            |
 
 To start Inclusion, you will do.  
 ```
@@ -157,7 +160,7 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
 
 ## Version History  
 
-  - 2.1.0 **Possible Breaking Changes**
+  - 3.0.0 **Possible Breaking Changes**
     - Bug Fixes to Management UI
     - Controller Node, is now identified in the UI
     - Migrated to Z-Wave JS V7
@@ -172,7 +175,9 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
         }  
         ```  
     - Controller operation **GetNodes** no longer returns an empty entry.
-    - Fixed newly added nodes, not being marked as ready (and therefore not passing events)
+    - Fixed newly added nodes, not being marked as ready (and therefore not passing events)  
+    - Per node information when calling **GetNodes** has been substantially increased.
+    - Added a Controller function **SetNodeLocation**
 
   - 2.0.0
     - Added a User Interface tab, allowing control/maintenance of the zwave network. ([#22](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/22))
