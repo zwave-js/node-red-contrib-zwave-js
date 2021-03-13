@@ -118,8 +118,12 @@ let ZwaveJsUI = (function () {
     // -- -- -- -- Inclusion
 
     let optInclusion = $('<div>').appendTo(controllerOpts)
-    makeControllerOption('Start Inclusion (Non-Secure)', 'StartInclusion', [true]).appendTo(optInclusion)
-    makeControllerOption('Start Inclusion (Secure)', 'StartInclusion', [false]).appendTo(optInclusion)
+    makeControllerOption('Start Inclusion (Non-Secure)', 'StartInclusion', [true]).appendTo(
+      optInclusion
+    )
+    makeControllerOption('Start Inclusion (Secure)', 'StartInclusion', [false]).appendTo(
+      optInclusion
+    )
     makeControllerOption('Stop Inclusion', 'StopInclusion').appendTo(optInclusion)
     $('<span id="zwave-js-status-box-inclusion">')
       .addClass('zwave-js-status-box')
@@ -378,7 +382,7 @@ let ZwaveJsUI = (function () {
         let nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${data.node}']`)
         if (data.status == 'ready') {
           // Ready
-          nodeRow.find('.zwave-js-node-row-ready').html(renderReadyIcon('Ready'))
+          nodeRow.find('.zwave-js-node-row-ready').html(renderReadyIcon(true))
         } else {
           // Normal status update
           nodeRow.find('.zwave-js-node-row-status').html(STATUSES[data.status])
@@ -393,46 +397,43 @@ let ZwaveJsUI = (function () {
       operation: 'GetNodes'
     })
       .then(({ object }) => {
-
-        let controllerNode = object.filter(N => N.isControllerNode);
-        if(controllerNode.length > 0){
+        let controllerNode = object.filter(N => N.isControllerNode)
+        if (controllerNode.length > 0) {
           makeInfo('#zwave-js-controller-info', controllerNode[0].deviceConfig)
         }
 
         $('#zwave-js-node-list')
           .empty()
-          .append(object.filter(node => node).map(renderNode))
+          .append(object.filter(node => node && !node.isControllerNode).map(renderNode))
       })
       .catch(console.error)
   }
 
   function renderNode(node) {
-
-    let ControllerLabel = node.isControllerNode ? " (Controller)":"";
-
     return $('<div>')
       .addClass('red-ui-treeList-label zwave-js-node-row')
       .attr('data-nodeid', node.nodeId)
       .data('info', node)
       .click(() => selectNode(node.nodeId))
       .append(
-        $('<div>').html(node.nodeId+ControllerLabel).addClass('zwave-js-node-row-id'),
+        $('<div>').html(node.nodeId).addClass('zwave-js-node-row-id'),
         $('<div>').html(node.name).addClass('zwave-js-node-row-name'),
         $('<div>').html(STATUSES[node.status]).addClass('zwave-js-node-row-status'),
-        $('<div>').html(renderReadyIcon()).addClass('zwave-js-node-row-ready')
+        $('<div>')
+          .html(renderReadyIcon(node.interviewStage == 'Complete'))
+          .addClass('zwave-js-node-row-ready')
       )
   }
 
-  function renderReadyIcon(stage) {
-
+  function renderReadyIcon(isReady) {
     let i = $('<i>')
 
-    if(stage != null){
-      if(stage == "Ready"){
-        i.addClass('fa fa-thumbs-up')
-        RED.popover.tooltip(i, 'Ready')
-      }
+    // Node is "ready" if .interviewStage=="Complete" OR when the node emits a "ready" event
+    if (isReady) {
+      i.addClass('fa fa-thumbs-up')
+      RED.popover.tooltip(i, 'Ready')
     }
+
     return i
   }
 
