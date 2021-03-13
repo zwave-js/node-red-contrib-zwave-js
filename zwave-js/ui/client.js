@@ -98,17 +98,19 @@ let ZwaveJsUI = (function () {
 
     let controllerOpts = $('<div>').appendTo(controllerHeader).hide()
 
-    function makeControllerOption(text, operation, params) {
+    function makeControllerOption(text, operation, paramGenerator) {
       return $('<button>')
         .addClass('red-ui-button red-ui-button-small')
         .html(text)
-        .click(() =>
+        .click(() => {
+          let params = paramGenerator ? paramGenerator() : undefined
+          console.log({ params })
           controllerRequest({
             class: 'Controller',
             operation,
             params
           })
-        )
+        })
     }
 
     // -- -- -- -- Controller info
@@ -117,13 +119,16 @@ let ZwaveJsUI = (function () {
 
     // -- -- -- -- Inclusion
 
-    let optInclusion = $('<div>').appendTo(controllerOpts)
-    makeControllerOption('Start Inclusion (Non-Secure)', 'StartInclusion', [true]).appendTo(
-      optInclusion
-    )
-    makeControllerOption('Start Inclusion (Secure)', 'StartInclusion', [false]).appendTo(
-      optInclusion
-    )
+    let optInclusion = $('<div>')
+      .css({ display: 'inline-flex', alignItems: 'center' })
+      .appendTo(controllerOpts)
+    makeControllerOption('Start Inclusion', 'StartInclusion', () => {
+      return [$('#zwave-js-secure-inclusion').is(':checked')]
+    }).appendTo(optInclusion)
+    $('<input type="checkbox" id="zwave-js-secure-inclusion">')
+      .css({ margin: '0 2px' })
+      .appendTo(optInclusion)
+    $('<span>').css({ margin: '0 2px', fontSize: 'x-small' }).text('Secure').appendTo(optInclusion)
     makeControllerOption('Stop Inclusion', 'StopInclusion').appendTo(optInclusion)
     $('<span id="zwave-js-status-box-inclusion">')
       .addClass('zwave-js-status-box')
