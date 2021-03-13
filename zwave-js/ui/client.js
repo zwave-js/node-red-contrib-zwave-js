@@ -423,16 +423,13 @@ let ZwaveJsUI = (function () {
         $('<div>').html(node.nodeId).addClass('zwave-js-node-row-id'),
         $('<div>').html(node.name).addClass('zwave-js-node-row-name'),
         $('<div>').html(node.status).addClass('zwave-js-node-row-status'),
-        $('<div>')
-          .html(renderReadyIcon(node.interviewStage == 'Complete'))
-          .addClass('zwave-js-node-row-ready')
+        $('<div>').html(renderReadyIcon(node.ready)).addClass('zwave-js-node-row-ready')
       )
   }
 
   function renderReadyIcon(isReady) {
     let i = $('<i>')
 
-    // Node is "ready" if .interviewStage=="Complete" OR when the node emits a "ready" event
     if (isReady) {
       i.addClass('fa fa-thumbs-up')
       RED.popover.tooltip(i, 'Ready')

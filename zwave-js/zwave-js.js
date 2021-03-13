@@ -411,6 +411,7 @@ module.exports = function (RED) {
                             name: N.name,
                             location: N.location,
                             status: NodeStatus[N.status],
+                            ready: N.ready,
                             interviewStage: NodeInterviewStage[N.interviewStage],
                             zwavePlusVersion: N.zwavePlusVersion,
                             zwavePlusNodeType: N.zwavePlusNodeType,
