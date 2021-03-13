@@ -66,19 +66,6 @@ module.exports = {
       let homeId = controller.homeId.toString(16)
 
       CONTROLLERS[homeId] = { controller, request }
-
-      /* - args caused a circular error for node added/excluded
-
-      CONTROLLER_EVENTS.forEach(event => {
-        controller.on(event, (...args) => {
-          _RED.comms.publish(`/zwave-js/${homeId}`, {
-            type: 'controller-event',
-            event,
-            args
-          })
-        })
-      })
-      */
      
       CONTROLLER_EVENTS.forEach(event => {
         controller.on(event, (...args) => {
@@ -96,10 +83,10 @@ module.exports = {
           status
         })
       }
-      let emitNodeAsleep = emitNodeStatus(1)
-      let emitNodeAwake = emitNodeStatus(2)
-      let emitNodeDead = emitNodeStatus(3)
-      let emitNodeAlive = emitNodeStatus(4)
+      let emitNodeAsleep = emitNodeStatus("Asleep")
+      let emitNodeAwake = emitNodeStatus("Awake")
+      let emitNodeDead = emitNodeStatus("Dead")
+      let emitNodeAlive = emitNodeStatus("Alive")
 
       let emitNodeEvent = type => (node, payload) => {
         _RED.comms.publish(`/zwave-js/${homeId}/${node.id}`, {

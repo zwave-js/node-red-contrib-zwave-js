@@ -177,7 +177,9 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
     - Controller operation **GetNodes** no longer returns an empty entry.
     - Fixed newly added nodes, not being marked as ready (and therefore not passing events)  
     - Per node information when calling **GetNodes** has been substantially increased.
-    - Added a Controller function **SetNodeLocation**
+    - Node status is now a string ("Unknown","Asleep","Awake","Dead","Alive")
+    - Added a Controller function **SetNodeLocation**  
+
 
   - 2.0.0
     - Added a User Interface tab, allowing control/maintenance of the zwave network. ([#22](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/22))

@@ -1,5 +1,5 @@
 let ZwaveJsUI = (function () {
-  const STATUSES = ['UNKNOWN', 'ASLEEP', 'AWAKE', 'DEAD', 'ALIVE']
+
   const AUTO_HIDE_CC = [
     'Association',
     'Association Group Information',
@@ -381,7 +381,7 @@ let ZwaveJsUI = (function () {
           nodeRow.find('.zwave-js-node-row-ready').html(renderReadyIcon('Ready'))
         } else {
           // Normal status update
-          nodeRow.find('.zwave-js-node-row-status').html(STATUSES[data.status])
+          nodeRow.find('.zwave-js-node-row-status').html(data.status)
         }
         break
     }
@@ -418,7 +418,7 @@ let ZwaveJsUI = (function () {
       .append(
         $('<div>').html(node.nodeId+ControllerLabel).addClass('zwave-js-node-row-id'),
         $('<div>').html(node.name).addClass('zwave-js-node-row-name'),
-        $('<div>').html(STATUSES[node.status]).addClass('zwave-js-node-row-status'),
+        $('<div>').html(node.status).addClass('zwave-js-node-row-status'),
         $('<div>').html(renderReadyIcon()).addClass('zwave-js-node-row-ready')
       )
   }

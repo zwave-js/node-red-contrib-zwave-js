@@ -12,6 +12,7 @@ module.exports = function (RED) {
     const MODPackage = require('../package.json')
 
     const NodeInterviewStage = ["None", "ProtocolInfo", "NodeInfo", "CommandClasses", "OverwriteConfig", "Neighbors", "Complete"]
+    const NodeStatus = ['Unknown', 'Asleep', 'Awake', 'Dead', 'Alive']
 
     const UI = require('./ui/server.js')
     UI.init(RED)
@@ -409,7 +410,7 @@ module.exports = function (RED) {
                             nodeId: N.id,
                             name: N.name,
                             location: N.location,
-                            status: N.status,
+                            status: NodeStatus[N.status],
                             interviewStage: NodeInterviewStage[N.interviewStage],
                             zwavePlusVersion: N.zwavePlusVersion,
                             zwavePlusNodeType: N.zwavePlusNodeType,
