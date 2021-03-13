@@ -12,7 +12,7 @@ module.exports = function (RED) {
     const MODPackage = require('../package.json')
 
     const NodeInterviewStage = ["None", "ProtocolInfo", "NodeInfo", "CommandClasses", "OverwriteConfig", "Neighbors", "Complete"]
-    const NodeStatus = ['Unknown', 'Asleep', 'Awake', 'Dead', 'Alive']
+    const NodeStatus = ['UNKNOWN', 'ASLEEP', 'AWAKE', 'DEAD', 'ALIVE']
 
     const UI = require('./ui/server.js')
     UI.init(RED)

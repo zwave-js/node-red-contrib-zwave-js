@@ -83,10 +83,10 @@ module.exports = {
           status
         })
       }
-      let emitNodeAsleep = emitNodeStatus("Asleep")
-      let emitNodeAwake = emitNodeStatus("Awake")
-      let emitNodeDead = emitNodeStatus("Dead")
-      let emitNodeAlive = emitNodeStatus("Alive")
+      let emitNodeAsleep = emitNodeStatus("ASLEEP")
+      let emitNodeAwake = emitNodeStatus("AWAKE")
+      let emitNodeDead = emitNodeStatus("DEAD")
+      let emitNodeAlive = emitNodeStatus("ALIVE")
 
       let emitNodeEvent = type => (node, payload) => {
         _RED.comms.publish(`/zwave-js/${homeId}/${node.id}`, {
