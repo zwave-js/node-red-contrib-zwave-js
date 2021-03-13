@@ -5,7 +5,7 @@ An extremely easy to use, zero dependency and feature rich ZWave node for node-r
 
 The implementation is 100% javascript. it is therefore:  
   - Very fast
-  - Does not require a build of openzwave or any other library
+  - Does not require a build of any static libraries 
   - Stable
 
 Install this node via the Node-Red pallet menu, and you have zwave abilities.  
@@ -34,7 +34,7 @@ GUI
 This mode comes as a node-red UI. It's more for managing your network, but can alter certain values.
 just open up the UI tab (on the right)
 
-Regardless of your poison, the node will inject the following events, into your flow.
+Whatever your poison, the node will inject the following events, into your flow.
 
 | event                       | node                                | object                          | Meaning                           |
 | --------------------------- | ----------------------------------- | ------------------------------- | --------------------------------- |  
@@ -159,7 +159,7 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
 
   - 2.1.0 **Possible Breaking Changes**
     - Bug Fixes to Management UI
-    - Controller Node, is no longer listed as a node in the UI
+    - Controller Node, is now identified in the UI
     - Migrated to Z-Wave JS V7
     - Logging options added to config UI
     - Some 1.4.0 optimsiations removed, as recent changes to Z-Wave JS has made them unnecessary
