@@ -414,7 +414,8 @@ module.exports = function (RED) {
                             productId: N.productId,
                             productType: N.productType,
                             neighbors: N.neighbors,
-                            deviceConfig: N.deviceConfig
+                            deviceConfig: N.deviceConfig,
+                            isControllerNode:N.isControllerNode()
                         })
                         
                     });

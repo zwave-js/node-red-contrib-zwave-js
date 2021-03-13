@@ -394,28 +394,29 @@ let ZwaveJsUI = (function () {
     })
       .then(({ object }) => {
 
-        let assumedControllerID = 1
-
-        let controllerNode = object.filter(N => N.nodeId === assumedControllerID); //Node ID 1 should be the controller, this is risky, as there maybe secondry controllers at play, but it will do for now.
+        let controllerNode = object.filter(N => N.isControllerNode);
         if(controllerNode.length > 0){
           makeInfo('#zwave-js-controller-info', controllerNode[0].deviceConfig)
         }
 
         $('#zwave-js-node-list')
           .empty()
-          .append(object.filter(node => node.nodeId > assumedControllerID).map(renderNode))
+          .append(object.filter(node => node).map(renderNode))
       })
       .catch(console.error)
   }
 
   function renderNode(node) {
+
+    let ControllerLabel = node.isControllerNode ? " (Controller)":"";
+
     return $('<div>')
       .addClass('red-ui-treeList-label zwave-js-node-row')
       .attr('data-nodeid', node.nodeId)
       .data('info', node)
       .click(() => selectNode(node.nodeId))
       .append(
-        $('<div>').html(node.nodeId).addClass('zwave-js-node-row-id'),
+        $('<div>').html(node.nodeId+ControllerLabel).addClass('zwave-js-node-row-id'),
         $('<div>').html(node.name).addClass('zwave-js-node-row-name'),
         $('<div>').html(STATUSES[node.status]).addClass('zwave-js-node-row-status'),
         $('<div>').html(renderReadyIcon(node.interviewStage)).addClass('zwave-js-node-row-ready')
