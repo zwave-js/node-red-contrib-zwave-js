@@ -107,7 +107,8 @@ let ZwaveJsUI = (function () {
           controllerRequest({
             class: 'Controller',
             operation,
-            params
+            params,
+            noWait: true
           })
         })
     }
@@ -270,7 +271,8 @@ let ZwaveJsUI = (function () {
               controllerRequest({
                 class: 'Controller',
                 operation: 'RemoveFailedNode',
-                params: [selectedNode]
+                params: [selectedNode],
+                noWait: true
               })
               selectNode(1)
             })
@@ -833,7 +835,8 @@ let ZwaveJsUI = (function () {
               node: selectedNode,
               class: 'Unmanaged',
               operation: 'SetValue',
-              params: [valueId, val]
+              params: [valueId, val],
+              noWait: true
             })
             editor.remove()
           })
