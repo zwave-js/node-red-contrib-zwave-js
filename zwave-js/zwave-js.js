@@ -20,7 +20,7 @@ module.exports = function (RED) {
     function Init(config) {
 
         const node = this;
-        const NodesReady = [];
+        const NodesReady = []; // Now only used for display purposes
         RED.nodes.createNode(this, config);
         
         node.status({ fill: "red", shape: "dot", text: "Starting ZWave Driver..." });
@@ -191,57 +191,51 @@ module.exports = function (RED) {
             })
             
             Node.on("value notification", (N, VL) => {
-                if (NodesReady.indexOf(N.id) > -1) {
+                if (N.ready) {
                     Send(N, "VALUE_NOTIFICATION", VL);
                 }
             })
 
             Node.on("notification", (N, CC, ARGS) => {
-                if (NodesReady.indexOf(N.id) > -1) {
-
+                if (N.ready) {
                     let OBJ = {
                         ccId:CC,
                         args:ARGS
                     }
-
                     Send(N, "NOTIFICATION", OBJ);
                 }
             })
 
             Node.on("value added", (N, VL) => {
-                if (NodesReady.indexOf(N.id) > -1) {
+                if (N.ready) {
                     Send(N, "VALUE_UPDATED", VL);
                 }
             })
 
             Node.on("value updated", (N, VL) => {
-                if (NodesReady.indexOf(N.id) > -1) {
+                if (N.ready) {
                     Send(N, "VALUE_UPDATED", VL);
                 }
             })
 
             Node.on("wake up", (N) => {
-                if (NodesReady.indexOf(N.id) > -1) {
+                if (N.ready) {
                     Send(N, "WAKE_UP");
                 }
             })
 
             Node.on("sleep", (N) => {
-                if (NodesReady.indexOf(N.id) > -1) {
+                if (N.ready) {
                     Send(N, "SLEEP");
                 }
             })
 
             Node.on("interview completed", (N) => {
-                if (NodesReady.indexOf(N.id) > -1) {
-                    Send(N, "INTERVIEW_COMPLETE");
-                }
+                Send(N, "INTERVIEW_COMPLETE");
             })
 
             Node.on("interview failed", (N, Er) => {
-                if (NodesReady.indexOf(N.id) > -1) {
-                    Send(N, "INTERVIEW_FAILED", Er);
-                }
+                Send(N, "INTERVIEW_FAILED", Er);
             })
         }
         
@@ -278,8 +272,14 @@ module.exports = function (RED) {
         };
 
         function NodeCheck(ID) {
+
             if (Driver.controller.nodes.get(ID) == null) {
                 let ErrorMSG = "Node " + ID + " does not exist.";
+                throw new Error(ErrorMSG);
+            }
+
+            if (!Driver.controller.nodes.get(ID).ready) {
+                let ErrorMSG = "Node " + ID + " is not yet ready, to receive commands.";
                 throw new Error(ErrorMSG);
             }
         }
