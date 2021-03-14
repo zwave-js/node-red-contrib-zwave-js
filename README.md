@@ -162,7 +162,7 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
 
   - 3.0.0 **Possible Breaking Changes**
     - Bug Fixes to Management UI
-    - Controller Node, is now identified in the UI
+    - The Controller Node, is now hidden from the list of nodes.
     - Migrated to Z-Wave JS V7
     - Logging options added to config UI
     - Some 1.4.0 optimsiations removed, as recent changes to Z-Wave JS has made them unnecessary
