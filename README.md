@@ -24,13 +24,13 @@ ZWave-JS is actively  maintained, fast and supports the security command class.
 ## Usage Modes
 node-red-contrib-zwave-js, is split into 3 different usage modes.
 
-[Managed](managed.md)  
+[Managed](./managed.md)  
 If you're wanting to get up and running quickly, or not familar with Z-Wave JS, then this is for you.
 
-[Unmanaged](unmanaged.md)   
+[Unmanaged](./unmanaged.md)   
 If you're familar with Z-Wave JS, or a more hardened user, to various z-wave stack implementations, then this may be more usefull.  
 
-GUI  
+[GUI](./GUI.md)   
 This mode comes as a node-red UI. It's more for managing your network, but can alter certain values.
 just open up the UI tab (on the right)
 
