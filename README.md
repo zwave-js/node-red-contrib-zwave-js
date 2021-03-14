@@ -18,19 +18,19 @@ The node is straightforward to use, and removes all the complexities that you wo
 
   ![Image](./Demo.png)  
 
-**node-red-contrib-zwave-js** is based on  [ZWave-JS](https://zwave-js.github.io/node-zwave-js/#/).  
+**node-red-contrib-zwave-js** is based on  [&#x1F517;ZWave-JS](https://zwave-js.github.io/node-zwave-js/#/).  
 ZWave-JS is actively  maintained, fast and supports the security command class.
 
 ## Usage Modes
 node-red-contrib-zwave-js, is split into 3 different usage modes.
 
-[Managed](./managed.md)  
+[&#x1F517;Managed](./managed.md)  
 If you're wanting to get up and running quickly, or not familar with Z-Wave JS, then this is for you.
 
-[Unmanaged](./unmanaged.md)   
+[&#x1F517;Unmanaged](./unmanaged.md)   
 If you're familar with Z-Wave JS, or a more hardened user, to various z-wave stack implementations, then this may be more usefull.  
 
-[GUI](./GUI.md)   
+[&#x1F517;GUI](./GUI.md)   
 This mode comes as a node-red UI. It's more for managing your network, but can alter certain values.
 just open up the UI tab (on the right)
 
