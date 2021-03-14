@@ -15,7 +15,8 @@
             "GetSupportedKeys": {
                 "MapsToFunc": "getSupportedKeys",
                 "ParamsRequired": 0,
-                "ParamsOptional": 0
+                "ParamsOptional": 0,
+                "ResponseThroughEvent": false
             }
         }
     },
