@@ -3,7 +3,7 @@
 Unmanaged usage, is more involved, and generally requires a little more understanding and poses certain limits on what can be done.  
 However, the reward here, is that Command Class support is only limited by ZWave-JS.
 
-The difference with this approach, is that you supply a [ValueID](https://zwave-js.github.io/node-zwave-js/#/api/valueid)  
+The difference with this approach, is that you supply a [&#x1F517;ValueID](https://zwave-js.github.io/node-zwave-js/#/api/valueid)  
 The ValueID interface uniquely identifies to which CC, endpoint and property a value belongs to.
 
 There is only 4 commands to use here.
