@@ -22,7 +22,7 @@ module.exports = function (RED) {
         const node = this;
         const NodesReady = []; // Now only used for display purposes
         RED.nodes.createNode(this, config);
-        
+
         node.status({ fill: "red", shape: "dot", text: "Starting ZWave Driver..." });
 
         /*
@@ -34,37 +34,37 @@ module.exports = function (RED) {
           the method signature should be (Class Name, Operation Name, object[])
         */
         const CCParamConverters = {
-            "BinarySwitch.Set":ProcessDurationClass,
-            "MultiLevelSwitch.Set":ProcessDurationClass,
-            "Meter.Get":ParseMeterOptions
+            "BinarySwitch.Set": ProcessDurationClass,
+            "MultiLevelSwitch.Set": ProcessDurationClass,
+            "Meter.Get": ParseMeterOptions
         }
 
         let DriverOptions = {};
 
         // Logging
         DriverOptions.logConfig = {};
-        if(config.loggingLevel != null && parseInt(config.loggingLevel) > -1){
+        if (config.loggingLevel != null && parseInt(config.loggingLevel) > -1) {
 
             DriverOptions.logConfig.enabled = true;
             DriverOptions.logConfig.level = parseInt(config.loggingLevel);
             DriverOptions.logConfig.logToFile = true;
 
-            if(config.logFile != null && config.logFile.length > 0){
+            if (config.logFile != null && config.logFile.length > 0) {
                 DriverOptions.logConfig.filename = config.logFile
-            }else{
-                DriverOptions.logConfig.filename =  Path.join(RED.settings.userDir, "zwave-js-log.txt");
+            } else {
+                DriverOptions.logConfig.filename = Path.join(RED.settings.userDir, "zwave-js-log.txt");
             }
 
-            if(config.logNodeFilter != null && config.logNodeFilter.length > 0){
+            if (config.logNodeFilter != null && config.logNodeFilter.length > 0) {
                 let Nodes = config.logNodeFilter.split(",")
                 let NodesArray = [];
-                Nodes.forEach((N) =>{
+                Nodes.forEach((N) => {
                     NodesArray.push(parseInt(N))
                 })
                 DriverOptions.logConfig.nodeFilter = NodesArray;
             }
         }
-        else{
+        else {
             DriverOptions.logConfig.enabled = false;
         }
 
@@ -74,18 +74,18 @@ module.exports = function (RED) {
 
         // Timeout (Configurable via UI)
         DriverOptions.timeouts = {};
-        if(config.ackTimeout != null && config.ackTimeout.length > 0){
+        if (config.ackTimeout != null && config.ackTimeout.length > 0) {
             DriverOptions.timeouts.ack = parseInt(config.ackTimeout);
         }
-        if(config.controllerTimeout != null && config.controllerTimeout.length > 0){
+        if (config.controllerTimeout != null && config.controllerTimeout.length > 0) {
             DriverOptions.timeouts.response = parseInt(config.controllerTimeout);
         }
-        if(config.sendResponseTimeout != null && config.sendResponseTimeout.length > 0){
+        if (config.sendResponseTimeout != null && config.sendResponseTimeout.length > 0) {
             DriverOptions.timeouts.report = parseInt(config.sendResponseTimeout);
         }
-        
-        
-        if (config.encryptionKey != null && config.encryptionKey.length > 0 &&  config.encryptionKey.startsWith('[') && config.encryptionKey.endsWith(']')) {
+
+
+        if (config.encryptionKey != null && config.encryptionKey.length > 0 && config.encryptionKey.startsWith('[') && config.encryptionKey.endsWith(']')) {
 
             let RemoveBrackets = config.encryptionKey.replace("[", "").replace("]", "");
             let _Array = RemoveBrackets.split(",");
@@ -177,7 +177,7 @@ module.exports = function (RED) {
 
         node.on('input', Input);
 
-        function WireNodeEvents(Node){
+        function WireNodeEvents(Node) {
 
             Node.on("ready", (N) => {
 
@@ -188,47 +188,37 @@ module.exports = function (RED) {
                     NodesReady.push(N.id);
                     node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
                 }
-            })
-            
-            Node.on("value notification", (N, VL) => {
-                if (N.ready) {
-                    Send(N, "VALUE_NOTIFICATION", VL);
-                }
-            })
 
-            Node.on("notification", (N, CC, ARGS) => {
-                if (N.ready) {
+                Node.on("value notification", (N, VL) => {
+                    Send(N, "VALUE_NOTIFICATION", VL);
+                })
+
+                Node.on("notification", (N, CC, ARGS) => {
                     let OBJ = {
-                        ccId:CC,
-                        args:ARGS
+                        ccId: CC,
+                        args: ARGS
                     }
                     Send(N, "NOTIFICATION", OBJ);
-                }
-            })
+                })
 
-            Node.on("value added", (N, VL) => {
-                if (N.ready) {
+                Node.on("value added", (N, VL) => {
                     Send(N, "VALUE_UPDATED", VL);
-                }
-            })
+                })
 
-            Node.on("value updated", (N, VL) => {
-                if (N.ready) {
+                Node.on("value updated", (N, VL) => {
                     Send(N, "VALUE_UPDATED", VL);
-                }
-            })
+                })
 
-            Node.on("wake up", (N) => {
-                if (N.ready) {
+                Node.on("wake up", (N) => {
                     Send(N, "WAKE_UP");
-                }
+                })
+
+                Node.on("sleep", (N) => {
+                    Send(N, "SLEEP");
+                })
+
             })
 
-            Node.on("sleep", (N) => {
-                if (N.ready) {
-                    Send(N, "SLEEP");
-                }
-            })
 
             Node.on("interview completed", (N) => {
                 Send(N, "INTERVIEW_COMPLETE");
@@ -238,7 +228,7 @@ module.exports = function (RED) {
                 Send(N, "INTERVIEW_FAILED", Er);
             })
         }
-        
+
         async function Input(msg, send, done) {
             try {
                 let Class = msg.payload.class;
@@ -317,9 +307,9 @@ module.exports = function (RED) {
             let EP = 0;
 
             if (msg.payload.hasOwnProperty("endpoint")) {
-              EP = parseInt(msg.payload.endpoint)
+                EP = parseInt(msg.payload.endpoint)
             } else if (msg.payload.hasOwnProperty("endPoint")) {
-              EP = parseInt(msg.payload.endPoint)
+                EP = parseInt(msg.payload.endPoint)
             }
 
             if (Func.hasOwnProperty("ParamEnumDependency")) {
@@ -331,8 +321,8 @@ module.exports = function (RED) {
                 }
             }
 
-            if(CCParamConverters.hasOwnProperty(Class+"."+Operation)){
-                let Handler = CCParamConverters[Class+"."+Operation];
+            if (CCParamConverters.hasOwnProperty(Class + "." + Operation)) {
+                let Handler = CCParamConverters[Class + "." + Operation];
                 Params = Handler(Class, Operation, Params);
             }
 
@@ -371,20 +361,20 @@ module.exports = function (RED) {
 
                 case "GetValue":
                     let V = Driver.controller.nodes.get(Node).getValue(Params[0]);
-                    
+
                     let ReturnObject = {
-                        response:V,
-                        valueId:Params[0]
+                        response: V,
+                        valueId: Params[0]
                     }
                     Send(ReturnNode, "GET_VALUE_RESPONSE", ReturnObject, send);
                     break;
 
                 case "GetValueMetadata":
                     let M = Driver.controller.nodes.get(Node).getValueMetadata(Params[0]);
-                    
+
                     let ReturnObjectM = {
-                        response:M,
-                        valueId:Params[0]
+                        response: M,
+                        valueId: Params[0]
                     }
                     Send(ReturnNode, "GET_VALUE_METADATA_RESPONSE", ReturnObjectM, send);
                     break;
@@ -433,7 +423,7 @@ module.exports = function (RED) {
                             deviceConfig: N.deviceConfig,
                             isControllerNode: N.isControllerNode()
                         })
-                        
+
                     });
                     Send(ReturnController, "NODE_LIST", Nodes, send);
                     break;
@@ -487,13 +477,13 @@ module.exports = function (RED) {
                     break;
 
                 case "StartInclusion":
-                    if(Params != null && Params.length > 0){
+                    if (Params != null && Params.length > 0) {
                         await Driver.controller.beginInclusion(Params[0]);
                     }
-                    else{
+                    else {
                         await Driver.controller.beginInclusion(false);
                     }
-                    
+
                     break;
 
                 case "StopInclusion":
@@ -563,14 +553,14 @@ module.exports = function (RED) {
         }
 
         // Meter Fix
-        function ParseMeterOptions(Class, Operation, Params){
+        function ParseMeterOptions(Class, Operation, Params) {
             if (typeof Params[0] == 'object') {
                 Params[0].rateType = EnumLookup.RateType[Params[0].rateType];
             }
             return Params;
         }
 
-       
+
 
 
         Driver.start()
@@ -582,20 +572,20 @@ module.exports = function (RED) {
 
     RED.nodes.registerType("zwave-js", Init);
 
-    RED.httpAdmin.get("/zwjsgetversion",function(req,res){
-        res.json({"zwjsversion":ZWJSPKG.version,"moduleversion":MODPackage.version})
+    RED.httpAdmin.get("/zwjsgetversion", function (req, res) {
+        res.json({ "zwjsversion": ZWJSPKG.version, "moduleversion": MODPackage.version })
     })
 
     RED.httpAdmin.get("/zwjsgetports", RED.auth.needsPermission('serial.read'), function (req, res) {
         SP.list()
-        .then(ports => {
-            const a = ports.map(p => p.path);
-            res.json(a);
-        })
-        .catch(err => {
-            RED.log.error('Error listing serial ports', err)
-            res.json([]);
-        })
-        
+            .then(ports => {
+                const a = ports.map(p => p.path);
+                res.json(a);
+            })
+            .catch(err => {
+                RED.log.error('Error listing serial ports', err)
+                res.json([]);
+            })
+
     });
 }
