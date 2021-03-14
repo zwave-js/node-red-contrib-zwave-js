@@ -1,18 +1,38 @@
 {
-    "Meter":{
+    "EntryControl": {
+        "MapsToClass": "Entry Control",
+        "Operations": {
+            "GetConfiguration": {
+                "MapsToFunc": "getConfiguration",
+                "ParamsRequired": 0,
+                "ParamsOptional": 0
+            },
+            "SetConfiguration": {
+                "MapsToFunc": "setConfiguration",
+                "ParamsRequired": 2,
+                "ParamsOptional": 0
+            },
+            "GetSupportedKeys": {
+                "MapsToFunc": "getSupportedKeys",
+                "ParamsRequired": 0,
+                "ParamsOptional": 0
+            }
+        }
+    },
+    "Meter": {
         "MapsToClass": "Meter",
-        "Operations":{
-            "Get":{
+        "Operations": {
+            "Get": {
                 "MapsToFunc": "get",
                 "ParamsRequired": 1,
                 "ParamsOptional": 0
             },
-            "GetAll":{
+            "GetAll": {
                 "MapsToFunc": "getAll",
                 "ParamsRequired": 0,
                 "ParamsOptional": 0
             },
-            "Reset":{
+            "Reset": {
                 "MapsToFunc": "reset",
                 "ParamsRequired": 1,
                 "ParamsOptional": 0

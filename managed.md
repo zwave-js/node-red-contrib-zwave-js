@@ -28,6 +28,9 @@ Currently, the supported command classes are (when using Managed mode).
 | ColorSwitch               | Get                                 | [**COLOR COMPONENT**]                                 |
 | DoorLock                  | Set                                 | [**DOOR LOCK MODE**]                                  |
 | DoorLock                  | Get                                 |                                                       |
+| EntryControl              | SetConfiguration                    | [Number : Key Cache Size, Number : Cache Timeout]     |
+| EntryControl              | GetConfiguration                    |                                                       |
+| EntryControl              | GetSupportedKeys                    |                                                       |
 | Lock                      | Set                                 | [Bool]                                                |
 | Lock                      | Get                                 |                                                       |
 | Indicator                 | Set                                 | [Number : Value] OR [**INDICATOR**[]]                 |

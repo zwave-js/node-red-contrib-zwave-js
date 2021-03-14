@@ -179,6 +179,7 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
     - Per node information when calling **GetNodes** has been substantially increased.
     - Node status is now a string 'UNKNOWN', 'ASLEEP', 'AWAKE', 'DEAD', 'ALIVE'
     - Added a Controller function **SetNodeLocation**  
+    - Added support for **Entry Control** CC to Managed mode.  
 
 
   - 2.0.0
