@@ -16,7 +16,7 @@ module.exports = function (RED) {
     function Init(config) {
 
         const node = this;
-        const canDoSecure = false;
+        let canDoSecure = false;
         const NodesReady = []; // Now only used for display purposes
         RED.nodes.createNode(this, config);
 
