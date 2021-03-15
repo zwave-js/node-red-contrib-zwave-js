@@ -123,12 +123,12 @@ let ZwaveJsUI = (function () {
       .css({ display: 'inline-flex', alignItems: 'center' })
       .appendTo(controllerOpts)
     makeControllerOption('Start Inclusion', 'StartInclusion', () => {
-      return [$('#zwave-js-secure-inclusion').is(':checked')]
+      return [$('#zwave-js-insecure-inclusion').is(':checked')]
     }).appendTo(optInclusion)
-    $('<input type="checkbox" id="zwave-js-secure-inclusion">')
+    $('<input type="checkbox" id="zwave-js-insecure-inclusion">')
       .css({ margin: '0 2px' })
       .appendTo(optInclusion)
-    $('<span>').css({ margin: '0 2px', fontSize: 'x-small' }).text('Secure').appendTo(optInclusion)
+    $('<span>').css({ margin: '0 2px', fontSize: 'x-small' }).text('Insecure').appendTo(optInclusion)
     makeControllerOption('Stop Inclusion', 'StopInclusion').appendTo(optInclusion)
     $('<span id="zwave-js-status-box-inclusion">')
       .addClass('zwave-js-status-box')
