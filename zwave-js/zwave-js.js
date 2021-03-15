@@ -13,6 +13,9 @@ module.exports = function (RED) {
 
     const NodeInterviewStage = ["None", "ProtocolInfo", "NodeInfo", "CommandClasses", "OverwriteConfig", "Neighbors", "Complete"]
     const NodeStatus = ['UNKNOWN', 'ASLEEP', 'AWAKE', 'DEAD', 'ALIVE']
+    const ProtocolVersion = ["Unknown","2.0","4.2x / 5.0x","4.5x / 6.0x"]
+
+  
 
     const UI = require('./ui/server.js')
     UI.init(RED)
@@ -406,7 +409,7 @@ module.exports = function (RED) {
                             zwavePlusVersion: N.zwavePlusVersion,
                             zwavePlusNodeType: N.zwavePlusNodeType,
                             zwavePlusRoleType: N.zwavePlusRoleType,
-                            isListetning: N.isListetning,
+                            isListening: N.isListening,
                             isFrequentListening: N.isFrequentListening,
                             canSleep: N.canSleep,
                             isRouting: N.isRouting,
@@ -414,7 +417,7 @@ module.exports = function (RED) {
                             maxDataRate: N.maxDataRate,
                             supportsSecurity: N.supportsSecurity,
                             isSecure: N.isSecure,
-                            protocolVersion: N.protocolVersion,
+                            protocolVersion: ProtocolVersion[N.protocolVersion],
                             manufacturerId: N.manufacturerId,
                             productId: N.productId,
                             productType: N.productType,
