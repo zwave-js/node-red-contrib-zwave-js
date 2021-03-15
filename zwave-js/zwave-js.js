@@ -16,6 +16,7 @@ module.exports = function (RED) {
     function Init(config) {
 
         const node = this;
+        const canDoSecure = false;
         const NodesReady = []; // Now only used for display purposes
         RED.nodes.createNode(this, config);
 
@@ -92,10 +93,12 @@ module.exports = function (RED) {
             }
 
             DriverOptions.networkKey = Buffer.from(_Buffer);
+            canDoSecure = true;
 
         }
         else if (config.encryptionKey != null && config.encryptionKey.length > 0) {
             DriverOptions.networkKey = Buffer.from(config.encryptionKey);
+            canDoSecure = true;
         }
 
         var Driver;
@@ -473,12 +476,17 @@ module.exports = function (RED) {
                     break;
 
                 case "StartInclusion":
-                    if (Params != null && Params.length > 0) {
+                    if (!canDoSecure) {
+                        await Driver.controller.beginInclusion(true);
+                    }
+                    else if (Params != null && Params.length > 0) {
                         await Driver.controller.beginInclusion(Params[0]);
                     }
                     else {
                         await Driver.controller.beginInclusion(false);
                     }
+                    
+                   
 
                     break;
 
