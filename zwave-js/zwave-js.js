@@ -1,21 +1,14 @@
 module.exports = function (RED) {
-    // Refs
     const SP = require("serialport");
-    const ZW = require('zwave-js')
-    const { Message } = require("zwave-js/build/lib/message/Message");
-    const { Duration } = require("@zwave-js/core");
     const FMaps = require('./FunctionMaps.json')
     const EnumLookup = require('./Enums.json')
     const Path = require('path')
-    const FS = require('fs')
-    const ZWJSPKG = require('zwave-js/package.json')
     const MODPackage = require('../package.json')
-
-    const NodeInterviewStage = ["None", "ProtocolInfo", "NodeInfo", "CommandClasses", "OverwriteConfig", "Neighbors", "Complete"]
-    const NodeStatus = ['UNKNOWN', 'ASLEEP', 'AWAKE', 'DEAD', 'ALIVE']
-    const ProtocolVersion = ["Unknown","2.0","4.2x / 5.0x","4.5x / 6.0x"]
-
-  
+    const ZW = require('zwave-js')
+    const {InterviewStage, NodeStatus, ProtocolVersion} = require('zwave-js/Node')
+    const { Message } = require("zwave-js/build/lib/message/Message");
+    const { Duration } = require("@zwave-js/core");
+    const ZWJSPKG = require('zwave-js/package.json')
 
     const UI = require('./ui/server.js')
     UI.init(RED)
@@ -405,7 +398,7 @@ module.exports = function (RED) {
                             location: N.location,
                             status: NodeStatus[N.status],
                             ready: N.ready,
-                            interviewStage: NodeInterviewStage[N.interviewStage],
+                            interviewStage: InterviewStage[N.interviewStage],
                             zwavePlusVersion: N.zwavePlusVersion,
                             zwavePlusNodeType: N.zwavePlusNodeType,
                             zwavePlusRoleType: N.zwavePlusRoleType,
@@ -448,7 +441,7 @@ module.exports = function (RED) {
                 case "InterviewNode":
                     Params[0] = +Params[0]
                     NodeCheck(Params[0]);
-                    let Stage = NodeInterviewStage[Driver.controller.nodes.get(Params[0]).interviewStage];
+                    let Stage = InterviewStage[Driver.controller.nodes.get(Params[0]).interviewStage];
                     if (Stage != "Complete") {
                         let ErrorMSG = "Node " + Params[0] + " is already being interviewed. Current Interview Stage : " + Stage + "";
                         throw new Error(ErrorMSG);
