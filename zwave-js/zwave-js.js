@@ -355,7 +355,7 @@ module.exports = function (RED) {
                     break;
 
                 case "SetValue":
-                    Driver.controller.nodes.get(Node).setValue(Params[0], Params[1]);
+                    await Driver.controller.nodes.get(Node).setValue(Params[0], Params[1]);
                     break;
 
                 case "GetValue":

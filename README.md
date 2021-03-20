@@ -180,6 +180,7 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
     - Node status is now a string 'Unknown', 'Asleep', 'Awake', 'Dead', 'Alive'
     - Added a Controller function **SetNodeLocation**  
     - Added support for **Entry Control** CC to Managed mode.  
+    - Fix Node-Red crash when using **SetValue** and where a timeout occurs on a node ([#29](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/29))
 
 
   - 2.0.0
