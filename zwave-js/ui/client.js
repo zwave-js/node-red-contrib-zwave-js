@@ -271,9 +271,8 @@ let ZwaveJsUI = (function () {
               controllerRequest({
                 class: 'Controller',
                 operation: 'RemoveFailedNode',
-                params: [selectedNode],
-                noWait: false
-              })
+                params: [selectedNode]
+              }).catch(err => alert(err.responseText))
               selectNode(1)
             })
           )
@@ -923,10 +922,7 @@ let ZwaveJsUI = (function () {
       url: `zwave-js/${selectedController}`,
       method: 'POST',
       contentType: 'application/json',
-      data: JSON.stringify(req),
-      error: function (err) {
-        alert(err.responseText)
-      }
+      data: JSON.stringify(req)
     })
   }
 
