@@ -53,9 +53,13 @@ module.exports = {
           clearTimeout(timeout) // Cancel timeout
           if (!req.body.noWait) res.send(zwaveRes.payload) // Don't send if .noWait was specified
         },
-        err => err && res.status(500).send(err.message) // Error by controller
+        err => {
+          if(err){
+            clearTimeout(timeout) // Cancel timeout
+            if (!req.body.noWait) res.status(500).send(err.message) // Don't send if .noWait was specified
+          }
+        }
       )
-
       if (req.body.noWait) res.status(202).end() // Acknowledge receipt of request if not waiting for response
     })
   },

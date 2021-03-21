@@ -272,7 +272,7 @@ let ZwaveJsUI = (function () {
                 class: 'Controller',
                 operation: 'RemoveFailedNode',
                 params: [selectedNode],
-                noWait: true
+                noWait: false
               })
               selectNode(1)
             })
@@ -654,9 +654,9 @@ let ZwaveJsUI = (function () {
       valueId.propertyKeyName ??
       valueId.propertyName ??
       valueId.property +
-        (valueId.propertyKey !== undefined
-          ? `[0x${valueId.propertyKey.toString(16).toUpperCase().padStart(2, '0')}]`
-          : '')
+      (valueId.propertyKey !== undefined
+        ? `[0x${valueId.propertyKey.toString(16).toUpperCase().padStart(2, '0')}]`
+        : '')
     $('<span>').addClass('zwave-js-node-property-name').text(label).appendTo(el)
     $('<span>').addClass('zwave-js-node-property-value').appendTo(el)
     getValue(valueId)
@@ -923,7 +923,10 @@ let ZwaveJsUI = (function () {
       url: `zwave-js/${selectedController}`,
       method: 'POST',
       contentType: 'application/json',
-      data: JSON.stringify(req)
+      data: JSON.stringify(req),
+      error: function (err) {
+        alert(err.responseText)
+      }
     })
   }
 
