@@ -1,10 +1,9 @@
 let ZwaveJsUI = (function () {
-  const STATUSES = ['UNKNOWN', 'ASLEEP', 'AWAKE', 'DEAD', 'ALIVE']
   const AUTO_HIDE_CC = [
     'Association',
     'Association Group Information',
     'Firmware Update Meta Data',
-    // 'Manufacturer Specific',
+    'Manufacturer Specific',
     'Multi Channel',
     'Multi Channel Association',
     'Node Naming and Location',
@@ -98,17 +97,20 @@ let ZwaveJsUI = (function () {
 
     let controllerOpts = $('<div>').appendTo(controllerHeader).hide()
 
-    function makeControllerOption(text, operation, params) {
+    function makeControllerOption(text, operation, paramGenerator) {
       return $('<button>')
         .addClass('red-ui-button red-ui-button-small')
         .html(text)
-        .click(() =>
+        .click(() => {
+          let params = paramGenerator ? paramGenerator() : undefined
+          console.log({ params })
           controllerRequest({
             class: 'Controller',
             operation,
-            params
+            params,
+            noWait: true
           })
-        )
+        })
     }
 
     // -- -- -- -- Controller info
@@ -117,9 +119,16 @@ let ZwaveJsUI = (function () {
 
     // -- -- -- -- Inclusion
 
-    let optInclusion = $('<div>').appendTo(controllerOpts)
-    makeControllerOption('Start Inclusion (Non-Secure)', 'StartInclusion', [true]).appendTo(optInclusion)
-    makeControllerOption('Start Inclusion (Secure)', 'StartInclusion', [false]).appendTo(optInclusion)
+    let optInclusion = $('<div>')
+      .css({ display: 'inline-flex', alignItems: 'center' })
+      .appendTo(controllerOpts)
+    makeControllerOption('Start Inclusion', 'StartInclusion', () => {
+      return [$('#zwave-js-insecure-inclusion').is(':checked')]
+    }).appendTo(optInclusion)
+    $('<input type="checkbox" id="zwave-js-insecure-inclusion">')
+      .css({ margin: '0 2px' })
+      .appendTo(optInclusion)
+    $('<span>').css({ margin: '0 2px', fontSize: 'x-small' }).text('Insecure').appendTo(optInclusion)
     makeControllerOption('Stop Inclusion', 'StopInclusion').appendTo(optInclusion)
     $('<span id="zwave-js-status-box-inclusion">')
       .addClass('zwave-js-status-box')
@@ -263,7 +272,7 @@ let ZwaveJsUI = (function () {
                 class: 'Controller',
                 operation: 'RemoveFailedNode',
                 params: [selectedNode]
-              })
+              }).catch(err => alert(err.responseText))
               selectNode(1)
             })
           )
@@ -378,10 +387,10 @@ let ZwaveJsUI = (function () {
         let nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${data.node}']`)
         if (data.status == 'ready') {
           // Ready
-          nodeRow.find('.zwave-js-node-row-ready').html(renderReadyIcon('Complete'))
+          nodeRow.find('.zwave-js-node-row-ready').html(renderReadyIcon(true))
         } else {
           // Normal status update
-          nodeRow.find('.zwave-js-node-row-status').html(STATUSES[data.status])
+          nodeRow.find('.zwave-js-node-row-status').html(data.status.toUpperCase())
         }
         break
     }
@@ -393,13 +402,14 @@ let ZwaveJsUI = (function () {
       operation: 'GetNodes'
     })
       .then(({ object }) => {
-        // console.log(object)
-
-        makeInfo('#zwave-js-controller-info', object[1].deviceConfig) // Node 1 should be the controller
+        let controllerNode = object.filter(N => N.isControllerNode)
+        if (controllerNode.length > 0) {
+          makeInfo('#zwave-js-controller-info', controllerNode[0].deviceConfig)
+        }
 
         $('#zwave-js-node-list')
           .empty()
-          .append(object.filter(node => node).map(renderNode))
+          .append(object.filter(node => node && !node.isControllerNode).map(renderNode))
       })
       .catch(console.error)
   }
@@ -413,45 +423,48 @@ let ZwaveJsUI = (function () {
       .append(
         $('<div>').html(node.nodeId).addClass('zwave-js-node-row-id'),
         $('<div>').html(node.name).addClass('zwave-js-node-row-name'),
-        $('<div>').html(STATUSES[node.status]).addClass('zwave-js-node-row-status'),
-        $('<div>').html(renderReadyIcon(node.interviewStage)).addClass('zwave-js-node-row-ready')
+        $('<div>').html(node.status.toUpperCase()).addClass('zwave-js-node-row-status'),
+        $('<div>').html(renderReadyIcon(node.ready)).addClass('zwave-js-node-row-ready')
       )
   }
 
-  function renderReadyIcon(stage) {
+  function renderReadyIcon(isReady) {
     let i = $('<i>')
-    if (stage === 'RestartFromCache') {
-      i.addClass('fa fa-thumbs-o-up')
-      RED.popover.tooltip(i, 'Ready (From Cache)')
-    } else if (stage === 'Complete') {
+
+    if (isReady) {
       i.addClass('fa fa-thumbs-up')
       RED.popover.tooltip(i, 'Ready')
     }
+
     return i
   }
 
   function makeInfo(elId, deviceConfig = {}) {
     let el = $(elId)
 
-    let moreInfo = $('<dl>')
-      .css({ whiteSpace: 'pre-wrap', width: '-webkit-fill-available' })
-      .append(
-        ...Object.entries(deviceConfig.metadata || {}).map(([key, val]) => {
-          return [
-            $('<dt>').html(key),
-            $('<dd>').html(
-              val.replace(/http[^\s]*/g, url => `<a href="${url}">${url.slice(0, 30)}...</a>`)
-            )
-          ]
-        })
-      )
-      .hide()
-
     el.empty().append(
       $('<span>').text(`${deviceConfig.manufacturer} ${deviceConfig.label}`),
-      $('<span>').text(`(${deviceConfig.description})`),
-      $('<button>')
+      $('<span>').text(`(${deviceConfig.description})`)
+    )
+
+    if (Object.keys(deviceConfig.metadata || {}).length) {
+      let moreInfo = $('<dl>')
+        .css({ whiteSpace: 'pre-wrap', width: '-webkit-fill-available' })
+        .append(
+          ...Object.entries(deviceConfig.metadata).map(([key, val]) => {
+            return [
+              $('<dt>').html(key),
+              $('<dd>').html(
+                val.replace(/http[^\s]*/g, url => `<a href="${url}">${url.slice(0, 30)}...</a>`)
+              )
+            ]
+          })
+        )
+        .hide()
+
+      let btn = $('<button>')
         .addClass('red-ui-button red-ui-button-small')
+        .css({ position: 'absolute', right: 5 })
         .html('More Info')
         .click(function () {
           if ($(this).html() == 'More Info') {
@@ -461,9 +474,10 @@ let ZwaveJsUI = (function () {
             moreInfo.hide()
             $(this).html('More Info')
           }
-        }),
-      moreInfo
-    )
+        })
+
+      el.append(btn, moreInfo)
+    }
   }
 
   function cancelSetName() {
@@ -565,18 +579,6 @@ let ZwaveJsUI = (function () {
         // Step 2: For each CC, get all associated properties
         let propsInCC = valueIdList.filter(valueId => valueId.commandClass == commandClass)
 
-        // ** Special case for `Previous Value` and `Delta Time` properties in the `Meter CC`
-        if (commandClass == 50)
-          propsInCC = propsInCC.filter(valueId => {
-            if (/previousValue|deltaTime/.test(valueId.property)) {
-              // We will display these values in a special way once they come in
-              // So fetch the values (and meta) but don't put in tree
-              getValue(valueId)
-              return false
-            }
-            return true
-          })
-
         return {
           element: renderCommandClassElement(commandClass, commandClassName),
           expanded: !AUTO_HIDE_CC.includes(commandClassName.replace(/\s/g, ' ')),
@@ -651,9 +653,9 @@ let ZwaveJsUI = (function () {
       valueId.propertyKeyName ??
       valueId.propertyName ??
       valueId.property +
-        (valueId.propertyKey !== undefined
-          ? `[0x${valueId.propertyKey.toString(16).toUpperCase().padStart(2, '0')}]`
-          : '')
+      (valueId.propertyKey !== undefined
+        ? `[0x${valueId.propertyKey.toString(16).toUpperCase().padStart(2, '0')}]`
+        : '')
     $('<span>').addClass('zwave-js-node-property-name').text(label).appendTo(el)
     $('<span>').addClass('zwave-js-node-property-value').appendTo(el)
     getValue(valueId)
@@ -711,11 +713,6 @@ let ZwaveJsUI = (function () {
   function updateValue(valueId) {
     // Assumes you already checked if this applies to selectedNode
 
-    // Check for special case `Previous Value` or `Delta Time` properties in the `Meter CC`
-    if (valueId.commandClass == 50 && /previousValue|deltaTime/.test(valueId.property)) {
-      return updateMeter(valueId)
-    }
-
     let propertyRow = getPropertyRow(valueId)
 
     if (!propertyRow) {
@@ -768,46 +765,8 @@ let ZwaveJsUI = (function () {
     propertyValue.data('value', value)
   }
 
-  function updateMeter(valueId) {
-    // Could be a value update or meta update
-
-    // Get `value` property row that is associated with this propertyKey
-    let propertyRow = getPropertyRow({ ...valueId, property: 'value' })
-
-    if (!propertyRow) {
-      // `Value` property not yet loaded. This is weird. Shouldn't happen.
-      return
-    }
-
-    let propertyValue = propertyRow.find('.zwave-js-node-property-value')
-
-    // If value given
-    if (valueId.newValue ?? valueId.value)
-      propertyValue.data(valueId.property, valueId.newValue ?? valueId.value)
-
-    // If meta.unit given
-    if (valueId.meta?.unit) propertyValue.data(valueId.property + 'Unit', valueId.meta.unit)
-
-    // Update tooltip
-    let data = propertyValue.data()
-    let tooltip = 'Previous value '
-    if (data.previousValue != undefined) {
-      tooltip += data.previousValue + (data.previousValueUnit ?? '')
-      if (data.deltaTime != undefined)
-        tooltip += ' from ' + data.deltaTime + (data.deltaTimeUnit ?? '') + ' ago'
-    } else {
-      tooltip += 'unknown'
-    }
-    RED.popover.tooltip(propertyValue, tooltip)
-  }
-
   function updateMeta(valueId, meta = {}) {
     // Assumes you already checked if this applies to selectedNode
-
-    // Check for special case `Previous Value` or `Delta Time` properties in the `Meter CC`
-    if (valueId.commandClass == 50 && /previousValue|deltaTime/.test(valueId.property)) {
-      return updateMeter({ ...valueId, meta })
-    }
 
     let propertyRow = getPropertyRow(valueId)
     let propertyValue = propertyRow.find('.zwave-js-node-property-value')
@@ -875,7 +834,8 @@ let ZwaveJsUI = (function () {
               node: selectedNode,
               class: 'Unmanaged',
               operation: 'SetValue',
-              params: [valueId, val]
+              params: [valueId, val],
+              noWait: true
             })
             editor.remove()
           })

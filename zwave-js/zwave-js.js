@@ -1,17 +1,14 @@
 module.exports = function (RED) {
-    // Refs
     const SP = require("serialport");
-    const ZW = require('zwave-js')
-    const { Message } = require("zwave-js/build/lib/message/Message");
-    const { Duration } = require("@zwave-js/core");
     const FMaps = require('./FunctionMaps.json')
     const EnumLookup = require('./Enums.json')
     const Path = require('path')
-    const FS = require('fs')
-    const ZWJSPKG = require('zwave-js/package.json')
     const MODPackage = require('../package.json')
-
-    const NodeInterviewStage = ["None", "ProtocolInfo", "NodeInfo", "RestartFromCache", "CommandClasses", "OverwriteConfig", "Neighbors", "Complete"]
+    const ZW = require('zwave-js')
+    const {InterviewStage, NodeStatus, ProtocolVersion} = require('zwave-js/Node')
+    const { Message } = require("zwave-js/build/lib/message/Message");
+    const { Duration } = require("@zwave-js/core");
+    const ZWJSPKG = require('zwave-js/package.json')
 
     const UI = require('./ui/server.js')
     UI.init(RED)
@@ -19,10 +16,11 @@ module.exports = function (RED) {
     function Init(config) {
 
         const node = this;
+        let canDoSecure = false;
+        const NodesReady = []; // Now only used for display purposes
         RED.nodes.createNode(this, config);
 
         node.status({ fill: "red", shape: "dot", text: "Starting ZWave Driver..." });
-
 
         /*
           Some Params need a little bit of magic. i.e converting to a class
@@ -33,12 +31,39 @@ module.exports = function (RED) {
           the method signature should be (Class Name, Operation Name, object[])
         */
         const CCParamConverters = {
-            "BinarySwitch.Set":ProcessDurationClass,
-            "MultiLevelSwitch.Set":ProcessDurationClass,
-            "Meter.Get":ParseMeterOptions
+            "BinarySwitch.Set": ProcessDurationClass,
+            "MultiLevelSwitch.Set": ProcessDurationClass,
+            "Meter.Get": ParseMeterOptions
         }
 
         let DriverOptions = {};
+
+        // Logging
+        DriverOptions.logConfig = {};
+        if (config.logLevel != null && config.logLevel != "none") {
+
+            DriverOptions.logConfig.enabled = true;
+            DriverOptions.logConfig.level = config.logLevel;
+            DriverOptions.logConfig.logToFile = true;
+
+            if (config.logFile != null && config.logFile.length > 0) {
+                DriverOptions.logConfig.filename = config.logFile
+            } else {
+                DriverOptions.logConfig.filename = Path.join(RED.settings.userDir, "zwave-js-log.txt");
+            }
+
+            if (config.logNodeFilter != null && config.logNodeFilter.length > 0) {
+                let Nodes = config.logNodeFilter.split(",")
+                let NodesArray = [];
+                Nodes.forEach((N) => {
+                    NodesArray.push(parseInt(N))
+                })
+                DriverOptions.logConfig.nodeFilter = NodesArray;
+            }
+        }
+        else {
+            DriverOptions.logConfig.enabled = false;
+        }
 
         // Cache Dir
         DriverOptions.storage = {};
@@ -46,18 +71,18 @@ module.exports = function (RED) {
 
         // Timeout (Configurable via UI)
         DriverOptions.timeouts = {};
-        if(config.ackTimeout != null && config.ackTimeout.length > 0){
+        if (config.ackTimeout != null && config.ackTimeout.length > 0) {
             DriverOptions.timeouts.ack = parseInt(config.ackTimeout);
         }
-        if(config.controllerTimeout != null && config.controllerTimeout.length > 0){
+        if (config.controllerTimeout != null && config.controllerTimeout.length > 0) {
             DriverOptions.timeouts.response = parseInt(config.controllerTimeout);
         }
-        if(config.sendResponseTimeout != null && config.sendResponseTimeout.length > 0){
+        if (config.sendResponseTimeout != null && config.sendResponseTimeout.length > 0) {
             DriverOptions.timeouts.report = parseInt(config.sendResponseTimeout);
         }
-        
-        
-        if (config.encryptionKey != null && config.encryptionKey.length > 0 &&  config.encryptionKey.startsWith('[') && config.encryptionKey.endsWith(']')) {
+
+
+        if (config.encryptionKey != null && config.encryptionKey.length > 0 && config.encryptionKey.startsWith('[') && config.encryptionKey.endsWith(']')) {
 
             let RemoveBrackets = config.encryptionKey.replace("[", "").replace("]", "");
             let _Array = RemoveBrackets.split(",");
@@ -68,10 +93,12 @@ module.exports = function (RED) {
             }
 
             DriverOptions.networkKey = Buffer.from(_Buffer);
+            canDoSecure = true;
 
         }
         else if (config.encryptionKey != null && config.encryptionKey.length > 0) {
             DriverOptions.networkKey = Buffer.from(config.encryptionKey);
+            canDoSecure = true;
         }
 
         var Driver;
@@ -99,38 +126,10 @@ module.exports = function (RED) {
             node.status({ fill: "yellow", shape: "dot", text: "Interviewing Nodes..." });
 
             let ReturnController = { id: "Controller" };
-            let NodesReady = []
-
-            /* green light already interviewed nodes, to speed up ability to receieve events */
-            let HomeID = Driver.controller.homeId;
-            let NodeStateCacheFile = Path.join(RED.settings.userDir, "zwave-js-cache", (HomeID).toString(16)+".json");
-            /* For new installs, the file won't have been created (or this quick at least ) */
-            /* This is fine, as the full inetrview will need to take place if so - so the green light wil be given after the interview */
-            if(FS.existsSync(NodeStateCacheFile)){
-
-                let FileContent = FS.readFileSync(NodeStateCacheFile,'utf8')
-
-                let Cache = JSON.parse(FileContent);
-                let Nodes = Object.keys(Cache.nodes);
-                
-                for(let i = 0;i<Nodes.length;i++){
-    
-                    let NodeState = Cache.nodes[Nodes[i]];
-
-                    if(NodeState.id < 2){
-                        continue;
-                    }
-                    
-                    if(NodeState.interviewStage == "Complete" || NodeState.interviewStage == "RestartFromCache"){
-    
-                        NodesReady.push(NodeState.id);
-                        node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
-                    }
-                }
-            }
 
             // Add, Remove
             Driver.controller.on("node added", (N) => {
+                WireNodeEvents(N);
                 Send(N, "NODE_ADDED")
             })
 
@@ -161,70 +160,8 @@ module.exports = function (RED) {
                 Send(ReturnController, "NETWORK_HEAL_DONE")
             })
 
-            
-           
-            Driver.controller.nodes.forEach((N1) => {
-                
-                N1.on("ready", (N2) => {
-                    if (N2.id < 2) {
-                        return;
-                    }
-                    if (NodesReady.indexOf(N2.id) < 0) {
-                        
-                        NodesReady.push(N2.id);
-                        node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
-                    }
-
-                    
-                })
-                
-                N1.on("value notification", (ND, VL) => {
-                    if (NodesReady.indexOf(ND.id) > -1) {
-                        Send(ND, "VALUE_NOTIFICATION", VL);
-                    }
-                })
-
-                N1.on("notification", (ND, L, VL) => {
-                    if (NodesReady.indexOf(ND.id) > -1) {
-                        Send(ND, "NOTIFICATION", VL);
-                    }
-                })
-
-                N1.on("value added", (ND, VL) => {
-                    if (NodesReady.indexOf(ND.id) > -1) {
-                        Send(ND, "VALUE_UPDATED", VL);
-                    }
-                })
-
-                N1.on("value updated", (ND, VL) => {
-                    if (NodesReady.indexOf(ND.id) > -1) {
-                        Send(ND, "VALUE_UPDATED", VL);
-                    }
-                })
-
-                N1.on("wake up", (ND) => {
-                    if (NodesReady.indexOf(ND.id) > -1) {
-                        Send(ND, "WAKE_UP");
-                    }
-                })
-
-                N1.on("sleep", (ND) => {
-                    if (NodesReady.indexOf(ND.id) > -1) {
-                        Send(ND, "SLEEP");
-                    }
-                })
-
-                N1.on("interview completed", (ND) => {
-                    if (NodesReady.indexOf(ND.id) > -1) {
-                        Send(ND, "INTERVIEW_COMPLETE");
-                    }
-                })
-
-                N1.on("interview failed", (ND, Er) => {
-                    if (NodesReady.indexOf(ND.id) > -1) {
-                        Send(ND, "INTERVIEW_FAILED", Er);
-                    }
-                })
+            Driver.controller.nodes.forEach((ZWN) => {
+                WireNodeEvents(ZWN);
             });
 
         });
@@ -238,7 +175,59 @@ module.exports = function (RED) {
         });
 
         node.on('input', Input);
-        
+
+        function WireNodeEvents(Node) {
+
+            Node.on("ready", (N) => {
+
+                if (N.isControllerNode()) {
+                    return;
+                }
+                if (NodesReady.indexOf(N.id) < 0) {
+                    NodesReady.push(N.id);
+                    node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
+                }
+
+                Node.on("value notification", (N, VL) => {
+                    Send(N, "VALUE_NOTIFICATION", VL);
+                })
+
+                Node.on("notification", (N, CC, ARGS) => {
+                    let OBJ = {
+                        ccId: CC,
+                        args: ARGS
+                    }
+                    Send(N, "NOTIFICATION", OBJ);
+                })
+
+                Node.on("value added", (N, VL) => {
+                    Send(N, "VALUE_UPDATED", VL);
+                })
+
+                Node.on("value updated", (N, VL) => {
+                    Send(N, "VALUE_UPDATED", VL);
+                })
+
+                Node.on("wake up", (N) => {
+                    Send(N, "WAKE_UP");
+                })
+
+                Node.on("sleep", (N) => {
+                    Send(N, "SLEEP");
+                })
+
+            })
+
+
+            Node.on("interview completed", (N) => {
+                Send(N, "INTERVIEW_COMPLETE");
+            })
+
+            Node.on("interview failed", (N, Er) => {
+                Send(N, "INTERVIEW_FAILED", Er);
+            })
+        }
+
         async function Input(msg, send, done) {
             try {
                 let Class = msg.payload.class;
@@ -272,8 +261,14 @@ module.exports = function (RED) {
         };
 
         function NodeCheck(ID) {
+
             if (Driver.controller.nodes.get(ID) == null) {
                 let ErrorMSG = "Node " + ID + " does not exist.";
+                throw new Error(ErrorMSG);
+            }
+
+            if (!Driver.controller.nodes.get(ID).ready) {
+                let ErrorMSG = "Node " + ID + " is not yet ready, to receive commands.";
                 throw new Error(ErrorMSG);
             }
         }
@@ -311,9 +306,9 @@ module.exports = function (RED) {
             let EP = 0;
 
             if (msg.payload.hasOwnProperty("endpoint")) {
-              EP = parseInt(msg.payload.endpoint)
+                EP = parseInt(msg.payload.endpoint)
             } else if (msg.payload.hasOwnProperty("endPoint")) {
-              EP = parseInt(msg.payload.endPoint)
+                EP = parseInt(msg.payload.endPoint)
             }
 
             if (Func.hasOwnProperty("ParamEnumDependency")) {
@@ -325,8 +320,8 @@ module.exports = function (RED) {
                 }
             }
 
-            if(CCParamConverters.hasOwnProperty(Class+"."+Operation)){
-                let Handler = CCParamConverters[Class+"."+Operation];
+            if (CCParamConverters.hasOwnProperty(Class + "." + Operation)) {
+                let Handler = CCParamConverters[Class + "." + Operation];
                 Params = Handler(Class, Operation, Params);
             }
 
@@ -360,25 +355,25 @@ module.exports = function (RED) {
                     break;
 
                 case "SetValue":
-                    Driver.controller.nodes.get(Node).setValue(Params[0], Params[1]);
+                    await Driver.controller.nodes.get(Node).setValue(Params[0], Params[1]);
                     break;
 
                 case "GetValue":
                     let V = Driver.controller.nodes.get(Node).getValue(Params[0]);
-                    
+
                     let ReturnObject = {
-                        response:V,
-                        valueId:Params[0]
+                        response: V,
+                        valueId: Params[0]
                     }
                     Send(ReturnNode, "GET_VALUE_RESPONSE", ReturnObject, send);
                     break;
 
                 case "GetValueMetadata":
                     let M = Driver.controller.nodes.get(Node).getValueMetadata(Params[0]);
-                    
+
                     let ReturnObjectM = {
-                        response:M,
-                        valueId:Params[0]
+                        response: M,
+                        valueId: Params[0]
                     }
                     Send(ReturnNode, "GET_VALUE_METADATA_RESPONSE", ReturnObjectM, send);
                     break;
@@ -398,20 +393,37 @@ module.exports = function (RED) {
             switch (Operation) {
                 case "GetNodes":
                     let Nodes = [];
-                    Driver.controller.nodes.forEach((C, CK) => {
-                        Nodes[CK] =
-                        {
-                            nodeId: C.id,
-                            status: C.status,
-                            name: C.name,
-                            interviewStage: NodeInterviewStage[C.interviewStage],
-                            isSecure: C.isSecure,
-                            manufacturerId: C.manufacturerId,
-                            productId: C.productId,
-                            productType: C.productType,
-                            neighbors: C.neighbors,
-                            deviceConfig: C.deviceConfig
-                        }
+                    Driver.controller.nodes.forEach((N, NI) => {
+
+                        Nodes.push({
+                            nodeId: N.id,
+                            name: N.name,
+                            location: N.location,
+                            status: NodeStatus[N.status],
+                            ready: N.ready,
+                            interviewStage: InterviewStage[N.interviewStage],
+                            zwavePlusVersion: N.zwavePlusVersion,
+                            zwavePlusNodeType: N.zwavePlusNodeType,
+                            zwavePlusRoleType: N.zwavePlusRoleType,
+                            isListening: N.isListening,
+                            isFrequentListening: N.isFrequentListening,
+                            canSleep: N.canSleep,
+                            isRouting: N.isRouting,
+                            supportedDataRates: N.supportedDataRates,
+                            maxDataRate: N.maxDataRate,
+                            supportsSecurity: N.supportsSecurity,
+                            isSecure: N.isSecure,
+                            protocolVersion: ProtocolVersion[N.protocolVersion],
+                            manufacturerId: N.manufacturerId,
+                            productId: N.productId,
+                            productType: N.productType,
+                            firmwareVersion: N.firmwareVersion,
+                            neighbors: N.neighbors,
+                            deviceConfig: N.deviceConfig,
+                            isControllerNode: N.isControllerNode(),
+                            supportsBeaming:N.supportsBeaming
+                        })
+
                     });
                     Send(ReturnController, "NODE_LIST", Nodes, send);
                     break;
@@ -423,10 +435,17 @@ module.exports = function (RED) {
                     Send(ReturnNode, "NODE_NAME_SET", Params[1], send)
                     break
 
+                case "SetNodeLocation":
+                    NodeCheck(Params[0])
+                    Driver.controller.nodes.get(Params[0]).location = Params[1]
+                    ReturnNode.id = Params[0]
+                    Send(ReturnNode, "NODE_LOCATION_SET", Params[1], send)
+                    break
+
                 case "InterviewNode":
                     Params[0] = +Params[0]
                     NodeCheck(Params[0]);
-                    let Stage = NodeInterviewStage[Driver.controller.nodes.get(Params[0]).interviewStage];
+                    let Stage = InterviewStage[Driver.controller.nodes.get(Params[0]).interviewStage];
                     if (Stage != "Complete") {
                         let ErrorMSG = "Node " + Params[0] + " is already being interviewed. Current Interview Stage : " + Stage + "";
                         throw new Error(ErrorMSG);
@@ -458,13 +477,18 @@ module.exports = function (RED) {
                     break;
 
                 case "StartInclusion":
-                    if(Params != null && Params.length > 0){
+                    if (!canDoSecure) {
+                        await Driver.controller.beginInclusion(true);
+                    }
+                    else if (Params != null && Params.length > 0) {
                         await Driver.controller.beginInclusion(Params[0]);
                     }
-                    else{
+                    else {
                         await Driver.controller.beginInclusion(false);
                     }
                     
+                   
+
                     break;
 
                 case "StopInclusion":
@@ -534,14 +558,14 @@ module.exports = function (RED) {
         }
 
         // Meter Fix
-        function ParseMeterOptions(Class, Operation, Params){
+        function ParseMeterOptions(Class, Operation, Params) {
             if (typeof Params[0] == 'object') {
                 Params[0].rateType = EnumLookup.RateType[Params[0].rateType];
             }
             return Params;
         }
 
-       
+
 
 
         Driver.start()
@@ -553,20 +577,20 @@ module.exports = function (RED) {
 
     RED.nodes.registerType("zwave-js", Init);
 
-    RED.httpAdmin.get("/zwjsgetversion",function(req,res){
-        res.json({"zwjsversion":ZWJSPKG.version,"moduleversion":MODPackage.version})
+    RED.httpAdmin.get("/zwjsgetversion", function (req, res) {
+        res.json({ "zwjsversion": ZWJSPKG.version, "moduleversion": MODPackage.version })
     })
 
     RED.httpAdmin.get("/zwjsgetports", RED.auth.needsPermission('serial.read'), function (req, res) {
         SP.list()
-        .then(ports => {
-            const a = ports.map(p => p.path);
-            res.json(a);
-        })
-        .catch(err => {
-            RED.log.error('Error listing serial ports', err)
-            res.json([]);
-        })
-        
+            .then(ports => {
+                const a = ports.map(p => p.path);
+                res.json(a);
+            })
+            .catch(err => {
+                RED.log.error('Error listing serial ports', err)
+                res.json([]);
+            })
+
     });
 }

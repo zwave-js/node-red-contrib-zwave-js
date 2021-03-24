@@ -14,7 +14,10 @@
                 encryptionKey : {value:""},
                 ackTimeout:{value:""},
                 controllerTimeout:{value:""},
-                sendResponseTimeout:{value:""}
+                sendResponseTimeout:{value:""},
+                logLevel:{value:"none"},
+                logFile:{value:""},
+                logNodeFilter:{value:""}
 
             },
             inputs: 1,
@@ -23,7 +26,6 @@
             label: function () {
                 return this.name;
             },
-
             onpaletteadd:ZwaveJsUI.init,
             oneditprepare:SortUI
         });
@@ -102,6 +104,30 @@
     <div class="form-row">
         <label  for="node-input-sendResponseTimeout" style="width:130px"><i class="fa fa-pencil"></i> Req -> Res</label>
         <input type="text" id="node-input-sendResponseTimeout" placeholder="Use Default">
+    </div>
+    <br />
+    <p>
+        <strong>Z-Wave JS Logging</strong>
+    </p>
+    <div class="form-row">
+        <label  for="node-input-logLevel" style="width:130px"><i class="fa fa-pencil"></i> Log Level</label>
+        <select id="node-input-logLevel">
+            <option value="none">Logging Disabled</option>
+            <option value="error">Error</option>
+            <option value="warn">Warn</option>
+            <option value="info">Info</option>
+            <option value="verbose">Verbose</option>
+            <option value="debug">Debug</option>
+            <option value="silly">Silly</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label  for="node-input-logFile" style="width:130px"><i class="fa fa-pencil"></i> Log File</label>
+        <input type="text" id="node-input-logFile" placeholder="zwave-js-log.txt">
+    </div>
+    <div class="form-row">
+        <label  for="node-input-logFile" style="width:130px"><i class="fa fa-pencil"></i> Node Filter</label>
+        <input type="text" id="node-input-logNodeFilter" placeholder="2,5,24">
     </div>
     <br />
     <p>

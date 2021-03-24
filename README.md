@@ -5,7 +5,7 @@ An extremely easy to use, zero dependency and feature rich ZWave node for node-r
 
 The implementation is 100% javascript. it is therefore:  
   - Very fast
-  - Does not require a build of openzwave or any other library
+  - Does not require a build of any static library
   - Stable
 
 Install this node via the Node-Red pallet menu, and you have zwave abilities.  
@@ -18,29 +18,31 @@ The node is straightforward to use, and removes all the complexities that you wo
 
   ![Image](./Demo.png)  
 
-**node-red-contrib-zwave-js** is based on  [ZWave-JS](https://zwave-js.github.io/node-zwave-js/#/).  
+**node-red-contrib-zwave-js** is based on  [&#x1F517;ZWave-JS](https://zwave-js.github.io/node-zwave-js/#/).  
 ZWave-JS is actively  maintained, fast and supports the security command class.
 
 ## Usage Modes
 node-red-contrib-zwave-js, is split into 3 different usage modes.
 
-[Managed](managed.md)  
+[&#x1F517;Managed](./managed.md)  
 If you're wanting to get up and running quickly, or not familar with Z-Wave JS, then this is for you.
 
-[Unmanaged](unmanaged.md)   
+[&#x1F517;Unmanaged](./unmanaged.md)   
 If you're familar with Z-Wave JS, or a more hardened user, to various z-wave stack implementations, then this may be more usefull.  
 
-GUI  
+[&#x1F517;GUI](./GUI.md)   
 This mode comes as a node-red UI. It's more for managing your network, but can alter certain values.
 just open up the UI tab (on the right)
 
-Regardless of your poison, the node will inject the following events, into your flow.
+Whatever your poison, the node will inject the following events, into your flow.
 
 | event                       | node                                | object                          | Meaning                           |
 | --------------------------- | ----------------------------------- | ------------------------------- | --------------------------------- |  
 | NODE_ADDED                  | The ID of the added node            |                                 | A Node Was Added                  |
 | NODE_REMOVED                | The ID of the removed node          |                                 | A Node Was Removed                |
-| INCLUSION_STARTED           |                                     | Bool : Only secure devices      | Include Mode Started              |
+| NODE_NAME_SET               | The ID of the affected node         |                                 | Node name was set                 |
+| NODE_LOCATION_SET           | The ID of the affected node         |                                 | Node location was set             |
+| INCLUSION_STARTED           |                                     | Bool : Secure Include           | Include Mode Started              |
 | INCLUSION_STOPPED           |                                     |                                 | include Mode Stopped              |
 | EXCLUSION_STARTED           |                                     |                                 | Exclude Mode Started              |
 | EXCLUSION_STOPPED           |                                     |                                 | Exclude Mode Stopped              |
@@ -50,7 +52,7 @@ Regardless of your poison, the node will inject the following events, into your 
 | CONTROLLER_RESET_COMPLETE   |                                     |                                 | The controller was reset          |
 | VALUE_UPDATED               | The source Node ID                  | The objects command content     | A Value Was Updated               |
 | VALUE_NOTIFICATION          | The source Node ID                  | The objects command content     | A Value Notification Was Received |
-| NOTIFICATION                | The source Node ID                  | The objects command content     | A Notification Was Sent           |
+| NOTIFICATION                | The source Node ID                  | Command Class ID & Event Data   | A Notification Was Sent           |
 | WAKE_UP                     | The source Node ID                  |                                 | A Node Has Woken Up               |
 | SLEEP                       | The source Node ID                  |                                 | A Node Has Gone To Sleep          |
 | INTERVIEW_COMPLETE          | The source Node ID                  |                                 | The node has been interviewed     |
@@ -93,6 +95,7 @@ The **Controller** class does not require a **node** ID.
 | Controller                | InterviewNode                       | [Number : Node ID]                                    |
 | Controller                | GetNodes                            |                                                       |
 | Controller                | SetNodeName                         | [Number : Node ID, String : Node Name]                |
+| Controller                | SetNodeLocation                     | [Number : Node ID, String : Node Location]            |
 
 To start Inclusion, you will do.  
 ```
@@ -156,6 +159,29 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
 
 
 ## Version History  
+
+  - 3.0.0 **Possible Breaking Changes**
+    - Bug Fixes to Management UI
+    - The Controller Node, is now hidden from the list of nodes.
+    - Migrated to Z-Wave JS V7
+    - Logging options added to config UI
+    - Some 1.4.0 optimsiations removed, as recent changes to Z-Wave JS has made them unnecessary
+    - Changes to the **NOTIFICATION** event.
+        The **object** component will now contain the following structure
+        ```
+        {
+          ccId: Number - The Command Class ID,
+          args: The main event data (simple or complex, hihgly dependant on the CC)
+        }  
+        ```  
+    - Controller operation **GetNodes** no longer returns an empty entry.
+    - Fixed newly added nodes, not being marked as ready (and therefore not passing events)  
+    - Per node information when calling **GetNodes** has been substantially increased.
+    - Node status is now a string 'Unknown', 'Asleep', 'Awake', 'Dead', 'Alive'
+    - Added a Controller function **SetNodeLocation**  
+    - Added support for **Entry Control** CC to Managed mode.  
+    - Fix Node-Red crash when using **SetValue** and where a timeout occurs on a node ([#29](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/29))
+
 
   - 2.0.0
     - Added a User Interface tab, allowing control/maintenance of the zwave network. ([#22](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/22))

@@ -28,6 +28,9 @@ Currently, the supported command classes are (when using Managed mode).
 | ColorSwitch               | Get                                 | [**COLOR COMPONENT**]                                 |
 | DoorLock                  | Set                                 | [**DOOR LOCK MODE**]                                  |
 | DoorLock                  | Get                                 |                                                       |
+| EntryControl              | SetConfiguration                    | [Number : Key Cache Size, Number : Cache Timeout]     |
+| EntryControl              | GetConfiguration                    |                                                       |
+| EntryControl              | GetSupportedKeys (see notes)        |                                                       |
 | Lock                      | Set                                 | [Bool]                                                |
 | Lock                      | Get                                 |                                                       |
 | Indicator                 | Set                                 | [Number : Value] OR [**INDICATOR**[]]                 |
@@ -116,9 +119,14 @@ let Report = {
 When setting the interval, the **Controller Node ID** parameter will almost certainly be 1 - unless you have multiple controllers,
 and you want the wake up to be recieved by a different controller. 
 
+## Notes on GetSupportedKeys
+This will return an array of ASCII codes - representing the keys that are supported on the device  
+
 ## Enums and formatted values.
 Some command classes, require a certain structure in there payload, so please refer to the below information.  
 the CC's above should tell you what is required.
+
+
 
 ## Structures  
 

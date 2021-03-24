@@ -1,11 +1,11 @@
 {
   "name": "node-red-contrib-zwave-js",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "license": "MIT",
   "description": "An extremely easy to use, zero dependency and feature rich ZWave node for node-red. Based on ZWave-JS",
   "dependencies": {
     "serialport": "9.0.7",
-    "zwave-js": "6.6.1"
+    "zwave-js":"7.0.0"
   },
   "keywords": [
     "node-red",
@@ -30,7 +30,7 @@
     "name": "Marcus Davies",
     "email": "marcus.davies83@icloud.com"
   },
-  "contributes": [
+  "contributors": [
     {
       "name": "hufftheweevil (Justin)",
       "url": "https://github.com/hufftheweevil"

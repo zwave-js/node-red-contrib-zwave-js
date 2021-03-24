@@ -42,15 +42,25 @@ module.exports = {
 
       let Controller = CONTROLLERS[req.params.homeId]
 
-      if (!Controller) return res.status(404).end()
+      if (!Controller) return res.status(404).end() // Controller not found
+
+      let timeout = setTimeout(() => res.status(504).end(), 5000) // Request to controller timed out
 
       Controller.request(
-        { payload: req.body },
+        { payload: req.body }, // Pass request packet to controller
         zwaveRes => {
-          res.send(zwaveRes.payload)
+          // Response from controller...
+          clearTimeout(timeout) // Cancel timeout
+          if (!req.body.noWait) res.send(zwaveRes.payload) // Don't send if .noWait was specified
         },
-        err => err && res.status(500).send(err.message)
+        err => {
+          if(err){
+            clearTimeout(timeout) // Cancel timeout
+            if (!req.body.noWait) res.status(500).send(err.message) // Don't send if .noWait was specified
+          }
+        }
       )
+      if (req.body.noWait) res.status(202).end() // Acknowledge receipt of request if not waiting for response
     })
   },
   register: (driver, request) => {
@@ -71,8 +81,7 @@ module.exports = {
         controller.on(event, (...args) => {
           _RED.comms.publish(`/zwave-js/${homeId}`, {
             type: 'controller-event',
-            event,
-            args
+            event
           })
         })
       })
@@ -84,10 +93,10 @@ module.exports = {
           status
         })
       }
-      let emitNodeAsleep = emitNodeStatus(1)
-      let emitNodeAwake = emitNodeStatus(2)
-      let emitNodeDead = emitNodeStatus(3)
-      let emitNodeAlive = emitNodeStatus(4)
+      let emitNodeAsleep = emitNodeStatus('ASLEEP')
+      let emitNodeAwake = emitNodeStatus('AWAKE')
+      let emitNodeDead = emitNodeStatus('DEAD')
+      let emitNodeAlive = emitNodeStatus('ALIVE')
 
       let emitNodeEvent = type => (node, payload) => {
         _RED.comms.publish(`/zwave-js/${homeId}/${node.id}`, {
