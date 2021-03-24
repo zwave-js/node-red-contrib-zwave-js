@@ -40,10 +40,10 @@ module.exports = function (RED) {
 
         // Logging
         DriverOptions.logConfig = {};
-        if (config.loggingLevel != null && parseInt(config.loggingLevel) > -1) {
+        if (config.logLevel != null && config.logLevel != "none") {
 
             DriverOptions.logConfig.enabled = true;
-            DriverOptions.logConfig.level = parseInt(config.loggingLevel);
+            DriverOptions.logConfig.level = config.logLevel;
             DriverOptions.logConfig.logToFile = true;
 
             if (config.logFile != null && config.logFile.length > 0) {
@@ -420,7 +420,8 @@ module.exports = function (RED) {
                             firmwareVersion: N.firmwareVersion,
                             neighbors: N.neighbors,
                             deviceConfig: N.deviceConfig,
-                            isControllerNode: N.isControllerNode()
+                            isControllerNode: N.isControllerNode(),
+                            supportsBeaming:N.supportsBeaming
                         })
 
                     });
