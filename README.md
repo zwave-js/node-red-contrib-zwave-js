@@ -21,6 +21,12 @@ The node is straightforward to use, and removes all the complexities that you wo
 **node-red-contrib-zwave-js** is based on  [&#x1F517;ZWave-JS](https://zwave-js.github.io/node-zwave-js/#/).  
 ZWave-JS is actively  maintained, fast and supports the security command class.
 
+## Node Types
+There are 2 node types.  
+**ZWave-JS Controller**: Allowing a single point of entry to/from your zwave network.
+**Filter Node**: A node that works in conjuction with a **ZWave-JS Controller** node, which applies filtering to a specific device.  
+This allows the node to be used in mulitple places in your collection of flows.
+
 ## Usage Modes
 node-red-contrib-zwave-js, is split into 3 different usage modes.
 
@@ -159,6 +165,11 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
 
 
 ## Version History  
+
+  - 3.1.0
+    - Introduced a new node type **Filter Node**  
+      This node works in conjuction with the main **ZWave-JS Controller** node, allowing for much greater flexibity, with in your flows.  
+      the node acts as a filter, only passing events to/from a specifc zwave device.
 
   - 3.0.0 **Possible Breaking Changes**
     - Bug Fixes to Management UI
