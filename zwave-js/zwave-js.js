@@ -23,9 +23,16 @@ module.exports = function (RED) {
         node.status({ fill: "red", shape: "dot", text: "Starting ZWave Driver..." });
 
         // Allow commands from filter nodes
-        RED.events.on("zwjs:node:command",async (MSG)  =>{
+        RED.events.on("zwjs:node:command",processMessageEvent);
+        async function processMessageEvent(MSG){
             await Input(MSG)
-        })
+        }
+        RED.events.on("zwjs:node:checkready",processReadyRequest);
+        async function processReadyRequest(NID){
+            if(NodesReady.indexOf(parseInt(NID)) > -1){
+                RED.events.emit("zwjs:node:ready:" + NID);
+            }
+        }
 
         /*
           Some Params need a little bit of magic. i.e converting to a class
@@ -172,11 +179,15 @@ module.exports = function (RED) {
         });
 
         node.on('close', (done) => {
+
             UI.unregister(Driver.controller.homeId)
             Driver.destroy();
+            RED.events.removeListener("zwjs:node:checkready",processReadyRequest);
+            RED.events.removeListener("zwjs:node:command",processMessageEvent);
             if (done) {
                 done();
             }
+            
         });
 
         node.on('input', Input);
@@ -188,9 +199,12 @@ module.exports = function (RED) {
                 if (N.isControllerNode()) {
                     return;
                 }
+
                 if (NodesReady.indexOf(N.id) < 0) {
                     NodesReady.push(N.id);
                     node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
+
+                    RED.events.emit("zwjs:node:ready:" + N.id);
                 }
 
                 Node.on("value notification", (N, VL) => {
