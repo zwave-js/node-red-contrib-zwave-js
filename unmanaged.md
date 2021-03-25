@@ -15,7 +15,10 @@ There is only 4 commands to use here.
 | Unmanaged                 | GetValue                            | [ValueID]                                             |  
 | Unmanaged                 | GetValueMetadata                    | [ValueID]                                             |  
 
-## Example 101
+## Example 101  
+
+**NOTE:** You do not need to specify the ```node``` IF the message, is going through the **Filter Node**  
+The filter node takes care to address the message to the correct zwave device.
 
 ```
 /* Get all ValueID's for a node */
