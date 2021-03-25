@@ -23,7 +23,7 @@ ZWave-JS is actively  maintained, fast and supports the security command class.
 
 ## Node Types
 There are 2 node types.  
-**ZWave-JS Controller**: Allowing a single point of entry to/from your zwave network.
+**ZWave-JS Controller**: Allowing a single point of entry to/from your zwave network.  
 **Filter Node**: A node that works in conjuction with a **ZWave-JS Controller** node, which applies filtering to a specific device.  
 This allows the node to be used in mulitple places in your collection of flows.
 
