@@ -1,0 +1,73 @@
+﻿
+<script type="text/javascript">
+
+    RED.nodes.registerType('zwave-filter-node',
+        {
+            category: 'Smart Home',
+            color: 'rgb(16,115,185)',
+            defaults:
+            {
+               
+                name: { value: "Filter Node" },
+                filteredNodeId:{value:""}
+
+            },
+            inputs: 1,
+            outputs: 1,
+            icon: "ZWAVE.png",
+            label: function () {
+                return this.name;
+            },
+        });
+
+</script>
+
+<script type="text/x-red" data-template-name="zwave-filter-node">
+    <p>
+        <strong>Basic settings.</strong><br />
+        Note: This node works in conjuction with the main Controller Node, therefore, ensure the main node is in one of your flows.
+    </p>
+    <div class="form-row">
+        <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="My ZWave Node">
+    </div>
+    <div class="form-row">
+        <label for="node-input-filteredNodeId" style="width:130px"><i class="fa fa-pencil"></i> Node ID</label>
+        <input type="text" id="node-input-filteredNodeId" placeholder="Enter Node ID">
+
+    </div>
+    
+   
+</script>
+
+<script type="text/x-red" data-help-name="zwave-filter-node">
+    <p>A node that only deals with a single zwave node.</p>
+
+    <p>
+        <code>Input:</code><br />
+        A <strong>payload</strong> object containing a command to send.<br />
+        <strong>params</strong> will be dependant on the <strong>class</strong> and <strong>operation</strong> being performed.
+<pre>
+{
+   class: "Configuration",
+   operation: "Set",
+   params: [0x18,0x03,1]
+}
+</pre>
+    </p>
+
+    <p>
+        <code>Output:</code><br />
+        A <strong>payload</strong> containing an event that has occured within the zwave network.<br />
+        The contents of <strong>object</strong> is dependant on the event.
+<pre>
+{
+   event: "VALUE_UPDATED",
+   timestamp: "23-12-2020T12:23:23+000",
+   object: ...
+}
+</pre>
+    </p>
+
+
+</script>

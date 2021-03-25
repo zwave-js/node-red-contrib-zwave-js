@@ -22,6 +22,11 @@ module.exports = function (RED) {
 
         node.status({ fill: "red", shape: "dot", text: "Starting ZWave Driver..." });
 
+        // Allow commands from filter nodes
+        RED.events.on("zwjs:node:command",async (MSG)  =>{
+            await Input(MSG)
+        })
+
         /*
           Some Params need a little bit of magic. i.e converting to a class
 
@@ -535,6 +540,11 @@ module.exports = function (RED) {
             }
             else {
                 node.send({ "payload": PL });
+            }
+
+            // Allow passing event to filter nodes
+            if(Node.id != "Controller"){
+                RED.events.emit("zwjs:node:event:"+Node.id,{ "payload": PL })
             }
         }
 
