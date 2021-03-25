@@ -1,10 +1,10 @@
 ﻿
 <script type="text/javascript">
 
-    RED.nodes.registerType('zwave-filter-node',
+    RED.nodes.registerType('zwave-js-filter',
         {
             category: 'Smart Home',
-            color: 'rgb(16,115,185)',
+            color: 'rgb(46,145,205)',
             defaults:
             {
                
@@ -14,7 +14,7 @@
             },
             inputs: 1,
             outputs: 1,
-            icon: "ZWAVE.png",
+            icon: "DEVICE.png",
             label: function () {
                 return this.name;
             },
@@ -22,7 +22,7 @@
 
 </script>
 
-<script type="text/x-red" data-template-name="zwave-filter-node">
+<script type="text/x-red" data-template-name="zwave-js-filter">
     <p>
         <strong>Basic settings.</strong><br />
         Note: This node works in conjuction with the main Controller Node, therefore, ensure the main node is in one of your flows.
@@ -40,8 +40,8 @@
    
 </script>
 
-<script type="text/x-red" data-help-name="zwave-filter-node">
-    <p>A node that only deals with a single zwave node.</p>
+<script type="text/x-red" data-help-name="zwave-js-filter">
+    <p>A device filter node (Requires the Main Controller node in one of your flows).</p>
 
     <p>
         <code>Input:</code><br />

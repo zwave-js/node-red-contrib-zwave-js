@@ -30,7 +30,7 @@ module.exports = function (RED) {
 
     }
 
-    RED.nodes.registerType("zwave-filter-node", Init);
+    RED.nodes.registerType("zwave-js-filter", Init);
 
 
 }
