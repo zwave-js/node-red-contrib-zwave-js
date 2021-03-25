@@ -29,8 +29,9 @@ Allows a single point of entry to/from your zwave network - this is the main Nod
 ![Image](./ControllerNode.PNG)  
 
 **Filter Node**:  
-Works in conjunction with the Controller Node, which provides the ability to place multiple copies, in mulitple flows, whilst  
-using the Controller Node as its gateway. the Controller Node its self, can be used on its own if you so wish, but only 1 copy can be active.  
+Works in conjunction with the Controller Node, which provides the ability to place multiple copies,  
+in mulitple flows, whilst using the Controller Node as its gateway.  
+the Controller Node its self, can be used on its own if you so wish, but only 1 copy can be active.  
 ![Image](./FilterNode.PNG)  
 
 
