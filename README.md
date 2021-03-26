@@ -175,10 +175,10 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
 
 ## Version History  
 
-  - 3.1.1
-    - Typo in read me :-|
+  - 3.1.2
+    - Fixed missing ```node``` property in messages, when **ZWave Device** nodes are in use.
 
-  - 3.1.0
+  - 3.1.1
     - Introduced a new node type of **ZWave Device**  
       This node works in conjunction with the main **Z-Wave JS Controller** node, allowing for much greater flexibility within your flows.  
       The node acts as a single ZWave device, allowing it to be placed in different flows.

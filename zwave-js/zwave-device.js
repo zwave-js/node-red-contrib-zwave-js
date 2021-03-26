@@ -15,7 +15,6 @@ module.exports = function (RED) {
 
         RED.events.on("zwjs:node:event:" + config.filteredNodeId, processEventMessage)
         function processEventMessage(MSG){
-            delete MSG.payload.node;
             node.send(MSG)
         }
         
