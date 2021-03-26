@@ -53,11 +53,9 @@ Currently, the supported command classes are (when using Managed mode).
 
 The aim of course is to expose them all.
 
-## Example 101
+## Example 101  
 See below, for examples on how to interrogate the CC's in the table above.  
-  
-**NOTE:** You do not need to specify the ```node``` IF the message, is going through the **Filter Node**  
-The filter node takes care to address the message to the correct zwave device.
+**NOTE:** You do not need to specify the ```node``` property IF the message, is going through a **ZWave Device** node.  
 
 ```
 /* Set a configuration value for a zwave node */

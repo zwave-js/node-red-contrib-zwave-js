@@ -16,9 +16,7 @@ There is only 4 commands to use here.
 | Unmanaged                 | GetValueMetadata                    | [ValueID]                                             |  
 
 ## Example 101  
-
-**NOTE:** You do not need to specify the ```node``` IF the message, is going through the **Filter Node**  
-The filter node takes care to address the message to the correct zwave device.
+**NOTE:** You do not need to specify the ```node``` property IF the message, is going through the **ZWave Device** node.  
 
 ```
 /* Get all ValueID's for a node */
