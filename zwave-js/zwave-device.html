@@ -1,0 +1,99 @@
+﻿
+<script type="text/javascript">
+
+    RED.nodes.registerType('zwave-device',
+        {
+            category: 'ZWave JS',
+            color: 'rgb(46,145,205)',
+            defaults:
+            {
+               
+                name: { value: "Some Z-Wave Device" },
+                filteredNodeId:{value:undefined}
+
+            },
+            inputs: 1,
+            outputs: 1,
+            icon: "DEVICE.png",
+            label: function () {
+                return this.name;
+            },
+            oneditprepare:SortUI
+        });
+
+        function SortUI(){
+           
+            $.getJSON("zwjsgetnodelist", (data) => {
+
+                $("#node-input-filteredNodeId").empty()
+                $("#node-input-filteredNodeId").append(new Option("Select Node" , "Select Node"));
+
+                $("#node-input-filteredNodeId").append(
+                    data.map(function (node) {
+                        if(!node.isController){
+                            return new Option(node.id + " : " + node.name , node.id.toString());
+                        }
+                        
+                    })
+                )
+
+                if(this.filteredNodeId !== undefined){
+                    $("#node-input-filteredNodeId").val(this.filteredNodeId)
+                }else{
+                    $("#node-input-filteredNodeId").val("Select Node")
+                }
+            })
+        }
+
+</script>
+
+<script type="text/x-red" data-template-name="zwave-device">
+    <p>
+        <strong>Basic settings.</strong><br />
+        Note: This node works in conjunction with the main Z-Wave JS Controller node, therefore, ensure it is in one of your flows.
+    </p>
+    <div class="form-row">
+        <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="My ZWave Node">
+    </div>
+    <div class="form-row">
+        <label for="node-input-filteredNodeId" style="width:130px"><i class="fa fa-pencil"></i> Node ID</label>
+        <select id="node-input-filteredNodeId">
+        </select>
+
+    </div>
+    
+   
+</script>
+
+<script type="text/x-red" data-help-name="zwave-device">
+    <p>A Z-Wave device node.</p>
+
+    <p>
+        <code>Input:</code><br />
+        A <strong>payload</strong> object containing a command to send.<br />
+        <strong>params</strong> will be dependant on the <strong>class</strong> and <strong>operation</strong> being performed.
+<pre>
+{
+   class: "Configuration",
+   operation: "Set",
+   params: [0x18,0x03,1]
+}
+</pre>
+    </p>
+
+    <p>
+        <code>Output:</code><br />
+        A <strong>payload</strong> containing an event that has occured within the zwave network.<br />
+        The contents of <strong>object</strong> is dependant on the event.
+<pre>
+{
+   event: "VALUE_UPDATED",
+   timestamp: "23-12-2020T12:23:23+000",
+   object: ...
+}
+</pre>
+    </p>
+
+
+</script>

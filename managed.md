@@ -53,8 +53,9 @@ Currently, the supported command classes are (when using Managed mode).
 
 The aim of course is to expose them all.
 
-## Example 101
-See below, for examples on how to interrogate the CC's in the table above.
+## Example 101  
+See below, for examples on how to interrogate the CC's in the table above.  
+**NOTE:** You do not need to specify the ```node``` property IF the message, is going through a **ZWave Device** node.  
 
 ```
 /* Set a configuration value for a zwave node */

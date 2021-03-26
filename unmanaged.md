@@ -15,7 +15,8 @@ There is only 4 commands to use here.
 | Unmanaged                 | GetValue                            | [ValueID]                                             |  
 | Unmanaged                 | GetValueMetadata                    | [ValueID]                                             |  
 
-## Example 101
+## Example 101  
+**NOTE:** You do not need to specify the ```node``` property IF the message, is going through the **ZWave Device** node.  
 
 ```
 /* Get all ValueID's for a node */
