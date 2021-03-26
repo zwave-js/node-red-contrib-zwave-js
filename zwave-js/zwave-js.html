@@ -5,20 +5,19 @@
 
     RED.nodes.registerType('zwave-js',
         {
-            category: 'Smart Home',
+            category: 'ZWave JS',
             color: 'rgb(46,145,205)',
             defaults:
             {
-                serialPort: { value: "Select Port" },
-                name: { value: "ZWave-JS Controller" },
-                encryptionKey : {value:""},
-                ackTimeout:{value:""},
-                controllerTimeout:{value:""},
-                sendResponseTimeout:{value:""},
+                serialPort: { value: undefined },
+                name: { value: "Z-Wave JS Controller" },
+                encryptionKey : {value:undefined},
+                ackTimeout:{value:undefined},
+                controllerTimeout:{value:undefined},
+                sendResponseTimeout:{value:undefined},
                 logLevel:{value:"none"},
-                logFile:{value:""},
-                logNodeFilter:{value:""}
-
+                logFile:{value:undefined},
+                logNodeFilter:{value:undefined}
             },
             inputs: 1,
             outputs: 1,
@@ -31,40 +30,53 @@
         });
 
 
-    function SortUI(Current) {
-        Current = Current || this.serialPort;
+    function SortUI() {
+        
+            $.getJSON("zwjsgetports",(data) => {
 
-        $.getJSON("zwjsgetports", function (data) {
-            var selectLabel = "Select Port";
-            var customLabel = "Custom...";
-            var defaultOptions = data.concat([selectLabel, customLabel]);
-            var options = [selectLabel]
-                .concat(data)
-                .concat(Current && !defaultOptions.includes(Current) ? [Current] : [])
-                .concat([customLabel]);
+                $("#node-input-serialPort").empty()
+                $("#node-input-serialPort").append(new Option("Select Port", "Select Port"));
+                $("#node-input-serialPort").append(new Option("Custom Path...", "Custom Path..."));
 
-            $("#node-input-serialPort")
-                .empty()
-                .append(
-                    options.map(function (option) {
+                $("#node-input-serialPort").append(
+                    data.map(function (option) {
                         return new Option(option, option);
                     })
                 )
-                .val(Current)
-                .unbind('change')
-                .change(function (event) {
-                    if (event.target.value === customLabel) {
-                        var customPort = (prompt('Input your custom serial port', '') || '').trim();
-                        SortUI(customPort || selectLabel);
-                    }
-                });
-        });
 
-        $.getJSON("zwjsgetversion",function(data){
-            $("#MOD_Version").val(data.moduleversion)
-            $("#ZWJS_Version").val(data.zwjsversion)
-        })
-    }
+                if (this.serialPort !== undefined) {
+
+                    if(data.indexOf(this.serialPort) < 0){
+                        $("#node-input-serialPort").append(new Option(this.serialPort, this.serialPort));
+                    }
+
+                    $("#node-input-serialPort").val(this.serialPort)
+
+                } else {
+                    $("#node-input-serialPort").val("Select Port")
+                }
+
+                $("#node-input-serialPort").change(function (event){
+
+                    var Value = event.target.value;
+
+                     if(Value === "Custom Path..."){
+
+                         Value = prompt("Enter custom serial path.")
+                         if(Value !== null){
+                            Value = Value.trim()
+                            $("#node-input-serialPort").append(new Option(Value, Value));
+                            $("#node-input-serialPort").val(Value)
+                         }
+                     }
+                });
+            });
+
+            $.getJSON("zwjsgetversion", function (data) {
+                $("#MOD_Version").val(data.moduleversion)
+                $("#ZWJS_Version").val(data.zwjsversion)
+            })
+        }
 
 
 
@@ -81,7 +93,6 @@
     <div class="form-row">
         <label for="node-input-serialPort" style="width:130px"><i class="fa fa-pencil"></i> Serial Port</label>
         <select id="node-input-serialPort">
-            <option value="Select Port">Select Port</option>
         </select>
 
     </div>
@@ -145,7 +156,7 @@
 </script>
 
 <script type="text/x-red" data-help-name="zwave-js">
-    <p>A Zwave Controller for node red.</p>
+    <p>A Z-Wave Controller for node red.</p>
 
     <p>
         <code>Input:</code><br />

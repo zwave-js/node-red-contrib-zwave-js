@@ -20,7 +20,7 @@
   "node-red": {
     "nodes": {
       "zwave-js": "zwave-js/zwave-js.js",
-      "zwave-js-filter": "zwave-js/zwave-js-filter.js"
+      "zwave-device": "zwave-js/zwave-device.js"
     }
   },
   "repository": {

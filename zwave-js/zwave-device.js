@@ -38,12 +38,8 @@ module.exports = function (RED) {
                 done();
             }
 
-        });
-
-       
-
-      
+        });      
     }
 
-    RED.nodes.registerType("zwave-js-filter", Init);
+    RED.nodes.registerType("zwave-device", Init);
 }

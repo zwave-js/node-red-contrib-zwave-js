@@ -24,15 +24,15 @@ ZWave-JS is actively  maintained, fast and supports the security command class.
 ## Node Types
 There are 2 node types.  
 
-**ZWave-JS Controller**:  
+**Z-Wave JS Controller**:  
 Allows a single point of entry to/from your zwave network - This is the main Node.  
-You can address any zwave device, and recieve updates from them.  
+You can address any zwave device, and recieve updates from them, using this node.  
 ![Image](./ControllerNode.PNG)  
 
-**Filter Node**:  
-Works in conjunction with the Controller Node, but represents a single zwave device.  
-Multiple copies can be used across different flows.  
-The Controller Node its self, can be used on its own if you so wish, but only 1 copy can be deployed 
+**ZWave Device**:  
+Works in conjunction with the Controller Node above, but represents a single zwave device.  
+Multiple copies of this node, can be used across different flows.  
+The Controller Node its self, can be used on its own if you so wish, but only 1 copy can be deployed.
 ![Image](./FilterNode.PNG)  
 
 
@@ -176,9 +176,11 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
 ## Version History  
 
   - 3.1.0
-    - Introduced a new node type **Filter Node**  
-      This node works in conjunction with the main **ZWave-JS Controller** node, allowing for much greater flexibility, within your flows.  
-      the node acts as a filter, only passing events to/from a specific zwave device.
+    - Introduced a new node type of **ZWave Device**  
+      This node works in conjunction with the main **Z-Wave JS Controller** node, allowing for much greater flexibility within your flows.  
+      The node acts as a single ZWave device, allowing it to be placed in different flows.
+    - Bug fixes.
+    - code improvements  
 
   - 3.0.0 **Possible Breaking Changes**
     - Bug Fixes to Management UI

@@ -34,6 +34,7 @@ module.exports = function (RED) {
             }
         }
 
+    
         /*
           Some Params need a little bit of magic. i.e converting to a class
 
@@ -52,19 +53,19 @@ module.exports = function (RED) {
 
         // Logging
         DriverOptions.logConfig = {};
-        if (config.logLevel != null && config.logLevel != "none") {
+        if (config.logLevel !== "none") {
 
             DriverOptions.logConfig.enabled = true;
             DriverOptions.logConfig.level = config.logLevel;
             DriverOptions.logConfig.logToFile = true;
 
-            if (config.logFile != null && config.logFile.length > 0) {
+            if (config.logFile !== undefined && config.logFile.length > 0) {
                 DriverOptions.logConfig.filename = config.logFile
             } else {
                 DriverOptions.logConfig.filename = Path.join(RED.settings.userDir, "zwave-js-log.txt");
             }
 
-            if (config.logNodeFilter != null && config.logNodeFilter.length > 0) {
+            if (config.logNodeFilter !== undefined && config.logNodeFilter.length > 0) {
                 let Nodes = config.logNodeFilter.split(",")
                 let NodesArray = [];
                 Nodes.forEach((N) => {
@@ -83,32 +84,32 @@ module.exports = function (RED) {
 
         // Timeout (Configurable via UI)
         DriverOptions.timeouts = {};
-        if (config.ackTimeout != null && config.ackTimeout.length > 0) {
+        if (config.ackTimeout !== undefined && config.ackTimeout.length > 0) {
             DriverOptions.timeouts.ack = parseInt(config.ackTimeout);
         }
-        if (config.controllerTimeout != null && config.controllerTimeout.length > 0) {
+        if (config.controllerTimeout !== undefined && config.controllerTimeout.length > 0) {
             DriverOptions.timeouts.response = parseInt(config.controllerTimeout);
         }
-        if (config.sendResponseTimeout != null && config.sendResponseTimeout.length > 0) {
+        if (config.sendResponseTimeout !== undefined && config.sendResponseTimeout.length > 0) {
             DriverOptions.timeouts.report = parseInt(config.sendResponseTimeout);
         }
 
 
-        if (config.encryptionKey != null && config.encryptionKey.length > 0 && config.encryptionKey.startsWith('[') && config.encryptionKey.endsWith(']')) {
+        if (config.encryptionKey !== undefined && config.encryptionKey.length > 0 && config.encryptionKey.startsWith('[') && config.encryptionKey.endsWith(']')) {
 
             let RemoveBrackets = config.encryptionKey.replace("[", "").replace("]", "");
             let _Array = RemoveBrackets.split(",");
 
             let _Buffer = [];
             for (let i = 0; i < _Array.length; i++) {
-                _Buffer.push(parseInt(_Array[i]));
+                _Buffer.push(parseInt(_Array[i].trim()));
             }
 
             DriverOptions.networkKey = Buffer.from(_Buffer);
             canDoSecure = true;
 
         }
-        else if (config.encryptionKey != null && config.encryptionKey.length > 0) {
+        else if (config.encryptionKey !== undefined && config.encryptionKey.length > 0) {
             DriverOptions.networkKey = Buffer.from(config.encryptionKey);
             canDoSecure = true;
         }
@@ -281,7 +282,7 @@ module.exports = function (RED) {
 
         function NodeCheck(ID) {
 
-            if (Driver.controller.nodes.get(ID) == null) {
+            if (Driver.controller.nodes.get(ID) === undefined) {
                 let ErrorMSG = "Node " + ID + " does not exist.";
                 throw new Error(ErrorMSG);
             }
@@ -317,7 +318,7 @@ module.exports = function (RED) {
 
             let Func = Map.Operations[Operation];
 
-            if (Params.length != Func.ParamsRequired && Params.length != (Func.ParamsOptional + Func.ParamsRequired)) {
+            if (Params.length !== Func.ParamsRequired && Params.length !== (Func.ParamsOptional + Func.ParamsRequired)) {
                 let ErrorMSG = "Incorrect number of parameters specified for " + Operation;
                 throw new Error(ErrorMSG);
             }
@@ -465,7 +466,7 @@ module.exports = function (RED) {
                     Params[0] = +Params[0]
                     NodeCheck(Params[0]);
                     let Stage = InterviewStage[Driver.controller.nodes.get(Params[0]).interviewStage];
-                    if (Stage != "Complete") {
+                    if (Stage !== "Complete") {
                         let ErrorMSG = "Node " + Params[0] + " is already being interviewed. Current Interview Stage : " + Stage + "";
                         throw new Error(ErrorMSG);
                     }
@@ -499,7 +500,7 @@ module.exports = function (RED) {
                     if (!canDoSecure) {
                         await Driver.controller.beginInclusion(true);
                     }
-                    else if (Params != null && Params.length > 0) {
+                    else if (Params !== undefined && Params.length > 0) {
                         await Driver.controller.beginInclusion(Params[0]);
                     }
                     else {
@@ -545,7 +546,7 @@ module.exports = function (RED) {
         function Send(Node, Subject, Value, send) {
             let PL = { "node": Node.id, "event": Subject, "timestamp": new Date() }
 
-            if (Value != null) {
+            if (Value !== undefined) {
                 PL.object = Value;
             }
 
@@ -557,7 +558,7 @@ module.exports = function (RED) {
             }
 
             // Allow passing event to filter nodes
-            if(Node.id != "Controller"){
+            if(Node.id !== "Controller"){
                 RED.events.emit("zwjs:node:event:"+Node.id,{ "payload": PL })
             }
         }
@@ -566,10 +567,10 @@ module.exports = function (RED) {
         function ProcessDurationClass(Class, Operation, Params) {
             if (Params.length > 0) {
                 for (let i = 0; i < Params.length; i++) {
-                    if (typeof Params[i] == 'object') {
+                    if (typeof Params[i] === "object") {
                         let Keys = Object.keys(Params[i]);
-                        if (Keys.length == 1) {
-                            if (Keys[0] = "Duration") {
+                        if (Keys.length === 1) {
+                            if (Keys[0] === "Duration") {
                                 let D = new Duration(Params[i].Duration.value, Params[i].Duration.unit)
                                 Params[i] = D;
                             }
@@ -583,13 +584,32 @@ module.exports = function (RED) {
 
         // Meter Fix
         function ParseMeterOptions(Class, Operation, Params) {
-            if (typeof Params[0] == 'object') {
+            if (typeof Params[0] === "object") {
                 Params[0].rateType = EnumLookup.RateType[Params[0].rateType];
             }
             return Params;
         }
 
 
+        // HTTP Node List
+        RED.httpAdmin.get("/zwjsgetnodelist", function (req, res) {
+
+            let NodesList = []
+            Driver.controller.nodes.forEach((N, NI) => {
+
+                let Node = {
+                    id:N.id,
+                    name:N.name,
+                    isController:N.isControllerNode()
+                }
+                if(Node.name === undefined){
+                    Node.name = "Unnamed"
+                }
+                NodesList.push(Node)
+            });
+
+            res.json(NodesList)
+        })
 
 
         Driver.start()
