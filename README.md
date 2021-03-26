@@ -32,7 +32,7 @@ You can address any zwave device, and recieve updates from them, using this node
 **ZWave Device**:  
 Works in conjunction with the Controller Node above, but represents a single zwave device.  
 Multiple copies of this node, can be used across different flows.  
-The Controller Node its self, can be used on its own if you so wish, but only 1 copy can be deployed.
+The Controller Node its self, can be used on its own if you so wish, but only 1 copy can be deployed.  
 ![Image](./FilterNode.PNG)  
 
 
