@@ -175,6 +175,9 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
 
 ## Version History  
 
+  - 3.1.1
+    - Typo in read me :-|
+
   - 3.1.0
     - Introduced a new node type of **ZWave Device**  
       This node works in conjunction with the main **Z-Wave JS Controller** node, allowing for much greater flexibility within your flows.  
