@@ -24,6 +24,21 @@ module.exports = function (RED) {
         node.on('input', Input);
         async function Input(msg, send, done) {
 
+            if(msg.payload.class === "Controller"){
+
+                let ErrorMSG = "Controller commands must be sent directly to the Controller Node.";
+                let Err =  new Error(ErrorMSG);
+
+                if (done) {
+                    done(Err)
+                }
+                else{
+                    node.error(Err);
+                }
+
+                return;
+            }
+
             msg.payload.node = parseInt(config.filteredNodeId);
             RED.events.emit("zwjs:node:command", msg);
             if (done) {

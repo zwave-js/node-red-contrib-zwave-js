@@ -13,6 +13,8 @@ module.exports = function (RED) {
     const UI = require('./ui/server.js')
     UI.init(RED)
 
+    let NodeList = []; // used by HTTP Get Nodes (for device nodes)
+
     function Init(config) {
 
         const node = this;
@@ -118,6 +120,7 @@ module.exports = function (RED) {
 
         try {
             Driver = new ZW.Driver(config.serialPort, DriverOptions);
+            
         }
         catch (e) {
             node.error(e);
@@ -142,11 +145,13 @@ module.exports = function (RED) {
 
             // Add, Remove
             Driver.controller.on("node added", (N) => {
+                ShareNodeList();
                 WireNodeEvents(N);
                 Send(N, "NODE_ADDED")
             })
 
             Driver.controller.on("node removed", (N) => {
+                ShareNodeList();
                 Send(N, "NODE_REMOVED")
             })
 
@@ -173,6 +178,8 @@ module.exports = function (RED) {
                 Send(ReturnController, "NETWORK_HEAL_DONE")
             })
 
+            ShareNodeList();
+
             Driver.controller.nodes.forEach((ZWN) => {
                 WireNodeEvents(ZWN);
             });
@@ -192,6 +199,18 @@ module.exports = function (RED) {
         });
 
         node.on('input', Input);
+
+        function ShareNodeList(){
+            NodeList.length = 0;
+            Driver.controller.nodes.forEach((ZWN) => {
+                let Node = {
+                    id: ZWN.id,
+                    name: ZWN.name !== undefined ? ZWN.name : "No Name",
+                    isController: ZWN.isControllerNode()
+                }
+                NodeList.push(Node)
+            });
+        }
 
         function WireNodeEvents(Node) {
 
@@ -453,6 +472,7 @@ module.exports = function (RED) {
                     Driver.controller.nodes.get(Params[0]).name = Params[1]
                     ReturnNode.id = Params[0]
                     Send(ReturnNode, "NODE_NAME_SET", Params[1], send)
+                    ShareNodeList();
                     break
 
                 case "SetNodeLocation":
@@ -590,28 +610,6 @@ module.exports = function (RED) {
             return Params;
         }
 
-
-        // HTTP Node List
-        RED.httpAdmin.get("/zwjsgetnodelist", function (req, res) {
-
-            let NodesList = []
-            Driver.controller.nodes.forEach((N, NI) => {
-
-                let Node = {
-                    id:N.id,
-                    name:N.name,
-                    isController:N.isControllerNode()
-                }
-                if(Node.name === undefined){
-                    Node.name = "Unnamed"
-                }
-                NodesList.push(Node)
-            });
-
-            res.json(NodesList)
-        })
-
-
         Driver.start()
             .catch((e) => {
                 node.error(e);
@@ -620,6 +618,10 @@ module.exports = function (RED) {
     }
 
     RED.nodes.registerType("zwave-js", Init);
+
+    RED.httpAdmin.get("/zwjsgetnodelist", function (req, res) {
+        res.json(NodeList)
+    })
 
     RED.httpAdmin.get("/zwjsgetversion", function (req, res) {
         res.json({ "zwjsversion": ZWJSPKG.version, "moduleversion": MODPackage.version })
