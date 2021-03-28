@@ -5,7 +5,7 @@ However, the reward here, is that Command Class support is only limited by ZWave
 
 The difference with this approach, is that you supply a [&#x1F517;ValueID](https://zwave-js.github.io/node-zwave-js/#/api/valueid)  
 The ValueID interface uniquely identifies to which CC, endpoint and property a value belongs to.  
-These methods directly interact with the Z-Wave JS Value API.
+These methods directly interact with the Z-Wave JS Value API.  
 
 There is only 4 commands to use here.
 
