@@ -1,7 +1,8 @@
 # Managed Usage.  
   
 First, lets get out the way, what Managed mode is.  
-Managed mode is where the node-red plugin it's self does a lot of the heavy lifting. Locating the correct command class, correct node, its endpoint, so on and so forth.
+Managed mode is where the node-red plugin it's self does a lot of the heavy lifting. Locating the correct command class, correct node, its endpoint, so on and so forth.  
+Underneath it all, this method uses the Z-Wave JS Command Classes API  
 
 Managed mode, allows easy accesss, the downside with Managed mode, is that command class support needs to be 'Bridged',  
 so that the command classes, can be used in an easy way.  

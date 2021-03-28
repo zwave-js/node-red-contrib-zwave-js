@@ -1,14 +1,14 @@
 ![Image](./ReadMe.png)  
 
 # node-red-contrib-zwave-js
-An extremely easy to use, zero dependency and feature rich ZWave node for node-red. Based on ZWave-JS
+An extremely easy to use, zero dependency and feature rich Z-Wave node for Node Red, based on Z-Wave JS.
 
 The implementation is 100% javascript. it is therefore:  
   - Very fast
   - Does not require a build of any static library
   - Stable
 
-Install this node via the Node-Red pallet menu, and you have zwave abilities.  
+Install this node via the Node Red pallet menu, and you have Z-Wave support in Node Red .  
 The node is straightforward to use, and removes all the complexities that you would otherwise need to deal with.
 
   - Add the node into your flow
@@ -18,8 +18,8 @@ The node is straightforward to use, and removes all the complexities that you wo
 
   ![Image](./Demo.png)  
 
-**node-red-contrib-zwave-js** is based on  [&#x1F517;ZWave-JS](https://zwave-js.github.io/node-zwave-js/#/).  
-ZWave-JS is actively  maintained, fast and supports the security command class.
+**node-red-contrib-zwave-js** is based on  [&#x1F517;Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/).  
+Z-Wave JS is actively  maintained, fast and supports the security command class.
 
 ## Node Types
 There are 2 node types.  
@@ -39,11 +39,11 @@ The Controller Node its self, can be used on its own if you so wish, but only 1 
 ## Usage Modes
 node-red-contrib-zwave-js, is split into 3 different usage modes.
 
-[&#x1F517;Managed](./managed.md)  
+[&#x1F517;Managed](./managed.md) (Z-Wave JS Command Classes API)  
 If you're wanting to get up and running quickly, or not familar with Z-Wave JS, then this is for you.
 
-[&#x1F517;Unmanaged](./unmanaged.md)   
-If you're familar with Z-Wave JS, or a more hardened user, to various z-wave stack implementations, then this may be more usefull.  
+[&#x1F517;Unmanaged](./unmanaged.md) (Z-Wave JS Value API)  
+If you're familar with Z-Wave JS, or a more hardened user, with various z-wave stack implementations, then this may be more usefull.  
 
 [&#x1F517;GUI](./GUI.md)   
 This mode comes as a node-red UI. It's more for managing your network, but can alter certain values.
@@ -174,6 +174,10 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
 
 
 ## Version History  
+
+  - 3.1.3
+    - Bump Z-wave JS.  
+    - Small updates to read me.
 
   - 3.1.2
     - Fixed missing ```node``` property in messages, when **ZWave Device** nodes are in use.
