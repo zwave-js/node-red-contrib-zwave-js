@@ -296,8 +296,8 @@ module.exports = function (RED) {
                         await Unmanaged(msg, send);
                         break;
 
-                        case "Driver":
-                        await Driver(msg, send);
+                    case "Driver":
+                        await DriverCMD(msg, send);
                         break;
 
                     default:
@@ -398,7 +398,7 @@ module.exports = function (RED) {
         }
 
         // Driver
-        async function Driver(msg,send){
+        async function DriverCMD(msg,send){
 
             let Operation = msg.payload.operation;
             let ReturnNode = { id: "N/A" };
