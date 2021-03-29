@@ -7,9 +7,8 @@ Underneath it all, this method uses the Z-Wave JS Command Classes API
 Managed mode, allows easy accesss, the downside with Managed mode, is that command class support needs to be 'Bridged',  
 so that the command classes, can be used in an easy way.  
 
-Currently, the supported command classes are (when using Managed mode).  
 Some CCs require a JSON Object, which are documented at the bottom.  
-For those CCs that require an Enum value, you can get all the valid Enums, by sending the following message:  
+For those CCs that require an Enum value however, you can get all the valid Enums, by sending the following message:  
 ```
 {
   payload:{
@@ -18,6 +17,7 @@ For those CCs that require an Enum value, you can get all the valid Enums, by se
   }
 }
 ```
+Currently, the supported command classes are (when using Managed mode).  
 
 | class                     | operation                           | params                                                |
 | ------------------------- | ----------------------------------- | ----------------------------------------------------- |
