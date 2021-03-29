@@ -57,7 +57,7 @@ For those CCs that require an Enum value, you can get all the valid Enums, by se
 | ThermostatSetPoint        | Set                                 | [**SetPointType**: Enum, Value: Number, Scale: Number] |
 | ThermostatSetPoint        | Get                                 | [**SetPointType**: Enum]                              | 
 | ThermostatOperatingState  | Get                                 |                                                       | 
-| ThermostatSetback         | Set  (See Notes)                    | [**SetbackType**: Enum, Set Back State: String | Number] | 
+| ThermostatSetback         | Set  (See Notes)                    | [**SetbackType**: Enum, Set Back State: String \| Number] | 
 | ThermostatSetback         | Get                                 |                                                       | 
 | WakeInterval              | Set (See Notes)                     | [Seconds: Number, Controller Node ID:Number]          |
 | WakeInterval              | Get                                 |                                                       | 
