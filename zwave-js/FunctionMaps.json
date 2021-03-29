@@ -1,4 +1,64 @@
 {
+    "MultilevelSensor": {
+        "MapsToClass": "Multilevel Sensor",
+        "Operations": {
+            "Get": {
+                "MapsToFunc": "get",
+                "ParamsOptional": 0,
+                "ParamsRequired": 0
+            },
+            "GetSupportedScales": {
+                "MapsToFunc": "getSupportedScales",
+                "ParamsOptional": 0,
+                "ParamsRequired": 1
+            },
+            "GetSupportedSensorTypes": {
+                "MapsToFunc": "getSupportedSensorTypes",
+                "ParamsOptional": 0,
+                "ParamsRequired": 0
+            }
+        }
+    },
+    "SoundSwitch": {
+        "MapsToClass": "Sound Switch",
+        "Operations": {
+            "GetConfiguration": {
+                "MapsToFunc": "getConfiguration",
+                "ParamsOptional": 0,
+                "ParamsRequired": 0
+            },
+            "GetPlaying": {
+                "MapsToFunc": "getPlaying",
+                "ParamsOptional": 0,
+                "ParamsRequired": 0
+            },
+            "GetToneCount": {
+                "MapsToFunc": "getToneCount",
+                "ParamsOptional": 0,
+                "ParamsRequired": 0
+            },
+            "GetToneInfo": {
+                "MapsToFunc": "GetToneInfo",
+                "ParamsOptional": 0,
+                "ParamsRequired": 1
+            },
+            "Play": {
+                "MapsToFunc": "Play",
+                "ParamsOptional": 1,
+                "ParamsRequired": 1
+            },
+            "SetConfiguration": {
+                "MapsToFunc": "setConfiguration",
+                "ParamsOptional": 0,
+                "ParamsRequired": 1
+            },
+            "Stop": {
+                "MapsToFunc": "stopPlaying",
+                "ParamsOptional": 0,
+                "ParamsRequired": 0
+            }
+        }
+    },
     "EntryControl": {
         "MapsToClass": "Entry Control",
         "Operations": {

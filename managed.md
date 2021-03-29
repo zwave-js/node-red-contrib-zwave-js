@@ -51,7 +51,17 @@ For those CCs that require an Enum value, you can get all the valid Enums, by se
 | Meter                     | Reset                               | [**MeterResetOptions**: Object]                       |
 | MultiLevelSwitch          | Set                                 | [Number, **Duration**: Object (Optional)]             |
 | MultiLevelSwitch          | Get                                 |                                                       |
+| MultiLevelSensor          | Get                                 |                                                       |
+| MultiLevelSensor          | GetSupportedScales                  | [Sensor Type: Number]                                 |
+| MultiLevelSensor          | GetSupportedSensorTypes             |                                                       |
 | Notification              | SendReport                          | [**Event**: Object]                                   |
+| SoundSwitch               | GetConfiguration                    |                                                       |
+| SoundSwitch               | SetConfiguration                    | [Default Tone: Number, Default Volume: Number]        |
+| SoundSwitch               | GetPlaying                          |                                                       |
+| SoundSwitch               | GetToneCount                        |                                                       |
+| SoundSwitch               | GetToneInfo                         | [Tone ID: Number]                                     |
+| SoundSwitch               | Play                                | [Tone ID: Number, Volume: Number (Optional)]          |
+| SoundSwitch               | Stop                                |                                                       |
 | ThermostatMode            | Set                                 | [**ThermostatMode**: Enum]                            |
 | ThermostatMode            | Get                                 |                                                       |
 | ThermostatSetPoint        | Set                                 | [**SetPointType**: Enum, Value: Number, Scale: Number] |

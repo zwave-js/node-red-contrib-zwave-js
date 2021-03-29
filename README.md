@@ -92,28 +92,30 @@ And such event(s) will look like this.
 }
 ```
 
-## Controller based operations
+## Controller/Driver based operations
 Accessing the UI, will provide you with most of the network management operations.  
 But, if you prefer, you can action them via a node message.  
   
-The **Controller** class does not require a **node** ID.  
+The **Controller** and **Driver** classes do not require a **node** ID.  
+However! Some Controller methods themself, actually need a Node ID as part of the required params.   
 
 | class                     | operation                           | params                                                |
 | ------------------------- | ----------------------------------- | ----------------------------------------------------- |
 | Controller                | StartHealNetwork                    |                                                       |
 | Controller                | StopHealNetwork                     |                                                       |
-| Controller                | StartInclusion (see Notes)          | [Bool : Include Non-Secure (optional)]                |
+| Controller                | StartInclusion (see Notes)          | [Include Non-Secure: Bool (optional)]                 |
 | Controller                | StopInclusion                       |                                                       |
 | Controller                | StartExclusion                      |                                                       |
 | Controller                | StopExclusion                       |                                                       |
 | Controller                | HardReset (see Notes)               |                                                       |
-| Controller                | ProprietaryFunc (See Notes)         | [Number : Serial Function ID, Buffer : Data]          |
-| Controller                | InterviewNode                       | [Number : Node ID]                                    |
+| Controller                | ProprietaryFunc (See Notes)         | [Serial Function ID: Number, Data: Buffer]            |
+| Controller                | InterviewNode                       | [Node ID: Number]                                     |
 | Controller                | GetNodes                            |                                                       |
-| Controller                | SetNodeName                         | [Number : Node ID, String : Node Name]                |
-| Controller                | SetNodeLocation                     | [Number : Node ID, String : Node Location]            |
+| Controller                | SetNodeName                         | [Node ID: Number, Node Name: String]                  |
+| Controller                | SetNodeLocation                     | [Node ID: Number, Node Location: String]              |
+| Driver                    | GetEnums                            |                                                       |
 
-To start Inclusion, you will do.  
+To start an in-secure Inclusion, you will do.  
 ```
 {
   payload: {
@@ -181,6 +183,7 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
     - Overhauled Enum value validation (they are now imported, no longer mirrored)  
     - Enum values are removed from read me - you can now obtain them using class: **Driver**, operation: **GetEnums**  
     - Added support for **Sound Switch** CC to Managed mode.  
+    - Added support for **Multi Level Sensor** CC to Managed mode.
     - Fixed **ThermostatSetback** enum validation
 
   - 3.1.3
