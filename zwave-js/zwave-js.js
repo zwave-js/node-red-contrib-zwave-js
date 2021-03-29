@@ -1,17 +1,33 @@
 module.exports = function (RED) {
     const SP = require("serialport");
     const FMaps = require('./FunctionMaps.json')
-    const EnumLookup = require('./Enums.json')
     const Path = require('path')
-    const MODPackage = require('../package.json')
-    const ZW = require('zwave-js')
-    const {InterviewStage, NodeStatus, ProtocolVersion} = require('zwave-js/Node')
-    const { Message } = require("zwave-js/build/lib/message/Message");
+    const ModulePackage = require('../package.json')
+    const ZWaveJS = require('zwave-js')
     const { Duration } = require("@zwave-js/core");
-    const ZWJSPKG = require('zwave-js/package.json')
+    const { Message } = require("zwave-js/build/lib/message/Message"); // to replace with proper export
+    const ZWaveJSPackage = require('zwave-js/package.json')
 
     const UI = require('./ui/server.js')
     UI.init(RED)
+
+    // Z-Wave JS Enum Lookups
+    const Enums = {
+
+        // CC enums
+        RateType: ZWaveJS.RateType,
+        ColorComponent: ZWaveJS.ColorComponent,
+        SetbackType: ZWaveJS.SetbackType,
+        BinarySensorType: ZWaveJS.BinarySensorType,
+        ThermostatMode: ZWaveJS.ThermostatMode,
+        ThermostatSetpointType: ZWaveJS.ThermostatSetpointType,
+        DoorLockMode: ZWaveJS.DoorLockMode,
+
+        // node enums
+        InterviewStage: ZWaveJS.InterviewStage,
+        NodeStatus: ZWaveJS.NodeStatus,
+        ProtocolVersion: ZWaveJS.ProtocolVersion
+    }
 
     let NodeList = []; // used by HTTP Get Nodes (for device nodes)
 
@@ -119,7 +135,7 @@ module.exports = function (RED) {
         var Driver;
 
         try {
-            Driver = new ZW.Driver(config.serialPort, DriverOptions);
+            Driver = new ZWaveJS.Driver(config.serialPort, DriverOptions);
             
         }
         catch (e) {
@@ -280,6 +296,10 @@ module.exports = function (RED) {
                         await Unmanaged(msg, send);
                         break;
 
+                        case "Driver":
+                        await Driver(msg, send);
+                        break;
+
                     default:
                         await NodeFunction(msg, send);
                         break;
@@ -352,9 +372,9 @@ module.exports = function (RED) {
 
             if (Func.hasOwnProperty("ParamEnumDependency")) {
                 for (let i = 0; i < Params.length; i++) {
-                    if (Func.ParamEnumDependency.hasOwnProperty(i)) {
-                        let Enum = Func.ParamEnumDependency[i];
-                        Params[i] = EnumLookup[Enum][Params[i]]
+                    if (Func.ParamEnumDependency.hasOwnProperty(i.toString())) {
+                        let Enum = Func.ParamEnumDependency[i.toString()];
+                        Params[i] = Enums[Enum][Params[i]]
                     }
                 }
             }
@@ -375,6 +395,19 @@ module.exports = function (RED) {
             }
 
             return;
+        }
+
+        // Driver
+        async function Driver(msg,send){
+
+            let Operation = msg.payload.operation;
+            let ReturnNode = { id: "N/A" };
+
+            switch(Operation){
+                case "GetEnums":
+                    Send(ReturnNode, "ENUM_LIST", Enums, send);
+                    break;
+            }
         }
 
         // Unmanaged
@@ -438,9 +471,9 @@ module.exports = function (RED) {
                             nodeId: N.id,
                             name: N.name,
                             location: N.location,
-                            status: NodeStatus[N.status],
+                            status: Enums.NodeStatus[N.status],
                             ready: N.ready,
-                            interviewStage: InterviewStage[N.interviewStage],
+                            interviewStage: Enums.InterviewStage[N.interviewStage],
                             zwavePlusVersion: N.zwavePlusVersion,
                             zwavePlusNodeType: N.zwavePlusNodeType,
                             zwavePlusRoleType: N.zwavePlusRoleType,
@@ -452,7 +485,7 @@ module.exports = function (RED) {
                             maxDataRate: N.maxDataRate,
                             supportsSecurity: N.supportsSecurity,
                             isSecure: N.isSecure,
-                            protocolVersion: ProtocolVersion[N.protocolVersion],
+                            protocolVersion: Enums.ProtocolVersion[N.protocolVersion],
                             manufacturerId: N.manufacturerId,
                             productId: N.productId,
                             productType: N.productType,
@@ -485,7 +518,7 @@ module.exports = function (RED) {
                 case "InterviewNode":
                     Params[0] = +Params[0]
                     NodeCheck(Params[0]);
-                    let Stage = InterviewStage[Driver.controller.nodes.get(Params[0]).interviewStage];
+                    let Stage = Enums.InterviewStage[Driver.controller.nodes.get(Params[0]).interviewStage];
                     if (Stage !== "Complete") {
                         let ErrorMSG = "Node " + Params[0] + " is already being interviewed. Current Interview Stage : " + Stage + "";
                         throw new Error(ErrorMSG);
@@ -526,9 +559,6 @@ module.exports = function (RED) {
                     else {
                         await Driver.controller.beginInclusion(false);
                     }
-                    
-                   
-
                     break;
 
                 case "StopInclusion":
@@ -605,7 +635,7 @@ module.exports = function (RED) {
         // Meter Fix
         function ParseMeterOptions(Class, Operation, Params) {
             if (typeof Params[0] === "object") {
-                Params[0].rateType = EnumLookup.RateType[Params[0].rateType];
+                Params[0].rateType = Enums.RateType[Params[0].rateType];
             }
             return Params;
         }
@@ -624,7 +654,7 @@ module.exports = function (RED) {
     })
 
     RED.httpAdmin.get("/zwjsgetversion", function (req, res) {
-        res.json({ "zwjsversion": ZWJSPKG.version, "moduleversion": MODPackage.version })
+        res.json({ "zwjsversion": ZWaveJSPackage.version, "moduleversion": ModulePackage.version })
     })
 
     RED.httpAdmin.get("/zwjsgetports", RED.auth.needsPermission('serial.read'), function (req, res) {

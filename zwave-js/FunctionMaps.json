@@ -96,7 +96,8 @@
                 "ParamsRequired": 2,
                 "ParamsOptional": 0,
                 "ParamEnumDependency": {
-                    "0": "SetbackType"
+                    "0": "SetbackType",
+                    "1": "SetbackState"
                 }
             }
         }
