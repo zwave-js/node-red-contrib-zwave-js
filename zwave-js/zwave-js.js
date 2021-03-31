@@ -4,9 +4,10 @@ module.exports = function (RED) {
     const Path = require('path')
     const ModulePackage = require('../package.json')
     const ZWaveJS = require('zwave-js')
-    const { Duration } = require("@zwave-js/core");
+    const { Duration, createDefaultTransportFormat } = require("@zwave-js/core");
     const { Message } = require("zwave-js/build/lib/message/Message"); // to replace with proper export
     const ZWaveJSPackage = require('zwave-js/package.json')
+    const Winston = require("winston");
 
     const UI = require('./ui/server.js')
     UI.init(RED)
@@ -30,21 +31,74 @@ module.exports = function (RED) {
     }
 
     let NodeList = []; // used by HTTP Get Nodes (for device nodes)
+    var Logger;
+    var FileTransport; // Needed for Z-Wave JS logging.
+
+    // Log function
+    const Log = function(level,label,direction,tag1,msg,tag2){
+
+        if(Logger !== undefined){
+
+            let logEntry = {
+                direction: "  ",
+                message: msg,
+                level: level,
+                label: label,
+                timestamp: new Date().toJSON(),
+                multiline:Array.isArray(msg)
+            }
+            if (direction.length > 0) {
+                logEntry.direction = direction === "IN" ? "» " : "« "
+            }
+
+            if (tag1 !== undefined) {
+                logEntry.primaryTags = tag1
+            }
+
+            if (tag2 !== undefined) {
+                logEntry.secondaryTags = tag2
+            }
+
+            Logger.log(logEntry)
+        }
+
+    }
 
     function Init(config) {
 
         const node = this;
         let canDoSecure = false;
-        const NodesReady = []; // Now only used for display purposes
+        const NodesReady = [];
         RED.nodes.createNode(this, config);
+
+        // Create Logger (if enabled)
+        if (config.logLevel !== "none") {
+
+            Logger = Winston.createLogger({level:config.logLevel});
+
+            let FileTransportOptions = {
+                filename: Path.join(RED.settings.userDir, "zwave-js-log.txt"),
+                format:createDefaultTransportFormat(false,false)
+            }
+            if (config.logFile !== undefined && config.logFile.length > 0) {
+                FileTransportOptions.filename = config.logFile
+            }
+
+            FileTransport = new Winston.transports.File(FileTransportOptions)
+            Logger.add(FileTransport)
+        }
+
+        
 
         node.status({ fill: "red", shape: "dot", text: "Starting ZWave Driver..." });
 
-        // Allow commands from filter nodes
+        Log("silly","MODULE","",undefined,"Registering event -> zwjs:node:command")
         RED.events.on("zwjs:node:command",processMessageEvent);
         async function processMessageEvent(MSG){
             await Input(MSG)
         }
+
+        Log("silly","MODULE","",undefined,"Registering event -> zwjs:node:checkready")
         RED.events.on("zwjs:node:checkready",processReadyRequest);
         async function processReadyRequest(NID){
             if(NodesReady.indexOf(parseInt(NID)) > -1){
@@ -67,23 +121,17 @@ module.exports = function (RED) {
             "Meter.Get": ParseMeterOptions
         }
 
+        Log("silly","MODULE","",undefined,"Generating Driver options")
         let DriverOptions = {};
 
         // Logging
         DriverOptions.logConfig = {};
-        if (config.logLevel !== "none") {
+        if (Logger !== undefined) {
 
             DriverOptions.logConfig.enabled = true;
-            DriverOptions.logConfig.level = config.logLevel;
-            DriverOptions.logConfig.logToFile = true;
-
-            if (config.logFile !== undefined && config.logFile.length > 0) {
-                DriverOptions.logConfig.filename = config.logFile
-            } else {
-                DriverOptions.logConfig.filename = Path.join(RED.settings.userDir, "zwave-js-log.txt");
-            }
 
             if (config.logNodeFilter !== undefined && config.logNodeFilter.length > 0) {
+                Log("silly","MODULE","","[USER OPTIONS]","Z-Wave JS Log Node Filter: "+config.logNodeFilter)
                 let Nodes = config.logNodeFilter.split(",")
                 let NodesArray = [];
                 Nodes.forEach((N) => {
@@ -91,6 +139,8 @@ module.exports = function (RED) {
                 })
                 DriverOptions.logConfig.nodeFilter = NodesArray;
             }
+
+            DriverOptions.logConfig.transports = [FileTransport]
         }
         else {
             DriverOptions.logConfig.enabled = false;
@@ -103,12 +153,15 @@ module.exports = function (RED) {
         // Timeout (Configurable via UI)
         DriverOptions.timeouts = {};
         if (config.ackTimeout !== undefined && config.ackTimeout.length > 0) {
+            Log("debug","MODULE","","[USER OPTIONS]","ACK timeout set to: "+config.ackTimeout)
             DriverOptions.timeouts.ack = parseInt(config.ackTimeout);
         }
         if (config.controllerTimeout !== undefined && config.controllerTimeout.length > 0) {
+            Log("debug","MODULE","","[USER OPTIONS]","Controller timeout set to: "+config.controllerTimeout)
             DriverOptions.timeouts.response = parseInt(config.controllerTimeout);
         }
         if (config.sendResponseTimeout !== undefined && config.sendResponseTimeout.length > 0) {
+            Log("debug","MODULE","","[USER OPTIONS]","Report timeout set to: "+config.sendResponseTimeout)
             DriverOptions.timeouts.report = parseInt(config.sendResponseTimeout);
         }
 
@@ -117,6 +170,8 @@ module.exports = function (RED) {
 
             let RemoveBrackets = config.encryptionKey.replace("[", "").replace("]", "");
             let _Array = RemoveBrackets.split(",");
+
+            Log("debug","MODULE","","[USER OPTIONS]","Encryption key provided as Array","("+_Array.length+" bytes)")
 
             let _Buffer = [];
             for (let i = 0; i < _Array.length; i++) {
@@ -128,6 +183,9 @@ module.exports = function (RED) {
 
         }
         else if (config.encryptionKey !== undefined && config.encryptionKey.length > 0) {
+
+            Log("debug","MODULE","","[USER OPTIONS]","Encryption key provided as String","("+config.encryptionKey.length+" characters)")
+
             DriverOptions.networkKey = Buffer.from(config.encryptionKey);
             canDoSecure = true;
         }
@@ -135,24 +193,30 @@ module.exports = function (RED) {
         var Driver;
 
         try {
+            Log("info","MODULE","",undefined,"Instantiating Z-Wave JS Driver: "+config.serialPort+"")
             Driver = new ZWaveJS.Driver(config.serialPort, DriverOptions);
             
         }
         catch (e) {
+            Log("error","ERROR","","[DRIVER INIT]",e.message)
             node.error(e);
             return;
         }
 
         UI.register(Driver, Input)
 
+        Log("silly","MODULE","",undefined,"Registering driver event -> error")
         Driver.on("error", (e) => {
+            Log("error","ERROR","","[DRIVER]",e.message)
             node.error(e);
         });
 
+        Log("silly","MODULE","",undefined,"Registering driver event -> all nodes ready")
         Driver.on("all nodes ready", () => {
             node.status({ fill: "green", shape: "dot", text: "All Nodes Ready!" });
         })
 
+        Log("silly","MODULE","",undefined,"Registering driver event -> driver ready")
         Driver.once("driver ready", () => {
 
             node.status({ fill: "yellow", shape: "dot", text: "Interviewing Nodes..." });
@@ -594,11 +658,20 @@ module.exports = function (RED) {
         }
 
         function Send(Node, Subject, Value, send) {
+
             let PL = { "node": Node.id, "event": Subject, "timestamp": new Date() }
 
             if (Value !== undefined) {
                 PL.object = Value;
             }
+
+            let PLKeys = Object.keys(PL);
+            let OBJArray = [];
+            PLKeys.forEach((K) =>{
+                OBJArray.push(" "+K+": "+PL[K]);
+            })
+
+            Log("debug","USRFLO","OUT","[MODULE]",["Forwarding event to user"].concat(OBJArray));
 
             if (send) {
                 send({ "payload": PL })
@@ -615,6 +688,9 @@ module.exports = function (RED) {
 
         // Duration Fix
         function ProcessDurationClass(Class, Operation, Params) {
+
+            Log("debug","MODULE","","[PRE-PROCESSOR]","Checking for Duration Object");
+
             if (Params.length > 0) {
                 for (let i = 0; i < Params.length; i++) {
                     if (typeof Params[i] === "object") {
@@ -623,6 +699,7 @@ module.exports = function (RED) {
                             if (Keys[0] === "Duration") {
                                 let D = new Duration(Params[i].Duration.value, Params[i].Duration.unit)
                                 Params[i] = D;
+                                Log("debug","MODULE","","[PRE-PROCESSOR]",["Duration class instance created: Param "+i+""].concat([" Value: "+Params[i].Duration.value," Unit: "+Params[i].Duration.unit]));
                             }
                         }
                     }
@@ -634,14 +711,17 @@ module.exports = function (RED) {
 
         // Meter Fix
         function ParseMeterOptions(Class, Operation, Params) {
+            Log("debug","MODULE","","[PRE-PROCESSOR]","Parsing METER -> GET Params");
             if (typeof Params[0] === "object") {
                 Params[0].rateType = Enums.RateType[Params[0].rateType];
+                Log("debug","MODULE","","[PRE-PROCESSOR]","Meter Get type set to: "+Params[0].rateType);
             }
             return Params;
         }
 
         Driver.start()
             .catch((e) => {
+                Log("error","ERROR","","[DRIVER]",e.message)
                 node.error(e);
 
             })
