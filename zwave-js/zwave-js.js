@@ -35,7 +35,7 @@ module.exports = function (RED) {
     var FileTransport; // Needed for Z-Wave JS logging.
 
     // Log function
-    const Log = function(level,label,direction,tag1,msg,tag2){
+    const Log = function(level,entity,direction,tag1,msg,tag2){
 
         if(Logger !== undefined){
 
@@ -43,16 +43,16 @@ module.exports = function (RED) {
                 direction: "  ",
                 message: msg,
                 level: level,
-                label: label,
+                label: entity,
                 timestamp: new Date().toJSON(),
                 multiline:Array.isArray(msg)
             }
             if (direction.length > 0) {
-                logEntry.direction = direction === "IN" ? "» " : "« "
+                logEntry.direction = direction === "IN" ? "« " : "» "
             }
 
             if (tag1 !== undefined) {
-                logEntry.primaryTags = tag1
+                logEntry.primaryTags = "["+tag1+"]"
             }
 
             if (tag2 !== undefined) {
@@ -89,20 +89,24 @@ module.exports = function (RED) {
         }
 
         
+        
 
         node.status({ fill: "red", shape: "dot", text: "Starting ZWave Driver..." });
 
-        Log("silly","MODULE","",undefined,"Registering event -> zwjs:node:command")
+        Log("silly","MODULE","",undefined,"Registering event -> 'zwjs:node:command'")
         RED.events.on("zwjs:node:command",processMessageEvent);
         async function processMessageEvent(MSG){
-            await Input(MSG)
+            Log("debug","USRFLO","OUT","DEVMOD","Received event 'zwjs:node:command'. Forwarding to input.")
+            await Input(MSG,undefined,undefined,true)
         }
 
-        Log("silly","MODULE","",undefined,"Registering event -> zwjs:node:checkready")
+        Log("silly","MODULE","",undefined,"Registering event -> 'zwjs:node:checkready'")
         RED.events.on("zwjs:node:checkready",processReadyRequest);
         async function processReadyRequest(NID){
+            Log("debug","DEVMOD","OUT","MODULE","Received event 'zwjs:node:checkready'. Processing.","[Node: "+NID+"]")
             if(NodesReady.indexOf(parseInt(NID)) > -1){
                 RED.events.emit("zwjs:node:ready:" + NID);
+                Log("debug","DEVMOD","IN","MODULE","Responding to event 'zwjs:node:checkready'", "[Node: "+NID+"]")
             }
         }
 
@@ -131,7 +135,7 @@ module.exports = function (RED) {
             DriverOptions.logConfig.enabled = true;
 
             if (config.logNodeFilter !== undefined && config.logNodeFilter.length > 0) {
-                Log("silly","MODULE","","[USER OPTIONS]","Z-Wave JS Log Node Filter: "+config.logNodeFilter)
+                Log("silly","MODULE","IN","OPTIONS","Z-Wave JS Log Node Filter: "+config.logNodeFilter)
                 let Nodes = config.logNodeFilter.split(",")
                 let NodesArray = [];
                 Nodes.forEach((N) => {
@@ -153,15 +157,15 @@ module.exports = function (RED) {
         // Timeout (Configurable via UI)
         DriverOptions.timeouts = {};
         if (config.ackTimeout !== undefined && config.ackTimeout.length > 0) {
-            Log("debug","MODULE","","[USER OPTIONS]","ACK timeout set to: "+config.ackTimeout)
+            Log("debug","MODULE","IN","OPTIONS","ACK timeout set to: "+config.ackTimeout)
             DriverOptions.timeouts.ack = parseInt(config.ackTimeout);
         }
         if (config.controllerTimeout !== undefined && config.controllerTimeout.length > 0) {
-            Log("debug","MODULE","","[USER OPTIONS]","Controller timeout set to: "+config.controllerTimeout)
+            Log("debug","MODULE","IN","OPTIONS","Controller timeout set to: "+config.controllerTimeout)
             DriverOptions.timeouts.response = parseInt(config.controllerTimeout);
         }
         if (config.sendResponseTimeout !== undefined && config.sendResponseTimeout.length > 0) {
-            Log("debug","MODULE","","[USER OPTIONS]","Report timeout set to: "+config.sendResponseTimeout)
+            Log("debug","MODULE","IN","OPTIONS","Report timeout set to: "+config.sendResponseTimeout)
             DriverOptions.timeouts.report = parseInt(config.sendResponseTimeout);
         }
 
@@ -171,7 +175,7 @@ module.exports = function (RED) {
             let RemoveBrackets = config.encryptionKey.replace("[", "").replace("]", "");
             let _Array = RemoveBrackets.split(",");
 
-            Log("debug","MODULE","","[USER OPTIONS]","Encryption key provided as Array","("+_Array.length+" bytes)")
+            Log("debug","MODULE","IN","OPTIONS","Encryption key provided as Array","("+_Array.length+" bytes)")
 
             let _Buffer = [];
             for (let i = 0; i < _Array.length; i++) {
@@ -184,7 +188,7 @@ module.exports = function (RED) {
         }
         else if (config.encryptionKey !== undefined && config.encryptionKey.length > 0) {
 
-            Log("debug","MODULE","","[USER OPTIONS]","Encryption key provided as String","("+config.encryptionKey.length+" characters)")
+            Log("debug","MODULE","IN","OPTIONS","Encryption key provided as String","("+config.encryptionKey.length+" characters)")
 
             DriverOptions.networkKey = Buffer.from(config.encryptionKey);
             canDoSecure = true;
@@ -193,30 +197,30 @@ module.exports = function (RED) {
         var Driver;
 
         try {
-            Log("info","MODULE","",undefined,"Instantiating Z-Wave JS Driver: "+config.serialPort+"")
+            Log("info","MODULE","",undefined,"Instantiating Z-Wave JS Driver","("+config.serialPort+")")
             Driver = new ZWaveJS.Driver(config.serialPort, DriverOptions);
             
         }
         catch (e) {
-            Log("error","ERROR","","[DRIVER INIT]",e.message)
+            Log("error","ERROR ","OUT","MODULE",e.message)
             node.error(e);
             return;
         }
 
         UI.register(Driver, Input)
 
-        Log("silly","MODULE","",undefined,"Registering driver event -> error")
+        Log("silly","MODULE","",undefined,"Registering driver event -> 'error'")
         Driver.on("error", (e) => {
-            Log("error","ERROR","","[DRIVER]",e.message)
+            Log("error","ERROR ","OUT","MODULE",e.message)
             node.error(e);
         });
 
-        Log("silly","MODULE","",undefined,"Registering driver event -> all nodes ready")
+        Log("silly","MODULE","",undefined,"Registering driver event -> 'all nodes ready'")
         Driver.on("all nodes ready", () => {
             node.status({ fill: "green", shape: "dot", text: "All Nodes Ready!" });
         })
 
-        Log("silly","MODULE","",undefined,"Registering driver event -> driver ready")
+        Log("silly","MODULE","",undefined,"Registering driver event -> 'driver ready'")
         Driver.once("driver ready", () => {
 
             node.status({ fill: "yellow", shape: "dot", text: "Interviewing Nodes..." });
@@ -268,6 +272,8 @@ module.exports = function (RED) {
 
         node.on('close', (done) => {
 
+            Log("info","MODULE","",undefined,"Cleaning up environment")
+
             UI.unregister(Driver.controller.homeId)
             Driver.destroy();
             RED.events.removeListener("zwjs:node:checkready",processReadyRequest);
@@ -281,6 +287,7 @@ module.exports = function (RED) {
         node.on('input', Input);
 
         function ShareNodeList(){
+            Log("silly","MODULE","OUT","DEVMOD","Refreshing node list.")
             NodeList.length = 0;
             Driver.controller.nodes.forEach((ZWN) => {
                 let Node = {
@@ -294,6 +301,8 @@ module.exports = function (RED) {
 
         function WireNodeEvents(Node) {
 
+            Log("silly","MODULE","",undefined,"Registering node events","[Node: "+Node.id+"]")
+
             Node.on("ready", (N) => {
 
                 if (N.isControllerNode()) {
@@ -303,6 +312,8 @@ module.exports = function (RED) {
                 if (NodesReady.indexOf(N.id) < 0) {
                     NodesReady.push(N.id);
                     node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
+
+                    Log("silly","MODULE","OUT","DEVMOD","Sending event 'zwjs:node:ready:"+N.id+"'")
 
                     RED.events.emit("zwjs:node:ready:" + N.id);
                 }
@@ -347,8 +358,28 @@ module.exports = function (RED) {
             })
         }
 
-        async function Input(msg, send, done) {
+        async function Input(msg, send, done, internal) {
             try {
+
+                let PLKeys = Object.keys(msg.payload);
+                let OBJArray = [];
+
+                OBJArray.push("│")
+                PLKeys.forEach((K) =>{
+                    OBJArray.push("│ "+(K + ": ").padEnd(12,' ')+msg.payload[K]);
+                })
+                OBJArray.push("└─")
+
+
+                if(internal){
+                    Log("debug","DEVMOD","OUT","MODULE",["Received message from event"].concat(OBJArray));
+                }
+                else{
+                    Log("debug","USRFLO","OUT","MODULE",["Received message from flow"].concat(OBJArray));
+                }
+  
+
+
                 let Class = msg.payload.class;
 
                 switch (Class) {
@@ -374,6 +405,7 @@ module.exports = function (RED) {
                 }
             }
             catch (er) {
+                Log("error","ERROR ","OUT","FLOMSG",er.message);
                 if (done) {
                     done(er);
                 }
@@ -659,7 +691,7 @@ module.exports = function (RED) {
 
         function Send(Node, Subject, Value, send) {
 
-            let PL = { "node": Node.id, "event": Subject, "timestamp": new Date() }
+            let PL = { "node": Node.id, "event": Subject, "timestamp": new Date().toJSON() }
 
             if (Value !== undefined) {
                 PL.object = Value;
@@ -667,11 +699,13 @@ module.exports = function (RED) {
 
             let PLKeys = Object.keys(PL);
             let OBJArray = [];
+            OBJArray.push("│")
             PLKeys.forEach((K) =>{
-                OBJArray.push(" "+K+": "+PL[K]);
+                OBJArray.push("│ "+(K + ": ").padEnd(12,' ')+PL[K]);
             })
+            OBJArray.push("└─")
 
-            Log("debug","USRFLO","OUT","[MODULE]",["Forwarding event to user"].concat(OBJArray));
+            Log("debug","USRFLO","IN","MODULE",["Forwarding event to the flow"].concat(OBJArray));
 
             if (send) {
                 send({ "payload": PL })
@@ -682,6 +716,7 @@ module.exports = function (RED) {
 
             // Allow passing event to filter nodes
             if(Node.id !== "Controller"){
+                Log("silly","DEVMOD","IN","MODULE",["Forwarding event out as an event"].concat(OBJArray));
                 RED.events.emit("zwjs:node:event:"+Node.id,{ "payload": PL })
             }
         }
@@ -689,7 +724,7 @@ module.exports = function (RED) {
         // Duration Fix
         function ProcessDurationClass(Class, Operation, Params) {
 
-            Log("debug","MODULE","","[PRE-PROCESSOR]","Checking for Duration Object");
+            Log("debug","MODULE","",undefined,"Checking for Duration Object");
 
             if (Params.length > 0) {
                 for (let i = 0; i < Params.length; i++) {
@@ -699,7 +734,14 @@ module.exports = function (RED) {
                             if (Keys[0] === "Duration") {
                                 let D = new Duration(Params[i].Duration.value, Params[i].Duration.unit)
                                 Params[i] = D;
-                                Log("debug","MODULE","","[PRE-PROCESSOR]",["Duration class instance created: Param "+i+""].concat([" Value: "+Params[i].Duration.value," Unit: "+Params[i].Duration.unit]));
+
+                                let ArrayMSG = ["Duration class instance created: Param "+i];
+                                ArrayMSG.push("│")
+                                ArrayMSG.push("│ "+("Value: ").padEnd(12,' ')+Params[i].Duration.value);
+                                ArrayMSG.push("│ "+("Unit: ").padEnd(12,' ')+Params[i].Duration.unit);
+                                ArrayMSG.push("└─")
+                                
+                                Log("debug","MODULE","",undefined,ArrayMSG);
                             }
                         }
                     }
@@ -711,17 +753,17 @@ module.exports = function (RED) {
 
         // Meter Fix
         function ParseMeterOptions(Class, Operation, Params) {
-            Log("debug","MODULE","","[PRE-PROCESSOR]","Parsing METER -> GET Params");
+            Log("debug","MODULE","",undefined,"Parsing METER -> GET Params");
             if (typeof Params[0] === "object") {
                 Params[0].rateType = Enums.RateType[Params[0].rateType];
-                Log("debug","MODULE","","[PRE-PROCESSOR]","Meter Get type set to: "+Params[0].rateType);
+                Log("debug","MODULE","",undefined,"Meter Get type set to: "+Params[0].rateType);
             }
             return Params;
         }
 
         Driver.start()
             .catch((e) => {
-                Log("error","ERROR","","[DRIVER]",e.message)
+                Log("error","ERROR ","OUT","MODULE",e.message)
                 node.error(e);
 
             })
