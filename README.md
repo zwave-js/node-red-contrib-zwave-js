@@ -184,7 +184,8 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
     - Enum values are removed from read me - you can now obtain them using class: **Driver**, operation: **GetEnums**  
     - Added support for **Sound Switch** CC to Managed mode.  
     - Added support for **Multi Level Sensor** CC to Managed mode.
-    - Fixed **ThermostatSetback** enum validation
+    - Fixed **ThermostatSetback** enum validation  
+    - Node Red module logging, is now embedded within the Z-Wave JS Logs.
 
   - 3.1.3
     - Bump Z-wave JS.  
