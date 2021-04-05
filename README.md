@@ -186,7 +186,7 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
     - Added support for **Multi Level Sensor** CC to Managed mode.
     - Fixed **ThermostatSetback** enum validation  
     - Node Red module logging, is now embedded within the Z-Wave JS Logs.  
-    - Added Z-Wave JS statistics logging (optional).
+    - Added Z-Wave JS statistics reporting (optional).
 
   - 3.1.3
     - Bump Z-wave JS.  
