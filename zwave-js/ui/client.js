@@ -298,8 +298,8 @@ let ZwaveJsUI = (function () {
         let info = $(`.zwave-js-node-row.selected`).data('info')?.deviceConfig || {}
         let id = [
           '0x' + info.manufacturerId.toString(16).padStart(4, '0'),
-          info.devices[0].productType,
-          info.devices[0].productId,
+          '0x' + info.devices[0].productType.toString(16).padStart(4, '0'),
+          '0x' + info.devices[0].productId.toString(16).padStart(4, '0'),
           info.firmwareVersion.min
         ].join(':')
         window.open(`https://devices.zwave-js.io/?jumpTo=${id}`, '_blank')
