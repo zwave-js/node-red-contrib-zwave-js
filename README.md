@@ -179,13 +179,14 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
 ## Version History  
 
   - 3.2.0
-    - Bump Z-wave JS.  
+    - Bump Z-Wave JS (7.1.0).  
     - Overhauled Enum value validation (they are now imported, no longer mirrored)  
     - Enum values are removed from read me - you can now obtain them using class: **Driver**, operation: **GetEnums**  
     - Added support for **Sound Switch** CC to Managed mode.  
     - Added support for **Multi Level Sensor** CC to Managed mode.
     - Fixed **ThermostatSetback** enum validation  
-    - Node Red module logging, is now embedded within the Z-Wave JS Logs.
+    - Node Red module logging, is now embedded within the Z-Wave JS Logs.  
+    - Added Z-Wave JS statistics logging (optional).
 
   - 3.1.3
     - Bump Z-wave JS.  

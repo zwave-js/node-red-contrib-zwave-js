@@ -181,9 +181,16 @@ module.exports = function (RED) {
         var Driver;
 
         try {
+
             Log("info", "REDCTL", "", undefined,"Instantiating 'Driver' class","("+config.serialPort+")")
             Driver = new ZWaveJS.Driver(config.serialPort, DriverOptions);
 
+            if(config.sendUsageStatistics !== undefined && config.sendUsageStatistics){
+                Driver.enableStatistics({applicationName: ModulePackage.name,applicationVersion:ModulePackage.version})
+            }
+            else{
+                Driver.disableStatistics();
+            }
         }
         catch (e) {
             Log("error", "REDCTL", "", "[ERROR] [INIT]","Instantiating 'Driver' failed: "+e.message)
@@ -325,7 +332,6 @@ module.exports = function (RED) {
                 })
 
             })
-
 
             Node.on("interview completed", (N) => {
                 Send(N, "INTERVIEW_COMPLETE");
