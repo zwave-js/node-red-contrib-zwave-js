@@ -153,7 +153,7 @@ If specifing a string, the valid values are: **Frost Protection** | **Energy Sav
 ```
 {
   scale: Number,
-  rateType: "Unspecified" | "Consumed" | "Produced"
+  rateType: Enum (RateType)
 }
 ```
 
