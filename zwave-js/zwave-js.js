@@ -1,3 +1,5 @@
+const { type } = require("os");
+
 module.exports = function (RED) {
     const SP = require("serialport");
     const FMaps = require('./FunctionMaps.json')
@@ -186,9 +188,11 @@ module.exports = function (RED) {
             Driver = new ZWaveJS.Driver(config.serialPort, DriverOptions);
 
             if(config.sendUsageStatistics !== undefined && config.sendUsageStatistics){
+                Log("info", "REDCTL", "", "[TELEMETRY]","Enabling statistics reporting")
                 Driver.enableStatistics({applicationName: ModulePackage.name,applicationVersion:ModulePackage.version})
             }
             else{
+                Log("info", "REDCTL", "", "[TELEMETRY]","Disabling statistics reporting")
                 Driver.disableStatistics();
             }
         }
@@ -675,9 +679,14 @@ module.exports = function (RED) {
                 Lines.push("└─[params]")
                 let i = 0;
                 params.forEach((P) => {
-                    Lines.push("    "+(i+":").padEnd(12,' ') + P);
-                    i++;
 
+                    if(typeof P === 'object'){
+                        Lines.push("    "+(i+": ") + JSON.stringify(P));
+                    }
+                    else{
+                        Lines.push("    "+(i+": ") + P);
+                    }
+                    i++
                 })
             }
 
@@ -695,7 +704,7 @@ module.exports = function (RED) {
 
                 let OBKeys = Object.keys(Value);
                 OBKeys.forEach((K) => {
-                    Lines.push("    "+(K+":").padEnd(12,' ') + Value[K]);
+                    Lines.push("    "+(K+": ") + Value[K]);
                 })
             }
             return Lines;
