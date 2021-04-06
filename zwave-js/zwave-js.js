@@ -20,7 +20,7 @@ module.exports = function (RED) {
         SetbackType: ZWaveJS.SetbackType,
         BinarySensorType: ZWaveJS.BinarySensorType,
         ThermostatMode: ZWaveJS.ThermostatMode,
-        ThermostatSetpointType: ZWaveJS.ThermostatSetpointType,
+        SetPointType: ZWaveJS.ThermostatSetpointType,
         DoorLockMode: ZWaveJS.DoorLockMode,
 
         // node enums
