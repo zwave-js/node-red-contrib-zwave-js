@@ -44,7 +44,7 @@ Currently, the supported command classes are (when using Managed mode).
 | EntryControl              | GetSupportedKeys (see notes)        |                                                       |
 | Lock                      | Set                                 | [Bool]                                                |
 | Lock                      | Get                                 |                                                       |
-| Indicator                 | Set                                 | [Value: Number] | [**Indicator**[]: Object]           |
+| Indicator                 | Set                                 | [Value: Number] \| [**Indicator**[]: Object]           |
 | Indicator                 | Get                                 | [Indicator: Number (Optional)]                        |
 | Meter                     | Get                                 | [**MeterOptions**: Object]                            |
 | Meter                     | GetAll                              |                                                       |
