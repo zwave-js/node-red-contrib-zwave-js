@@ -87,8 +87,12 @@
 
     <p>
         <strong>Z-Wave JS Analytics Reporting.</strong><br />
-        Sending usage reports, is anonymous, and no personal or identifiable information is included. Read the statement <a target="_blank" href="https://zwave-js.github.io/node-zwave-js/#/getting-started/telemetry?id=usage-statistics">[Here]</a>.<br />
-        The information is used to improve Z-Wave JS and determines where focus of the library should be.
+        Sending usage reports, is optional, anonymous, and no personal or personally identifiable information is included for transmission,<br />
+        this includes storing any internet addressable value.<br />
+        The information collected, does include your z-wave 'home id', but even that is hashed in a way it cannot be reversed<br />
+        or re-constructed - it is used to filter out duplicate data, it again, does not identify you personally or across the internet.<br />
+        The information is used to better focus development efforts with Z-Wave JS.<br /><br />
+        To find out what is collected, read the statement <a target="_blank" href="https://zwave-js.github.io/node-zwave-js/#/getting-started/telemetry?id=usage-statistics">[Here]</a>.
     </p>
     <div class="form-row">
         <label  for="node-input-sendUsageStatistics" style="width:130px"><i class="fa fa-pencil"></i> Send Statistics</label>
