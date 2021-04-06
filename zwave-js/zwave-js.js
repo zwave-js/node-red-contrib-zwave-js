@@ -188,11 +188,11 @@ module.exports = function (RED) {
             Driver = new ZWaveJS.Driver(config.serialPort, DriverOptions);
 
             if(config.sendUsageStatistics !== undefined && config.sendUsageStatistics){
-                Log("info", "REDCTL", "", "[TELEMETRY]","Enabling statistics reporting")
+                Log("info", "REDCTL", "", "[TELEMETRY]","Enabling analytics reporting")
                 Driver.enableStatistics({applicationName: ModulePackage.name,applicationVersion:ModulePackage.version})
             }
             else{
-                Log("info", "REDCTL", "", "[TELEMETRY]","Disabling statistics reporting")
+                Log("info", "REDCTL", "", "[TELEMETRY]","Disabling analytics reporting")
                 Driver.disableStatistics();
             }
         }
