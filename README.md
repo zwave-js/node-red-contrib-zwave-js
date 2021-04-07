@@ -179,7 +179,7 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
 ## Version History  
 
   - 3.2.0
-    - Bump Z-Wave JS (7.1.0).  
+    - Bump Z-Wave JS (7.1.1).  
     - Overhauled Enum value validation (they are now imported, no longer mirrored)  
     - Enum values are removed from read me - you can now obtain them using class: **Driver**, operation: **GetEnums**  
     - Added support for **Sound Switch** CC to Managed mode.  
