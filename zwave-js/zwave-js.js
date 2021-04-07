@@ -1,5 +1,3 @@
-const { type } = require("os");
-
 module.exports = function (RED) {
     const SP = require("serialport");
     const FMaps = require('./FunctionMaps.json')
@@ -87,7 +85,7 @@ module.exports = function (RED) {
             Logger.add(FileTransport)
         }
 
-        node.status({ fill: "red", shape: "dot", text: "Starting ZWave Driver..." });
+        node.status({ fill: "red", shape: "dot", text: "Starting Z-Wave Driver..." });
 
         RED.events.on("zwjs:node:command", processMessageEvent);
         async function processMessageEvent(MSG) {
@@ -145,7 +143,7 @@ module.exports = function (RED) {
         // Timeout (Configurable via UI)
         DriverOptions.timeouts = {};
         if (config.ackTimeout !== undefined && config.ackTimeout.length > 0) {
-            Log("debug", "REDCTL", "", "[OPTIONS] [timeouts.ack]",config.ackTimeout)
+            Log("debug", "REDCTL", "", "[OPTIONS] [timeouts.ack]", config.ackTimeout)
             DriverOptions.timeouts.ack = parseInt(config.ackTimeout);
         }
         if (config.controllerTimeout !== undefined && config.controllerTimeout.length > 0) {
@@ -184,20 +182,20 @@ module.exports = function (RED) {
 
         try {
 
-            Log("info", "REDCTL", "", undefined,"Instantiating 'Driver' class","("+config.serialPort+")")
+            Log("info", "REDCTL", "", undefined, "Instantiating 'Driver' class", "(" + config.serialPort + ")")
             Driver = new ZWaveJS.Driver(config.serialPort, DriverOptions);
 
-            if(config.sendUsageStatistics !== undefined && config.sendUsageStatistics){
-                Log("info", "REDCTL", "", "[TELEMETRY]","Enabling analytics reporting")
-                Driver.enableStatistics({applicationName: ModulePackage.name,applicationVersion:ModulePackage.version})
+            if (config.sendUsageStatistics !== undefined && config.sendUsageStatistics) {
+                Log("info", "REDCTL", "", "[TELEMETRY]", "Enabling analytics reporting")
+                Driver.enableStatistics({ applicationName: ModulePackage.name, applicationVersion: ModulePackage.version })
             }
-            else{
-                Log("info", "REDCTL", "", "[TELEMETRY]","Disabling analytics reporting")
+            else {
+                Log("info", "REDCTL", "", "[TELEMETRY]", "Disabling analytics reporting")
                 Driver.disableStatistics();
             }
         }
         catch (e) {
-            Log("error", "REDCTL", "", "[ERROR] [INIT]","Instantiating 'Driver' failed: "+e.message)
+            Log("error", "REDCTL", "", "[ERROR] [INIT]", "Instantiating 'Driver' failed: " + e.message)
             node.error(e);
             return;
         }
@@ -205,7 +203,7 @@ module.exports = function (RED) {
         UI.register(Driver, Input)
 
         Driver.on("error", (e) => {
-            Log("error", "REDCTL", "", "[ERROR] [EVENT]","'Driver' through: "+e.message)
+            Log("error", "REDCTL", "", "[ERROR] [EVENT]", "'Driver' threw: " + e.message)
             node.error(e);
         });
 
@@ -264,7 +262,7 @@ module.exports = function (RED) {
 
         node.on('close', (done) => {
 
-            Log("info", "REDCTL", "", undefined,"Cleaning up")
+            Log("info", "REDCTL", "", undefined, "Cleaning up")
 
             UI.unregister(Driver.controller.homeId)
             Driver.destroy();
@@ -354,7 +352,7 @@ module.exports = function (RED) {
                 let Operation = msg.payload.operation;
                 let Params = msg.payload.params || []
 
-                Log("debug","REDCTL","IN","[ORIG: "+(internal ? "EVENT" : "DIRECT")+"] [NDE: "+Node+"]",printParams(Class,Operation,Params))
+                Log("debug", "REDCTL", "IN", "[ORIG: " + (internal ? "EVENT" : "DIRECT") + "] [NDE: " + Node + "]", printParams(Class, Operation, Params))
 
 
                 switch (Class) {
@@ -380,7 +378,7 @@ module.exports = function (RED) {
                 }
             }
             catch (er) {
-                Log("error", "REDCTL", "", "[ERROR] [INPUT]","Could not process payload: "+er.message)
+                Log("error", "REDCTL", "", "[ERROR] [INPUT]", "Could not process payload: " + er.message)
                 if (done) {
                     done(er);
                 }
@@ -458,14 +456,17 @@ module.exports = function (RED) {
 
             let ZWJSC = Driver.controller.nodes.get(Node).getEndpoint(EP).commandClasses[Map.MapsToClass];
 
-            Log("debug", "REDCTL", "", "[MAP]", "Class: "+Class+"="+Map.MapsToClass+", Operation: "+Operation+"="+Func.MapsToFunc)
+            Log("debug", "REDCTL", "", "[MAP]", "Class: " + Class + "=" + Map.MapsToClass + ", Operation: " + Operation + "=" + Func.MapsToFunc)
 
             if (Func.hasOwnProperty("ResponseThroughEvent") && !Func.ResponseThroughEvent) {
+
+                Log("debug", "REDCTL", "", "[MAP]", "Will wait for result")
 
                 let Result = await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
                 Send(ReturnNode, "VALUE_UPDATED", Result, send)
             }
             else {
+                Log("debug", "REDCTL", "", "[MAP]", "Result will be delivered via an event")
                 await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
             }
 
@@ -669,22 +670,22 @@ module.exports = function (RED) {
             return;
         }
 
-        function printParams(Class, Operation, params){
+        function printParams(Class, Operation, params) {
 
             let Lines = [];
-            Lines.push("[CLS: "+Class+"] [OP: "+Operation+"]")
+            Lines.push("[CLS: " + Class + "] [OP: " + Operation + "]")
 
-            if(params.length > 0){
+            if (params.length > 0) {
 
                 Lines.push("└─[params]")
                 let i = 0;
                 params.forEach((P) => {
 
-                    if(typeof P === 'object'){
-                        Lines.push("    "+(i+": ") + JSON.stringify(P));
+                    if (typeof P === 'object') {
+                        Lines.push("    " + (i + ": ") + JSON.stringify(P));
                     }
-                    else{
-                        Lines.push("    "+(i+": ") + P);
+                    else {
+                        Lines.push("    " + (i + ": ") + P);
                     }
                     i++
                 })
@@ -693,18 +694,18 @@ module.exports = function (RED) {
             return Lines
         }
 
-        function printObject(Event, Value){
+        function printObject(Event, Value) {
 
             let Lines = [];
-            Lines.push("[EVT: "+Event+"]")
+            Lines.push("[EVT: " + Event + "]")
 
-            if(Value !== undefined){
+            if (Value !== undefined) {
 
                 Lines.push("└─[object]")
 
                 let OBKeys = Object.keys(Value);
                 OBKeys.forEach((K) => {
-                    Lines.push("    "+(K+": ") + Value[K]);
+                    Lines.push("    " + (K + ": ") + Value[K]);
                 })
             }
             return Lines;
@@ -719,7 +720,7 @@ module.exports = function (RED) {
                 PL.object = Value;
             }
 
-            Log("debug","REDCTL","OUT","[NDE: "+Node.id+"]",printObject(Subject,Value))
+            Log("debug", "REDCTL", "OUT", "[NDE: " + Node.id + "]", printObject(Subject, Value))
 
             if (send) {
                 send({ "payload": PL })
@@ -765,10 +766,10 @@ module.exports = function (RED) {
 
         }
 
-        Log("info", "REDCTL", "",undefined,"Starting 'Driver'")
+        Log("info", "REDCTL", "", undefined, "Starting 'Driver'")
         Driver.start()
             .catch((e) => {
-                Log("error", "REDCTL", "", "[ERROR] [START]","'Driver' through: "+e.message)
+                Log("error", "REDCTL", "", "[ERROR] [START]", "'Driver' threw: " + e.message)
                 node.error(e);
 
             })
