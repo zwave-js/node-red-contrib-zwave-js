@@ -57,14 +57,14 @@ Whatever your poison, the node will inject the following events, into your flow.
 | NODE_REMOVED                | The ID of the removed node          |                                 | A Node Was Removed                |
 | NODE_NAME_SET               | The ID of the affected node         |                                 | Node name was set                 |
 | NODE_LOCATION_SET           | The ID of the affected node         |                                 | Node location was set             |
-| INCLUSION_STARTED           |                                     | Bool : Secure Include           | Include Mode Started              |
-| INCLUSION_STOPPED           |                                     |                                 | include Mode Stopped              |
-| EXCLUSION_STARTED           |                                     |                                 | Exclude Mode Started              |
-| EXCLUSION_STOPPED           |                                     |                                 | Exclude Mode Stopped              |
-| NETWORK_HEAL_DONE           |                                     |                                 | Done Healing Network              |
-| NETWORK_HEAL_STARTED        |                                     |                                 | Started Healing Network           |
-| NETWORK_HEAL_STOPPED        |                                     |                                 | Stopped Healing Network           |
-| CONTROLLER_RESET_COMPLETE   |                                     |                                 | The controller was reset          |
+| INCLUSION_STARTED           | "Controller"                        | Bool : Secure Include           | Include Mode Started              |
+| INCLUSION_STOPPED           | "Controller"                        |                                 | include Mode Stopped              |
+| EXCLUSION_STARTED           | "Controller"                        |                                 | Exclude Mode Started              |
+| EXCLUSION_STOPPED           | "Controller"                        |                                 | Exclude Mode Stopped              |
+| NETWORK_HEAL_DONE           | "Controller"                        |                                 | Done Healing Network              |
+| NETWORK_HEAL_STARTED        | "Controller"                        |                                 | Started Healing Network           |
+| NETWORK_HEAL_STOPPED        | "Controller"                        |                                 | Stopped Healing Network           |
+| CONTROLLER_RESET_COMPLETE   | "Controller"                        |                                 | The controller was reset          |
 | VALUE_UPDATED               | The source Node ID                  | The objects command content     | A Value Was Updated               |
 | VALUE_NOTIFICATION          | The source Node ID                  | The objects command content     | A Value Notification Was Received |
 | NOTIFICATION                | The source Node ID                  | Command Class ID & Event Data   | A Notification Was Sent           |
@@ -73,10 +73,11 @@ Whatever your poison, the node will inject the following events, into your flow.
 | INTERVIEW_COMPLETE          | The source Node ID                  |                                 | The node has been interviewed     |
 | INTERVIEW_FAILED            | The source Node ID                  | Detailed Error Info             | Could not interview node          |
 | INTERVIEW_STARTED           | The source Node ID                  |                                 | Node interview started            |
-| NODE_LIST                   |                                     | ZWaveNode[]                     | Response to GetNodes              | 
+| NODE_LIST                   | "Controller"                        | ZWaveNode[]                     | Response to GetNodes              | 
 | VALUE_ID_LIST               | The source Node ID                  | ValueID[]                       | Response to GetDefinedValueIDs    | 
 | GET_VALUE_RESPONSE          | The source Node ID                  | Value & Value ID                | Response to GetValue              | 
 | GET_VALUE_METADATA_RESPONSE | The source Node ID                  | Metadata & Value ID             | Response to GetValueMetadata      | 
+| ENUM_LIST                   | "N/A"                               | All valid Enum Values           | Response to GetEnums              | 
 
 And such event(s) will look like this.
 
@@ -91,28 +92,30 @@ And such event(s) will look like this.
 }
 ```
 
-## Controller based operations
+## Controller/Driver based operations
 Accessing the UI, will provide you with most of the network management operations.  
 But, if you prefer, you can action them via a node message.  
   
-The **Controller** class does not require a **node** ID.  
+The **Controller** and **Driver** classes do not require a **node** ID.  
+However! Some Controller methods themself, actually need a Node ID as part of the required params.   
 
 | class                     | operation                           | params                                                |
 | ------------------------- | ----------------------------------- | ----------------------------------------------------- |
 | Controller                | StartHealNetwork                    |                                                       |
 | Controller                | StopHealNetwork                     |                                                       |
-| Controller                | StartInclusion (see Notes)          | [Bool : Include Non-Secure (optional)]                |
+| Controller                | StartInclusion (see Notes)          | [Include Non-Secure: Bool (optional)]                 |
 | Controller                | StopInclusion                       |                                                       |
 | Controller                | StartExclusion                      |                                                       |
 | Controller                | StopExclusion                       |                                                       |
 | Controller                | HardReset (see Notes)               |                                                       |
-| Controller                | ProprietaryFunc (See Notes)         | [Number : Serial Function ID, Buffer : Data]          |
-| Controller                | InterviewNode                       | [Number : Node ID]                                    |
+| Controller                | ProprietaryFunc (See Notes)         | [Serial Function ID: Number, Data: Buffer]            |
+| Controller                | InterviewNode                       | [Node ID: Number]                                     |
 | Controller                | GetNodes                            |                                                       |
-| Controller                | SetNodeName                         | [Number : Node ID, String : Node Name]                |
-| Controller                | SetNodeLocation                     | [Number : Node ID, String : Node Location]            |
+| Controller                | SetNodeName                         | [Node ID: Number, Node Name: String]                  |
+| Controller                | SetNodeLocation                     | [Node ID: Number, Node Location: String]              |
+| Driver                    | GetEnums                            |                                                       |
 
-To start Inclusion, you will do.  
+To start an in-secure Inclusion, you will do.  
 ```
 {
   payload: {
@@ -174,6 +177,16 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
 
 
 ## Version History  
+
+  - 3.2.0
+    - Bump Z-Wave JS (7.1.1).  
+    - Overhauled Enum value validation (they are now imported, no longer mirrored)  
+    - Enum values are removed from read me - you can now obtain them using class: **Driver**, operation: **GetEnums**  
+    - Added support for **Sound Switch** CC to Managed mode.  
+    - Added support for **Multi Level Sensor** CC to Managed mode.
+    - Fixed **ThermostatSetback** enum validation  
+    - Node Red module logging, is now embedded within the Z-Wave JS Logs.  
+    - Added Z-Wave JS statistics reporting (optional).
 
   - 3.1.3
     - Bump Z-wave JS.  

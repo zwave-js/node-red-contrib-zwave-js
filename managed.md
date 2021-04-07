@@ -7,49 +7,69 @@ Underneath it all, this method uses the Z-Wave JS Command Classes API
 Managed mode, allows easy accesss, the downside with Managed mode, is that command class support needs to be 'Bridged',  
 so that the command classes, can be used in an easy way.  
 
-Currently, the supported command classes are (when using Managed mode).
+Some CCs require a JSON Object, which are documented at the bottom.  
+For those CCs that require an Enum value however, you can get all the valid Enums, by sending the following message:  
+```
+{
+  payload:{
+    class: "Driver",
+    operation:"GetEnums"
+  }
+}
+```
+Currently, the supported command classes are (when using Managed mode).  
 
 | class                     | operation                           | params                                                |
 | ------------------------- | ----------------------------------- | ----------------------------------------------------- |
-| Association               | GetGroup                            | [Number : Group ID]                                   |
-| Association               | AddNodes                            | [Number : Group ID, Number[] : NodeID's]              |
-| Association               | RemoveNodes                         | [**REMOVE OPTIONS**]                                  |
-| Association               | RemoveNodesFromAllGroups            | [Number[] : NodeID's]                                 |
+| Association               | GetGroup                            | [Group ID: Number]                                    |
+| Association               | AddNodes                            | [Group ID: Number, NodeIDs: Number[]]                 |
+| Association               | RemoveNodes                         | [**RemoveOptions**: Object]                           |
+| Association               | RemoveNodesFromAllGroups            | [NodeIDs: Number[]]                                   |
 | Association               | GetGroupCount                       |                                                       |
-| AssociationGroupInfo      | GetGroupName                        | [Number : Group ID]                                   |
+| AssociationGroupInfo      | GetGroupName                        | [Group ID: Number]                                    |
 | Basic                     | Set                                 | [Number]                                              |
 | Basic                     | Get                                 |                                                       |
 | Battery                   | Get                                 |                                                       |
-| BinarySensor              | Get                                 | [**BINARY SENSOR TYPE**]                              |
-| BinarySwitch              | Set                                 | [Bool, **DURATION** (Optional)]                       |
+| BinarySensor              | Get                                 | [**BinarySensorType**: Enum]                          |
+| BinarySwitch              | Set                                 | [Bool, **Duration**: Object (Optional)]               |
 | BinarySwitch              | Get                                 |                                                       |
-| Configuration             | Set                                 | [Number : ParamID, Number : Value, Number : Value Length] |
-| Configuration             | Get                                 | [Number : ParamID]                                    |
-| ColorSwitch               | Set                                 | [**COLOR**]                                           |
-| ColorSwitch               | Get                                 | [**COLOR COMPONENT**]                                 |
-| DoorLock                  | Set                                 | [**DOOR LOCK MODE**]                                  |
+| Configuration             | Set                                 | [ParamID: Number, Value: Number, Value Length: Number] |
+| Configuration             | Get                                 | [ParamID: Number]                                     |
+| ColorSwitch               | Set                                 | [**Color**: Object]                                   |
+| ColorSwitch               | Get                                 | [**ColorComponent**: Enum]                            |
+| DoorLock                  | Set                                 | [**DoorLockMode**: Enum]                              |
 | DoorLock                  | Get                                 |                                                       |
-| EntryControl              | SetConfiguration                    | [Number : Key Cache Size, Number : Cache Timeout]     |
+| EntryControl              | SetConfiguration                    | [Key Cache Size: Number, Cache Timeout: Number]       |
 | EntryControl              | GetConfiguration                    |                                                       |
 | EntryControl              | GetSupportedKeys (see notes)        |                                                       |
 | Lock                      | Set                                 | [Bool]                                                |
 | Lock                      | Get                                 |                                                       |
-| Indicator                 | Set                                 | [Number : Value] OR [**INDICATOR**[]]                 |
-| Indicator                 | Get                                 | [Number : Indicator (optional)]                       |
-| Meter                     | Get                                 | [**METER OPTIONS**]                                   |
+| Indicator                 | Set                                 | [Value: Number] \| [**Indicator**[]: Object]           |
+| Indicator                 | Get                                 | [Indicator: Number (Optional)]                        |
+| Meter                     | Get                                 | [**MeterOptions**: Object]                            |
 | Meter                     | GetAll                              |                                                       |
-| Meter                     | Reset                               | [**METER RESET OPTIONS**]                             |
-| MultiLevelSwitch          | Set                                 | [Number, **DURATION** (Optional)]                     |
+| Meter                     | Reset                               | [**MeterResetOptions**: Object]                       |
+| MultiLevelSwitch          | Set                                 | [Number, **Duration**: Object (Optional)]             |
 | MultiLevelSwitch          | Get                                 |                                                       |
-| Notification              | SendReport                          | [**EVENT**]                                           |
-| ThermostatMode            | Set                                 | [**THERMOSTAT MODE**]                                 |
+| MultiLevelSensor          | Get                                 |                                                       |
+| MultiLevelSensor          | GetSupportedScales                  | [Sensor Type: Number]                                 |
+| MultiLevelSensor          | GetSupportedSensorTypes             |                                                       |
+| Notification              | SendReport                          | [**Event**: Object]                                   |
+| SoundSwitch               | GetConfiguration                    |                                                       |
+| SoundSwitch               | SetConfiguration                    | [Default Tone: Number, Default Volume: Number]        |
+| SoundSwitch               | GetPlaying                          |                                                       |
+| SoundSwitch               | GetToneCount                        |                                                       |
+| SoundSwitch               | GetToneInfo                         | [Tone ID: Number]                                     |
+| SoundSwitch               | Play                                | [Tone ID: Number, Volume: Number (Optional)]          |
+| SoundSwitch               | Stop                                |                                                       |
+| ThermostatMode            | Set                                 | [**ThermostatMode**: Enum]                            |
 | ThermostatMode            | Get                                 |                                                       |
-| ThermostatSetPoint        | Set                                 | [**SET POINT TYPE**, Number : Value, Number : Scale]  |
-| ThermostatSetPoint        | Get                                 | [**SET POINT TYPE**]                                  | 
+| ThermostatSetPoint        | Set                                 | [**SetPointType**: Enum, Value: Number, Scale: Number] |
+| ThermostatSetPoint        | Get                                 | [**SetPointType**: Enum]                              | 
 | ThermostatOperatingState  | Get                                 |                                                       | 
-| ThermostatSetback         | Set                                 | [**SET BACK TYPE**, **SET BACK STATE**]               | 
+| ThermostatSetback         | Set  (See Notes)                    | [**SetbackType**: Enum, Set Back State: String \| Number] | 
 | ThermostatSetback         | Get                                 |                                                       | 
-| WakeInterval              | Set (See Notes)                     | [Number : Seconds, Number : Controller Node ID]       |
+| WakeInterval              | Set (See Notes)                     | [Seconds: Number, Controller Node ID:Number]          |
 | WakeInterval              | Get                                 |                                                       | 
 
 The aim of course is to expose them all.
@@ -124,23 +144,20 @@ and you want the wake up to be recieved by a different controller.
 ## Notes on GetSupportedKeys
 This will return an array of ASCII codes - representing the keys that are supported on the device  
 
-## Enums and formatted values.
-Some command classes, require a certain structure in there payload, so please refer to the below information.  
-the CC's above should tell you what is required.
+## Notes on ThermostatSetback  
+If specifing a string, the valid values are: **Frost Protection** | **Energy Saving** | **Unused**
 
+## Object Structures  
 
-
-## Structures  
-
-The **METER OPTIONS** value should be an object formatted like below.  
+**MeterOptions**
 ```
 {
   scale: Number,
-  rateType: "Unspecified" | "Consumed" | "Produced"
+  rateType: Enum (RateType)
 }
 ```
 
-The **METER RESET OPTIONS** value should be an object formatted like below.  
+**MeterResetOptions**
 ```
 {
   type: number,
@@ -148,7 +165,7 @@ The **METER RESET OPTIONS** value should be an object formatted like below.
 }
 ```
 
-The **EVENT** value should be an object formatted like below.  
+**Event**
 ```
 {
   notificationType: Number,
@@ -158,7 +175,7 @@ The **EVENT** value should be an object formatted like below.
 }
 ```
 
-The **REMOVE OPTIONS** value should be an object formatted like below.  
+**RemoveOptions**
 ```
 {
   groupId: Number,
@@ -166,7 +183,7 @@ The **REMOVE OPTIONS** value should be an object formatted like below.
 }
 ```
 
-The **DURATION** value should be an object formatted like below.  
+**Duration**
 ```
 {
   Duration: {
@@ -176,14 +193,14 @@ The **DURATION** value should be an object formatted like below.
 }
 ```
 
-The **COLOR** value should be an object formatted like below.  
+**Color**
 ```
 {
   hexColor: "#000000"
 }
 ```
 
-The **INDICATOR** value should be an object formatted like below.  
+**Indicator**
 ```
 {
   indicatorId: number;
@@ -191,90 +208,3 @@ The **INDICATOR** value should be an object formatted like below.
   value: number | boolean;
 }
 ```
-
-## ENUMS 
-
-| DOOR LOCK MODE              |  
-| --------------------------- |
-| Unsecured                   |
-| UnsecuredWithTimeout        |
-| InsideUnsecured             |
-| InsideUnsecuredWithTimeout  |
-| OutsideUnsecured            |
-| OutsideUnsecuredWithTimeout |
-| Unknown                     |
-| Secured                     |
-
-| SET POINT TYPE        |
-| --------------------- |
-| N/A                   |
-| Heating               |
-| Cooling               |
-| Furnace               |
-| Dry Air               |
-| Moist Air             |
-| Auto Changeover       |
-| Energy Save Heating   |
-| Energy Save Cooling   |
-| Away Heating          |
-| Away Cooling          |
-| Full power            |
-
-| THERMOSTAT MODE         |
-| ----------------------- |
-| Off                     |
-| Heat                    |
-| Cool                    |
-| Auto                    |
-| Auxiliary               |
-| Fan                     |
-| Furnace                 |
-| Dry                     |
-| Moist                   |
-| Auto changeover         |
-| Energy heat             |
-| Energy cool             |
-| Away                    |
-| Full power              |
-| Manufacturer specific   |
-
-| BINARY SENSOR TYPE |
-| ------------------ |
-| General Purpose    |
-| Smoke              |
-| CO                 |
-| CO2                |
-| Heat               |
-| Water              |
-| Freeze             |
-| Tamper             |
-| Aux                |
-| Door/Window        |
-| Tilt               |
-| Motion             |
-| Glass Break        |
-| Any                |
-
-| SET BACK TYPE      |
-| ------------------ |
-| None               |
-| Temporary          |
-| Permanent          |
-
-| SET BACK STATE     |
-| ------------------ |
-| Frost Protection   |
-| Energy Saving      |
-| Unused             |
-
-| COLOR COMPONENT    |
-| ------------------ |
-| Warm White         |
-| Cold White         |
-| Red                |
-| Green              |
-| Blue               |
-| Amber              |
-| Cyan               |
-| Purple             |
-| Index              |

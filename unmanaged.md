@@ -11,7 +11,7 @@ There is only 4 commands to use here.
 
 | class                     | operation                           | params                                                |
 | ------------------------- | ----------------------------------- | ----------------------------------------------------- |
-| Unmanaged                 | GetDefinedValueIDs                  | -                                                     | 
+| Unmanaged                 | GetDefinedValueIDs                  |                                                       | 
 | Unmanaged                 | SetValue                            | [ValueID, Value]                                      |
 | Unmanaged                 | GetValue                            | [ValueID]                                             |  
 | Unmanaged                 | GetValueMetadata                    | [ValueID]                                             |  

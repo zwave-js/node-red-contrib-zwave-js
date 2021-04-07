@@ -17,7 +17,8 @@
                 sendResponseTimeout:{value:undefined},
                 logLevel:{value:"none"},
                 logFile:{value:undefined},
-                logNodeFilter:{value:undefined}
+                logNodeFilter:{value:undefined},
+                sendUsageStatistics:{value:true}
             },
             inputs: 1,
             outputs: 1,
@@ -83,6 +84,19 @@
 </script>
 
 <script type="text/x-red" data-template-name="zwave-js">
+
+    <p>
+        <strong>Z-Wave JS Analytics Reporting.</strong><br />
+        Sending Analytics, helps the Z-Wave JS project focus on areas that are most prevalent.<br />
+        No personal or personally identifiable information is collected, this includes internet addressable values.<br /><br />
+        To read about the information collected, click <a target="_blank" href="https://zwave-js.github.io/node-zwave-js/#/data-collection/user-disclosure">HERE</a>. 
+        
+    </p>
+    <div class="form-row">
+        <label  for="node-input-sendUsageStatistics" style="width:130px"><i class="fa fa-pencil"></i> Send Analytics</label>
+        <input type="checkbox" id="node-input-sendUsageStatistics">
+    </div>
+
     <p>
         <strong>Basic settings.</strong>
     </p>

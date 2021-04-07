@@ -1,42 +1,104 @@
 module.exports = function (RED) {
     const SP = require("serialport");
     const FMaps = require('./FunctionMaps.json')
-    const EnumLookup = require('./Enums.json')
     const Path = require('path')
-    const MODPackage = require('../package.json')
-    const ZW = require('zwave-js')
-    const {InterviewStage, NodeStatus, ProtocolVersion} = require('zwave-js/Node')
-    const { Message } = require("zwave-js/build/lib/message/Message");
-    const { Duration } = require("@zwave-js/core");
-    const ZWJSPKG = require('zwave-js/package.json')
+    const ModulePackage = require('../package.json')
+    const ZWaveJS = require('zwave-js')
+    const { Duration, createDefaultTransportFormat } = require("@zwave-js/core");
+    const ZWaveJSPackage = require('zwave-js/package.json')
+    const Winston = require("winston");
 
     const UI = require('./ui/server.js')
     UI.init(RED)
 
+    // Z-Wave JS Enum Lookups
+    const Enums = {
+
+        // CC enums
+        RateType: ZWaveJS.RateType,
+        ColorComponent: ZWaveJS.ColorComponent,
+        SetbackType: ZWaveJS.SetbackType,
+        BinarySensorType: ZWaveJS.BinarySensorType,
+        ThermostatMode: ZWaveJS.ThermostatMode,
+        SetPointType: ZWaveJS.ThermostatSetpointType,
+        DoorLockMode: ZWaveJS.DoorLockMode,
+
+        // node enums
+        InterviewStage: ZWaveJS.InterviewStage,
+        NodeStatus: ZWaveJS.NodeStatus,
+        ProtocolVersion: ZWaveJS.ProtocolVersion
+    }
+
     let NodeList = []; // used by HTTP Get Nodes (for device nodes)
+    var Logger;
+    var FileTransport; // Needed for Z-Wave JS logging.
+
+    // Log function
+    const Log = function (level, label, direction, tag1, msg, tag2) {
+
+        if (Logger !== undefined) {
+
+            let logEntry = {
+                direction: "  ",
+                message: msg,
+                level: level,
+                label: label,
+                timestamp: new Date().toJSON(),
+                multiline: Array.isArray(msg)
+            }
+            if (direction.length > 0) {
+                logEntry.direction = direction === "IN" ? "« " : "» "
+            }
+
+            if (tag1 !== undefined) {
+                logEntry.primaryTags = tag1
+            }
+
+            if (tag2 !== undefined) {
+                logEntry.secondaryTags = tag2
+            }
+            Logger.log(logEntry)
+        }
+    }
 
     function Init(config) {
 
         const node = this;
         let canDoSecure = false;
-        const NodesReady = []; // Now only used for display purposes
+        const NodesReady = [];
         RED.nodes.createNode(this, config);
 
-        node.status({ fill: "red", shape: "dot", text: "Starting ZWave Driver..." });
+        // Create Logger (if enabled)
+        if (config.logLevel !== "none") {
 
-        // Allow commands from filter nodes
-        RED.events.on("zwjs:node:command",processMessageEvent);
-        async function processMessageEvent(MSG){
-            await Input(MSG)
+            Logger = Winston.createLogger({ level: config.logLevel });
+
+            let FileTransportOptions = {
+                filename: Path.join(RED.settings.userDir, "zwave-js-log.txt"),
+                format: createDefaultTransportFormat(false, false)
+            }
+            if (config.logFile !== undefined && config.logFile.length > 0) {
+                FileTransportOptions.filename = config.logFile
+            }
+
+            FileTransport = new Winston.transports.File(FileTransportOptions)
+            Logger.add(FileTransport)
         }
-        RED.events.on("zwjs:node:checkready",processReadyRequest);
-        async function processReadyRequest(NID){
-            if(NodesReady.indexOf(parseInt(NID)) > -1){
+
+        node.status({ fill: "red", shape: "dot", text: "Starting Z-Wave Driver..." });
+
+        RED.events.on("zwjs:node:command", processMessageEvent);
+        async function processMessageEvent(MSG) {
+            await Input(MSG, undefined, undefined, true)
+        }
+
+        RED.events.on("zwjs:node:checkready", processReadyRequest);
+        async function processReadyRequest(NID) {
+            if (NodesReady.indexOf(parseInt(NID)) > -1) {
                 RED.events.emit("zwjs:node:ready:" + NID);
             }
         }
 
-    
         /*
           Some Params need a little bit of magic. i.e converting to a class
 
@@ -55,17 +117,9 @@ module.exports = function (RED) {
 
         // Logging
         DriverOptions.logConfig = {};
-        if (config.logLevel !== "none") {
+        if (Logger !== undefined) {
 
             DriverOptions.logConfig.enabled = true;
-            DriverOptions.logConfig.level = config.logLevel;
-            DriverOptions.logConfig.logToFile = true;
-
-            if (config.logFile !== undefined && config.logFile.length > 0) {
-                DriverOptions.logConfig.filename = config.logFile
-            } else {
-                DriverOptions.logConfig.filename = Path.join(RED.settings.userDir, "zwave-js-log.txt");
-            }
 
             if (config.logNodeFilter !== undefined && config.logNodeFilter.length > 0) {
                 let Nodes = config.logNodeFilter.split(",")
@@ -75,6 +129,8 @@ module.exports = function (RED) {
                 })
                 DriverOptions.logConfig.nodeFilter = NodesArray;
             }
+
+            DriverOptions.logConfig.transports = [FileTransport]
         }
         else {
             DriverOptions.logConfig.enabled = false;
@@ -87,12 +143,15 @@ module.exports = function (RED) {
         // Timeout (Configurable via UI)
         DriverOptions.timeouts = {};
         if (config.ackTimeout !== undefined && config.ackTimeout.length > 0) {
+            Log("debug", "REDCTL", "", "[OPTIONS] [timeouts.ack]", config.ackTimeout)
             DriverOptions.timeouts.ack = parseInt(config.ackTimeout);
         }
         if (config.controllerTimeout !== undefined && config.controllerTimeout.length > 0) {
+            Log("debug", "REDCTL", "", "[OPTIONS] [timeouts.response] ", config.controllerTimeout)
             DriverOptions.timeouts.response = parseInt(config.controllerTimeout);
         }
         if (config.sendResponseTimeout !== undefined && config.sendResponseTimeout.length > 0) {
+            Log("debug", "REDCTL", "", "[OPTIONS] [timeouts.report]", config.sendResponseTimeout)
             DriverOptions.timeouts.report = parseInt(config.sendResponseTimeout);
         }
 
@@ -107,11 +166,14 @@ module.exports = function (RED) {
                 _Buffer.push(parseInt(_Array[i].trim()));
             }
 
+            Log("debug", "REDCTL", "", "[OPTIONS] [networkKey]", "Provided as Number[]", "(" + _Buffer.length + " bytes)")
             DriverOptions.networkKey = Buffer.from(_Buffer);
             canDoSecure = true;
 
         }
         else if (config.encryptionKey !== undefined && config.encryptionKey.length > 0) {
+
+            Log("debug", "REDCTL", "", "[OPTIONS] [networkKey]", "Provided as String", "(" + config.encryptionKey.length + " characters)")
             DriverOptions.networkKey = Buffer.from(config.encryptionKey);
             canDoSecure = true;
         }
@@ -119,10 +181,21 @@ module.exports = function (RED) {
         var Driver;
 
         try {
-            Driver = new ZW.Driver(config.serialPort, DriverOptions);
-            
+
+            Log("info", "REDCTL", "", undefined, "Instantiating 'Driver' class", "(" + config.serialPort + ")")
+            Driver = new ZWaveJS.Driver(config.serialPort, DriverOptions);
+
+            if (config.sendUsageStatistics !== undefined && config.sendUsageStatistics) {
+                Log("info", "REDCTL", "", "[TELEMETRY]", "Enabling analytics reporting")
+                Driver.enableStatistics({ applicationName: ModulePackage.name, applicationVersion: ModulePackage.version })
+            }
+            else {
+                Log("info", "REDCTL", "", "[TELEMETRY]", "Disabling analytics reporting")
+                Driver.disableStatistics();
+            }
         }
         catch (e) {
+            Log("error", "REDCTL", "", "[ERROR] [INIT]", "Instantiating 'Driver' failed: " + e.message)
             node.error(e);
             return;
         }
@@ -130,6 +203,7 @@ module.exports = function (RED) {
         UI.register(Driver, Input)
 
         Driver.on("error", (e) => {
+            Log("error", "REDCTL", "", "[ERROR] [EVENT]", "'Driver' threw: " + e.message)
             node.error(e);
         });
 
@@ -188,19 +262,21 @@ module.exports = function (RED) {
 
         node.on('close', (done) => {
 
+            Log("info", "REDCTL", "", undefined, "Cleaning up")
+
             UI.unregister(Driver.controller.homeId)
             Driver.destroy();
-            RED.events.removeListener("zwjs:node:checkready",processReadyRequest);
-            RED.events.removeListener("zwjs:node:command",processMessageEvent);
+            RED.events.removeListener("zwjs:node:checkready", processReadyRequest);
+            RED.events.removeListener("zwjs:node:command", processMessageEvent);
             if (done) {
                 done();
             }
-            
+
         });
 
         node.on('input', Input);
 
-        function ShareNodeList(){
+        function ShareNodeList() {
             NodeList.length = 0;
             Driver.controller.nodes.forEach((ZWN) => {
                 let Node = {
@@ -214,6 +290,7 @@ module.exports = function (RED) {
 
         function WireNodeEvents(Node) {
 
+
             Node.on("ready", (N) => {
 
                 if (N.isControllerNode()) {
@@ -223,6 +300,7 @@ module.exports = function (RED) {
                 if (NodesReady.indexOf(N.id) < 0) {
                     NodesReady.push(N.id);
                     node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
+
 
                     RED.events.emit("zwjs:node:ready:" + N.id);
                 }
@@ -257,7 +335,6 @@ module.exports = function (RED) {
 
             })
 
-
             Node.on("interview completed", (N) => {
                 Send(N, "INTERVIEW_COMPLETE");
             })
@@ -267,9 +344,16 @@ module.exports = function (RED) {
             })
         }
 
-        async function Input(msg, send, done) {
+        async function Input(msg, send, done, internal) {
             try {
+
+                let Node = msg.payload.node || "N/A"
                 let Class = msg.payload.class;
+                let Operation = msg.payload.operation;
+                let Params = msg.payload.params || []
+
+                Log("debug", "REDCTL", "IN", "[ORIG: " + (internal ? "EVENT" : "DIRECT") + "] [NDE: " + Node + "]", printParams(Class, Operation, Params))
+
 
                 switch (Class) {
                     case "Controller":
@@ -278,6 +362,10 @@ module.exports = function (RED) {
 
                     case "Unmanaged":
                         await Unmanaged(msg, send);
+                        break;
+
+                    case "Driver":
+                        await DriverCMD(msg, send);
                         break;
 
                     default:
@@ -290,6 +378,7 @@ module.exports = function (RED) {
                 }
             }
             catch (er) {
+                Log("error", "REDCTL", "", "[ERROR] [INPUT]", "Could not process payload: " + er.message)
                 if (done) {
                     done(er);
                 }
@@ -314,9 +403,10 @@ module.exports = function (RED) {
 
         // Node
         async function NodeFunction(msg, send) {
+
             let Operation = msg.payload.operation
             let Class = msg.payload.class;
-            let Node = msg.payload.node;
+            let Node = msg.payload.node
             var Params = msg.payload.params || [];
 
             let ReturnNode = { id: Node };
@@ -352,9 +442,9 @@ module.exports = function (RED) {
 
             if (Func.hasOwnProperty("ParamEnumDependency")) {
                 for (let i = 0; i < Params.length; i++) {
-                    if (Func.ParamEnumDependency.hasOwnProperty(i)) {
-                        let Enum = Func.ParamEnumDependency[i];
-                        Params[i] = EnumLookup[Enum][Params[i]]
+                    if (Func.ParamEnumDependency.hasOwnProperty(i.toString())) {
+                        let Enum = Func.ParamEnumDependency[i.toString()];
+                        Params[i] = Enums[Enum][Params[i]]
                     }
                 }
             }
@@ -366,15 +456,34 @@ module.exports = function (RED) {
 
             let ZWJSC = Driver.controller.nodes.get(Node).getEndpoint(EP).commandClasses[Map.MapsToClass];
 
+            Log("debug", "REDCTL", "", "[MAP]", "Class: " + Class + "=" + Map.MapsToClass + ", Operation: " + Operation + "=" + Func.MapsToFunc)
+
             if (Func.hasOwnProperty("ResponseThroughEvent") && !Func.ResponseThroughEvent) {
+
+                Log("debug", "REDCTL", "", "[MAP]", "Will wait for result")
+
                 let Result = await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
                 Send(ReturnNode, "VALUE_UPDATED", Result, send)
             }
             else {
+                Log("debug", "REDCTL", "", "[MAP]", "Result will be delivered via an event")
                 await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
             }
 
             return;
+        }
+
+        // Driver
+        async function DriverCMD(msg, send) {
+
+            let Operation = msg.payload.operation;
+            let ReturnNode = { id: "N/A" };
+
+            switch (Operation) {
+                case "GetEnums":
+                    Send(ReturnNode, "ENUM_LIST", Enums, send);
+                    break;
+            }
         }
 
         // Unmanaged
@@ -438,9 +547,9 @@ module.exports = function (RED) {
                             nodeId: N.id,
                             name: N.name,
                             location: N.location,
-                            status: NodeStatus[N.status],
+                            status: Enums.NodeStatus[N.status],
                             ready: N.ready,
-                            interviewStage: InterviewStage[N.interviewStage],
+                            interviewStage: Enums.InterviewStage[N.interviewStage],
                             zwavePlusVersion: N.zwavePlusVersion,
                             zwavePlusNodeType: N.zwavePlusNodeType,
                             zwavePlusRoleType: N.zwavePlusRoleType,
@@ -452,7 +561,7 @@ module.exports = function (RED) {
                             maxDataRate: N.maxDataRate,
                             supportsSecurity: N.supportsSecurity,
                             isSecure: N.isSecure,
-                            protocolVersion: ProtocolVersion[N.protocolVersion],
+                            protocolVersion: Enums.ProtocolVersion[N.protocolVersion],
                             manufacturerId: N.manufacturerId,
                             productId: N.productId,
                             productType: N.productType,
@@ -460,7 +569,7 @@ module.exports = function (RED) {
                             neighbors: N.neighbors,
                             deviceConfig: N.deviceConfig,
                             isControllerNode: N.isControllerNode(),
-                            supportsBeaming:N.supportsBeaming
+                            supportsBeaming: N.supportsBeaming
                         })
 
                     });
@@ -485,7 +594,7 @@ module.exports = function (RED) {
                 case "InterviewNode":
                     Params[0] = +Params[0]
                     NodeCheck(Params[0]);
-                    let Stage = InterviewStage[Driver.controller.nodes.get(Params[0]).interviewStage];
+                    let Stage = Enums.InterviewStage[Driver.controller.nodes.get(Params[0]).interviewStage];
                     if (Stage !== "Complete") {
                         let ErrorMSG = "Node " + Params[0] + " is already being interviewed. Current Interview Stage : " + Stage + "";
                         throw new Error(ErrorMSG);
@@ -526,9 +635,6 @@ module.exports = function (RED) {
                     else {
                         await Driver.controller.beginInclusion(false);
                     }
-                    
-                   
-
                     break;
 
                 case "StopInclusion":
@@ -545,30 +651,76 @@ module.exports = function (RED) {
 
                 case "ProprietaryFunc":
 
-                    let ZWMessage = new Message(Driver, {
-                        type: 0x00,
+                    let ZWaveMessage = new ZWaveJS.Message(Driver, {
+                        type: ZWaveJS.MessageType.Request,
                         functionType: Params[0],
                         payload: Params[1]
-                    });
+                    })
+
 
                     let MessageSettings = {
-                        priority: 2,
+                        priority: ZWaveJS.MessagePriority.Controller,
                         supportCheck: false
                     }
 
-                    await Driver.sendMessage(ZWMessage, MessageSettings)
+                    await Driver.sendMessage(ZWaveMessage, MessageSettings)
                     break;
             }
 
             return;
         }
 
+        function printParams(Class, Operation, params) {
+
+            let Lines = [];
+            Lines.push("[CLS: " + Class + "] [OP: " + Operation + "]")
+
+            if (params.length > 0) {
+
+                Lines.push("└─[params]")
+                let i = 0;
+                params.forEach((P) => {
+
+                    if (typeof P === 'object') {
+                        Lines.push("    " + (i + ": ") + JSON.stringify(P));
+                    }
+                    else {
+                        Lines.push("    " + (i + ": ") + P);
+                    }
+                    i++
+                })
+            }
+
+            return Lines
+        }
+
+        function printObject(Event, Value) {
+
+            let Lines = [];
+            Lines.push("[EVT: " + Event + "]")
+
+            if (Value !== undefined) {
+
+                Lines.push("└─[object]")
+
+                let OBKeys = Object.keys(Value);
+                OBKeys.forEach((K) => {
+                    Lines.push("    " + (K + ": ") + Value[K]);
+                })
+            }
+            return Lines;
+        }
+
+
         function Send(Node, Subject, Value, send) {
-            let PL = { "node": Node.id, "event": Subject, "timestamp": new Date() }
+
+            let PL = { "node": Node.id, "event": Subject, "timestamp": new Date().toJSON() }
 
             if (Value !== undefined) {
                 PL.object = Value;
             }
+
+            Log("debug", "REDCTL", "OUT", "[NDE: " + Node.id + "]", printObject(Subject, Value))
 
             if (send) {
                 send({ "payload": PL })
@@ -578,13 +730,15 @@ module.exports = function (RED) {
             }
 
             // Allow passing event to filter nodes
-            if(Node.id !== "Controller"){
-                RED.events.emit("zwjs:node:event:"+Node.id,{ "payload": PL })
+            if (Node.id !== "Controller") {
+                RED.events.emit("zwjs:node:event:" + Node.id, { "payload": PL })
             }
         }
 
         // Duration Fix
         function ProcessDurationClass(Class, Operation, Params) {
+
+
             if (Params.length > 0) {
                 for (let i = 0; i < Params.length; i++) {
                     if (typeof Params[i] === "object") {
@@ -593,6 +747,7 @@ module.exports = function (RED) {
                             if (Keys[0] === "Duration") {
                                 let D = new Duration(Params[i].Duration.value, Params[i].Duration.unit)
                                 Params[i] = D;
+
                             }
                         }
                     }
@@ -605,13 +760,16 @@ module.exports = function (RED) {
         // Meter Fix
         function ParseMeterOptions(Class, Operation, Params) {
             if (typeof Params[0] === "object") {
-                Params[0].rateType = EnumLookup.RateType[Params[0].rateType];
+                Params[0].rateType = Enums.RateType[Params[0].rateType];
             }
             return Params;
+
         }
 
+        Log("info", "REDCTL", "", undefined, "Starting 'Driver'")
         Driver.start()
             .catch((e) => {
+                Log("error", "REDCTL", "", "[ERROR] [START]", "'Driver' threw: " + e.message)
                 node.error(e);
 
             })
@@ -624,7 +782,7 @@ module.exports = function (RED) {
     })
 
     RED.httpAdmin.get("/zwjsgetversion", function (req, res) {
-        res.json({ "zwjsversion": ZWJSPKG.version, "moduleversion": MODPackage.version })
+        res.json({ "zwjsversion": ZWaveJSPackage.version, "moduleversion": ModulePackage.version })
     })
 
     RED.httpAdmin.get("/zwjsgetports", RED.auth.needsPermission('serial.read'), function (req, res) {
