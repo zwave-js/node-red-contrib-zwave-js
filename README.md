@@ -104,13 +104,13 @@ Whatever your poison, the node will inject the following events, into your flow.
 
 And such event(s) will look like this.
 
-```
+```json
 {
-  payload: {
-    node: 2,
-    event: "VALUE_UPDATED",
-    timestamp: "23-12-2020T12:23:23+000",
-    object: ...
+  "payload": {
+    "node": 2,
+    "event": "VALUE_UPDATED",
+    "timestamp": "23-12-2020T12:23:23+000",
+    "object": {...}
   }
 }
 ```
