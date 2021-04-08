@@ -205,6 +205,7 @@ return Message
 
   - 3.2.1
     - Added Home Assistant Guide 
+    - Example syntax highlighting
 
   - 3.2.0
     - Bump Z-Wave JS (7.1.1).  
@@ -240,7 +241,7 @@ return Message
         The **object** component will now contain the following structure
         ```javascript
         {
-          ccId: 0, // Command Class ID 
+          ccId: Number, // Command Class ID 
           args: {} // The main event data (simple or complex, highly dependant on the CC)
         }  
         ```  

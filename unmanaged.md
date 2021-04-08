@@ -19,41 +19,47 @@ There is only 4 commands to use here.
 ## Example 101  
 **NOTE:** You do not need to specify the ```node``` property IF the message, is going through the **ZWave Device** node.  
 
-```
+```javascript
 /* Get all ValueID's for a node */
-{
-  payload: {
-    node: 2,
-    class: "Unmanaged",
-    operation: "GetDefinedValueIDs"
-  }
+
+let Message = {
+    payload: {
+        node: 2,
+        class: "Unmanaged",
+        operation: "GetDefinedValueIDs"
+    }
 }
+return Message
 ```
 
-```
+```javascript
 /* Set a value */
-/* NOTE : setValue only supports providing 2 params, the ValueID its self, and the value to set. */  
-/* ValueID will be one of the ValueIDs returned from GetDefinedValueIDs                          */
-{
-  payload: {
-    node: 2,
-    class: "Unmanaged",
-    operation: "SetValue",
-    params: [ValueID,Value]
-  }
+/* NOTE : setValue only supports providing 2 params, the ValueID its self, and the value to set. */
+/*        ValueID will be one of the ValueIDs returned from GetDefinedValueIDs                   */
+
+let Message = {
+    payload: {
+        node: 2,
+        class: "Unmanaged",
+        operation: "SetValue",
+        params: [ValueID, Value]
+    }
 }
+return Message
 ```
 
-```
+```javascript
 /* Get a value */
 /* NOTE : using getValue will return the cached value, and may not represent the current value. */
-/*        getValue should not be used for poling the device                                     */  
-{
-  payload: {
-    node: 2,
-    class: "Unmanaged",
-    operation: "GetValue",
-    params: [ValueID]
-  }
+/*        getValue should not be used for poling the device                                     */
+
+let Message = {
+    payload: {
+        node: 2,
+        class: "Unmanaged",
+        operation: "GetValue",
+        params: [ValueID]
+    }
 }
+return Message
 ```

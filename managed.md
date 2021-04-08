@@ -208,8 +208,8 @@ If specifing a string, the valid values are: **Frost Protection** | **Energy Sav
 **Indicator**
 ```javascript
 {
-  indicatorId: Number;
-  propertyId: Number;
-  value: Number | Bool;
+  indicatorId: Number,
+  propertyId: Number,
+  value: Number | Bool,
 }
 ```
