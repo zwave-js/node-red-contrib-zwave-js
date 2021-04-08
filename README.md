@@ -239,10 +239,10 @@ return Message
     - Some 1.4.0 optimsiations removed, as recent changes to Z-Wave JS has made them unnecessary
     - Changes to the **NOTIFICATION** event.
         The **object** component will now contain the following structure
-        ```
+        ```javascript
         {
-          ccId: Number - The Command Class ID,
-          args: The main event data (simple or complex, hihgly dependant on the CC)
+          ccId: 0, // Command Class ID 
+          args: {} // The main event data (simple or complex, highly dependant on the CC)
         }  
         ```  
     - Controller operation **GetNodes** no longer returns an empty entry.
