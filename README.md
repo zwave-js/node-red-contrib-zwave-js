@@ -25,8 +25,8 @@ Z-Wave JS is actively  maintained, fast and supports the security command class.
 
 ## Home Assistant Install
 To install this node in the Node Red add-on, that Home Assistant provides, follow the below steps:  
-  - If not already, install the HA Node Red add-on.
-  - DO NOT Attempt to install this node, via the palette menu.
+  - If not already done, install the HA Node Red add-on.
+  - Do not Attempt to install this node, via the palette menu - it will likely not install some serial port stuff.  
   - Edit the Node Red plugin configuration as below (specifically  **system_packages** and **npm_packages**)
   - Restart the add-on/Node Red - and you should be ready to go.
 ```yaml
