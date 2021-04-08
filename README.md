@@ -30,7 +30,7 @@ Please note: This is a self contained Z-Wave driver for Node Red, it will not wo
 if this isn't your setup, then please refer to the below guide to install into the Node Red instance that HA provides.
 
   - Do not Attempt to install this node, via the palette menu - it will likely not install some serial port stuff.  
-  - Edit the Node Red plugin configuration as below (specifically  **system_packages** and **npm_packages**)
+  - Edit the Node Red add-on configuration as below (specifically  **system_packages** and **npm_packages**)
   - Restart the add-on/Node Red - and you should be ready to go.
 ```yaml
 system_packages:
