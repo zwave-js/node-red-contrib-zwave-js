@@ -29,7 +29,7 @@ Z-Wave JS is actively  maintained, fast and supports the security command class.
 Please note: This is a self contained Z-Wave driver for Node Red, it will not work along side the Z-Wave plugin for Home Assistant.  
 if this isn't your setup, then please refer to the below guide to install into the Node Red instance that HA provides.
 
-  - Do not Attempt to install this node, via the palette menu - it will likely not install some serial port stuff.  
+  - Do not attempt to install this node, via the palette menu - it will likely not install some serial port stuff.  
   - Edit the Node Red add-on configuration as below (specifically  **system_packages** and **npm_packages**)
   - Restart the add-on/Node Red - and you should be ready to go.
 ```yaml
