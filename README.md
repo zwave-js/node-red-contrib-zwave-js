@@ -8,18 +8,42 @@ The implementation is 100% javascript. it is therefore:
   - Does not require a build of any static library
   - Stable
 
-Install this node via the Node Red pallet menu, and you have Z-Wave support in Node Red .  
+Install this node via the Node Red palette menu (See [Home Assistant Install](#home-assistant-install) if this applies to you),  
+and you have Z-Wave support in Node Red.  
+  
 The node is straightforward to use, and removes all the complexities that you would otherwise need to deal with.
 
   - Add the node into your flow
   - Select the serial port that represents your USB Zwave radio.
-  - Set an encryption key (string or hex array [0x01,0x02]) if you want to use Secure devices.
+  - Set an encryption key if you want to use Secure devices:  
+     - Plain text (16 characters) 
+     - Or hex array (16 bytes) [0x01,0x02]
   - Listen for, and send commands using the node.
 
   ![Image](./Demo.png)  
 
 **node-red-contrib-zwave-js** is based on  [&#x1F517;Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/).  
 Z-Wave JS is actively  maintained, fast and supports the security command class.
+
+## Home Assistant Install
+Please note: This is a self contained Z-Wave driver for Node Red, it will not work along side the Z-Wave plugin for Home Assistant.  
+if this isn't your setup, then please refer to the below guide to install into the Node Red instance that HA provides.
+
+  - Do not attempt to install this node, via the palette menu - it will likely not install some serial port stuff.  
+  - Edit the Node Red add-on configuration as below (specifically  **system_packages** and **npm_packages**)
+  - Restart the add-on/Node Red - and you should be ready to go.
+```yaml
+system_packages:
+  - make
+  - python3
+  - g++
+  - gcc
+  - linux-headers
+  - udev
+npm_packages:
+  - serialport
+  - node-red-contrib-zwave-js
+```
 
 ## Node Types
 There are 2 node types.  
@@ -81,13 +105,13 @@ Whatever your poison, the node will inject the following events, into your flow.
 
 And such event(s) will look like this.
 
-```
+```javascript
 {
   payload: {
     node: 2,
     event: "VALUE_UPDATED",
     timestamp: "23-12-2020T12:23:23+000",
-    object: ...
+    object: {}
   }
 }
 ```
@@ -116,14 +140,15 @@ However! Some Controller methods themself, actually need a Node ID as part of th
 | Driver                    | GetEnums                            |                                                       |
 
 To start an in-secure Inclusion, you will do.  
-```
-{
-  payload: {
-    class: "Controller",
-    operation: "StartInclusion",
-    params: [true]
-  }
+```javascript
+let Message = {
+    payload: {
+        class: "Controller",
+        operation: "StartInclusion",
+        params: [true]
+    }
 }
+return Message;
 ```
 
 ## Notes on StartInclusion  
@@ -151,7 +176,7 @@ disables the LED on the GEN 5 Z-Stick, breaking it down we have:
 
 This means we do:
 
-```
+```javascript
 /* LED Configuration
  * Configuration Value Size
  * Value
@@ -159,17 +184,18 @@ This means we do:
  * ??
  */
 
-let _Buf_OFF = Buffer.from([0x51,0x01,0x00,0x05,0x01])
-let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
-                                                      
-{
-  payload:{
-    node: 2,
-    class: "Controller",
-    operation:"ProprietaryFunc",
-    params: [0xF2, _Buf_OFF]
-  }
+let _Buf_OFF = Buffer.from([0x51, 0x01, 0x00, 0x05, 0x01])
+let _Buf_ON = Buffer.from([0x51, 0x01, 0x01, 0x05, 0x01])
+
+let Message = {
+    payload: {
+        node: 2,
+        class: "Controller",
+        operation: "ProprietaryFunc",
+        params: [0xF2, _Buf_OFF]
+    }
 }
+return Message
 ```
 
 **SOF**, **Total Length**, **REQ** & the **Serial API Checksum** will be provided for you.
@@ -177,6 +203,10 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
 
 
 ## Version History  
+
+  - 3.2.1
+    - Added Home Assistant Guide 
+    - Example syntax highlighting
 
   - 3.2.0
     - Bump Z-Wave JS (7.1.1).  
@@ -210,10 +240,10 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
     - Some 1.4.0 optimsiations removed, as recent changes to Z-Wave JS has made them unnecessary
     - Changes to the **NOTIFICATION** event.
         The **object** component will now contain the following structure
-        ```
+        ```javascript
         {
-          ccId: Number - The Command Class ID,
-          args: The main event data (simple or complex, hihgly dependant on the CC)
+          ccId: Number, // Command Class ID 
+          args: {} // The main event data (simple or complex, highly dependant on the CC)
         }  
         ```  
     - Controller operation **GetNodes** no longer returns an empty entry.

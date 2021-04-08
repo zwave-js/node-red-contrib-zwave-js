@@ -9,13 +9,14 @@ so that the command classes, can be used in an easy way.
 
 Some CCs require a JSON Object, which are documented at the bottom.  
 For those CCs that require an Enum value however, you can get all the valid Enums, by sending the following message:  
-```
-{
-  payload:{
-    class: "Driver",
-    operation:"GetEnums"
-  }
+```javascript
+let Message = {
+    payload: {
+        class: "Driver",
+        operation: "GetEnums"
+    }
 }
+return Message
 ```
 Currently, the supported command classes are (when using Managed mode).  
 
@@ -78,63 +79,67 @@ The aim of course is to expose them all.
 See below, for examples on how to interrogate the CC's in the table above.  
 **NOTE:** You do not need to specify the ```node``` property IF the message, is going through a **ZWave Device** node.  
 
-```
+```javascript
 /* Set a configuration value for a zwave node */
 
-{
-  payload:{
-    node: 2,
-    class: "Configuration",
-    operation:"Set",
-    params: [0x18, 0x03, 1] // Config Param, Config Value, Value Size
-  }
+let Message = {
+    payload: {
+        node: 2,
+        class: "Configuration",
+        operation: "Set",
+        params: [0x18, 0x03, 1] // Config Param, Config Value, Value Size
+    }
 }
+return Message
 ```
 
-```
+```javascript
 /* Get a configuration value from a zwave node */
 /* The result will be injected into your flow */
 
-{
-  payload:{
-    node: 2,
-    class: "Configuration",
-    operation:"Get",
-    params: [0x18] // Config Param
-  }
+let Message = {
+    payload: {
+        node: 2,
+        class: "Configuration",
+        operation: "Get",
+        params: [0x18] // Config Param
+    }
 }
+return Message
 ```
 
-```
+```javascript
 /* Support for multi-channel devices. i.e Wall sockets with multiple outlets */
 
-{
-  payload:{
-    node: 2,
-    class: "BinarySwitch",
-    operation:"Set",
-    endpoint:1, // zero based index. 0 - First outlet, 1 - second outlet and so on.
-    params: [true]
-  }
+let Message = {
+    payload: {
+        node: 2,
+        class: "BinarySwitch",
+        operation: "Set",
+        endpoint: 1, // zero based index. 0 - First outlet, 1 - second outlet and so on.
+        params: [true]
+    }
 }
+return Message
 ```
 
-```
+```javascript
 /* Issue a notification report */
 
 let Report = {
-  notificationType: 0x06,
-  notificationEvent: 0x16
+    notificationType: 0x06,
+    notificationEvent: 0x16
 }
 
-{
-  payload:{
-    node: 2,
-    class: "Notification",
-    operation:"SendReport",
-    params: [Report]
-  }
+Let Message = {
+    payload: {
+        node: 2,
+        class: "Notification",
+        operation: "SendReport",
+        params: [Report]
+    }
 }
+return Message
 ```
 
 ## Notes on WakeInterval  
@@ -150,7 +155,7 @@ If specifing a string, the valid values are: **Frost Protection** | **Energy Sav
 ## Object Structures  
 
 **MeterOptions**
-```
+```javascript
 {
   scale: Number,
   rateType: Enum (RateType)
@@ -158,15 +163,15 @@ If specifing a string, the valid values are: **Frost Protection** | **Energy Sav
 ```
 
 **MeterResetOptions**
-```
+```javascript
 {
-  type: number,
-  targetValue: number
+  type: Number,
+  targetValue: Number
 }
 ```
 
 **Event**
-```
+```javascript
 {
   notificationType: Number,
   notificationEvent: Number,
@@ -176,7 +181,7 @@ If specifing a string, the valid values are: **Frost Protection** | **Energy Sav
 ```
 
 **RemoveOptions**
-```
+```javascript
 {
   groupId: Number,
   nodeIds: Number[]
@@ -184,7 +189,7 @@ If specifing a string, the valid values are: **Frost Protection** | **Energy Sav
 ```
 
 **Duration**
-```
+```javascript
 {
   Duration: {
     value: Number,
@@ -194,17 +199,17 @@ If specifing a string, the valid values are: **Frost Protection** | **Energy Sav
 ```
 
 **Color**
-```
+```javascript
 {
   hexColor: "#000000"
 }
 ```
 
 **Indicator**
-```
+```javascript
 {
-  indicatorId: number;
-  propertyId: number;
-  value: number | boolean;
+  indicatorId: Number,
+  propertyId: Number,
+  value: Number | Bool,
 }
 ```
