@@ -106,11 +106,11 @@ And such event(s) will look like this.
 
 ```json
 {
-  "payload": {
-    "node": 2,
-    "event": "VALUE_UPDATED",
-    "timestamp": "23-12-2020T12:23:23+000",
-    "object": {...}
+  payload: {
+    node: 2,
+    event: "VALUE_UPDATED",
+    timestamp: "23-12-2020T12:23:23+000",
+    object: {}
   }
 }
 ```
@@ -139,14 +139,15 @@ However! Some Controller methods themself, actually need a Node ID as part of th
 | Driver                    | GetEnums                            |                                                       |
 
 To start an in-secure Inclusion, you will do.  
-```
-{
-  payload: {
-    class: "Controller",
-    operation: "StartInclusion",
-    params: [true]
-  }
+```javascript
+let Message = {
+    payload: {
+        class: "Controller",
+        operation: "StartInclusion",
+        params: [true]
+    }
 }
+return Message;
 ```
 
 ## Notes on StartInclusion  
@@ -174,7 +175,7 @@ disables the LED on the GEN 5 Z-Stick, breaking it down we have:
 
 This means we do:
 
-```
+```javascript
 /* LED Configuration
  * Configuration Value Size
  * Value
@@ -182,17 +183,19 @@ This means we do:
  * ??
  */
 
-let _Buf_OFF = Buffer.from([0x51,0x01,0x00,0x05,0x01])
-let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
-                                                      
-{
-  payload:{
-    node: 2,
-    class: "Controller",
-    operation:"ProprietaryFunc",
-    params: [0xF2, _Buf_OFF]
-  }
+let _Buf_OFF = Buffer.from([0x51, 0x01, 0x00, 0x05, 0x01])
+let _Buf_ON = Buffer.from([0x51, 0x01, 0x01, 0x05, 0x01])
+
+let Message = {
+    payload: {
+        node: 2,
+        class: "Controller",
+        operation: "ProprietaryFunc",
+        params: [0xF2, _Buf_OFF]
+    }
 }
+
+return Message
 ```
 
 **SOF**, **Total Length**, **REQ** & the **Serial API Checksum** will be provided for you.
