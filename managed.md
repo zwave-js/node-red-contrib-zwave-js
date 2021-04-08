@@ -155,7 +155,7 @@ If specifing a string, the valid values are: **Frost Protection** | **Energy Sav
 ## Object Structures  
 
 **MeterOptions**
-```
+```javascript
 {
   scale: Number,
   rateType: Enum (RateType)
@@ -163,15 +163,15 @@ If specifing a string, the valid values are: **Frost Protection** | **Energy Sav
 ```
 
 **MeterResetOptions**
-```
+```javascript
 {
-  type: number,
-  targetValue: number
+  type: Number,
+  targetValue: Number
 }
 ```
 
 **Event**
-```
+```javascript
 {
   notificationType: Number,
   notificationEvent: Number,
@@ -181,7 +181,7 @@ If specifing a string, the valid values are: **Frost Protection** | **Energy Sav
 ```
 
 **RemoveOptions**
-```
+```javascript
 {
   groupId: Number,
   nodeIds: Number[]
@@ -189,7 +189,7 @@ If specifing a string, the valid values are: **Frost Protection** | **Energy Sav
 ```
 
 **Duration**
-```
+```javascript
 {
   Duration: {
     value: Number,
@@ -199,17 +199,17 @@ If specifing a string, the valid values are: **Frost Protection** | **Energy Sav
 ```
 
 **Color**
-```
+```javascript
 {
   hexColor: "#000000"
 }
 ```
 
 **Indicator**
-```
+```javascript
 {
-  indicatorId: number;
-  propertyId: number;
-  value: number | boolean;
+  indicatorId: Number;
+  propertyId: Number;
+  value: Number | Bool;
 }
 ```
