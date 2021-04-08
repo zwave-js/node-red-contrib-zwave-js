@@ -8,7 +8,7 @@ The implementation is 100% javascript. it is therefore:
   - Does not require a build of any static library
   - Stable
 
-Install this node via the Node Red pallet menu, and you have Z-Wave support in Node Red .  
+Install this node via the Node Red palette menu (See [Home Assistant Install](#home-assistant-install) if this applies to you), and you have Z-Wave support in Node Red.  
 The node is straightforward to use, and removes all the complexities that you would otherwise need to deal with.
 
   - Add the node into your flow
@@ -20,6 +20,25 @@ The node is straightforward to use, and removes all the complexities that you wo
 
 **node-red-contrib-zwave-js** is based on  [&#x1F517;Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/).  
 Z-Wave JS is actively  maintained, fast and supports the security command class.
+
+## Home Assistant Install
+To install this node in the Node Red add-on, that Home Assistant provides, follow the below steps:  
+  - If not already, install the HA Node Red add-on.
+  - DO NOT Attempt to install this node, via the palette menu.
+  - Edit the Node Red plugin configuration as below (specifically the  **system_packages** and **npm_packages**)
+  - Restart the add-on/Node Red - and you should be ready to go.
+```yaml
+system_packages:
+  - make
+  - python3
+  - g++
+  - gcc
+  - linux-headers
+  - udev
+npm_packages:
+  - serialport
+  - node-red-contrib-zwave-js
+```
 
 ## Node Types
 There are 2 node types.  
@@ -177,6 +196,9 @@ let _Buf_ON = Buffer.from([0x51,0x01,0x01,0x05,0x01])
 
 
 ## Version History  
+
+  - 3.2.1
+    - Added Home Assistant Guide 
 
   - 3.2.0
     - Bump Z-Wave JS (7.1.1).  
