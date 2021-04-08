@@ -8,7 +8,9 @@ The implementation is 100% javascript. it is therefore:
   - Does not require a build of any static library
   - Stable
 
-Install this node via the Node Red palette menu (See [Home Assistant Install](#home-assistant-install) if this applies to you), and you have Z-Wave support in Node Red.  
+Install this node via the Node Red palette menu (See [Home Assistant Install](#home-assistant-install) if this applies to you),  
+and you have Z-Wave support in Node Red.  
+  
 The node is straightforward to use, and removes all the complexities that you would otherwise need to deal with.
 
   - Add the node into your flow
