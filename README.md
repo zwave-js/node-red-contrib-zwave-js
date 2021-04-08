@@ -16,7 +16,7 @@ The node is straightforward to use, and removes all the complexities that you wo
   - Add the node into your flow
   - Select the serial port that represents your USB Zwave radio.
   - Set an encryption key if you want to use Secure devices:  
-     - Plaint text (16 characters) 
+     - Plain text (16 characters) 
      - Or hex array (16 bytes) [0x01,0x02]
   - Listen for, and send commands using the node.
 
@@ -26,8 +26,10 @@ The node is straightforward to use, and removes all the complexities that you wo
 Z-Wave JS is actively  maintained, fast and supports the security command class.
 
 ## Home Assistant Install
+Please note: This is a self contained Z-Wave driver for Node Red, it will not work along side the Z-Wave plugin for Home Assistant.  
+if this isn't your setup, then please refer to the below guide to install into the Node Red instance that HA provides.
+
 To install this node in the Node Red add-on, that Home Assistant provides, follow the below steps:  
-  - If not already done, install the HA Node Red add-on.
   - Do not Attempt to install this node, via the palette menu - it will likely not install some serial port stuff.  
   - Edit the Node Red plugin configuration as below (specifically  **system_packages** and **npm_packages**)
   - Restart the add-on/Node Red - and you should be ready to go.
@@ -43,8 +45,6 @@ npm_packages:
   - serialport
   - node-red-contrib-zwave-js
 ```
-
-Please also note: this is a self contained Z-Wave driver for Node Red, it will not work along side the Z-Wave plugin for Home Assistant
 
 ## Node Types
 There are 2 node types.  
