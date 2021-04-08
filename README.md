@@ -194,7 +194,6 @@ let Message = {
         params: [0xF2, _Buf_OFF]
     }
 }
-
 return Message
 ```
 
