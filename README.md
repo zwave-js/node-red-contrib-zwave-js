@@ -104,7 +104,7 @@ Whatever your poison, the node will inject the following events, into your flow.
 
 And such event(s) will look like this.
 
-```json
+```javascript
 {
   payload: {
     node: 2,
