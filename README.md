@@ -204,6 +204,9 @@ return Message
 
 ## Version History  
 
+  - 3.2.2
+    - Bump Z-Wave JS
+
   - 3.2.1
     - Added Home Assistant Guide 
     - Example syntax highlighting
