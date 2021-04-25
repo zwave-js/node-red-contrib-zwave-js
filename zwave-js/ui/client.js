@@ -182,6 +182,7 @@ let ZwaveJsUI = (function () {
 
     $('<span id="zwave-js-selected-node-id">').appendTo(nodeHeader)
     $('<span id="zwave-js-selected-node-name">').appendTo(nodeHeader)
+    $('<span id="zwave-js-selected-node-location">').appendTo(nodeHeader)
 
     $('<button>')
       .addClass('red-ui-button red-ui-button-small')
@@ -238,6 +239,33 @@ let ZwaveJsUI = (function () {
         }
       })
       .appendTo(rename)
+
+    // -- -- -- -- Set location
+
+    let relocation = $('<div>').appendTo(nodeOpts)
+    $('<input>').addClass('red-ui-searchBox-input').hide().appendTo(relocation)
+    $('<button id="zwave-js-set-node-location">')
+      .addClass('red-ui-button red-ui-button-small')
+      .html('Set Location')
+      .click(function () {
+        let input = $(this).prev()
+        if (input.is(':visible')) {
+          controllerRequest({
+            class: 'Controller',
+            operation: 'SetNodeLocation',
+            params: [selectedNode, input.val()]
+          }).then(({ node, object }) => {
+            if (node == selectedNode) $('#zwave-js-selected-node-location').text("("+object+")")
+          })
+          input.hide()
+          $(this).html('Set Location')
+        } else {
+          input.show()
+          input.val($('#zwave-js-selected-node-location').text().replace(/\(/g,'').replace(/\)/g,''))
+          $(this).html('Go')
+        }
+      })
+      .appendTo(relocation)
 
     // -- -- -- -- Interview node
 
@@ -511,6 +539,12 @@ let ZwaveJsUI = (function () {
     $('#zwave-js-selected-node-id').text(selectedNode)
     let info = selectedEl.data('info')
     $('#zwave-js-selected-node-name').text(info.name)
+    if(info.location !== undefined && info.location.length > 0){
+      $('#zwave-js-selected-node-location').text("("+info.location+")")
+    }
+    else{
+      $('#zwave-js-selected-node-location').text("")
+    }
     makeInfo('#zwave-js-selected-node-info', info.deviceConfig)
     getProperties()
     RED.comms.subscribe(`/zwave-js/${selectedController}/${selectedNode}`, handleNodeEvent)

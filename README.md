@@ -206,8 +206,10 @@ return Message
 ## Version History  
 
   - 3.2.3
-    - Added **nodeName** and **nodeLocation** to incoming z-wave events (if provided).  
+    - Added **nodeName** and **nodeLocation** to incoming z-wave events (if they are set).  
+    - Added ability to set Node Location in the UI.  
     - Bump Z-Wave JS
+    - Fixed read me compatibility with **flows.nodered.org**
 
   - 3.2.2
     - Bump Z-Wave JS

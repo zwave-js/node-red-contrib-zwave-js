@@ -721,8 +721,16 @@ module.exports = function (RED) {
 
             let PL = {"node": Node.id}
             if(Node.id !== 'N/A' && Node.id !== 'Controller'){
-                PL.nodeName = getNodeInfoForPayload(Node.id,'name')
-                PL.nodeLocation = getNodeInfoForPayload(Node.id,'location')
+
+                let N = getNodeInfoForPayload(Node.id,'name');
+                if(N !== undefined){
+                    PL.nodeName = N;
+                }
+
+                let L = getNodeInfoForPayload(Node.id,'location')
+                if(L !== undefined){
+                    PL.nodeLocation = L
+                }
             }
             PL.event = Subject,
             PL.timestamp = new Date().toJSON()
