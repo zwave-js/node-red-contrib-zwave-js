@@ -207,7 +207,6 @@ return Message
 
   - 3.2.3
     - Added **nodeName** and **nodeLocation** to incoming z-wave events (if provided).  
-    - Added the ability to set the node location in the UI.
     - Bump Z-Wave JS
 
   - 3.2.2
