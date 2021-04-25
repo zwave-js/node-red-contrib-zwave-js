@@ -31,7 +31,8 @@ if this isn't your setup, then please refer to the below guide to install into t
 
   - Do not attempt to install this node, via the palette menu - it will likely not install some serial port stuff.  
   - Edit the Node Red add-on configuration as below (specifically  **system_packages** and **npm_packages**)
-  - Restart the add-on/Node Red - and you should be ready to go.
+  - Restart the add-on/Node Red - and you should be ready to go.  
+
 ```yaml
 system_packages:
   - make
@@ -203,6 +204,12 @@ return Message
 
 
 ## Version History  
+
+  - 3.2.3
+    - Added **nodeName** and **nodeLocation** to incoming z-wave events, if they are set.  ([#44](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/44))  
+    - Added ability to set Node Location in the UI.  
+    - Bump Z-Wave JS
+    - Fixed read me compatibility with **flows.nodered.org**
 
   - 3.2.2
     - Bump Z-Wave JS
