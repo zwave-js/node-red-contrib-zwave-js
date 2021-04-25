@@ -712,10 +712,20 @@ module.exports = function (RED) {
         }
 
 
+        function getNodeInfoForPayload(NodeID, Property){
+            let Prop = Driver.controller.nodes.get(parseInt(NodeID))[Property];
+            return Prop
+        }
+
         function Send(Node, Subject, Value, send) {
 
-            let PL = { "node": Node.id, "event": Subject, "timestamp": new Date().toJSON() }
-
+            let PL = {"node": Node.id}
+            if(Node.id !== 'N/A' && Node.id !== 'Controller'){
+                PL.nodeName = getNodeInfoForPayload(Node.id,'name')
+                PL.nodeLocation = getNodeInfoForPayload(Node.id,'location')
+            }
+            PL.event = Subject,
+            PL.timestamp = new Date().toJSON()
             if (Value !== undefined) {
                 PL.object = Value;
             }
@@ -730,7 +740,7 @@ module.exports = function (RED) {
             }
 
             // Allow passing event to filter nodes
-            if (Node.id !== "Controller") {
+            if (Node.id !== "Controller" && Node.id !== "N/A" ) {
                 RED.events.emit("zwjs:node:event:" + Node.id, { "payload": PL })
             }
         }
