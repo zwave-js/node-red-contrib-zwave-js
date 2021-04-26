@@ -602,23 +602,23 @@ module.exports = function (RED) {
                     else {
                         await Driver.controller.nodes.get(Params[0]).refreshInfo();
                         ReturnNode.id = Params[0];
-                        Send(ReturnNode, "INTERVIEW_STARTED", null, send)
+                        Send(ReturnNode, "INTERVIEW_STARTED", undefined, send)
                     }
                     break;
 
                 case "HardReset":
                     await Driver.hardReset();
-                    Send(ReturnController, "CONTROLLER_RESET_COMPLETE", null, send)
+                    Send(ReturnController, "CONTROLLER_RESET_COMPLETE", undefined, send)
                     break;
 
                 case "StartHealNetwork":
                     await Driver.controller.beginHealingNetwork();
-                    Send(ReturnController, "NETWORK_HEAL_STARTED", null, send)
+                    Send(ReturnController, "NETWORK_HEAL_STARTED", undefined, send)
                     break;
 
                 case "StopHealNetwork":
                     await Driver.controller.stopHealingNetwork();
-                    Send(ReturnController, "NETWORK_HEAL_STOPPED", null, send)
+                    Send(ReturnController, "NETWORK_HEAL_STOPPED", undefined, send)
                     break;
 
                 case "RemoveFailedNode":
