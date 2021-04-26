@@ -205,6 +205,9 @@ return Message
 
 ## Version History  
 
+  - 3.2.4  
+    - Fixed issue where ```null``` was being compared to ```undefined```
+
   - 3.2.3
     - Added **nodeName** and **nodeLocation** to incoming z-wave events, if they are set.  ([#44](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/44))  
     - Added ability to set Node Location in the UI.  
