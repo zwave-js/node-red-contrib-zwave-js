@@ -146,9 +146,12 @@ return Message
 These class' and operations will be removed in a future release  
 Please see the [&#x1F517;Controller](./README.md) operations of:  
   - GetAssociationGroups
+  - GetAllAssociationGroups
   - GetAssociations
+  - GetAllAssociations
   - AddAssociations
   - RemoveAssociations
+  - RemoveNodeFromAllAssociations
 
 
 ## Notes on WakeInterval  

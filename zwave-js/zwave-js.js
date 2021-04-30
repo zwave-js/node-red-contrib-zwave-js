@@ -370,6 +370,10 @@ module.exports = function (RED) {
                         await DriverCMD(msg, send);
                         break;
 
+                    case "Association":
+                        await Association(msg, send);
+                        break;
+
                     default:
                         await NodeFunction(msg, send);
                         break;
@@ -668,17 +672,50 @@ module.exports = function (RED) {
                     await Driver.sendMessage(ZWaveMessage, MessageSettings)
                     break;
 
+             
+            }
+
+            return;
+        }
+
+        // Association
+        async function Association(msg, send)
+        {
+            let Operation = msg.payload.operation
+            let Params = msg.payload.params;
+
+            let ReturnController = { id: "Controller" };
+            let ReturnNode = { id: "" };
+
+            switch(Operation)
+            {
                 case "GetAssociationGroups":
-                        Driver.controller.getAssociationGroups(Params[0])
-                        break;
+                    Driver.controller.getAssociationGroups(Params[0])
+                    break;
 
                 case "GetAllAssociationGroups":
-                        Driver.controller.getAllAssociationGroups(Params[0])
-                        break;
+                    Driver.controller.getAllAssociationGroups(Params[0])
+                    break;
 
                 case "GetAssociations":
-                        Driver.controller.getAssociations(Params[0])
-                        break;
+                    Driver.controller.getAssociations(Params[0])
+                    break;
+
+                case "GetAllAssociations":
+                    Driver.controller.getAllAssociations(Params[0])
+                    break;
+
+                case "AddAssociations":
+                    Driver.controller.addAssociations(Params[0], Params[1], Params[2])
+                    break;
+            
+                case "RemoveAssociations":
+                    Driver.controller.removeAssociations(Params[0], Params[1], Params[2])
+                    break;
+
+                case "RemoveNodeFromAllAssociations":
+                    Driver.controller.removeNodeFromAllAssociations(Params[0])
+                    break;
             }
 
             return;

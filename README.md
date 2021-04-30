@@ -121,10 +121,10 @@ And such event(s) will look like this.
 Accessing the UI, will provide you with most of the network management operations.  
 But, if you prefer, you can action them via a node message.  
   
-The **Controller** and **Driver** classes do not require a **node** ID.  
+The **Controller**, **Driver** and **Association** classes do not require a **node** ID.  
 However! Some Controller methods themself, actually need a Node ID as part of the required params.  
 
-Some Controller methods (namley Assocation methods) require an Object. These are detailed at the bottom.
+Some Association methods require an Object, these are detailed at the bottom.
 
 | class                     | operation                           | params                                                |
 | ------------------------- | ----------------------------------- | ----------------------------------------------------- |
@@ -140,11 +140,13 @@ Some Controller methods (namley Assocation methods) require an Object. These are
 | Controller                | GetNodes                            |                                                       |
 | Controller                | SetNodeName                         | [Node ID: Number, Node Name: String]                  |
 | Controller                | SetNodeLocation                     | [Node ID: Number, Node Location: String]              |
-| Controller                | GetAssociationGroups                | [**AssociationAddress**: Object]                          |
-| Controller                | GetAllAssociationGroups             | [Node ID: Number]                                     |
-| Controller                | GetAssociations                     | [**AssociationAddress**: Object]                          |
-| Controller                | AddAssociations                     | TODO                                                  |
-| Controller                | RemoveAssociations                  | TODO                                                  |
+| Association               | GetAssociationGroups                | [**AssociationAddress**: Object]                      |
+| Association               | GetAllAssociationGroups             | [Node ID: Number]                                     |
+| Association               | GetAssociations                     | [**AssociationAddress**: Object]                      |
+| Association               | GetAllAssociations                  | [Node ID: Number]                                     |
+| Association               | AddAssociations                     | [**AssociationAddress**: Object, Group  ID: Number, **AssociationAddress**: Object[]] |
+| Association               | RemoveAssociations                  | [**AssociationAddress**: Object, Group  ID: Number, **AssociationAddress**: Object[]] |
+| Association               | RemoveNodeFromAllAssociations       | [Node ID: Number]                                     |
 | Driver                    | GetEnums                            |                                                       |
 
 To start an in-secure Inclusion, you will do.  
