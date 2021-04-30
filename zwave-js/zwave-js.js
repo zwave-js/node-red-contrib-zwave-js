@@ -691,9 +691,6 @@ module.exports = function (RED) {
             let Params = msg.payload.params;
 
             let ReturnNode = { id: "" };
-
-            var Result = {}
-
             switch(Operation)
             {
                 case "GetAssociationGroups":
@@ -703,13 +700,13 @@ module.exports = function (RED) {
                     ResultData.forEach((FV,FK) =>{
                         let A = {
                             GroupID:FK,
-                            AssociationGroup:FV
+                            AssociationGroupInfo:FV
                         }
                         PL.push(A);
                     })
 
                     ReturnNode.id = Params[0].nodeId
-                    Send(ReturnNode,"ASSOCIATION_GROUPS",PL,send)
+                    Send(ReturnNode,"ASSOCIATION_GROUPS",{SourceAddress:Params[0],Groups:PL},send)
                     break;
 
                 case "GetAllAssociationGroups":
@@ -719,14 +716,14 @@ module.exports = function (RED) {
                     ResultData.forEach((FV,FK) =>{
                         let A = {
                             Endpoint:FK,
-                            AssociationGroups:[]
+                            Groups:[]
                         }
                         FV.forEach((SV, SK) =>{
                             let B = {
                                 GroupID:SK,
-                                AssociationGroup:SV
+                                AssociationGroupInfo:SV
                             }
-                            A.AssociationGroups.push(B)
+                            A.Groups.push(B)
                         })
                         PL.push(A);
                     })
@@ -736,11 +733,23 @@ module.exports = function (RED) {
                     break;
 
                 case "GetAssociations":
-                    ///////
-                    Result.associationAddress = Params[0]
-                    Result.associations = Driver.controller.getAssociations(Params[0])
+                    NodeCheck(Params[0].nodeId);
+                    var ResultData = Driver.controller.getAssociations(Params[0])
+                    var PL = []
+                    ResultData.forEach((FV, FK) =>{
+                        let A = {
+                            GroupID:FK,
+                            AssociationAddress:[]
+                        }
+                        FV.forEach((AA) =>{
+                            A.AssociationAddress.push(AA);
+                        });
+
+                        PL.push(A)
+                    })
+
                     ReturnNode.id = Params[0].nodeId
-                    Send(ReturnNode,"ASSOCIATIONS",Result,send)
+                    Send(ReturnNode,"ASSOCIATIONS",{SourceAddress:Params[0],Associations:PL},send)
                     break;
 
                 case "GetAllAssociations":
