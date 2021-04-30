@@ -22,12 +22,12 @@ Currently, the supported command classes are (when using Managed mode).
 
 | class                              | operation                           | params                                                |
 | ---------------------------------- | ----------------------------------- | ----------------------------------------------------- |
-| Association (Depreciated)          | GetGroup                            | [Group ID: Number]                                    |
-| Association (Depreciated)          | AddNodes                            | [Group ID: Number, NodeIDs: Number[]]                 |
-| Association (Depreciated)          | RemoveNodes                         | [**RemoveOptions**: Object]                           |
-| Association (Depreciated)          | RemoveNodesFromAllGroups            | [NodeIDs: Number[]]                                   |
-| Association (Depreciated)          | GetGroupCount                       |                                                       |
-| AssociationGroupInfo (Depreciated) | GetGroupName                        | [Group ID: Number]                                    |
+| Association (Deprecated)           | GetGroup                            | [Group ID: Number]                                    |
+| Association (Deprecated)           | AddNodes                            | [Group ID: Number, NodeIDs: Number[]]                 |
+| Association (Deprecated)           | RemoveNodes                         | [**RemoveOptions**: Object]                           |
+| Association (Deprecated)           | RemoveNodesFromAllGroups            | [NodeIDs: Number[]]                                   |
+| Association (Deprecated)           | GetGroupCount                       |                                                       |
+| AssociationGroupInfo (Deprecated)  | GetGroupName                        | [Group ID: Number]                                    |
 | Basic                              | Set                                 | [Number]                                              |
 | Basic                              | Get                                 |                                                       |
 | Battery                            | Get                                 |                                                       |
@@ -142,8 +142,8 @@ Let Message = {
 return Message
 ```
 
-## Depreciated Association and AssociationGroupInfo
-These class' and operations will be removed in a furture  
+## Deprecated Association and AssociationGroupInfo
+These class' and operations will be removed in a furture release  
 Please see the [&#x1F517;Controller](./README.md) operations of:  
   - GetAssociationGroups
   - GetAssociations

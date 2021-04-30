@@ -209,10 +209,10 @@ return Message
 
 ## Version History  
 
-  - 3.3.0
+  - 3.3.0 **Deprecation Warnings**
     - Bump Z-Wave JS
     - Added new Association managment methods via the **Controller** class
-    - **Association** and **AssociationGroupInfo** is now marked for removal.
+    - **Association** and **AssociationGroupInfo** classes are now marked for removal.
     - Improvments/fixes to logging platform.
 
   - 3.2.4  
