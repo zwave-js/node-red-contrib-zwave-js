@@ -697,11 +697,19 @@ module.exports = function (RED) {
             switch(Operation)
             {
                 case "GetAssociationGroups":
-                    //////
-                    Result.associationAddress = Params[0]
-                    Result.groups =  Driver.controller.getAssociationGroups(Params[0]);
+                    NodeCheck(Params[0].nodeId);
+                    var ResultData = Driver.controller.getAssociationGroups(Params[0])
+                    var PL = []
+                    ResultData.forEach((FV,FK) =>{
+                        let A = {
+                            GroupID:FK,
+                            AssociationGroup:FV
+                        }
+                        PL.push(A);
+                    })
+
                     ReturnNode.id = Params[0].nodeId
-                    Send(ReturnNode,"ASSOCIATION_GROUPS",Result,send)
+                    Send(ReturnNode,"ASSOCIATION_GROUPS",PL,send)
                     break;
 
                 case "GetAllAssociationGroups":
