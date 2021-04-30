@@ -103,6 +103,13 @@ Whatever your poison, the node will inject the following events, into your flow.
 | GET_VALUE_RESPONSE          | The source Node ID                  | Value & Value ID                | Response to GetValue              | 
 | GET_VALUE_METADATA_RESPONSE | The source Node ID                  | Metadata & Value ID             | Response to GetValueMetadata      | 
 | ENUM_LIST                   | "N/A"                               | All valid Enum Values           | Response to GetEnums              | 
+| ASSOCIATION_GROUPS          | The source Node ID                  | Association Group Info[]        | Response to GetAssociations       |  
+| ALL_ASSOCIATION_GROUPS      | The source Node ID                  | Association Group Info[]        | Response to GetAllAssociations    |  
+| ASSOCIATIONS                | The source Node ID                  | Configured Associations         | Response to GetAssociations       |  
+| ALL_ASSOCIATIONS            | The source Node ID                  | Configured Associations         | Response to GetAllAssociations    |  
+| ASSOCIATIONS_ADDED          | The source Node ID                  |                                 | Associations Were Added           |  
+| ASSOCIATIONS_REMOVED        | The source Node ID                  |                                 | Associations Were Removed         |  
+| ALL_ASSOCIATIONS_REMOVED    | The source Node ID                  |                                 | All Associations Were Removed     |  
 
 And such event(s) will look like this.
 
