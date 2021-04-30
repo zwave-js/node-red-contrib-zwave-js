@@ -4,3 +4,4 @@ node_modules
 .prettierignore
 mock
 .github
+package-lock.json
