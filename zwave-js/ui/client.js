@@ -229,6 +229,8 @@ let ZwaveJsUI = (function () {
               .find(`[data-nodeid='${node}'] .zwave-js-node-row-name`)
               .html(object)
             if (node == selectedNode) $('#zwave-js-selected-node-name').text(object)
+
+            getNodes();
           })
           input.hide()
           $(this).html('Set Name')
@@ -256,6 +258,8 @@ let ZwaveJsUI = (function () {
             params: [selectedNode, input.val()]
           }).then(({ node, object }) => {
             if (node == selectedNode) $('#zwave-js-selected-node-location').text("("+object+")")
+
+            getNodes();
           })
           input.hide()
           $(this).html('Set Location')
@@ -538,13 +542,21 @@ let ZwaveJsUI = (function () {
     selectedEl.addClass('selected')
     $('#zwave-js-selected-node-id').text(selectedNode)
     let info = selectedEl.data('info')
-    $('#zwave-js-selected-node-name').text(info.name)
+
+    if(info.name !== undefined && info.name.length > 0){
+      $('#zwave-js-selected-node-name').text(info.name)
+    }
+    else{
+      $('#zwave-js-selected-node-name').text("")
+    }
+   
     if(info.location !== undefined && info.location.length > 0){
       $('#zwave-js-selected-node-location').text("("+info.location+")")
     }
     else{
       $('#zwave-js-selected-node-location').text("")
     }
+
     makeInfo('#zwave-js-selected-node-info', info.deviceConfig)
     getProperties()
     RED.comms.subscribe(`/zwave-js/${selectedController}/${selectedNode}`, handleNodeEvent)
