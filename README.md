@@ -138,6 +138,10 @@ However! Some Controller methods themself, actually need a Node ID as part of th
 | Controller                | GetNodes                            |                                                       |
 | Controller                | SetNodeName                         | [Node ID: Number, Node Name: String]                  |
 | Controller                | SetNodeLocation                     | [Node ID: Number, Node Location: String]              |
+| Controller                | GetAssociationGroups                | TODO                                                  |
+| Controller                | GetAssociations                     | TODO                                                  |
+| Controller                | AddAssociations                     | TODO                                                  |
+| Controller                | RemoveAssociations                  | TODO                                                  |
 | Driver                    | GetEnums                            |                                                       |
 
 To start an in-secure Inclusion, you will do.  
@@ -204,6 +208,12 @@ return Message
 
 
 ## Version History  
+
+  - 3.3.0
+    - Bump Z-Wave JS
+    - Added new Association managment methods via the **Controller** class
+    - **Association** and **AssociationGroupInfo** is now marked for removal.
+    - Improvments/fixes to logging platform.
 
   - 3.2.4  
     - Fixed issue where ```null``` was being compared to ```undefined```

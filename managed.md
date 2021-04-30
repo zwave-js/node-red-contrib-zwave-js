@@ -20,58 +20,58 @@ return Message
 ```
 Currently, the supported command classes are (when using Managed mode).  
 
-| class                     | operation                           | params                                                |
-| ------------------------- | ----------------------------------- | ----------------------------------------------------- |
-| Association               | GetGroup                            | [Group ID: Number]                                    |
-| Association               | AddNodes                            | [Group ID: Number, NodeIDs: Number[]]                 |
-| Association               | RemoveNodes                         | [**RemoveOptions**: Object]                           |
-| Association               | RemoveNodesFromAllGroups            | [NodeIDs: Number[]]                                   |
-| Association               | GetGroupCount                       |                                                       |
-| AssociationGroupInfo      | GetGroupName                        | [Group ID: Number]                                    |
-| Basic                     | Set                                 | [Number]                                              |
-| Basic                     | Get                                 |                                                       |
-| Battery                   | Get                                 |                                                       |
-| BinarySensor              | Get                                 | [**BinarySensorType**: Enum]                          |
-| BinarySwitch              | Set                                 | [Bool, **Duration**: Object (Optional)]               |
-| BinarySwitch              | Get                                 |                                                       |
-| Configuration             | Set                                 | [ParamID: Number, Value: Number, Value Length: Number] |
-| Configuration             | Get                                 | [ParamID: Number]                                     |
-| ColorSwitch               | Set                                 | [**Color**: Object]                                   |
-| ColorSwitch               | Get                                 | [**ColorComponent**: Enum]                            |
-| DoorLock                  | Set                                 | [**DoorLockMode**: Enum]                              |
-| DoorLock                  | Get                                 |                                                       |
-| EntryControl              | SetConfiguration                    | [Key Cache Size: Number, Cache Timeout: Number]       |
-| EntryControl              | GetConfiguration                    |                                                       |
-| EntryControl              | GetSupportedKeys (see notes)        |                                                       |
-| Lock                      | Set                                 | [Bool]                                                |
-| Lock                      | Get                                 |                                                       |
-| Indicator                 | Set                                 | [Value: Number] \| [**Indicator**[]: Object]           |
-| Indicator                 | Get                                 | [Indicator: Number (Optional)]                        |
-| Meter                     | Get                                 | [**MeterOptions**: Object]                            |
-| Meter                     | GetAll                              |                                                       |
-| Meter                     | Reset                               | [**MeterResetOptions**: Object]                       |
-| MultiLevelSwitch          | Set                                 | [Number, **Duration**: Object (Optional)]             |
-| MultiLevelSwitch          | Get                                 |                                                       |
-| MultiLevelSensor          | Get                                 |                                                       |
-| MultiLevelSensor          | GetSupportedScales                  | [Sensor Type: Number]                                 |
-| MultiLevelSensor          | GetSupportedSensorTypes             |                                                       |
-| Notification              | SendReport                          | [**Event**: Object]                                   |
-| SoundSwitch               | GetConfiguration                    |                                                       |
-| SoundSwitch               | SetConfiguration                    | [Default Tone: Number, Default Volume: Number]        |
-| SoundSwitch               | GetPlaying                          |                                                       |
-| SoundSwitch               | GetToneCount                        |                                                       |
-| SoundSwitch               | GetToneInfo                         | [Tone ID: Number]                                     |
-| SoundSwitch               | Play                                | [Tone ID: Number, Volume: Number (Optional)]          |
-| SoundSwitch               | Stop                                |                                                       |
-| ThermostatMode            | Set                                 | [**ThermostatMode**: Enum]                            |
-| ThermostatMode            | Get                                 |                                                       |
-| ThermostatSetPoint        | Set                                 | [**SetPointType**: Enum, Value: Number, Scale: Number] |
-| ThermostatSetPoint        | Get                                 | [**SetPointType**: Enum]                              | 
-| ThermostatOperatingState  | Get                                 |                                                       | 
-| ThermostatSetback         | Set  (See Notes)                    | [**SetbackType**: Enum, Set Back State: String \| Number] | 
-| ThermostatSetback         | Get                                 |                                                       | 
-| WakeInterval              | Set (See Notes)                     | [Seconds: Number, Controller Node ID:Number]          |
-| WakeInterval              | Get                                 |                                                       | 
+| class                              | operation                           | params                                                |
+| ---------------------------------- | ----------------------------------- | ----------------------------------------------------- |
+| Association (Depreciated)          | GetGroup                            | [Group ID: Number]                                    |
+| Association (Depreciated)          | AddNodes                            | [Group ID: Number, NodeIDs: Number[]]                 |
+| Association (Depreciated)          | RemoveNodes                         | [**RemoveOptions**: Object]                           |
+| Association (Depreciated)          | RemoveNodesFromAllGroups            | [NodeIDs: Number[]]                                   |
+| Association (Depreciated)          | GetGroupCount                       |                                                       |
+| AssociationGroupInfo (Depreciated) | GetGroupName                        | [Group ID: Number]                                    |
+| Basic                              | Set                                 | [Number]                                              |
+| Basic                              | Get                                 |                                                       |
+| Battery                            | Get                                 |                                                       |
+| BinarySensor                       | Get                                 | [**BinarySensorType**: Enum]                          |
+| BinarySwitch                       | Set                                 | [Bool, **Duration**: Object (Optional)]               |
+| BinarySwitch                       | Get                                 |                                                       |
+| Configuration                      | Set                                 | [ParamID: Number, Value: Number, Value Length: Number]|
+| Configuration                      | Get                                 | [ParamID: Number]                                     |
+| ColorSwitch                        | Set                                 | [**Color**: Object]                                   |
+| ColorSwitch                        | Get                                 | [**ColorComponent**: Enum]                            |
+| DoorLock                           | Set                                 | [**DoorLockMode**: Enum]                              |
+| DoorLock                           | Get                                 |                                                       |
+| EntryControl                       | SetConfiguration                    | [Key Cache Size: Number, Cache Timeout: Number]       |
+| EntryControl                       | GetConfiguration                    |                                                       |
+| EntryControl                       | GetSupportedKeys (see notes)        |                                                       |
+| Lock                               | Set                                 | [Bool]                                                |
+| Lock                               | Get                                 |                                                       |
+| Indicator                          | Set                                 | [Value: Number] \| [**Indicator**[]: Object]          |
+| Indicator                          | Get                                 | [Indicator: Number (Optional)]                        |
+| Meter                              | Get                                 | [**MeterOptions**: Object]                            |
+| Meter                              | GetAll                              |                                                       |
+| Meter                              | Reset                               | [**MeterResetOptions**: Object]                       |
+| MultiLevelSwitch                   | Set                                 | [Number, **Duration**: Object (Optional)]             |
+| MultiLevelSwitch                   | Get                                 |                                                       |
+| MultiLevelSensor                   | Get                                 |                                                       |
+| MultiLevelSensor                   | GetSupportedScales                  | [Sensor Type: Number]                                 |
+| MultiLevelSensor                   | GetSupportedSensorTypes             |                                                       |
+| Notification                       | SendReport                          | [**Event**: Object]                                   |
+| SoundSwitch                        | GetConfiguration                    |                                                       |
+| SoundSwitch                        | SetConfiguration                    | [Default Tone: Number, Default Volume: Number]        |
+| SoundSwitch                        | GetPlaying                          |                                                       |
+| SoundSwitch                        | GetToneCount                        |                                                       |
+| SoundSwitch                        | GetToneInfo                         | [Tone ID: Number]                                     |
+| SoundSwitch                        | Play                                | [Tone ID: Number, Volume: Number (Optional)]          |
+| SoundSwitch                        | Stop                                |                                                       |
+| ThermostatMode                     | Set                                 | [**ThermostatMode**: Enum]                            |
+| ThermostatMode                     | Get                                 |                                                       |
+| ThermostatSetPoint                 | Set                                 | [**SetPointType**: Enum, Value: Number, Scale: Number] |
+| ThermostatSetPoint                 | Get                                 | [**SetPointType**: Enum]                              | 
+| ThermostatOperatingState           | Get                                 |                                                       | 
+| ThermostatSetback                  | Set  (See Notes)                    | [**SetbackType**: Enum, Set Back State: String \| Number] | 
+| ThermostatSetback                  | Get                                 |                                                       | 
+| WakeInterval                       | Set (See Notes)                     | [Seconds: Number, Controller Node ID:Number]          |
+| WakeInterval                       | Get                                 |                                                       | 
 
 The aim of course is to expose them all.
 
@@ -141,6 +141,15 @@ Let Message = {
 }
 return Message
 ```
+
+## Depreciated Association and AssociationGroupInfo
+These class' and operations will be removed in a furture  
+Please see the [&#x1F517;Controller](./README.md) operations of:  
+  - GetAssociationGroups
+  - GetAssociations
+  - AddAssociations
+  - RemoveAssociations
+
 
 ## Notes on WakeInterval  
 When setting the interval, the **Controller Node ID** parameter will almost certainly be 1 - unless you have multiple controllers,
