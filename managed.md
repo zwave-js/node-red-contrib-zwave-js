@@ -143,7 +143,7 @@ return Message
 ```
 
 ## Deprecated Association and AssociationGroupInfo
-These class' and operations will be removed in a furture release  
+These class' and operations will be removed in a future release  
 Please see the [&#x1F517;Controller](./README.md) operations of:  
   - GetAssociationGroups
   - GetAssociations
