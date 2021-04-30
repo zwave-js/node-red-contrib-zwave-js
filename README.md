@@ -122,7 +122,9 @@ Accessing the UI, will provide you with most of the network management operation
 But, if you prefer, you can action them via a node message.  
   
 The **Controller** and **Driver** classes do not require a **node** ID.  
-However! Some Controller methods themself, actually need a Node ID as part of the required params.   
+However! Some Controller methods themself, actually need a Node ID as part of the required params.  
+
+Some Controller methods (namley Assocation methods) require an Object. These are detailed at the bottom.
 
 | class                     | operation                           | params                                                |
 | ------------------------- | ----------------------------------- | ----------------------------------------------------- |
@@ -138,8 +140,9 @@ However! Some Controller methods themself, actually need a Node ID as part of th
 | Controller                | GetNodes                            |                                                       |
 | Controller                | SetNodeName                         | [Node ID: Number, Node Name: String]                  |
 | Controller                | SetNodeLocation                     | [Node ID: Number, Node Location: String]              |
-| Controller                | GetAssociationGroups                | TODO                                                  |
-| Controller                | GetAssociations                     | TODO                                                  |
+| Controller                | GetAssociationGroups                | [**AssociationAddress**: Object]                          |
+| Controller                | GetAllAssociationGroups             | [Node ID: Number]                                     |
+| Controller                | GetAssociations                     | [**AssociationAddress**: Object]                          |
 | Controller                | AddAssociations                     | TODO                                                  |
 | Controller                | RemoveAssociations                  | TODO                                                  |
 | Driver                    | GetEnums                            |                                                       |
@@ -204,6 +207,15 @@ return Message
 ```
 
 **SOF**, **Total Length**, **REQ** & the **Serial API Checksum** will be provided for you.
+
+## Object Structures
+**AssociationAddress**
+```javascript
+{
+    nodeId: Number,
+    endpoint: Number (optional - defaults to 0)
+}
+```
 
 
 

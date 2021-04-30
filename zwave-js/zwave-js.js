@@ -75,7 +75,8 @@ module.exports = function (RED) {
 
             let FileTransportOptions = {
                 filename: Path.join(RED.settings.userDir, "zwave-js-log.txt"),
-                format: createDefaultTransportFormat(false, false)
+                format: createDefaultTransportFormat(false, false),
+                level: config.logLevel
             }
             if (config.logFile !== undefined && config.logFile.length > 0) {
                 FileTransportOptions.filename = config.logFile
@@ -184,6 +185,7 @@ module.exports = function (RED) {
 
             Log("info", "REDCTL", "", undefined, "Instantiating 'Driver' class", "(" + config.serialPort + ")")
             Driver = new ZWaveJS.Driver(config.serialPort, DriverOptions);
+
 
             if (config.sendUsageStatistics !== undefined && config.sendUsageStatistics) {
                 Log("info", "REDCTL", "", "[TELEMETRY]", "Enabling analytics reporting")
@@ -665,6 +667,18 @@ module.exports = function (RED) {
 
                     await Driver.sendMessage(ZWaveMessage, MessageSettings)
                     break;
+
+                case "GetAssociationGroups":
+                        Driver.controller.getAssociationGroups(Params[0])
+                        break;
+
+                case "GetAllAssociationGroups":
+                        Driver.controller.getAllAssociationGroups(Params[0])
+                        break;
+
+                case "GetAssociations":
+                        Driver.controller.getAssociations(Params[0])
+                        break;
             }
 
             return;
