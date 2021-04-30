@@ -103,6 +103,13 @@ Whatever your poison, the node will inject the following events, into your flow.
 | GET_VALUE_RESPONSE          | The source Node ID                  | Value & Value ID                | Response to GetValue              | 
 | GET_VALUE_METADATA_RESPONSE | The source Node ID                  | Metadata & Value ID             | Response to GetValueMetadata      | 
 | ENUM_LIST                   | "N/A"                               | All valid Enum Values           | Response to GetEnums              | 
+| ASSOCIATION_GROUPS          | The source Node ID                  | Association Group Info[]        | Response to GetAssociations       |  
+| ALL_ASSOCIATION_GROUPS      | The source Node ID                  | Association Group Info[]        | Response to GetAllAssociations    |  
+| ASSOCIATIONS                | The source Node ID                  | Configured Associations         | Response to GetAssociations       |  
+| ALL_ASSOCIATIONS            | The source Node ID                  | Configured Associations         | Response to GetAllAssociations    |  
+| ASSOCIATIONS_ADDED          | The source Node ID                  |                                 | Associations Were Added           |  
+| ASSOCIATIONS_REMOVED        | The source Node ID                  |                                 | Associations Were Removed         |  
+| ALL_ASSOCIATIONS_REMOVED    | The source Node ID                  |                                 | All Associations Were Removed     |  
 
 And such event(s) will look like this.
 
@@ -117,12 +124,14 @@ And such event(s) will look like this.
 }
 ```
 
-## Controller/Driver based operations
+## Controller/Driver and Association based operations
 Accessing the UI, will provide you with most of the network management operations.  
 But, if you prefer, you can action them via a node message.  
   
-The **Controller** and **Driver** classes do not require a **node** ID.  
-However! Some Controller methods themself, actually need a Node ID as part of the required params.   
+The **Controller**, **Driver** and **Associations** classes do not require a **node** ID.  
+However! Some Controller and Association methods themself, actually need a Node ID as part of the required params.  
+
+Some Association methods require an Object, these are detailed at the bottom.
 
 | class                     | operation                           | params                                                |
 | ------------------------- | ----------------------------------- | ----------------------------------------------------- |
@@ -138,6 +147,13 @@ However! Some Controller methods themself, actually need a Node ID as part of th
 | Controller                | GetNodes                            |                                                       |
 | Controller                | SetNodeName                         | [Node ID: Number, Node Name: String]                  |
 | Controller                | SetNodeLocation                     | [Node ID: Number, Node Location: String]              |
+| Associations              | GetAssociationGroups                | [**AssociationAddress**: Object]                      |
+| Associations              | GetAllAssociationGroups             | [Node ID: Number]                                     |
+| Associations              | GetAssociations                     | [**AssociationAddress**: Object]                      |
+| Associations              | GetAllAssociations                  | [Node ID: Number]                                     |
+| Associations              | AddAssociations                     | [**AssociationAddress**: Object, Group  ID: Number, **AssociationAddress**: Object[]] |
+| Associations              | RemoveAssociations                  | [**AssociationAddress**: Object, Group  ID: Number, **AssociationAddress**: Object[]] |
+| Associations              | RemoveNodeFromAllAssociations       | [Node ID: Number]                                     |
 | Driver                    | GetEnums                            |                                                       |
 
 To start an in-secure Inclusion, you will do.  
@@ -201,9 +217,26 @@ return Message
 
 **SOF**, **Total Length**, **REQ** & the **Serial API Checksum** will be provided for you.
 
+## Object Structures
+**AssociationAddress**
+```javascript
+{
+    nodeId: Number,
+    endpoint: Number (optional - defaults to 0)
+}
+```
+
 
 
 ## Version History  
+
+  - 3.3.0 **Deprecation Warnings**
+    - Bump Z-Wave JS
+    - Added new Association management methods via a new **Associations** class
+    - The Managed **Association** and **AssociationGroupInfo** classes are now marked for removal.
+    - Improvments/fixes to logger
+    - Fixed Some UI weirdness
+    - Improvments/fixes to Z-Wave Device Node
 
   - 3.2.4  
     - Fixed issue where ```null``` was being compared to ```undefined```

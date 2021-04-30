@@ -46,8 +46,8 @@ module.exports = function (RED) {
                 timestamp: new Date().toJSON(),
                 multiline: Array.isArray(msg)
             }
-            if (direction.length > 0) {
-                logEntry.direction = direction === "IN" ? "« " : "» "
+            if (direction !== undefined) {
+                logEntry.direction = (direction === "IN" ? "« " : "» ")
             }
 
             if (tag1 !== undefined) {
@@ -71,11 +71,12 @@ module.exports = function (RED) {
         // Create Logger (if enabled)
         if (config.logLevel !== "none") {
 
-            Logger = Winston.createLogger({ level: config.logLevel });
+            Logger = Winston.createLogger();
 
             let FileTransportOptions = {
                 filename: Path.join(RED.settings.userDir, "zwave-js-log.txt"),
-                format: createDefaultTransportFormat(false, false)
+                format: createDefaultTransportFormat(false, false),
+                level: config.logLevel
             }
             if (config.logFile !== undefined && config.logFile.length > 0) {
                 FileTransportOptions.filename = config.logFile
@@ -143,15 +144,15 @@ module.exports = function (RED) {
         // Timeout (Configurable via UI)
         DriverOptions.timeouts = {};
         if (config.ackTimeout !== undefined && config.ackTimeout.length > 0) {
-            Log("debug", "REDCTL", "", "[OPTIONS] [timeouts.ack]", config.ackTimeout)
+            Log("debug", "REDCTL", undefined, "[OPTIONS] [timeouts.ack]", config.ackTimeout)
             DriverOptions.timeouts.ack = parseInt(config.ackTimeout);
         }
         if (config.controllerTimeout !== undefined && config.controllerTimeout.length > 0) {
-            Log("debug", "REDCTL", "", "[OPTIONS] [timeouts.response] ", config.controllerTimeout)
+            Log("debug", "REDCTL", undefined, "[OPTIONS] [timeouts.response] ", config.controllerTimeout)
             DriverOptions.timeouts.response = parseInt(config.controllerTimeout);
         }
         if (config.sendResponseTimeout !== undefined && config.sendResponseTimeout.length > 0) {
-            Log("debug", "REDCTL", "", "[OPTIONS] [timeouts.report]", config.sendResponseTimeout)
+            Log("debug", "REDCTL", undefined, "[OPTIONS] [timeouts.report]", config.sendResponseTimeout)
             DriverOptions.timeouts.report = parseInt(config.sendResponseTimeout);
         }
 
@@ -166,14 +167,14 @@ module.exports = function (RED) {
                 _Buffer.push(parseInt(_Array[i].trim()));
             }
 
-            Log("debug", "REDCTL", "", "[OPTIONS] [networkKey]", "Provided as Number[]", "(" + _Buffer.length + " bytes)")
+            Log("debug", "REDCTL", undefined, "[OPTIONS] [networkKey]", "Provided as Number[]", "(" + _Buffer.length + " bytes)")
             DriverOptions.networkKey = Buffer.from(_Buffer);
             canDoSecure = true;
 
         }
         else if (config.encryptionKey !== undefined && config.encryptionKey.length > 0) {
 
-            Log("debug", "REDCTL", "", "[OPTIONS] [networkKey]", "Provided as String", "(" + config.encryptionKey.length + " characters)")
+            Log("debug", "REDCTL", undefined, "[OPTIONS] [networkKey]", "Provided as String", "(" + config.encryptionKey.length + " characters)")
             DriverOptions.networkKey = Buffer.from(config.encryptionKey);
             canDoSecure = true;
         }
@@ -182,20 +183,21 @@ module.exports = function (RED) {
 
         try {
 
-            Log("info", "REDCTL", "", undefined, "Instantiating 'Driver' class", "(" + config.serialPort + ")")
+            Log("info", "REDCTL", undefined, undefined, "Instantiating 'Driver' class", "(" + config.serialPort + ")")
             Driver = new ZWaveJS.Driver(config.serialPort, DriverOptions);
 
+
             if (config.sendUsageStatistics !== undefined && config.sendUsageStatistics) {
-                Log("info", "REDCTL", "", "[TELEMETRY]", "Enabling analytics reporting")
+                Log("info", "REDCTL", undefined, "[TELEMETRY]", "Enabling analytics reporting")
                 Driver.enableStatistics({ applicationName: ModulePackage.name, applicationVersion: ModulePackage.version })
             }
             else {
-                Log("info", "REDCTL", "", "[TELEMETRY]", "Disabling analytics reporting")
+                Log("info", "REDCTL", undefined, "[TELEMETRY]", "Disabling analytics reporting")
                 Driver.disableStatistics();
             }
         }
         catch (e) {
-            Log("error", "REDCTL", "", "[ERROR] [INIT]", "Instantiating 'Driver' failed: " + e.message)
+            Log("error", "REDCTL", undefined, "[ERROR] [INIT]", "Instantiating 'Driver' failed: " + e.message)
             node.error(e);
             return;
         }
@@ -203,7 +205,7 @@ module.exports = function (RED) {
         UI.register(Driver, Input)
 
         Driver.on("error", (e) => {
-            Log("error", "REDCTL", "", "[ERROR] [EVENT]", "'Driver' threw: " + e.message)
+            Log("error", "REDCTL", undefined, "[ERROR] [EVENT]", "'Driver' threw: " + e.message)
             node.error(e);
         });
 
@@ -262,7 +264,7 @@ module.exports = function (RED) {
 
         node.on('close', (done) => {
 
-            Log("info", "REDCTL", "", undefined, "Cleaning up")
+            Log("info", "REDCTL", undefined, undefined, "Cleaning up")
 
             UI.unregister(Driver.controller.homeId)
             Driver.destroy();
@@ -368,6 +370,10 @@ module.exports = function (RED) {
                         await DriverCMD(msg, send);
                         break;
 
+                    case "Associations":
+                        await Associations(msg, send);
+                        break;
+
                     default:
                         await NodeFunction(msg, send);
                         break;
@@ -378,7 +384,7 @@ module.exports = function (RED) {
                 }
             }
             catch (er) {
-                Log("error", "REDCTL", "", "[ERROR] [INPUT]", "Could not process payload: " + er.message)
+                Log("error", "REDCTL", undefined, "[ERROR] [INPUT]", "Could not process payload: " + er.message)
                 if (done) {
                     done(er);
                 }
@@ -388,17 +394,21 @@ module.exports = function (RED) {
             }
         };
 
-        function NodeCheck(ID) {
+        function NodeCheck(ID, SkipReady) {
 
             if (Driver.controller.nodes.get(ID) === undefined) {
                 let ErrorMSG = "Node " + ID + " does not exist.";
                 throw new Error(ErrorMSG);
             }
 
-            if (!Driver.controller.nodes.get(ID).ready) {
-                let ErrorMSG = "Node " + ID + " is not yet ready, to receive commands.";
-                throw new Error(ErrorMSG);
+            if(!SkipReady){
+
+                if (!Driver.controller.nodes.get(ID).ready) {
+                    let ErrorMSG = "Node " + ID + " is not yet ready, to receive commands.";
+                    throw new Error(ErrorMSG);
+                }
             }
+           
         }
 
         // Node
@@ -456,17 +466,17 @@ module.exports = function (RED) {
 
             let ZWJSC = Driver.controller.nodes.get(Node).getEndpoint(EP).commandClasses[Map.MapsToClass];
 
-            Log("debug", "REDCTL", "", "[MAP]", "Class: " + Class + "=" + Map.MapsToClass + ", Operation: " + Operation + "=" + Func.MapsToFunc)
+            Log("debug", "REDCTL", undefined, "[MAP]", "Class: " + Class + "=" + Map.MapsToClass + ", Operation: " + Operation + "=" + Func.MapsToFunc)
 
             if (Func.hasOwnProperty("ResponseThroughEvent") && !Func.ResponseThroughEvent) {
 
-                Log("debug", "REDCTL", "", "[MAP]", "Will wait for result")
+                Log("debug", "REDCTL", undefined, "[MAP]", "Will wait for result")
 
                 let Result = await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
                 Send(ReturnNode, "VALUE_UPDATED", Result, send)
             }
             else {
-                Log("debug", "REDCTL", "", "[MAP]", "Result will be delivered via an event")
+                Log("debug", "REDCTL", undefined, "[MAP]", "Result will be delivered via an event")
                 await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
             }
 
@@ -593,7 +603,7 @@ module.exports = function (RED) {
 
                 case "InterviewNode":
                     Params[0] = +Params[0]
-                    NodeCheck(Params[0]);
+                    NodeCheck(Params[0], true);
                     let Stage = Enums.InterviewStage[Driver.controller.nodes.get(Params[0]).interviewStage];
                     if (Stage !== "Complete") {
                         let ErrorMSG = "Node " + Params[0] + " is already being interviewed. Current Interview Stage : " + Stage + "";
@@ -664,6 +674,132 @@ module.exports = function (RED) {
                     }
 
                     await Driver.sendMessage(ZWaveMessage, MessageSettings)
+                    break;
+
+             
+            }
+
+            return;
+        }
+
+      
+
+        // Association
+        async function Associations(msg, send)
+        {
+            let Operation = msg.payload.operation
+            let Params = msg.payload.params;
+
+            let ReturnNode = { id: "" };
+            switch(Operation)
+            {
+                case "GetAssociationGroups":
+                    NodeCheck(Params[0].nodeId);
+                    var ResultData = Driver.controller.getAssociationGroups(Params[0])
+                    var PL = []
+                    ResultData.forEach((FV,FK) =>{
+                        let A = {
+                            GroupID:FK,
+                            AssociationGroupInfo:FV
+                        }
+                        PL.push(A);
+                    })
+
+                    ReturnNode.id = Params[0].nodeId
+                    Send(ReturnNode,"ASSOCIATION_GROUPS",{SourceAddress:Params[0],Groups:PL},send)
+                    break;
+
+                case "GetAllAssociationGroups":
+                    NodeCheck(Params[0]);
+                    var ResultData = Driver.controller.getAllAssociationGroups(Params[0])
+                    var PL = [];
+                    ResultData.forEach((FV,FK) =>{
+                        let A = {
+                            Endpoint:FK,
+                            Groups:[]
+                        }
+                        FV.forEach((SV, SK) =>{
+                            let B = {
+                                GroupID:SK,
+                                AssociationGroupInfo:SV
+                            }
+                            A.Groups.push(B)
+                        })
+                        PL.push(A);
+                    })
+
+                    ReturnNode.id = Params[0]
+                    Send(ReturnNode,"ALL_ASSOCIATION_GROUPS",PL,send)
+                    break;
+
+                case "GetAssociations":
+                    NodeCheck(Params[0].nodeId);
+                    var ResultData = Driver.controller.getAssociations(Params[0])
+                    var PL = []
+                    ResultData.forEach((FV, FK) =>{
+                        let A = {
+                            GroupID:FK,
+                            AssociationAddress:[]
+                        }
+                        FV.forEach((AA) =>{
+                            A.AssociationAddress.push(AA);
+                        });
+
+                        PL.push(A)
+                    })
+
+                    ReturnNode.id = Params[0].nodeId
+                    Send(ReturnNode,"ASSOCIATIONS",{SourceAddress:Params[0],Associations:PL},send)
+                    break;
+
+                case "GetAllAssociations":
+                    NodeCheck(Params[0]);
+                    var ResultData = Driver.controller.getAllAssociations(Params[0]);
+                    var PL = []
+                    ResultData.forEach((FV, FK) =>{
+                        let A = {
+                            AssociationAddress:FK,
+                            Associations:[]
+                        }
+                        FV.forEach((SV, SK) => {
+                            let B = {
+                                GroupID: SK,
+                                AssociationAddress: SV
+                            }
+                            A.Associations.push(B)
+                        });
+                        PL.push(A)
+                    })
+
+                    ReturnNode.id = Params[0]
+                    Send(ReturnNode,"ALL_ASSOCIATIONS",PL,send)
+                    break;
+
+                case "AddAssociations":
+                    NodeCheck(Params[0].nodeId);
+                    Params[2].forEach((A) =>{
+                        if(!Driver.controller.isAssociationAllowed(Params[0], Params[1], A)){
+                            let ErrorMSG = "Association: Source "+JSON.stringify(Params[0]); +", Group "+Params[1]+", Destination "+SON.stringify(A)+" is not allowed."
+                            throw new Error(ErrorMSG);
+                        }
+                    })
+                    await Driver.controller.addAssociations(Params[0], Params[1], Params[2])
+                    ReturnNode.id = Params[0].nodeId
+                    Send(ReturnNode,"ASSOCIATIONS_ADDED",undefined,send)
+                    break;
+            
+                case "RemoveAssociations":
+                    NodeCheck(Params[0].nodeId);
+                    await Driver.controller.removeAssociations(Params[0], Params[1], Params[2])
+                    ReturnNode.id = Params[0].nodeId
+                    Send(ReturnNode,"ASSOCIATIONS_REMOVED",undefined,send)
+                    break;
+
+                case "RemoveNodeFromAllAssociations":
+                    NodeCheck(Params[0]);
+                    await Driver.controller.removeNodeFromAllAssociations(Params[0])
+                    ReturnNode.id = Params[0]
+                    Send(ReturnNode,"ALL_ASSOCIATIONS_REMOVED",undefined,send)
                     break;
             }
 
@@ -747,8 +883,26 @@ module.exports = function (RED) {
                 node.send({ "payload": PL });
             }
 
-            // Allow passing event to filter nodes
-            if (Node.id !== "Controller" && Node.id !== "N/A" ) {
+            let DisallowedSubjectsForDNs = [
+                "INCLUSION_STARTED",
+                "INCLUSION_STOPPED",
+                "EXCLUSION_STARTED",
+                "EXCLUSION_STOPPED",
+                "NETWORK_HEAL_STARTED",
+                "NETWORK_HEAL_STOPPED",
+                "NETWORK_HEAL_DONE",
+                "NODE_LIST",
+                "CONTROLLER_RESET_COMPLETE",
+                "ASSOCIATION_GROUPS",
+                "ALL_ASSOCIATION_GROUPS",
+                "ASSOCIATIONS",
+                "ALL_ASSOCIATIONS",
+                "ASSOCIATIONS_ADDED",
+                "ASSOCIATIONS_REMOVED",
+                "ALL_ASSOCIATIONS_REMOVED",
+            ]
+
+            if (!DisallowedSubjectsForDNs.includes(Subject)) {
                 RED.events.emit("zwjs:node:event:" + Node.id, { "payload": PL })
             }
         }
@@ -784,10 +938,10 @@ module.exports = function (RED) {
 
         }
 
-        Log("info", "REDCTL", "", undefined, "Starting 'Driver'")
+        Log("info", "REDCTL", undefined, undefined, "Starting 'Driver'")
         Driver.start()
             .catch((e) => {
-                Log("error", "REDCTL", "", "[ERROR] [START]", "'Driver' threw: " + e.message)
+                Log("error", "REDCTL", undefined, "[ERROR] [START]", "'Driver' threw: " + e.message)
                 node.error(e);
 
             })
