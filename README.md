@@ -117,12 +117,12 @@ And such event(s) will look like this.
 }
 ```
 
-## Controller/Driver based operations
+## Controller/Driver and Association based operations
 Accessing the UI, will provide you with most of the network management operations.  
 But, if you prefer, you can action them via a node message.  
   
 The **Controller**, **Driver** and **Association** classes do not require a **node** ID.  
-However! Some Controller methods themself, actually need a Node ID as part of the required params.  
+However! Some Controller and Association methods themself, actually need a Node ID as part of the required params.  
 
 Some Association methods require an Object, these are detailed at the bottom.
 
@@ -225,7 +225,7 @@ return Message
 
   - 3.3.0 **Deprecation Warnings**
     - Bump Z-Wave JS
-    - Added new Association managment methods via the **Controller** class
+    - Added new Association managment methods via the **Association** class
     - **Association** and **AssociationGroupInfo** classes are now marked for removal.
     - Improvments/fixes to logging platform.
 
