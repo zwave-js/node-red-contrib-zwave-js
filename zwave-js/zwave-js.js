@@ -866,8 +866,26 @@ module.exports = function (RED) {
                 node.send({ "payload": PL });
             }
 
-            // Allow passing event to filter nodes
-            if (Node.id !== "Controller" && Node.id !== "N/A" ) {
+            let DisallowedSubjectsEventing = [
+                "INCLUSION_STARTED",
+                "INCLUSION_STOPPED",
+                "EXCLUSION_STARTED",
+                "EXCLUSION_STOPPED",
+                "NETWORK_HEAL_STARTED",
+                "NETWORK_HEAL_STOPPED",
+                "NETWORK_HEAL_DONE",
+                "NODE_LIST",
+                "CONTROLLER_RESET_COMPLETE",
+                "ASSOCIATION_GROUPS",
+                "ALL_ASSOCIATION_GROUPS",
+                "ASSOCIATIONS",
+                "ALL_ASSOCIATIONS",
+                "ASSOCIATIONS_ADDED",
+                "ASSOCIATIONS_REMOVED",
+                "ALL_ASSOCIATIONS_REMOVED",
+            ]
+
+            if (DisallowedSubjectsEventing.includes(Subject)) {
                 RED.events.emit("zwjs:node:event:" + Node.id, { "payload": PL })
             }
         }

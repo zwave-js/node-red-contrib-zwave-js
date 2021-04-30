@@ -228,7 +228,8 @@ return Message
     - Added new Association management methods via a new **Associations** class
     - The Managed **Association** and **AssociationGroupInfo** classes are now marked for removal.
     - Improvments/fixes to logger
-    - Fixed Some UI weirdness 
+    - Fixed Some UI weirdness
+    - Improvments/fixes to Z-Wave Device Node
 
   - 3.2.4  
     - Fixed issue where ```null``` was being compared to ```undefined```
