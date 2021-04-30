@@ -140,13 +140,13 @@ Some Association methods require an Object, these are detailed at the bottom.
 | Controller                | GetNodes                            |                                                       |
 | Controller                | SetNodeName                         | [Node ID: Number, Node Name: String]                  |
 | Controller                | SetNodeLocation                     | [Node ID: Number, Node Location: String]              |
-| Association               | GetAssociationGroups                | [**AssociationAddress**: Object]                      |
-| Association               | GetAllAssociationGroups             | [Node ID: Number]                                     |
-| Association               | GetAssociations                     | [**AssociationAddress**: Object]                      |
-| Association               | GetAllAssociations                  | [Node ID: Number]                                     |
-| Association               | AddAssociations                     | [**AssociationAddress**: Object, Group  ID: Number, **AssociationAddress**: Object[]] |
-| Association               | RemoveAssociations                  | [**AssociationAddress**: Object, Group  ID: Number, **AssociationAddress**: Object[]] |
-| Association               | RemoveNodeFromAllAssociations       | [Node ID: Number]                                     |
+| Associations              | GetAssociationGroups                | [**AssociationAddress**: Object]                      |
+| Associations              | GetAllAssociationGroups             | [Node ID: Number]                                     |
+| Associations              | GetAssociations                     | [**AssociationAddress**: Object]                      |
+| Associations              | GetAllAssociations                  | [Node ID: Number]                                     |
+| Associations              | AddAssociations                     | [**AssociationAddress**: Object, Group  ID: Number, **AssociationAddress**: Object[]] |
+| Associations              | RemoveAssociations                  | [**AssociationAddress**: Object, Group  ID: Number, **AssociationAddress**: Object[]] |
+| Associations              | RemoveNodeFromAllAssociations       | [Node ID: Number]                                     |
 | Driver                    | GetEnums                            |                                                       |
 
 To start an in-secure Inclusion, you will do.  
@@ -225,9 +225,10 @@ return Message
 
   - 3.3.0 **Deprecation Warnings**
     - Bump Z-Wave JS
-    - Added new Association managment methods via the **Association** class
-    - **Association** and **AssociationGroupInfo** classes are now marked for removal.
-    - Improvments/fixes to logging platform.
+    - Added new Association management methods via a new **Associations** class
+    - The Managed **Association** and **AssociationGroupInfo** classes are now marked for removal.
+    - Improvments/fixes to logger
+    - Fixed Some UI weirdness 
 
   - 3.2.4  
     - Fixed issue where ```null``` was being compared to ```undefined```

@@ -144,7 +144,7 @@ return Message
 
 ## Deprecated Association and AssociationGroupInfo
 These class' and operations will be removed in a future release  
-Please see the [&#x1F517;Association](./README.md#controllerdriver-and-association-based-operations) operations of:  
+Please see the [&#x1F517;Associations](./README.md#controllerdriver-and-association-based-operations) class of operations:  
   - GetAssociationGroups
   - GetAllAssociationGroups
   - GetAssociations

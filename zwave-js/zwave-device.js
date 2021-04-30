@@ -23,9 +23,9 @@ module.exports = function (RED) {
         node.on('input', Input);
         async function Input(msg, send, done) {
 
-            if(msg.payload.class === "Controller" || msg.payload.class === "Driver"){
+            if(msg.payload.class === "Controller" || msg.payload.class === "Driver" || msg.payload.class === "Associations"){
 
-                let ErrorMSG = "Controller and Driver commands must be sent directly to the Controller Node.";
+                let ErrorMSG = "Controller, Driver and Association commands must be sent directly to the Controller Node.";
                 let Err =  new Error(ErrorMSG);
 
                 if (done) {
