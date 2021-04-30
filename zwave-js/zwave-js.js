@@ -394,17 +394,21 @@ module.exports = function (RED) {
             }
         };
 
-        function NodeCheck(ID) {
+        function NodeCheck(ID, SkipReady) {
 
             if (Driver.controller.nodes.get(ID) === undefined) {
                 let ErrorMSG = "Node " + ID + " does not exist.";
                 throw new Error(ErrorMSG);
             }
 
-            if (!Driver.controller.nodes.get(ID).ready) {
-                let ErrorMSG = "Node " + ID + " is not yet ready, to receive commands.";
-                throw new Error(ErrorMSG);
+            if(!SkipReady){
+
+                if (!Driver.controller.nodes.get(ID).ready) {
+                    let ErrorMSG = "Node " + ID + " is not yet ready, to receive commands.";
+                    throw new Error(ErrorMSG);
+                }
             }
+           
         }
 
         // Node
@@ -599,7 +603,7 @@ module.exports = function (RED) {
 
                 case "InterviewNode":
                     Params[0] = +Params[0]
-                    NodeCheck(Params[0]);
+                    NodeCheck(Params[0], true);
                     let Stage = Enums.InterviewStage[Driver.controller.nodes.get(Params[0]).interviewStage];
                     if (Stage !== "Complete") {
                         let ErrorMSG = "Node " + Params[0] + " is already being interviewed. Current Interview Stage : " + Stage + "";
@@ -678,16 +682,7 @@ module.exports = function (RED) {
             return;
         }
 
-        function replacer(key, value) {
-            if(value instanceof Map) {
-              return {
-                dataType: 'Map',
-                value: Array.from(value.entries()), // or with spread: value: [...value]
-              };
-            } else {
-              return value;
-            }
-          }
+      
 
         // Association
         async function Associations(msg, send)
@@ -702,6 +697,7 @@ module.exports = function (RED) {
             switch(Operation)
             {
                 case "GetAssociationGroups":
+                    //////
                     Result.associationAddress = Params[0]
                     Result.groups =  Driver.controller.getAssociationGroups(Params[0]);
                     ReturnNode.id = Params[0].nodeId
@@ -709,6 +705,7 @@ module.exports = function (RED) {
                     break;
 
                 case "GetAllAssociationGroups":
+                    NodeCheck(Params[0]);
                     var ResultData = Driver.controller.getAllAssociationGroups(Params[0])
                     var PL = [];
                     ResultData.forEach((FV,FK) =>{
@@ -731,6 +728,7 @@ module.exports = function (RED) {
                     break;
 
                 case "GetAssociations":
+                    ///////
                     Result.associationAddress = Params[0]
                     Result.associations = Driver.controller.getAssociations(Params[0])
                     ReturnNode.id = Params[0].nodeId
@@ -738,7 +736,7 @@ module.exports = function (RED) {
                     break;
 
                 case "GetAllAssociations":
-
+                    NodeCheck(Params[0]);
                     var ResultData = Driver.controller.getAllAssociations(Params[0]);
                     var PL = []
                     ResultData.forEach((FV, FK) =>{
@@ -761,6 +759,7 @@ module.exports = function (RED) {
                     break;
 
                 case "AddAssociations":
+                    NodeCheck(Params[0].nodeId);
                     Params[2].forEach((A) =>{
                         if(!Driver.controller.isAssociationAllowed(Params[0], Params[1], A)){
                             let ErrorMSG = "Association: Source "+JSON.stringify(Params[0]); +", Group "+Params[1]+", Destination "+SON.stringify(A)+" is not allowed."
@@ -773,12 +772,14 @@ module.exports = function (RED) {
                     break;
             
                 case "RemoveAssociations":
+                    NodeCheck(Params[0].nodeId);
                     await Driver.controller.removeAssociations(Params[0], Params[1], Params[2])
                     ReturnNode.id = Params[0].nodeId
                     Send(ReturnNode,"ASSOCIATIONS_REMOVED",undefined,send)
                     break;
 
                 case "RemoveNodeFromAllAssociations":
+                    NodeCheck(Params[0]);
                     await Driver.controller.removeNodeFromAllAssociations(Params[0])
                     ReturnNode.id = Params[0]
                     Send(ReturnNode,"ALL_ASSOCIATIONS_REMOVED",undefined,send)
