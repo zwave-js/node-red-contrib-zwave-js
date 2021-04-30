@@ -885,7 +885,7 @@ module.exports = function (RED) {
                 "ALL_ASSOCIATIONS_REMOVED",
             ]
 
-            if (DisallowedSubjectsEventing.includes(Subject)) {
+            if (!DisallowedSubjectsEventing.includes(Subject)) {
                 RED.events.emit("zwjs:node:event:" + Node.id, { "payload": PL })
             }
         }
