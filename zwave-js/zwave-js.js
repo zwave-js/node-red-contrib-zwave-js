@@ -883,7 +883,7 @@ module.exports = function (RED) {
                 node.send({ "payload": PL });
             }
 
-            let DisallowedSubjectsEventing = [
+            let DisallowedSubjectsForDNs = [
                 "INCLUSION_STARTED",
                 "INCLUSION_STOPPED",
                 "EXCLUSION_STARTED",
@@ -902,7 +902,7 @@ module.exports = function (RED) {
                 "ALL_ASSOCIATIONS_REMOVED",
             ]
 
-            if (!DisallowedSubjectsEventing.includes(Subject)) {
+            if (!DisallowedSubjectsForDNs.includes(Subject)) {
                 RED.events.emit("zwjs:node:event:" + Node.id, { "payload": PL })
             }
         }
