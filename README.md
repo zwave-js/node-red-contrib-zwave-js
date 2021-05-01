@@ -230,6 +230,12 @@ return Message
 
 ## Version History  
 
+  - 3.3.1
+    - Added the ability to receive updated values after setting them  
+      for devices that do not report the updated value.  
+      this is only needed for **Managed** mode, as the Value API does exactly this.
+    - Added Controller status to the Controller node.
+
   - 3.3.0 **Deprecation Warnings**
     - Bump Z-Wave JS
     - Added new Association management methods via a new **Associations** class
