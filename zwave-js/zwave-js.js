@@ -223,6 +223,7 @@ module.exports = function (RED) {
 
         Driver.on("all nodes ready", () => {
             node.status({ fill: "green", shape: "dot", text: "All Nodes Ready!" });
+            AllNodesReady = true;
         })
 
         Driver.once("driver ready", () => {
@@ -295,28 +296,22 @@ module.exports = function (RED) {
                 let Skipped = []
 
                 P.forEach((V,K) =>{
-                    switch(K){
-
+                    switch(V){
                         case "pending":
-                            Pending.push(V)
+                            Pending.push(K)
                             break
-
                         case "done":
-                            Done.push(V)
+                            Done.push(K)
                             break
-
                         case "failed":
-                            Failed.push(V)
+                            Failed.push(K)
                             break
-
                         case "skipped":
-                            Skipped.push(V)
+                            Skipped.push(K)
                             break
                     }
-
                 })
-
-                node.status({ fill: "yellow", shape: "dot", text: "Healing Network Pending:["+Pending+"], Done:["+Done+"], Skipped:["+Skipped+"], Failed:["+Failed+"]"});
+                node.status({ fill: "yellow", shape: "dot", text: "Healing Network Pending:["+Pending.toString()+"], Done:["+Done.toString()+"], Skipped:["+Skipped.toString()+"], Failed:["+Failed.toString()+"]"});
             })
 
             ShareNodeList();
@@ -404,14 +399,14 @@ module.exports = function (RED) {
 
             Node.on("interview completed", (N) => {
                 Send(N, "INTERVIEW_COMPLETE");
-                node.status({ fill: "green", shape: "dot", text: "Node: "+N.id+" interview completed."});
+                node.status({ fill: "green", shape: "dot", text: "Node: "+N.id+" Interview Completed."});
                 RestoreReadyStatus();
 
             })
 
             Node.on("interview failed", (N, Er) => {
                 Send(N, "INTERVIEW_FAILED", Er);
-                node.status({ fill: "red", shape: "dot", text: "Node: "+N.id+" interview failed."});
+                node.status({ fill: "red", shape: "dot", text: "Node: "+N.id+" Interview Failed."});
                 RestoreReadyStatus();
             })
         }
@@ -488,7 +483,7 @@ module.exports = function (RED) {
             let Class = msg.payload.class;
             let Node = msg.payload.node
             var Params = msg.payload.params || [];
-            let ForceUpdate = msg.payload.forceUpdateOn;
+            let ForceUpdateOn = msg.payload.forceUpdateOn;
 
             let ReturnNode = { id: Node };
 
@@ -551,15 +546,15 @@ module.exports = function (RED) {
                 await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
             }
 
-            if(ForceUpdate !== undefined){
+            if(ForceUpdateOn !== undefined){
 
                 let VID = {
                     commandClass:Map.MapsToClass,
                     endpoint:EP,
-                    property:ForceUpdate.property,
+                    property:ForceUpdateOn.property,
                 }
-                if(ForceUpdate.propertyKey !== undefined){
-                    VID.propertyKey = ForceUpdate.propertyKey
+                if(ForceUpdateOn.propertyKey !== undefined){
+                    VID.propertyKey = ForceUpdateOn.propertyKey
                 }
 
                 Log("debug", "REDCTL", "OUT", "[FORCE-UPDATE]", printForceUpdate(Node, VID))
