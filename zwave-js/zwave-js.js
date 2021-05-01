@@ -486,12 +486,14 @@ module.exports = function (RED) {
                     commandClass:Map.MapsToClass,
                     endpoint:EP,
                     property:ForceUpdate.property,
-                    propertyKey:ForceUpdate.propertyKey
+                }
+                if(ForceUpdate.propertyKey !== undefined){
+                    VID.propertyKey = ForceUpdate.propertyKey
                 }
 
                 Log("debug", "REDCTL", "OUT", "[FORCE-UPDATE]", printForceUpdate(Node, VID))
 
-                Driver.controller.nodes.get(Node).pollValue(VID)
+                await Driver.controller.nodes.get(Node).pollValue(VID)
             }
 
             return;
