@@ -230,27 +230,43 @@ module.exports = function (RED) {
                 Send(N, "NODE_REMOVED")
             })
 
-            // Include, Exclude Started
+            // Include
             Driver.controller.on("inclusion started", (Secure) => {
                 Send(ReturnController, "INCLUSION_STARTED", { isSecureInclude: Secure })
+                node.status({ fill: "yellow", shape: "dot", text: "Inclusion Started. Secure: "+Secure });
             })
 
-            Driver.controller.on("exclusion started", () => {
-                Send(ReturnController, "EXCLUSION_STARTED")
+            Driver.controller.on("inclusion failed", () => {
+                Send(ReturnController, "INCLUSION_FAILED")
+                node.status({ fill: "red", shape: "dot", text: "Inclusion Failed."});
             })
 
-            // Include, Exclude Stopped
             Driver.controller.on("inclusion stopped", () => {
                 Send(ReturnController, "INCLUSION_STOPPED")
+                node.status({ fill: "green", shape: "dot", text: "Inclusion Stopped."});
             })
+
+            // Exclusion
+            Driver.controller.on("exclusion started", () => {
+                Send(ReturnController, "EXCLUSION_STARTED")
+                node.status({ fill: "yellow", shape: "dot", text: "Exclusion Started."});
+            })
+
+            Driver.controller.on("exclusion failed", () => {
+                Send(ReturnController, "EXCLUSION_FAILED")
+                node.status({ fill: "red", shape: "dot", text: "Exclusion Failed."});
+            })
+          
 
             Driver.controller.on("exclusion stopped", () => {
                 Send(ReturnController, "EXCLUSION_STOPPED")
+                node.status({ fill: "green", shape: "dot", text: "Exclusion Stopped."});
             })
 
             // Network Heal
             Driver.controller.on("heal network done", () => {
                 Send(ReturnController, "NETWORK_HEAL_DONE")
+                node.status({ fill: "green", shape: "dot", text: "Network Heal Done."});
             })
 
             ShareNodeList();
@@ -640,11 +656,13 @@ module.exports = function (RED) {
                 case "StartHealNetwork":
                     await Driver.controller.beginHealingNetwork();
                     Send(ReturnController, "NETWORK_HEAL_STARTED", undefined, send)
+                    node.status({ fill: "yellow", shape: "dot", text: "Network Heal Started."});
                     break;
 
                 case "StopHealNetwork":
                     await Driver.controller.stopHealingNetwork();
                     Send(ReturnController, "NETWORK_HEAL_STOPPED", undefined, send)
+                    node.status({ fill: "blue", shape: "dot", text: "Network Heal Stopped."});
                     break;
 
                 case "RemoveFailedNode":
