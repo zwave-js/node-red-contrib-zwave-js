@@ -231,9 +231,24 @@ return Message
 ## Version History  
 
   - 3.3.1
-    - Added the ability to receive updated values after setting them  
-      for devices that do not report the updated value.  
-      this is only needed for **Managed** mode, as the Value API does exactly this.
+    - Added the ability to receive updated values after setting them by  
+      specifying a **forceUpdateOn** object for devices that do not report the updated value.  
+      This is only needed for **Managed** mode, as the Value API does exactly this.  
+      ```javascript
+      let Message = {
+          payload: {
+              node: 27
+              class: "BinarySwitch",
+              operation: "Set",
+              endpoint:2,
+              forceUpdateOn: {
+                 property: "currentValue"
+              },
+              params: [true]
+          }
+      }
+      return Message;
+      ```
     - Added Controller status to the Controller node.
 
   - 3.3.0 **Deprecation Warnings**
