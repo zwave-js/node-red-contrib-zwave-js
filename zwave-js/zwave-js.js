@@ -37,7 +37,6 @@ module.exports = function (RED) {
     const Log = function (level, label, direction, tag1, msg, tag2) {
 
         if (Logger !== undefined) {
-
             let logEntry = {
                 direction: "  ",
                 message: msg,
@@ -49,11 +48,9 @@ module.exports = function (RED) {
             if (direction !== undefined) {
                 logEntry.direction = (direction === "IN" ? "« " : "» ")
             }
-
             if (tag1 !== undefined) {
                 logEntry.primaryTags = tag1
             }
-
             if (tag2 !== undefined) {
                 logEntry.secondaryTags = tag2
             }
@@ -63,14 +60,14 @@ module.exports = function (RED) {
 
     function Init(config) {
 
+        RED.nodes.createNode(this, config);
         const node = this;
         let canDoSecure = false;
         const NodesReady = [];
-        RED.nodes.createNode(this, config);
         let AllNodesReady = false;
+        var Driver;
 
-        function RestoreReadyStatus()
-        {
+        function RestoreReadyStatus(){
             setTimeout(()=>{
                 if(AllNodesReady){
                     node.status({ fill: "green", shape: "dot", text: "All Nodes Ready!" });
@@ -143,7 +140,6 @@ module.exports = function (RED) {
                 })
                 DriverOptions.logConfig.nodeFilter = NodesArray;
             }
-
             DriverOptions.logConfig.transports = [FileTransport]
         }
         else {
@@ -169,7 +165,6 @@ module.exports = function (RED) {
             DriverOptions.timeouts.report = parseInt(config.sendResponseTimeout);
         }
 
-
         if (config.encryptionKey !== undefined && config.encryptionKey.length > 0 && config.encryptionKey.startsWith('[') && config.encryptionKey.endsWith(']')) {
 
             let RemoveBrackets = config.encryptionKey.replace("[", "").replace("]", "");
@@ -183,7 +178,6 @@ module.exports = function (RED) {
             Log("debug", "REDCTL", undefined, "[OPTIONS] [networkKey]", "Provided as Number[]", "(" + _Buffer.length + " bytes)")
             DriverOptions.networkKey = Buffer.from(_Buffer);
             canDoSecure = true;
-
         }
         else if (config.encryptionKey !== undefined && config.encryptionKey.length > 0) {
 
@@ -191,8 +185,6 @@ module.exports = function (RED) {
             DriverOptions.networkKey = Buffer.from(config.encryptionKey);
             canDoSecure = true;
         }
-
-        var Driver;
 
         try {
 
@@ -352,7 +344,6 @@ module.exports = function (RED) {
 
         function WireNodeEvents(Node) {
 
-
             Node.on("ready", (N) => {
 
                 if (N.isControllerNode()) {
@@ -362,8 +353,6 @@ module.exports = function (RED) {
                 if (NodesReady.indexOf(N.id) < 0) {
                     NodesReady.push(N.id);
                     node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
-
-
                     RED.events.emit("zwjs:node:ready:" + N.id);
                 }
 
@@ -394,7 +383,6 @@ module.exports = function (RED) {
                 Node.on("sleep", (N) => {
                     Send(N, "SLEEP");
                 })
-
             })
 
             Node.on("interview completed", (N) => {
@@ -412,6 +400,7 @@ module.exports = function (RED) {
         }
 
         async function Input(msg, send, done, internal) {
+
             try {
 
                 let Node = msg.payload.node || "N/A"
@@ -420,7 +409,6 @@ module.exports = function (RED) {
                 let Params = msg.payload.params || []
 
                 Log("debug", "REDCTL", "IN", "[ORIG: " + (internal ? "EVENT" : "DIRECT") + "] [NDE: " + Node + "]", printParams(Class, Operation, Params))
-
 
                 switch (Class) {
                     case "Controller":
@@ -558,7 +546,6 @@ module.exports = function (RED) {
                 }
 
                 Log("debug", "REDCTL", "OUT", "[FORCE-UPDATE]", printForceUpdate(Node, VID))
-
                 await Driver.controller.nodes.get(Node).pollValue(VID)
             }
 
@@ -634,7 +621,6 @@ module.exports = function (RED) {
                 case "GetNodes":
                     let Nodes = [];
                     Driver.controller.nodes.forEach((N, NI) => {
-
                         Nodes.push({
                             nodeId: N.id,
                             name: N.name,
@@ -663,7 +649,6 @@ module.exports = function (RED) {
                             isControllerNode: N.isControllerNode(),
                             supportsBeaming: N.supportsBeaming
                         })
-
                     });
                     Send(ReturnController, "NODE_LIST", Nodes, send);
                     break;
@@ -1012,8 +997,6 @@ module.exports = function (RED) {
 
         // Duration Fix
         function ProcessDurationClass(Class, Operation, Params) {
-
-
             if (Params.length > 0) {
                 for (let i = 0; i < Params.length; i++) {
                     if (typeof Params[i] === "object") {
@@ -1027,7 +1010,6 @@ module.exports = function (RED) {
                         }
                     }
                 }
-
             }
             return Params;
         }
@@ -1070,6 +1052,5 @@ module.exports = function (RED) {
                 RED.log.error('Error listing serial ports', err)
                 res.json([]);
             })
-
     });
 }
