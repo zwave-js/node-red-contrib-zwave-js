@@ -237,7 +237,7 @@ return Message
       ```javascript
       let Message = {
           payload: {
-              node: 27
+              node: 27,
               class: "BinarySwitch",
               operation: "Set",
               endpoint:2,
