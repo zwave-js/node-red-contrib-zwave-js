@@ -522,20 +522,24 @@ module.exports = function (RED) {
 
             Log("debug", "REDCTL", undefined, "[MAP]", "Class: " + Class + "=" + Map.MapsToClass + ", Operation: " + Operation + "=" + Func.MapsToFunc)
 
-            if (Func.hasOwnProperty("ResponseThroughEvent") && !Func.ResponseThroughEvent) {
+            let RTE = (Func.hasOwnProperty("ResponseThroughEvent") && !Func.ResponseThroughEvent);
 
+            if(RTE){
+                Log("debug", "REDCTL", undefined, "[MAP]", "Result will be delivered via an event")
+            }
+            else{
                 Log("debug", "REDCTL", undefined, "[MAP]", "Will wait for result")
+            }
 
+            if (!RTE) {
                 let Result = await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
                 Send(ReturnNode, "VALUE_UPDATED", Result, send)
             }
             else {
-                Log("debug", "REDCTL", undefined, "[MAP]", "Result will be delivered via an event")
                 await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
             }
 
             if(ForceUpdateOn !== undefined){
-
                 let VID = {
                     commandClass:Map.MapsToClass,
                     endpoint:EP,
@@ -546,7 +550,7 @@ module.exports = function (RED) {
                 }
 
                 Log("debug", "REDCTL", "OUT", "[FORCE-UPDATE]", printForceUpdate(Node, VID))
-                await Driver.controller.nodes.get(Node).pollValue(VID)
+                await Driver.controller.nodes.get(Node).pollValue(VID) 
             }
 
             return;
