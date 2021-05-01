@@ -147,7 +147,10 @@ Some devices do not send an updated value, once it has been set,
 for these devices, we need to query the value that was just updated.  
 you can enforce this by supplying a **forceUpdateOn** object in the message.  
 you set a **property** that you wish to query and optionally a **propertyKey**  
-Both these values are present in **VALUE_UPDATED** events
+Both these values are present in **VALUE_UPDATED** events   
+
+If you do not utilise the newly set value or your device does respond correctly,  
+refrain from using this flag, as this will naturally cause some traffic.
 
 ```javascript
 let Message = {
