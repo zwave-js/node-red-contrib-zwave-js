@@ -67,6 +67,19 @@ module.exports = function (RED) {
         let canDoSecure = false;
         const NodesReady = [];
         RED.nodes.createNode(this, config);
+        let AllNodesReady = false;
+
+        function RestoreReadyStatus()
+        {
+            setTimeout(()=>{
+                if(AllNodesReady){
+                    node.status({ fill: "green", shape: "dot", text: "All Nodes Ready!" });
+                }
+                else{
+                    node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
+                }
+            },5000);
+        }
 
         // Create Logger (if enabled)
         if (config.logLevel !== "none") {
@@ -239,11 +252,13 @@ module.exports = function (RED) {
             Driver.controller.on("inclusion failed", () => {
                 Send(ReturnController, "INCLUSION_FAILED")
                 node.status({ fill: "red", shape: "dot", text: "Inclusion Failed."});
+                RestoreReadyStatus();
             })
 
             Driver.controller.on("inclusion stopped", () => {
                 Send(ReturnController, "INCLUSION_STOPPED")
                 node.status({ fill: "green", shape: "dot", text: "Inclusion Stopped."});
+                RestoreReadyStatus();
             })
 
             // Exclusion
@@ -255,18 +270,53 @@ module.exports = function (RED) {
             Driver.controller.on("exclusion failed", () => {
                 Send(ReturnController, "EXCLUSION_FAILED")
                 node.status({ fill: "red", shape: "dot", text: "Exclusion Failed."});
+                RestoreReadyStatus();
             })
           
 
             Driver.controller.on("exclusion stopped", () => {
                 Send(ReturnController, "EXCLUSION_STOPPED")
                 node.status({ fill: "green", shape: "dot", text: "Exclusion Stopped."});
+                RestoreReadyStatus();
             })
 
             // Network Heal
             Driver.controller.on("heal network done", () => {
                 Send(ReturnController, "NETWORK_HEAL_DONE")
                 node.status({ fill: "green", shape: "dot", text: "Network Heal Done."});
+                RestoreReadyStatus();
+            })
+
+            Driver.controller.on("heal network progress", (P) => {
+
+                let Pending = []
+                let Done = []
+                let Failed = []
+                let Skipped = []
+
+                P.forEach((V,K) =>{
+                    switch(K){
+
+                        case "pending":
+                            Pending.push(V)
+                            break
+
+                        case "done":
+                            Done.push(V)
+                            break
+
+                        case "failed":
+                            Failed.push(V)
+                            break
+
+                        case "skipped":
+                            Skipped.push(V)
+                            break
+                    }
+
+                })
+
+                node.status({ fill: "yellow", shape: "dot", text: "Healing Network Pending:["+Pending+"], Done:["+Done+"], Skipped:["+Skipped+"], Failed:["+Failed+"]"});
             })
 
             ShareNodeList();
@@ -354,10 +404,15 @@ module.exports = function (RED) {
 
             Node.on("interview completed", (N) => {
                 Send(N, "INTERVIEW_COMPLETE");
+                node.status({ fill: "green", shape: "dot", text: "Node: "+N.id+" interview completed."});
+                RestoreReadyStatus();
+
             })
 
             Node.on("interview failed", (N, Er) => {
                 Send(N, "INTERVIEW_FAILED", Er);
+                node.status({ fill: "red", shape: "dot", text: "Node: "+N.id+" interview failed."});
+                RestoreReadyStatus();
             })
         }
 
@@ -645,6 +700,7 @@ module.exports = function (RED) {
                         await Driver.controller.nodes.get(Params[0]).refreshInfo();
                         ReturnNode.id = Params[0];
                         Send(ReturnNode, "INTERVIEW_STARTED", undefined, send)
+                        node.status({ fill: "yellow", shape: "dot", text: "Interviewing Node: "+Params[0] });
                     }
                     break;
 
@@ -663,6 +719,7 @@ module.exports = function (RED) {
                     await Driver.controller.stopHealingNetwork();
                     Send(ReturnController, "NETWORK_HEAL_STOPPED", undefined, send)
                     node.status({ fill: "blue", shape: "dot", text: "Network Heal Stopped."});
+                    RestoreReadyStatus();
                     break;
 
                 case "RemoveFailedNode":
