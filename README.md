@@ -231,9 +231,8 @@ return Message
 ## Version History  
 
   - 3.3.1
-    - Added the ability to receive updated values after setting them by  
-      specifying a **forceUpdateOn** object for devices that do not report the updated value.  
-      This is only needed for **Managed** mode, as the Value API does exactly this.  
+    - Added an optional **forceUpdateOn** object for **Managed** mode usage.    
+      This should only be used for devices that do not report back the updated value [#51](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/51)  
       ```javascript
       let Message = {
           payload: {
@@ -249,7 +248,7 @@ return Message
       }
       return Message;
       ```
-    - Added Controller status to the Controller node.
+    - Added the current state of the controller to the Node status text [#47](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/47)
 
   - 3.3.0 **Deprecation Warnings**
     - Bump Z-Wave JS
