@@ -522,16 +522,16 @@ module.exports = function (RED) {
 
             Log("debug", "REDCTL", undefined, "[MAP]", "Class: " + Class + "=" + Map.MapsToClass + ", Operation: " + Operation + "=" + Func.MapsToFunc)
 
-            let RTE = (Func.hasOwnProperty("ResponseThroughEvent") && !Func.ResponseThroughEvent);
+            let WaitForResponse = (Func.hasOwnProperty("NoEvent") && Func.NoEvent);
 
-            if(RTE){
-                Log("debug", "REDCTL", undefined, "[MAP]", "Result will be delivered via an event")
-            }
-            else{
+            if(WaitForResponse){
                 Log("debug", "REDCTL", undefined, "[MAP]", "Will wait for result")
             }
+            else{
+                Log("debug", "REDCTL", undefined, "[MAP]", "Result will be delivered via an event")
+            }
 
-            if (!RTE) {
+            if (WaitForResponse) {
                 let Result = await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
                 Send(ReturnNode, "VALUE_UPDATED", Result, send)
             }
@@ -548,7 +548,6 @@ module.exports = function (RED) {
                 if(ForceUpdateOn.propertyKey !== undefined){
                     VID.propertyKey = ForceUpdateOn.propertyKey
                 }
-
                 Log("debug", "REDCTL", "OUT", "[FORCE-UPDATE]", printForceUpdate(Node, VID))
                 await Driver.controller.nodes.get(Node).pollValue(VID) 
             }
