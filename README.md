@@ -232,8 +232,8 @@ return Message
 
   - 3.3.1
     - Added an optional **forceUpdateOn** object for **Managed** mode usage.    
-      This should only be used for devices that do not report back the updated value [#51](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/51)  
-      As using it unnecessarily, will cause extra traffic on your network.
+      This should only be used for devices that do not report back the updated value  
+      As using it unnecessarily, will cause extra traffic on your network. [#51](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/51)  
       ```javascript
       {
         node: 27,
@@ -246,7 +246,7 @@ return Message
         params: [true]
       }
       ```
-    - Added the current state of the controller to the Node status text [#47](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/47)
+    - Added the current state of the controller to the Node status text. [#47](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/47)
 
   - 3.3.0 **Deprecation Warnings**
     - Bump Z-Wave JS
