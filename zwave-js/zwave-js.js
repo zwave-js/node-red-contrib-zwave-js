@@ -186,7 +186,6 @@ module.exports = function (RED) {
             Log("info", "REDCTL", undefined, undefined, "Instantiating 'Driver' class", "(" + config.serialPort + ")")
             Driver = new ZWaveJS.Driver(config.serialPort, DriverOptions);
 
-
             if (config.sendUsageStatistics !== undefined && config.sendUsageStatistics) {
                 Log("info", "REDCTL", undefined, "[TELEMETRY]", "Enabling analytics reporting")
                 Driver.enableStatistics({ applicationName: ModulePackage.name, applicationVersion: ModulePackage.version })
@@ -418,6 +417,7 @@ module.exports = function (RED) {
             let Class = msg.payload.class;
             let Node = msg.payload.node
             var Params = msg.payload.params || [];
+            let ForceUpdate = msg.payload.forceUpdateOn;
 
             let ReturnNode = { id: Node };
 
@@ -478,6 +478,20 @@ module.exports = function (RED) {
             else {
                 Log("debug", "REDCTL", undefined, "[MAP]", "Result will be delivered via an event")
                 await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
+            }
+
+            if(ForceUpdate !== undefined){
+
+                let VID = {
+                    commandClass:Map.MapsToClass,
+                    endpoint:EP,
+                    property:ForceUpdate.property,
+                    propertyKey:ForceUpdate.propertyKey
+                }
+
+                Log("debug", "REDCTL", "OUT", "[FORCE-UPDATE]", printForceUpdate(Node, VID))
+
+                Driver.controller.nodes.get(Node).pollValue(VID)
             }
 
             return;
@@ -838,6 +852,23 @@ module.exports = function (RED) {
             if (Value !== undefined) {
 
                 Lines.push("└─[object]")
+
+                let OBKeys = Object.keys(Value);
+                OBKeys.forEach((K) => {
+                    Lines.push("    " + (K + ": ") + Value[K]);
+                })
+            }
+            return Lines;
+        }
+
+        function printForceUpdate(NID, Value) {
+
+            let Lines = [];
+            Lines.push("[NDE: " + NID + "]")
+
+            if (Value !== undefined) {
+
+                Lines.push("└─[ValueID]")
 
                 let OBKeys = Object.keys(Value);
                 OBKeys.forEach((K) => {
