@@ -142,6 +142,29 @@ Let Message = {
 return Message
 ```
 
+## Forcing Updates
+Some devices do not send an updated value, once it has been set,  
+for these devices, we need to query the value that was just updated.  
+you can enforce this by supplying a **forceUpdateOn** object in the message.  
+you set a **property** that you wish to query and optionally a **propertyKey**  
+Both these values are present in **VALUE_UPDATED** events
+
+```javascript
+let Message = {
+    payload: {
+        node: 12,
+        class: "BinarySwitch",
+        operation: "Set",
+        endpoint: 1,
+        forceUpdateOn: {
+          property: "currentValue"
+        },
+        params: [true]
+    }
+}
+return Message
+```
+
 ## Deprecated Association and AssociationGroupInfo
 These class' and operations will be removed in a future release  
 Please see the [&#x1F517;Associations](./README.md#controllerdriver-and-association-based-operations) class of operations:  

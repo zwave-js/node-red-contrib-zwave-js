@@ -234,6 +234,7 @@ return Message
     - Added an optional **forceUpdateOn** object for **Managed** mode usage.    
       This should only be used for devices that do not report back the updated value  
       As using it unnecessarily, will cause extra traffic on your network. [#51](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/51)  
+      
       ```javascript
       {
         node: 27,
