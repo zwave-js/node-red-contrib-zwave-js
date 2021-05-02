@@ -4,7 +4,7 @@ module.exports = function (RED) {
     const Path = require('path')
     const ModulePackage = require('../package.json')
     const ZWaveJS = require('zwave-js')
-    const { Duration, createDefaultTransportFormat } = require("@zwave-js/core");
+    const { Duration, createDefaultTransportFormat, CommandClasses } = require("@zwave-js/core");
     const ZWaveJSPackage = require('zwave-js/package.json')
     const Winston = require("winston");
 
@@ -13,7 +13,6 @@ module.exports = function (RED) {
 
     // Z-Wave JS Enum Lookups
     const Enums = {
-
         // CC enums
         RateType: ZWaveJS.RateType,
         ColorComponent: ZWaveJS.ColorComponent,
@@ -266,7 +265,6 @@ module.exports = function (RED) {
                 RestoreReadyStatus();
             })
           
-
             Driver.controller.on("exclusion stopped", () => {
                 Send(ReturnController, "EXCLUSION_STOPPED")
                 node.status({ fill: "green", shape: "dot", text: "Exclusion Stopped."});
@@ -385,16 +383,20 @@ module.exports = function (RED) {
                 })
             })
 
-            Node.on("interview completed", (N) => {
-                Send(N, "INTERVIEW_COMPLETE");
-                node.status({ fill: "green", shape: "dot", text: "Node: "+N.id+" Interview Completed."});
-                RestoreReadyStatus();
-
+            Node.on("interview started", (N) => {
+                Send(N, "INTERVIEW_STARTED");
+                node.status({ fill: "red", shape: "dot", text: "Node: "+N.id+" Interview Started."});
             })
 
             Node.on("interview failed", (N, Er) => {
                 Send(N, "INTERVIEW_FAILED", Er);
                 node.status({ fill: "red", shape: "dot", text: "Node: "+N.id+" Interview Failed."});
+                RestoreReadyStatus();
+            })
+
+            Node.on("interview completed", (N) => {
+                Send(N, "INTERVIEW_COMPLETE");
+                node.status({ fill: "green", shape: "dot", text: "Node: "+N.id+" Interview Completed."});
                 RestoreReadyStatus();
             })
         }
@@ -523,14 +525,12 @@ module.exports = function (RED) {
             Log("debug", "REDCTL", undefined, "[MAP]", "Class: " + Class + "=" + Map.MapsToClass + ", Operation: " + Operation + "=" + Func.MapsToFunc)
 
             let WaitForResponse = (Func.hasOwnProperty("NoEvent") && Func.NoEvent);
-
             if(WaitForResponse){
                 Log("debug", "REDCTL", undefined, "[MAP]", "Will wait for result")
             }
             else{
                 Log("debug", "REDCTL", undefined, "[MAP]", "Result will be delivered via an event")
             }
-
             if (WaitForResponse) {
                 let Result = await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
                 Send(ReturnNode, "VALUE_UPDATED", Result, send)
@@ -620,6 +620,8 @@ module.exports = function (RED) {
             let ReturnController = { id: "Controller" };
             let ReturnNode = { id: "" };
 
+            let SupportsNN = false;
+
             switch (Operation) {
                 case "GetNodes":
                     let Nodes = [];
@@ -659,6 +661,10 @@ module.exports = function (RED) {
                 case "SetNodeName":
                     NodeCheck(Params[0])
                     Driver.controller.nodes.get(Params[0]).name = Params[1]
+                    SupportsNN = Driver.controller.nodes.get(Params[0]).supportsCC(CommandClasses["Node Naming and Location"])
+                    if(SupportsNN){
+                        await Driver.controller.nodes.get(Params[0]).commandClasses["Node Naming and Location"].setName(Params[1]);
+                    }
                     ReturnNode.id = Params[0]
                     Send(ReturnNode, "NODE_NAME_SET", Params[1], send)
                     ShareNodeList();
@@ -667,6 +673,10 @@ module.exports = function (RED) {
                 case "SetNodeLocation":
                     NodeCheck(Params[0])
                     Driver.controller.nodes.get(Params[0]).location = Params[1]
+                    SupportsNN = Driver.controller.nodes.get(Params[0]).supportsCC(CommandClasses["Node Naming and Location"])
+                    if(SupportsNN){
+                        await Driver.controller.nodes.get(Params[0]).commandClasses["Node Naming and Location"].setLocation(Params[1]);
+                    }
                     ReturnNode.id = Params[0]
                     Send(ReturnNode, "NODE_LOCATION_SET", Params[1], send)
                     break
@@ -681,9 +691,6 @@ module.exports = function (RED) {
                     }
                     else {
                         await Driver.controller.nodes.get(Params[0]).refreshInfo();
-                        ReturnNode.id = Params[0];
-                        Send(ReturnNode, "INTERVIEW_STARTED", undefined, send)
-                        node.status({ fill: "yellow", shape: "dot", text: "Interviewing Node: "+Params[0] });
                     }
                     break;
 
@@ -977,8 +984,13 @@ module.exports = function (RED) {
             let DisallowedSubjectsForDNs = [
                 "INCLUSION_STARTED",
                 "INCLUSION_STOPPED",
+                "INCLUSION_FAILED",
                 "EXCLUSION_STARTED",
                 "EXCLUSION_STOPPED",
+                "EXCLUSION_FAILED",
+                "INTERVIEW_STARTED",
+                "INTERVIEW_COMPLETED",
+                "INTERVIEW_FAILED",
                 "NETWORK_HEAL_STARTED",
                 "NETWORK_HEAL_STOPPED",
                 "NETWORK_HEAL_DONE",

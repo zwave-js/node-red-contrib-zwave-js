@@ -81,9 +81,11 @@ Whatever your poison, the node will inject the following events, into your flow.
 | NODE_NAME_SET               | The ID of the affected node         |                                 | Node name was set                 |
 | NODE_LOCATION_SET           | The ID of the affected node         |                                 | Node location was set             |
 | INCLUSION_STARTED           | "Controller"                        | Bool : Secure Include           | Include Mode Started              |
-| INCLUSION_STOPPED           | "Controller"                        |                                 | include Mode Stopped              |
+| INCLUSION_STOPPED           | "Controller"                        |                                 | Include Mode Stopped              |
+| INCLUSION_FAILED            | "Controller"                        |                                 | Include Failed                    |
 | EXCLUSION_STARTED           | "Controller"                        |                                 | Exclude Mode Started              |
 | EXCLUSION_STOPPED           | "Controller"                        |                                 | Exclude Mode Stopped              |
+| EXCLUSION_FAILED            | "Controller"                        |                                 | Exclude Failed                    |
 | NETWORK_HEAL_DONE           | "Controller"                        |                                 | Done Healing Network              |
 | NETWORK_HEAL_STARTED        | "Controller"                        |                                 | Started Healing Network           |
 | NETWORK_HEAL_STOPPED        | "Controller"                        |                                 | Stopped Healing Network           |
@@ -231,7 +233,9 @@ return Message
   - 3.3.1
     - Added an optional **forceUpdate** object for **Managed** mode usage. [#51](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/51)  
     - Added the realtime state of the controller to the Node status text. [#47](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/47)  
+    - Added Failure events to Controller node for include and exclude
     - Updated the descriptions between Managed and Unmanaged Modes
+    - Z-Wave Node Name and Location are now stored on the target device (if supported)
 
   - 3.3.0 **Deprecation Warnings**
     - Bump Z-Wave JS
