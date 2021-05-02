@@ -471,7 +471,7 @@ module.exports = function (RED) {
             let Class = msg.payload.class;
             let Node = msg.payload.node
             var Params = msg.payload.params || [];
-            let ForceUpdateOn = msg.payload.forceUpdateOn;
+            let forceUpdate = msg.payload.forceUpdate;
 
             let ReturnNode = { id: Node };
 
@@ -539,14 +539,14 @@ module.exports = function (RED) {
                 await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
             }
 
-            if(ForceUpdateOn !== undefined){
+            if(forceUpdate !== undefined){
                 let VID = {
                     commandClass:Map.MapsToClass,
                     endpoint:EP,
-                    property:ForceUpdateOn.property,
+                    property:forceUpdate.property,
                 }
-                if(ForceUpdateOn.propertyKey !== undefined){
-                    VID.propertyKey = ForceUpdateOn.propertyKey
+                if(forceUpdate.propertyKey !== undefined){
+                    VID.propertyKey = forceUpdate.propertyKey
                 }
                 Log("debug", "REDCTL", "OUT", "[FORCE-UPDATE]", printForceUpdate(Node, VID))
                 await Driver.controller.nodes.get(Node).pollValue(VID) 
