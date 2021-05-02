@@ -66,8 +66,9 @@ module.exports = function (RED) {
         let AllNodesReady = false;
         var Driver;
 
+        var RestoreReadyTimer;
         function RestoreReadyStatus(){
-            setTimeout(()=>{
+            RestoreReadyTimer = setTimeout(()=>{
                 if(AllNodesReady){
                     node.status({ fill: "green", shape: "dot", text: "All Nodes Ready!" });
                 }
@@ -225,9 +226,12 @@ module.exports = function (RED) {
 
             // Add, Remove
             Driver.controller.on("node added", (N) => {
+                clearTimeout(RestoreReadyTimer)
                 ShareNodeList();
                 WireNodeEvents(N);
                 Send(N, "NODE_ADDED")
+                Send(N, "INTERVIEW_STARTED");
+                node.status({ fill: "yellow", shape: "dot", text: "Node: "+N.id+" Interview Started."});
             })
 
             Driver.controller.on("node removed", (N) => {
