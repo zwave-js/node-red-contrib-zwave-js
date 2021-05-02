@@ -993,7 +993,7 @@ module.exports = function (RED) {
                 "EXCLUSION_STOPPED",
                 "EXCLUSION_FAILED",
                 "INTERVIEW_STARTED",
-                "INTERVIEW_COMPLETED",
+                "INTERVIEW_COMPLETE",
                 "INTERVIEW_FAILED",
                 "NETWORK_HEAL_STARTED",
                 "NETWORK_HEAL_STOPPED",
