@@ -385,7 +385,7 @@ module.exports = function (RED) {
 
             Node.on("interview started", (N) => {
                 Send(N, "INTERVIEW_STARTED");
-                node.status({ fill: "red", shape: "dot", text: "Node: "+N.id+" Interview Started."});
+                node.status({ fill: "yellow", shape: "dot", text: "Node: "+N.id+" Interview Started."});
             })
 
             Node.on("interview failed", (N, Er) => {

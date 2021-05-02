@@ -232,7 +232,7 @@ return Message
 
   - 3.3.1
     - Added an optional **forceUpdate** object for **Managed** mode usage. [#51](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/51)  
-    - Added the realtime state of the controller to the Node status text. [#47](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/47)  
+    - Added the realtime status of the controller to the Node status text. [#47](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/47)  
     - Added Failure events to Controller node for include and exclude
     - Updated the descriptions between Managed and Unmanaged Modes
     - Z-Wave Node Name and Location are now stored on the target device (if supported)
