@@ -59,7 +59,7 @@ Multiple copies of this node, can be used across different flows.
 ![Image](./FilterNode.PNG)  
 
 ## Usage Modes
-**node-red-contrib-zwave-js**, is split into 3 different usage modes.
+**node-red-contrib-zwave-js**, is split into 3 different usage modes.  
 The first 2 of these modes, is probably what you're intersted in.  
 Each have there own pros and cons.  
 
