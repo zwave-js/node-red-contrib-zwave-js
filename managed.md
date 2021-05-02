@@ -1,12 +1,11 @@
-# Managed Usage.  
+# Managed Mode.  
+
+ - Uses the Z-Wave JS Command Classes API
+ - Does not verify that any Set commands have been confirmed by your device,  
+   its upto the device to send an unsolicited value update (specifications suggest they should).
+ - Command Class support is specifically developed (listed below)
+ - The Node Red plugin its self, is doing a lot of the heavy lifting
   
-First, lets get out the way, what Managed mode is.  
-Managed mode is where the node-red plugin it's self does a lot of the heavy lifting. Locating the correct command class, correct node, its endpoint, so on and so forth.  
-Underneath it all, this method uses the Z-Wave JS Command Classes API  
-
-Managed mode, allows easy accesss, the downside with Managed mode, is that command class support needs to be 'Bridged',  
-so that the command classes, can be used in an easy way.  
-
 Some CCs require a JSON Object, which are documented at the bottom.  
 For those CCs that require an Enum value however, you can get all the valid Enums, by sending the following message:  
 ```javascript
