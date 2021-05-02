@@ -4,7 +4,7 @@ module.exports = function (RED) {
     const Path = require('path')
     const ModulePackage = require('../package.json')
     const ZWaveJS = require('zwave-js')
-    const { Duration, createDefaultTransportFormat } = require("@zwave-js/core");
+    const { Duration, createDefaultTransportFormat, CommandClasses } = require("@zwave-js/core");
     const ZWaveJSPackage = require('zwave-js/package.json')
     const Winston = require("winston");
 
@@ -13,7 +13,6 @@ module.exports = function (RED) {
 
     // Z-Wave JS Enum Lookups
     const Enums = {
-
         // CC enums
         RateType: ZWaveJS.RateType,
         ColorComponent: ZWaveJS.ColorComponent,
@@ -37,7 +36,6 @@ module.exports = function (RED) {
     const Log = function (level, label, direction, tag1, msg, tag2) {
 
         if (Logger !== undefined) {
-
             let logEntry = {
                 direction: "  ",
                 message: msg,
@@ -49,11 +47,9 @@ module.exports = function (RED) {
             if (direction !== undefined) {
                 logEntry.direction = (direction === "IN" ? "« " : "» ")
             }
-
             if (tag1 !== undefined) {
                 logEntry.primaryTags = tag1
             }
-
             if (tag2 !== undefined) {
                 logEntry.secondaryTags = tag2
             }
@@ -63,10 +59,24 @@ module.exports = function (RED) {
 
     function Init(config) {
 
+        RED.nodes.createNode(this, config);
         const node = this;
         let canDoSecure = false;
         const NodesReady = [];
-        RED.nodes.createNode(this, config);
+        let AllNodesReady = false;
+        var Driver;
+
+        var RestoreReadyTimer;
+        function RestoreReadyStatus(){
+            RestoreReadyTimer = setTimeout(()=>{
+                if(AllNodesReady){
+                    node.status({ fill: "green", shape: "dot", text: "All Nodes Ready!" });
+                }
+                else{
+                    node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
+                }
+            },5000);
+        }
 
         // Create Logger (if enabled)
         if (config.logLevel !== "none") {
@@ -130,7 +140,6 @@ module.exports = function (RED) {
                 })
                 DriverOptions.logConfig.nodeFilter = NodesArray;
             }
-
             DriverOptions.logConfig.transports = [FileTransport]
         }
         else {
@@ -156,7 +165,6 @@ module.exports = function (RED) {
             DriverOptions.timeouts.report = parseInt(config.sendResponseTimeout);
         }
 
-
         if (config.encryptionKey !== undefined && config.encryptionKey.length > 0 && config.encryptionKey.startsWith('[') && config.encryptionKey.endsWith(']')) {
 
             let RemoveBrackets = config.encryptionKey.replace("[", "").replace("]", "");
@@ -170,7 +178,6 @@ module.exports = function (RED) {
             Log("debug", "REDCTL", undefined, "[OPTIONS] [networkKey]", "Provided as Number[]", "(" + _Buffer.length + " bytes)")
             DriverOptions.networkKey = Buffer.from(_Buffer);
             canDoSecure = true;
-
         }
         else if (config.encryptionKey !== undefined && config.encryptionKey.length > 0) {
 
@@ -179,13 +186,10 @@ module.exports = function (RED) {
             canDoSecure = true;
         }
 
-        var Driver;
-
         try {
 
             Log("info", "REDCTL", undefined, undefined, "Instantiating 'Driver' class", "(" + config.serialPort + ")")
             Driver = new ZWaveJS.Driver(config.serialPort, DriverOptions);
-
 
             if (config.sendUsageStatistics !== undefined && config.sendUsageStatistics) {
                 Log("info", "REDCTL", undefined, "[TELEMETRY]", "Enabling analytics reporting")
@@ -211,6 +215,7 @@ module.exports = function (RED) {
 
         Driver.on("all nodes ready", () => {
             node.status({ fill: "green", shape: "dot", text: "All Nodes Ready!" });
+            AllNodesReady = true;
         })
 
         Driver.once("driver ready", () => {
@@ -221,9 +226,12 @@ module.exports = function (RED) {
 
             // Add, Remove
             Driver.controller.on("node added", (N) => {
+                clearTimeout(RestoreReadyTimer)
                 ShareNodeList();
                 WireNodeEvents(N);
                 Send(N, "NODE_ADDED")
+                Send(N, "INTERVIEW_STARTED");
+                node.status({ fill: "yellow", shape: "dot", text: "Node: "+N.id+" Interview Started."});
             })
 
             Driver.controller.on("node removed", (N) => {
@@ -231,27 +239,73 @@ module.exports = function (RED) {
                 Send(N, "NODE_REMOVED")
             })
 
-            // Include, Exclude Started
+            // Include
             Driver.controller.on("inclusion started", (Secure) => {
                 Send(ReturnController, "INCLUSION_STARTED", { isSecureInclude: Secure })
+                node.status({ fill: "yellow", shape: "dot", text: "Inclusion Started. Secure: "+Secure });
             })
 
-            Driver.controller.on("exclusion started", () => {
-                Send(ReturnController, "EXCLUSION_STARTED")
+            Driver.controller.on("inclusion failed", () => {
+                Send(ReturnController, "INCLUSION_FAILED")
+                node.status({ fill: "red", shape: "dot", text: "Inclusion Failed."});
+                RestoreReadyStatus();
             })
 
-            // Include, Exclude Stopped
             Driver.controller.on("inclusion stopped", () => {
                 Send(ReturnController, "INCLUSION_STOPPED")
+                node.status({ fill: "green", shape: "dot", text: "Inclusion Stopped."});
+                RestoreReadyStatus();
             })
 
+            // Exclusion
+            Driver.controller.on("exclusion started", () => {
+                Send(ReturnController, "EXCLUSION_STARTED")
+                node.status({ fill: "yellow", shape: "dot", text: "Exclusion Started."});
+            })
+
+            Driver.controller.on("exclusion failed", () => {
+                Send(ReturnController, "EXCLUSION_FAILED")
+                node.status({ fill: "red", shape: "dot", text: "Exclusion Failed."});
+                RestoreReadyStatus();
+            })
+          
             Driver.controller.on("exclusion stopped", () => {
                 Send(ReturnController, "EXCLUSION_STOPPED")
+                node.status({ fill: "green", shape: "dot", text: "Exclusion Stopped."});
+                RestoreReadyStatus();
             })
 
             // Network Heal
             Driver.controller.on("heal network done", () => {
                 Send(ReturnController, "NETWORK_HEAL_DONE")
+                node.status({ fill: "green", shape: "dot", text: "Network Heal Done."});
+                RestoreReadyStatus();
+            })
+
+            Driver.controller.on("heal network progress", (P) => {
+
+                let Pending = []
+                let Done = []
+                let Failed = []
+                let Skipped = []
+
+                P.forEach((V,K) =>{
+                    switch(V){
+                        case "pending":
+                            Pending.push(K)
+                            break
+                        case "done":
+                            Done.push(K)
+                            break
+                        case "failed":
+                            Failed.push(K)
+                            break
+                        case "skipped":
+                            Skipped.push(K)
+                            break
+                    }
+                })
+                node.status({ fill: "yellow", shape: "dot", text: "Healing Network Pending:["+Pending.toString()+"], Done:["+Done.toString()+"], Skipped:["+Skipped.toString()+"], Failed:["+Failed.toString()+"]"});
             })
 
             ShareNodeList();
@@ -292,7 +346,6 @@ module.exports = function (RED) {
 
         function WireNodeEvents(Node) {
 
-
             Node.on("ready", (N) => {
 
                 if (N.isControllerNode()) {
@@ -302,8 +355,6 @@ module.exports = function (RED) {
                 if (NodesReady.indexOf(N.id) < 0) {
                     NodesReady.push(N.id);
                     node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
-
-
                     RED.events.emit("zwjs:node:ready:" + N.id);
                 }
 
@@ -334,19 +385,28 @@ module.exports = function (RED) {
                 Node.on("sleep", (N) => {
                     Send(N, "SLEEP");
                 })
-
             })
 
-            Node.on("interview completed", (N) => {
-                Send(N, "INTERVIEW_COMPLETE");
+            Node.on("interview started", (N) => {
+                Send(N, "INTERVIEW_STARTED");
+                node.status({ fill: "yellow", shape: "dot", text: "Node: "+N.id+" Interview Started."});
             })
 
             Node.on("interview failed", (N, Er) => {
                 Send(N, "INTERVIEW_FAILED", Er);
+                node.status({ fill: "red", shape: "dot", text: "Node: "+N.id+" Interview Failed."});
+                RestoreReadyStatus();
+            })
+
+            Node.on("interview completed", (N) => {
+                Send(N, "INTERVIEW_COMPLETE");
+                node.status({ fill: "green", shape: "dot", text: "Node: "+N.id+" Interview Completed."});
+                RestoreReadyStatus();
             })
         }
 
         async function Input(msg, send, done, internal) {
+
             try {
 
                 let Node = msg.payload.node || "N/A"
@@ -355,7 +415,6 @@ module.exports = function (RED) {
                 let Params = msg.payload.params || []
 
                 Log("debug", "REDCTL", "IN", "[ORIG: " + (internal ? "EVENT" : "DIRECT") + "] [NDE: " + Node + "]", printParams(Class, Operation, Params))
-
 
                 switch (Class) {
                     case "Controller":
@@ -418,6 +477,7 @@ module.exports = function (RED) {
             let Class = msg.payload.class;
             let Node = msg.payload.node
             var Params = msg.payload.params || [];
+            let forceUpdate = msg.payload.forceUpdate;
 
             let ReturnNode = { id: Node };
 
@@ -468,16 +528,32 @@ module.exports = function (RED) {
 
             Log("debug", "REDCTL", undefined, "[MAP]", "Class: " + Class + "=" + Map.MapsToClass + ", Operation: " + Operation + "=" + Func.MapsToFunc)
 
-            if (Func.hasOwnProperty("ResponseThroughEvent") && !Func.ResponseThroughEvent) {
-
+            let WaitForResponse = (Func.hasOwnProperty("NoEvent") && Func.NoEvent);
+            if(WaitForResponse){
                 Log("debug", "REDCTL", undefined, "[MAP]", "Will wait for result")
-
+            }
+            else{
+                Log("debug", "REDCTL", undefined, "[MAP]", "Result will be delivered via an event")
+            }
+            if (WaitForResponse) {
                 let Result = await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
                 Send(ReturnNode, "VALUE_UPDATED", Result, send)
             }
             else {
-                Log("debug", "REDCTL", undefined, "[MAP]", "Result will be delivered via an event")
                 await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
+            }
+
+            if(forceUpdate !== undefined){
+                let VID = {
+                    commandClass:Map.MapsToClass,
+                    endpoint:EP,
+                    property:forceUpdate.property,
+                }
+                if(forceUpdate.propertyKey !== undefined){
+                    VID.propertyKey = forceUpdate.propertyKey
+                }
+                Log("debug", "REDCTL", "OUT", "[FORCE-UPDATE]", printForceUpdate(Node, VID))
+                await Driver.controller.nodes.get(Node).pollValue(VID) 
             }
 
             return;
@@ -548,11 +624,12 @@ module.exports = function (RED) {
             let ReturnController = { id: "Controller" };
             let ReturnNode = { id: "" };
 
+            let SupportsNN = false;
+
             switch (Operation) {
                 case "GetNodes":
                     let Nodes = [];
                     Driver.controller.nodes.forEach((N, NI) => {
-
                         Nodes.push({
                             nodeId: N.id,
                             name: N.name,
@@ -581,7 +658,6 @@ module.exports = function (RED) {
                             isControllerNode: N.isControllerNode(),
                             supportsBeaming: N.supportsBeaming
                         })
-
                     });
                     Send(ReturnController, "NODE_LIST", Nodes, send);
                     break;
@@ -589,6 +665,10 @@ module.exports = function (RED) {
                 case "SetNodeName":
                     NodeCheck(Params[0])
                     Driver.controller.nodes.get(Params[0]).name = Params[1]
+                    SupportsNN = Driver.controller.nodes.get(Params[0]).supportsCC(CommandClasses["Node Naming and Location"])
+                    if(SupportsNN){
+                        await Driver.controller.nodes.get(Params[0]).commandClasses["Node Naming and Location"].setName(Params[1]);
+                    }
                     ReturnNode.id = Params[0]
                     Send(ReturnNode, "NODE_NAME_SET", Params[1], send)
                     ShareNodeList();
@@ -597,6 +677,10 @@ module.exports = function (RED) {
                 case "SetNodeLocation":
                     NodeCheck(Params[0])
                     Driver.controller.nodes.get(Params[0]).location = Params[1]
+                    SupportsNN = Driver.controller.nodes.get(Params[0]).supportsCC(CommandClasses["Node Naming and Location"])
+                    if(SupportsNN){
+                        await Driver.controller.nodes.get(Params[0]).commandClasses["Node Naming and Location"].setLocation(Params[1]);
+                    }
                     ReturnNode.id = Params[0]
                     Send(ReturnNode, "NODE_LOCATION_SET", Params[1], send)
                     break
@@ -611,8 +695,6 @@ module.exports = function (RED) {
                     }
                     else {
                         await Driver.controller.nodes.get(Params[0]).refreshInfo();
-                        ReturnNode.id = Params[0];
-                        Send(ReturnNode, "INTERVIEW_STARTED", undefined, send)
                     }
                     break;
 
@@ -624,11 +706,14 @@ module.exports = function (RED) {
                 case "StartHealNetwork":
                     await Driver.controller.beginHealingNetwork();
                     Send(ReturnController, "NETWORK_HEAL_STARTED", undefined, send)
+                    node.status({ fill: "yellow", shape: "dot", text: "Network Heal Started."});
                     break;
 
                 case "StopHealNetwork":
                     await Driver.controller.stopHealingNetwork();
                     Send(ReturnController, "NETWORK_HEAL_STOPPED", undefined, send)
+                    node.status({ fill: "blue", shape: "dot", text: "Network Heal Stopped."});
+                    RestoreReadyStatus();
                     break;
 
                 case "RemoveFailedNode":
@@ -847,6 +932,23 @@ module.exports = function (RED) {
             return Lines;
         }
 
+        function printForceUpdate(NID, Value) {
+
+            let Lines = [];
+            Lines.push("[NDE: " + NID + "]")
+
+            if (Value !== undefined) {
+
+                Lines.push("└─[ValueID]")
+
+                let OBKeys = Object.keys(Value);
+                OBKeys.forEach((K) => {
+                    Lines.push("    " + (K + ": ") + Value[K]);
+                })
+            }
+            return Lines;
+        }
+
 
         function getNodeInfoForPayload(NodeID, Property){
             let Prop = Driver.controller.nodes.get(parseInt(NodeID))[Property];
@@ -886,8 +988,13 @@ module.exports = function (RED) {
             let DisallowedSubjectsForDNs = [
                 "INCLUSION_STARTED",
                 "INCLUSION_STOPPED",
+                "INCLUSION_FAILED",
                 "EXCLUSION_STARTED",
                 "EXCLUSION_STOPPED",
+                "EXCLUSION_FAILED",
+                "INTERVIEW_STARTED",
+                "INTERVIEW_COMPLETE",
+                "INTERVIEW_FAILED",
                 "NETWORK_HEAL_STARTED",
                 "NETWORK_HEAL_STOPPED",
                 "NETWORK_HEAL_DONE",
@@ -909,8 +1016,6 @@ module.exports = function (RED) {
 
         // Duration Fix
         function ProcessDurationClass(Class, Operation, Params) {
-
-
             if (Params.length > 0) {
                 for (let i = 0; i < Params.length; i++) {
                     if (typeof Params[i] === "object") {
@@ -924,7 +1029,6 @@ module.exports = function (RED) {
                         }
                     }
                 }
-
             }
             return Params;
         }
@@ -967,6 +1071,5 @@ module.exports = function (RED) {
                 RED.log.error('Error listing serial ports', err)
                 res.json([]);
             })
-
     });
 }

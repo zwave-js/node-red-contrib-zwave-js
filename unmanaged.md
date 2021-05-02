@@ -1,11 +1,9 @@
-# Unmanaged Usage.  
+# Unmanaged Mode.  
   
-Unmanaged usage, is more involved, and generally requires a little more understanding and poses certain limits on what can be done.  
-However, the reward here, is that Command Class support is only limited by ZWave-JS.  
-
-The difference with this approach, is that you supply a [&#x1F517;ValueID](https://zwave-js.github.io/node-zwave-js/#/api/valueid)  
-The ValueID interface uniquely identifies to which CC, endpoint and property a value belongs to.  
-These methods directly interact with the Z-Wave JS Value API.  
+ - Uses the Z-Wave JS Value API
+ - Ensures any Set Command is followed up with an Updated value event
+ - Command class support is only limited by whats supported in Z-Wave JS
+ - Limited in what can be done, ex: No transition times. Its mainly for primitive types.
 
 There is only 4 commands to use here.
 
@@ -35,7 +33,7 @@ return Message
 ```javascript
 /* Set a value */
 /* NOTE : setValue only supports providing 2 params, the ValueID its self, and the value to set. */
-/*        ValueID will be one of the ValueIDs returned from GetDefinedValueIDs                   */
+/*        ValueID will be one of the obejcts (not actual IDs) returned from GetDefinedValueIDs                   */
 
 let Message = {
     payload: {

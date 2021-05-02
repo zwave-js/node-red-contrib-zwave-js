@@ -283,7 +283,11 @@ let ZwaveJsUI = (function () {
           class: 'Controller',
           operation: 'InterviewNode',
           params: [+selectedNode]
-        }).catch(err => alert(err.responseText))
+        }).catch((err) => {
+          if(err.status !== 504){
+            alert(err.responseText)
+          }
+        })
       })
       .appendTo(optInterview)
     $('<span id="zwave-js-status-box-interview">')

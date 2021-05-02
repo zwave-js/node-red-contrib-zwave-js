@@ -1,12 +1,11 @@
-# Managed Usage.  
+# Managed Mode.  
+
+ - Uses the Z-Wave JS Command Classes API
+ - Does not verify that any Set commands have been confirmed by your device,  
+   its upto the device to send a value update (specifications suggest they should).
+ - Command Class support is specifically developed (listed below)
+ - The Node Red plugin its self, is doing a lot of the heavy lifting
   
-First, lets get out the way, what Managed mode is.  
-Managed mode is where the node-red plugin it's self does a lot of the heavy lifting. Locating the correct command class, correct node, its endpoint, so on and so forth.  
-Underneath it all, this method uses the Z-Wave JS Command Classes API  
-
-Managed mode, allows easy accesss, the downside with Managed mode, is that command class support needs to be 'Bridged',  
-so that the command classes, can be used in an easy way.  
-
 Some CCs require a JSON Object, which are documented at the bottom.  
 For those CCs that require an Enum value however, you can get all the valid Enums, by sending the following message:  
 ```javascript
@@ -137,6 +136,29 @@ Let Message = {
         class: "Notification",
         operation: "SendReport",
         params: [Report]
+    }
+}
+return Message
+```
+
+## Forcing Updates
+If you prefer Managed Mode, but have devices (or endpoints), that do not report back updated values,
+you can enforce an update by suppplying a **forceUpdate** object, and providing  
+a **property** and optionally **propertyKey** - both of which are avalable in VALUE_UPDATED events.  
+
+This will cause extra traffic in your network, so only use this if needed.
+
+```javascript
+let Message = {
+    payload: {
+        node: 12,
+        class: "BinarySwitch",
+        operation: "Set",
+        endpoint: 2,
+        forceUpdate: {
+          property: "currentValue"
+        },
+        params: [true]
     }
 }
 return Message

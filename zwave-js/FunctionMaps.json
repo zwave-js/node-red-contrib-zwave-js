@@ -76,7 +76,7 @@
                 "MapsToFunc": "getSupportedKeys",
                 "ParamsRequired": 0,
                 "ParamsOptional": 0,
-                "ResponseThroughEvent": false
+                "NoEvent": true
             }
         }
     },
@@ -168,7 +168,7 @@
                 "MapsToFunc": "getGroup",
                 "ParamsRequired": 1,
                 "ParamsOptional": 0,
-                "ResponseThroughEvent": false
+                "NoEvent": true
             },
             "AddNodes": {
                 "MapsToFunc": "addNodeIds",
@@ -189,7 +189,7 @@
                 "MapsToFunc": "getGroupCount",
                 "ParamsRequired": 0,
                 "ParamsOptional": 0,
-                "ResponseThroughEvent": false
+                "NoEvent": true
             }
         }
     },
@@ -200,7 +200,7 @@
                 "MapsToFunc": "getGroupName",
                 "ParamsRequired": 1,
                 "ParamsOptional": 0,
-                "ResponseThroughEvent": false
+                "NoEvent": true
             }
         }
     },

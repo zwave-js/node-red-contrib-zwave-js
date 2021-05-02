@@ -1,8 +1,7 @@
 ![Image](./ReadMe.png)  
 
 # node-red-contrib-zwave-js
-An extremely easy to use, zero dependency and feature rich Z-Wave node for Node Red, based on Z-Wave JS.
-
+An extremely easy to use, zero dependency and feature rich Z-Wave node for Node Red, based on Z-Wave JS.  
 The implementation is 100% javascript. it is therefore:  
   - Very fast
   - Does not require a build of any static library
@@ -57,22 +56,21 @@ You can address any zwave device, and recieve updates from them, using this node
 **ZWave Device**:  
 Works in conjunction with the Controller Node above, but represents a single zwave device.  
 Multiple copies of this node, can be used across different flows.  
-The Controller Node its self, can be used on its own if you so wish, but only 1 copy can be deployed.  
 ![Image](./FilterNode.PNG)  
 
-
 ## Usage Modes
-node-red-contrib-zwave-js, is split into 3 different usage modes.
+**node-red-contrib-zwave-js**, is split into 3 different usage modes.  
+The first 2 of these modes, is probably what you're intersted in.  
+Each have there own pros and cons.  
 
 [&#x1F517;Managed](./managed.md) (Z-Wave JS Command Classes API)  
-If you're wanting to get up and running quickly, or not familar with Z-Wave JS, then this is for you.
+This mode is quick to get up and running, and is a good starting point.
 
 [&#x1F517;Unmanaged](./unmanaged.md) (Z-Wave JS Value API)  
-If you're familar with Z-Wave JS, or a more hardened user, with various z-wave stack implementations, then this may be more usefull.  
+This mode requires a little more understanding, but is preferred by the pros.
 
 [&#x1F517;GUI](./GUI.md)   
 This mode comes as a node-red UI. It's more for managing your network, but can alter certain values.
-just open up the UI tab (on the right)
 
 Whatever your poison, the node will inject the following events, into your flow.
 
@@ -83,9 +81,11 @@ Whatever your poison, the node will inject the following events, into your flow.
 | NODE_NAME_SET               | The ID of the affected node         |                                 | Node name was set                 |
 | NODE_LOCATION_SET           | The ID of the affected node         |                                 | Node location was set             |
 | INCLUSION_STARTED           | "Controller"                        | Bool : Secure Include           | Include Mode Started              |
-| INCLUSION_STOPPED           | "Controller"                        |                                 | include Mode Stopped              |
+| INCLUSION_STOPPED           | "Controller"                        |                                 | Include Mode Stopped              |
+| INCLUSION_FAILED            | "Controller"                        |                                 | Include Failed                    |
 | EXCLUSION_STARTED           | "Controller"                        |                                 | Exclude Mode Started              |
 | EXCLUSION_STOPPED           | "Controller"                        |                                 | Exclude Mode Stopped              |
+| EXCLUSION_FAILED            | "Controller"                        |                                 | Exclude Failed                    |
 | NETWORK_HEAL_DONE           | "Controller"                        |                                 | Done Healing Network              |
 | NETWORK_HEAL_STARTED        | "Controller"                        |                                 | Started Healing Network           |
 | NETWORK_HEAL_STOPPED        | "Controller"                        |                                 | Stopped Healing Network           |
@@ -229,6 +229,14 @@ return Message
 
 
 ## Version History  
+
+  - 3.3.1
+    - Added an optional **forceUpdate** object for **Managed** mode usage. [#51](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/51)  
+    - Added the realtime status of the controller to the Node status text. [#47](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/47)  
+    - Z-Wave Node Name and Location are now stored on the target device (if supported)
+    - Improved Controller status events to further describe the order
+    - Updated the descriptions between Managed and Unmanaged Modes
+
 
   - 3.3.0 **Deprecation Warnings**
     - Bump Z-Wave JS
