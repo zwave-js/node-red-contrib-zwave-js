@@ -2,7 +2,7 @@
 
  - Uses the Z-Wave JS Command Classes API
  - Does not verify that any Set commands have been confirmed by your device,  
-   its upto the device to send an unsolicited value update (specifications suggest they should).
+   its upto the device to send a value update (specifications suggest they should).
  - Command Class support is specifically developed (listed below)
  - The Node Red plugin its self, is doing a lot of the heavy lifting
   
@@ -142,14 +142,11 @@ return Message
 ```
 
 ## Forcing Updates
-Some devices do not send an updated value, once it has been set,  
-for these devices, we need to query the value that was just updated.  
-you can enforce this by supplying a **forceUpdateOn** object in the message.  
-you set a **property** that you wish to query and optionally a **propertyKey**  
-Both these values are present in **VALUE_UPDATED** events   
+If you prefer Managed Mode, but have devices (or endpoints), that do not report back updated values,
+you can enforce an update by suppplying a **forceUpdate** object, and providing  
+a **property** and optionally **propertyKey** - both of which are avalable in VALUE_UPDATED events.  
 
-If you do not utilise the newly set value or your device does respond correctly,  
-refrain from using this flag, as this will naturally cause some traffic.
+This will cause extra traffic in your network, so only use this if needed.
 
 ```javascript
 let Message = {
@@ -157,8 +154,8 @@ let Message = {
         node: 12,
         class: "BinarySwitch",
         operation: "Set",
-        endpoint: 1,
-        forceUpdateOn: {
+        endpoint: 2,
+        forceUpdate: {
           property: "currentValue"
         },
         params: [true]

@@ -57,11 +57,10 @@ You can address any zwave device, and recieve updates from them, using this node
 **ZWave Device**:  
 Works in conjunction with the Controller Node above, but represents a single zwave device.  
 Multiple copies of this node, can be used across different flows.  
-The Controller Node its self, can be used on its own if you so wish, but only 1 copy can be deployed.  
 ![Image](./FilterNode.PNG)  
 
 ## Usage Modes
-node-red-contrib-zwave-js, is split into 3 different usage modes.
+**node-red-contrib-zwave-js**, is split into 3 different usage modes.
 The first 2 of these modes, is probably what you're intersted in.  
 Each have there own pros and cons.  
 
@@ -73,7 +72,6 @@ This mode requires a little more understanding, but is preferred by the pros.
 
 [&#x1F517;GUI](./GUI.md)   
 This mode comes as a node-red UI. It's more for managing your network, but can alter certain values.
-just open up the UI tab (on the right)
 
 Whatever your poison, the node will inject the following events, into your flow.
 
@@ -232,24 +230,9 @@ return Message
 ## Version History  
 
   - 3.3.1
-    - Added an optional **forceUpdateOn** object for **Managed** mode usage.    
-      This should only be used for devices that do not report back the updated value  
-      As using it unnecessarily, will cause extra traffic on your network. [#51](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/51)  
-      
-      ```javascript
-      {
-        node: 27,
-        class: "BinarySwitch",
-        operation: "Set",
-        endpoint:2,
-        forceUpdateOn: {
-           property: "currentValue"
-        },
-        params: [true]
-      }
-      ```
-    - Added the current state of the controller to the Node status text. [#47](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/47)
-    - Improved the descriptions between Managed and Unmanaged Modes
+    - Added an optional **forceUpdate** object for **Managed** mode usage. [#51](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/51)  
+    - Added the realtime state of the controller to the Node status text. [#47](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/47)  
+    - Updated the descriptions between Managed and Unmanaged Modes
 
   - 3.3.0 **Deprecation Warnings**
     - Bump Z-Wave JS
