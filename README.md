@@ -230,6 +230,10 @@ return Message
 
 ## Version History  
 
+  - 3.4.0
+    - Added a **PollValue** method to the Unmanaged class
+    - Added a **GetAllValues** method to the Unmanaged class
+
   - 3.3.1
     - Added an optional **forceUpdate** object for **Managed** mode usage. [#51](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/51)  
     - Added the realtime status of the controller to the Node status text. [#47](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/47)  

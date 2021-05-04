@@ -611,6 +611,13 @@ module.exports = function (RED) {
                     }
                     Send(ReturnNode, "GET_VALUE_METADATA_RESPONSE", ReturnObjectM, send);
                     break;
+
+                case "PollValue":
+                    await Driver.controller.nodes.get(Node).pollValue(Params[0]);
+                    break;
+
+                case "GetAllValues":
+                    break;
             }
 
             return;
