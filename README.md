@@ -155,6 +155,7 @@ Some Association methods require an Object, these are detailed at the bottom.
 | Associations              | RemoveAssociations                  | [**AssociationAddress**: Object, Group  ID: Number, **AssociationAddress**: Object[]] |
 | Associations              | RemoveNodeFromAllAssociations       | [Node ID: Number]                                     |
 | Driver                    | GetEnums                            |                                                       |
+| Driver                    | GetValueDB                          | [Node ID: Number[] (Optional)]                        |
 
 To start an in-secure Inclusion, you will do.  
 ```javascript
@@ -232,7 +233,7 @@ return Message
 
   - 3.4.0
     - Added a **PollValue** method to the Unmanaged class
-    - Added a **GetAllValues** method to the Unmanaged class
+    - Added a **GetValueDB** method to the Driver class
 
   - 3.3.1
     - Added an optional **forceUpdate** object for **Managed** mode usage. [#51](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/51)  

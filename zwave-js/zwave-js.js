@@ -616,8 +616,6 @@ module.exports = function (RED) {
                     await Driver.controller.nodes.get(Node).pollValue(Params[0]);
                     break;
 
-                case "GetAllValues":
-                    break;
             }
 
             return;
@@ -634,6 +632,7 @@ module.exports = function (RED) {
             let SupportsNN = false;
 
             switch (Operation) {
+
                 case "GetNodes":
                     let Nodes = [];
                     Driver.controller.nodes.forEach((N, NI) => {
