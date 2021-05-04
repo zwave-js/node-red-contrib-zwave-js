@@ -563,12 +563,21 @@ module.exports = function (RED) {
         async function DriverCMD(msg, send) {
 
             let Operation = msg.payload.operation;
+            let Params = msg.payload.params || []
             let ReturnNode = { id: "N/A" };
 
             switch (Operation) {
+
                 case "GetEnums":
                     Send(ReturnNode, "ENUM_LIST", Enums, send);
                     break;
+
+                case "GetValueDB":
+                    let Values = [];
+                    if(Params.length < 1){
+                        
+                    }
+                        break;
             }
         }
 
