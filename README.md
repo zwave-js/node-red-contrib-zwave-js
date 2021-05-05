@@ -46,11 +46,11 @@ npm_packages:
 ```
 
 ## Node config (Advanced Driver Settings)
-**Custom CFG Dir**
+**Custom CFG Dir**  
 Z-Wave JS allows a custom directory, that will be used to search for additonal Device configuration files.  
 Note: if an internal device config is found to have the same identifiers, the one in the custom folder will take priority.  
 
-**Disk IO Throttle**
+**Disk IO Throttle**  
 If using **Unmanaged** Mode (see further down), the values received from **GetValue**, will be from a cache.  
 This cache is periodically written to disk. This setting allows you to control that behavioir.  
 Unless there is a specfic reason to do so - its best to leave it as 'Normal'
