@@ -1057,6 +1057,7 @@ module.exports = function (RED) {
                 "ASSOCIATIONS_ADDED",
                 "ASSOCIATIONS_REMOVED",
                 "ALL_ASSOCIATIONS_REMOVED",
+                "VALUE_DB"
             ]
 
             if (!DisallowedSubjectsForDNs.includes(Subject)) {
