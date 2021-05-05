@@ -53,7 +53,7 @@ Note: if an internal device config is found to have the same identifiers, the on
 **Disk IO Throttle**  
 If using **Unmanaged** Mode (see further down), the values received from **GetValue**, will be from a cache.  
 This cache is periodically written to disk. This setting allows you to control that behavioir.  
-Unless there is a specfic reason to do so - its best to leave it as 'Normal'
+Unless there is a specific reason to do so - its best to leave it as 'Normal'
 
 | Setting       | Description                                    | 
 | ------------- | -----------------------------------------------|
@@ -126,6 +126,8 @@ Whatever your poison, the node will inject the following events, into your flow.
 | ASSOCIATIONS_ADDED          | The source Node ID                  |                                 | Associations Were Added           |  
 | ASSOCIATIONS_REMOVED        | The source Node ID                  |                                 | Associations Were Removed         |  
 | ALL_ASSOCIATIONS_REMOVED    | The source Node ID                  |                                 | All Associations Were Removed     |  
+| VALUE_DB                    | "N/A"                               | A Structured Value DB object    | Response to GetValueDB            |  
+
 
 And such event(s) will look like this.
 

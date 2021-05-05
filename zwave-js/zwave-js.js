@@ -587,11 +587,32 @@ module.exports = function (RED) {
                     break;
 
                 case "GetValueDB":
-                    let Values = [];
+
+                    let Result = [];
+
                     if(Params.length < 1){
-                        
+                        Driver.controller.nodes.forEach((N, NI) => {
+                            Params.push(N.id)
+                        });
                     }
-                        break;
+                    Params.forEach((NID) =>{
+                        let G = {
+                            nodeId:NID,
+                            values:[]
+                        }
+                        const VIDs = Driver.controller.nodes.get(NID).getDefinedValueIDs();
+                        VIDs.forEach((VID) =>{
+                            let V = Driver.controller.nodes.get(NID).getValue(VID);
+                            let VI = {
+                                valueId:VID,
+                                currentValue:V
+                            }
+                            G.values.push(VI)
+                        })
+                        Result.push(G);
+                    })
+                    Send(ReturnNode, "VALUE_DB", Result, send);
+                    break;
             }
         }
 
