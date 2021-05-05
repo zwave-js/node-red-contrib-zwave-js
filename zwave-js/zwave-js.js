@@ -604,8 +604,8 @@ module.exports = function (RED) {
                         VIDs.forEach((VID) =>{
                             let V = Driver.controller.nodes.get(NID).getValue(VID);
                             let VI = {
-                                valueId:VID,
-                                currentValue:V
+                                response:V,
+                                valueId:VID
                             }
                             G.values.push(VI)
                         })
