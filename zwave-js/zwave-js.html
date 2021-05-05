@@ -12,14 +12,14 @@
                 serialPort: { value: undefined },
                 name: { value: "Z-Wave JS Controller" },
                 encryptionKey: { value: undefined },
-                ackTimeout: { value: undefined, validate: RED.validators.number() },
-                controllerTimeout: { value: undefined, validate: RED.validators.number() },
-                sendResponseTimeout: { value: undefined, validate: RED.validators.number() },
+                ackTimeout: { value: undefined },
+                controllerTimeout: { value: undefined},
+                sendResponseTimeout: { value: undefined },
                 logLevel: { value: "none" },
                 logFile: { value: undefined },
                 logNodeFilter: { value: undefined },
                 sendUsageStatistics: { value: true },
-                valueDiskCacheThrottle: { value: "normal" },
+                valueCacheDiskThrottle: { value: "normal" },
                 customConfigPath: { value: undefined }
             },
             inputs: 1,
@@ -34,8 +34,13 @@
 
 
     function SortUI() {
-        
-            $.getJSON("zwjsgetports",(data) => {
+
+            // 3.3 -> 3.4 
+            if (this.valueCacheDiskThrottle === undefined) {
+                $("#node-input-valueCacheDiskThrottle").val('normal');
+            }
+
+            $.getJSON("zwjsgetports", (data) => {
 
                 $("#node-input-serialPort").empty()
                 $("#node-input-serialPort").append(new Option("Select Port", "Select Port"));
@@ -49,7 +54,7 @@
 
                 if (this.serialPort !== undefined) {
 
-                    if(data.indexOf(this.serialPort) < 0){
+                    if (data.indexOf(this.serialPort) < 0) {
                         $("#node-input-serialPort").append(new Option(this.serialPort, this.serialPort));
                     }
 
@@ -59,19 +64,19 @@
                     $("#node-input-serialPort").val("Select Port")
                 }
 
-                $("#node-input-serialPort").change(function (event){
+                $("#node-input-serialPort").change(function (event) {
 
                     var Value = event.target.value;
 
-                     if(Value === "Custom Path..."){
+                    if (Value === "Custom Path...") {
 
-                         Value = prompt("Enter custom serial path.")
-                         if(Value !== null){
+                        Value = prompt("Enter custom serial path.")
+                        if (Value !== null) {
                             Value = Value.trim()
                             $("#node-input-serialPort").append(new Option(Value, Value));
                             $("#node-input-serialPort").val(Value)
-                         }
-                     }
+                        }
+                    }
                 });
             });
 
@@ -165,8 +170,8 @@
         <input type="text" id="node-input-customConfigPath" placeholder="/some/directory">
     </div>
     <div class="form-row">
-        <label  for="node-input-valueDiskCacheThrottle" style="width:130px"><i class="fa fa-pencil"></i> Disk Cache Throttle</label>
-        <select id="node-input-valueDiskCacheThrottle">
+        <label  for="node-input-valueCacheDiskThrottle" style="width:130px"><i class="fa fa-pencil"></i> Disk IO Throttle</label>
+        <select id="node-input-valueCacheDiskThrottle">
             <option value="normal">Normal</option>
             <option value="slow">Slow</option>
             <option value="fast">Fast</option>

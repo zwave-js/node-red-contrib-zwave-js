@@ -159,9 +159,9 @@ module.exports = function (RED) {
         }
 
         // Disk throttle
-        if(config.valueDiskCacheThrottle !== undefined && config.valueDiskCacheThrottle.length > 0){
-            Log("debug", "REDCTL", undefined, "[OPTIONS] [storage.throttle]", config.valueDiskCacheThrottle)
-            DriverOptions.storage.throttle = config.valueDiskCacheThrottle
+        if(config.valueCacheDiskThrottle !== undefined && config.valueCacheDiskThrottle.length > 0){
+            Log("debug", "REDCTL", undefined, "[OPTIONS] [storage.throttle]", config.valueCacheDiskThrottle)
+            DriverOptions.storage.throttle = config.valueCacheDiskThrottle
         }
 
         // Timeout 
