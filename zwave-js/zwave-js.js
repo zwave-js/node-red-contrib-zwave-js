@@ -598,13 +598,15 @@ module.exports = function (RED) {
                     Params.forEach((NID) =>{
                         let G = {
                             nodeId:NID,
+                            nodeName:getNodeInfoForPayload(NID,'name'),
+                            nodeLocation:getNodeInfoForPayload(NID,'location'),
                             values:[]
                         }
                         const VIDs = Driver.controller.nodes.get(NID).getDefinedValueIDs();
                         VIDs.forEach((VID) =>{
                             let V = Driver.controller.nodes.get(NID).getValue(VID);
                             let VI = {
-                                response:V,
+                                currentValue:V,
                                 valueId:VID
                             }
                             G.values.push(VI)
