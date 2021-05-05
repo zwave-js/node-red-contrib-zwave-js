@@ -146,11 +146,25 @@ module.exports = function (RED) {
             DriverOptions.logConfig.enabled = false;
         }
 
-        // Cache Dir
+        
         DriverOptions.storage = {};
+
+        // Cache Dir
         DriverOptions.storage.cacheDir = Path.join(RED.settings.userDir, "zwave-js-cache");
 
-        // Timeout (Configurable via UI)
+        // Custom  Config Path
+        if(config.customConfigPath !== undefined && config.customConfigPath.length > 0){
+            Log("debug", "REDCTL", undefined, "[OPTIONS] [storage.deviceConfigPriorityDir]", config.customConfigPath)
+            DriverOptions.storage.deviceConfigPriorityDir = config.customConfigPath
+        }
+
+        // Disk throttle
+        if(config.valueDiskCacheThrottle !== undefined && config.valueDiskCacheThrottle.length > 0){
+            Log("debug", "REDCTL", undefined, "[OPTIONS] [storage.throttle]", config.valueDiskCacheThrottle)
+            DriverOptions.storage.throttle = config.valueDiskCacheThrottle
+        }
+
+        // Timeout 
         DriverOptions.timeouts = {};
         if (config.ackTimeout !== undefined && config.ackTimeout.length > 0) {
             Log("debug", "REDCTL", undefined, "[OPTIONS] [timeouts.ack]", config.ackTimeout)

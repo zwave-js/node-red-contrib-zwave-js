@@ -234,6 +234,10 @@ return Message
   - 3.4.0
     - Added a **PollValue** method to the Unmanaged class
     - Added a **GetValueDB** method to the Driver class
+    - Added Ability to adjust how frequently the values and metadata should be written to disk.
+    - Added Ability to set a custom location for device config files
+    - Node property sections no longer auto expanded in the UI (this can be changed)
+    - Bump Z-Wave JS
 
   - 3.3.1
     - Added an optional **forceUpdate** object for **Managed** mode usage. [#51](https://github.com/zwave-js/node-red-contrib-zwave-js/issues/51)  

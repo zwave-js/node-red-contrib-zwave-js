@@ -11,14 +11,16 @@
             {
                 serialPort: { value: undefined },
                 name: { value: "Z-Wave JS Controller" },
-                encryptionKey : {value:undefined},
-                ackTimeout:{value:undefined},
-                controllerTimeout:{value:undefined},
-                sendResponseTimeout:{value:undefined},
-                logLevel:{value:"none"},
-                logFile:{value:undefined},
-                logNodeFilter:{value:undefined},
-                sendUsageStatistics:{value:true}
+                encryptionKey: { value: undefined },
+                ackTimeout: { value: undefined, validate: RED.validators.number() },
+                controllerTimeout: { value: undefined, validate: RED.validators.number() },
+                sendResponseTimeout: { value: undefined, validate: RED.validators.number() },
+                logLevel: { value: "none" },
+                logFile: { value: undefined },
+                logNodeFilter: { value: undefined },
+                sendUsageStatistics: { value: true },
+                valueDiskCacheThrottle: { value: "normal" },
+                customConfigPath: { value: undefined }
             },
             inputs: 1,
             outputs: 1,
@@ -153,6 +155,22 @@
     <div class="form-row">
         <label  for="node-input-logFile" style="width:130px"><i class="fa fa-pencil"></i> Node Filter</label>
         <input type="text" id="node-input-logNodeFilter" placeholder="2,5,24">
+    </div>
+    <br />
+    <p>
+        <strong>Advanced Driver Settings.</strong>
+    </p>
+    <div class="form-row">
+        <label  for="node-input-customConfigPath" style="width:130px"><i class="fa fa-pencil"></i> Custom CFG Dir</label>
+        <input type="text" id="node-input-customConfigPath" placeholder="/some/directory">
+    </div>
+    <div class="form-row">
+        <label  for="node-input-valueDiskCacheThrottle" style="width:130px"><i class="fa fa-pencil"></i> Disk Cache Throttle</label>
+        <select id="node-input-valueDiskCacheThrottle">
+            <option value="normal">Normal</option>
+            <option value="slow">Slow</option>
+            <option value="fast">Fast</option>
+        </select>
     </div>
     <br />
     <p>
