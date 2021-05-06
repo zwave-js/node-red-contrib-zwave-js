@@ -714,6 +714,13 @@ module.exports = function (RED) {
                     Send(ReturnController, "NODE_LIST", Nodes, send);
                     break;
 
+                case "GetNodeNeighbors":
+                    NodeCheck(Params[0])
+                    let NIDs = await Driver.controller.getNodeNeighbors(Params[0]);
+                    ReturnNode.id = Params[0]
+                    Send(ReturnNode, "NODE_NEIGHBORS", NIDs, send);
+                    break;
+
                 case "SetNodeName":
                     NodeCheck(Params[0])
                     Driver.controller.nodes.get(Params[0]).name = Params[1]
