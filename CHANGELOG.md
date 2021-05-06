@@ -4,7 +4,7 @@
     - Added a **PollValue** method to the Unmanaged class
     - Added a **GetValueDB** method to the Driver class
     - Added a **GetNodeNeighbors** method to the Controller class
-    - The **neighbors** property for each node in **NODE_LIST** is now set for removal. (3.5.0)
+    - The **neighbors** property for each node in **NODE_LIST** is now set for removal. (4.0.0)
     - Added Ability to adjust how frequently the values and metadata should be written to disk.
     - Added Ability to set a custom location for device config files
     - Node property sections no longer auto expanded in the UI (this can be changed)
@@ -20,7 +20,7 @@
   - 3.3.0 **Deprecation Warnings**
     - Bump Z-Wave JS
     - Added new Association management methods via a new **Associations** class
-    - The Managed **Association** and **AssociationGroupInfo** classes are now marked for removal (3.5.0).
+    - The Managed **Association** and **AssociationGroupInfo** classes are now marked for removal (4.0.0).
     - Improvments/fixes to logger
     - Fixed Some UI weirdness
     - Improvments/fixes to Z-Wave Device Node
