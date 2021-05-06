@@ -620,9 +620,10 @@ module.exports = function (RED) {
 
         // Unmanaged
         async function Unmanaged(msg, send) {
+
             let Operation = msg.payload.operation
             let Node = msg.payload.node;
-            let Params = msg.payload.params;
+            let Params = msg.payload.params || [];
 
             let ReturnNode = { id: Node };
 
@@ -669,8 +670,9 @@ module.exports = function (RED) {
 
         // Controller
         async function Controller(msg, send) {
+
             let Operation = msg.payload.operation
-            let Params = msg.payload.params;
+            let Params = msg.payload.params || [];
 
             let ReturnController = { id: "Controller" };
             let ReturnNode = { id: "" };
@@ -832,7 +834,7 @@ module.exports = function (RED) {
         async function Associations(msg, send)
         {
             let Operation = msg.payload.operation
-            let Params = msg.payload.params;
+            let Params = msg.payload.params || [];
 
             let ReturnNode = { id: "" };
             switch(Operation)
