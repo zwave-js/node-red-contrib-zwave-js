@@ -477,7 +477,7 @@ module.exports = function (RED) {
             if(!SkipReady){
 
                 if (!Driver.controller.nodes.get(ID).ready) {
-                    let ErrorMSG = "Node " + ID + " is not yet ready, to receive commands.";
+                    let ErrorMSG = "Node " + ID + " is not yet ready to receive commands.";
                     throw new Error(ErrorMSG);
                 }
             }
