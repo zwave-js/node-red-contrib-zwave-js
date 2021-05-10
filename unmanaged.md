@@ -33,6 +33,7 @@ and will as a result, update the cache.
 
 ```javascript
 /* Get all ValueID's for a node */
+/* NOTE: You can also obtain the ValueID for a given property, by double clicking it in the GUI */
 
 let Message = {
     payload: {
