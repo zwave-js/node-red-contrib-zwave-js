@@ -146,11 +146,25 @@ module.exports = function (RED) {
             DriverOptions.logConfig.enabled = false;
         }
 
-        // Cache Dir
+        
         DriverOptions.storage = {};
+
+        // Cache Dir
         DriverOptions.storage.cacheDir = Path.join(RED.settings.userDir, "zwave-js-cache");
 
-        // Timeout (Configurable via UI)
+        // Custom  Config Path
+        if(config.customConfigPath !== undefined && config.customConfigPath.length > 0){
+            Log("debug", "REDCTL", undefined, "[OPTIONS] [storage.deviceConfigPriorityDir]", config.customConfigPath)
+            DriverOptions.storage.deviceConfigPriorityDir = config.customConfigPath
+        }
+
+        // Disk throttle
+        if(config.valueCacheDiskThrottle !== undefined && config.valueCacheDiskThrottle.length > 0){
+            Log("debug", "REDCTL", undefined, "[OPTIONS] [storage.throttle]", config.valueCacheDiskThrottle)
+            DriverOptions.storage.throttle = config.valueCacheDiskThrottle
+        }
+
+        // Timeout 
         DriverOptions.timeouts = {};
         if (config.ackTimeout !== undefined && config.ackTimeout.length > 0) {
             Log("debug", "REDCTL", undefined, "[OPTIONS] [timeouts.ack]", config.ackTimeout)
@@ -463,7 +477,7 @@ module.exports = function (RED) {
             if(!SkipReady){
 
                 if (!Driver.controller.nodes.get(ID).ready) {
-                    let ErrorMSG = "Node " + ID + " is not yet ready, to receive commands.";
+                    let ErrorMSG = "Node " + ID + " is not yet ready to receive commands.";
                     throw new Error(ErrorMSG);
                 }
             }
@@ -563,20 +577,53 @@ module.exports = function (RED) {
         async function DriverCMD(msg, send) {
 
             let Operation = msg.payload.operation;
+            let Params = msg.payload.params || []
             let ReturnNode = { id: "N/A" };
 
             switch (Operation) {
+
                 case "GetEnums":
                     Send(ReturnNode, "ENUM_LIST", Enums, send);
+                    break;
+
+                case "GetValueDB":
+
+                    let Result = [];
+
+                    if(Params.length < 1){
+                        Driver.controller.nodes.forEach((N, NI) => {
+                            Params.push(N.id)
+                        });
+                    }
+                    Params.forEach((NID) =>{
+                        let G = {
+                            nodeId:NID,
+                            nodeName:getNodeInfoForPayload(NID,'name'),
+                            nodeLocation:getNodeInfoForPayload(NID,'location'),
+                            values:[]
+                        }
+                        const VIDs = Driver.controller.nodes.get(NID).getDefinedValueIDs();
+                        VIDs.forEach((VID) =>{
+                            let V = Driver.controller.nodes.get(NID).getValue(VID);
+                            let VI = {
+                                currentValue:V,
+                                valueId:VID
+                            }
+                            G.values.push(VI)
+                        })
+                        Result.push(G);
+                    })
+                    Send(ReturnNode, "VALUE_DB", Result, send);
                     break;
             }
         }
 
         // Unmanaged
         async function Unmanaged(msg, send) {
+
             let Operation = msg.payload.operation
             let Node = msg.payload.node;
-            let Params = msg.payload.params;
+            let Params = msg.payload.params || [];
 
             let ReturnNode = { id: Node };
 
@@ -611,6 +658,11 @@ module.exports = function (RED) {
                     }
                     Send(ReturnNode, "GET_VALUE_METADATA_RESPONSE", ReturnObjectM, send);
                     break;
+
+                case "PollValue":
+                    await Driver.controller.nodes.get(Node).pollValue(Params[0]);
+                    break;
+
             }
 
             return;
@@ -618,8 +670,9 @@ module.exports = function (RED) {
 
         // Controller
         async function Controller(msg, send) {
+
             let Operation = msg.payload.operation
-            let Params = msg.payload.params;
+            let Params = msg.payload.params || [];
 
             let ReturnController = { id: "Controller" };
             let ReturnNode = { id: "" };
@@ -627,6 +680,7 @@ module.exports = function (RED) {
             let SupportsNN = false;
 
             switch (Operation) {
+
                 case "GetNodes":
                     let Nodes = [];
                     Driver.controller.nodes.forEach((N, NI) => {
@@ -660,6 +714,13 @@ module.exports = function (RED) {
                         })
                     });
                     Send(ReturnController, "NODE_LIST", Nodes, send);
+                    break;
+
+                case "GetNodeNeighbors":
+                    NodeCheck(Params[0])
+                    let NIDs = await Driver.controller.getNodeNeighbors(Params[0]);
+                    ReturnNode.id = Params[0]
+                    Send(ReturnNode, "NODE_NEIGHBORS", NIDs, send);
                     break;
 
                 case "SetNodeName":
@@ -773,7 +834,7 @@ module.exports = function (RED) {
         async function Associations(msg, send)
         {
             let Operation = msg.payload.operation
-            let Params = msg.payload.params;
+            let Params = msg.payload.params || [];
 
             let ReturnNode = { id: "" };
             switch(Operation)
@@ -1007,6 +1068,7 @@ module.exports = function (RED) {
                 "ASSOCIATIONS_ADDED",
                 "ASSOCIATIONS_REMOVED",
                 "ALL_ASSOCIATIONS_REMOVED",
+                "VALUE_DB"
             ]
 
             if (!DisallowedSubjectsForDNs.includes(Subject)) {

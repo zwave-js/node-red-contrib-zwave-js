@@ -78,6 +78,14 @@ let ZwaveJsUI = (function () {
       .click(() => getControllers())
       .appendTo(controllerHeader)
 
+    $('<input type="checkbox" id="node-properties-auto-expand">')
+      .css({ margin: '0 2px' })
+      .appendTo(controllerHeader)
+
+    $('<span>')
+    .html('Auto expand node properties')
+      .appendTo(controllerHeader)
+
     $('<button>')
       .addClass('red-ui-button red-ui-button-small')
       .css({ float: 'right' })
@@ -631,7 +639,8 @@ let ZwaveJsUI = (function () {
 
         return {
           element: renderCommandClassElement(commandClass, commandClassName),
-          expanded: !AUTO_HIDE_CC.includes(commandClassName.replace(/\s/g, ' ')),
+         /* expanded: !AUTO_HIDE_CC.includes(commandClassName.replace(/\s/g, ' ')),*/
+         expanded:$("#node-properties-auto-expand").is(':checked'),
           children: propsInCC.map(valueId => {
             return { element: renderPropertyElement(valueId) }
           })
