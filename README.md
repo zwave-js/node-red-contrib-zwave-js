@@ -3,13 +3,14 @@
 # node-red-contrib-zwave-js
 An extremely easy to use, zero dependency and feature rich Z-Wave node for Node Red, based on Z-Wave JS.  
 The implementation is 100% javascript. it is therefore:  
-  - Very fast
+  - Extremely fast
   - Does not require a build of any static library
   - Stable
 
 Install this node via the Node Red palette menu (See [Home Assistant Install](#home-assistant-install) if this applies to you),  
 and you have Z-Wave support in Node Red.  
-  
+
+It offers a massive amount of flexibility and is packed full of features.   
 The node is straightforward to use, and removes all the complexities that you would otherwise need to deal with.
 
   - Add the node into your flow
