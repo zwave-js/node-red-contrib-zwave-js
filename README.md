@@ -189,14 +189,14 @@ let Message = {
 return Message;
 ```
 
-## Notes on StartInclusion  
+## Notes on Controller -> StartInclusion  
 By default, the include process will only include secure devices, if you want to include non-secure devices, provide a **true** value 
 
-## Notes on HardReset  
+## Notes on Controller -> HardReset  
 A one-way ticket for wiping out all the configuration on the controller.  
 Once you call this method, there is no going back - you are hearby **WARNED of the consequences**.  
 
-## Notes on ProprietaryFunc
+## Notes on Controller -> ProprietaryFunc
 The **Data** argument, must ONLY contain the data portion of the request  
 As an example, this byte array **[0x01, 0x08, 0x00, 0xF2, 0x51, 0x01, 0x00, 0x05, 0x01, 0x51]**  
 disables the LED on the GEN 5 Z-Stick, breaking it down we have:  

@@ -21,6 +21,12 @@ module.exports = function (RED) {
         ThermostatMode: ZWaveJS.ThermostatMode,
         SetPointType: ZWaveJS.ThermostatSetpointType,
         DoorLockMode: ZWaveJS.DoorLockMode,
+        AlarmSensorType: ZWaveJS.AlarmSensorType,
+        BarrierState:ZWaveJS.BarrierState,
+        SubsystemType:ZWaveJS.SubsystemType,
+        SubsystemState:ZWaveJS.SubsystemState,
+        UserIDStatus:ZWaveJS.UserIDStatus,
+        KeypadMode:ZWaveJS.KeypadMode,
 
         // node enums
         InterviewStage: ZWaveJS.InterviewStage,

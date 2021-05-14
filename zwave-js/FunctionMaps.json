@@ -1,4 +1,113 @@
 {
+    "UserCode": {
+        "MapsToClass": "User Code",
+        "Operations": {
+            "GetUsersCount": {
+                "MapsToFunc": "getUsersCount",
+                "ParamsOptional": 0,
+                "ParamsRequired": 0
+            },
+            "Get": {
+                "MapsToFunc": "get",
+                "ParamsOptional": 1,
+                "ParamsRequired": 1
+            },
+            "Set": {
+                "MapsToFunc": "set",
+                "ParamsOptional": 0,
+                "ParamsRequired": 3,
+                "ParamEnumDependency": {
+                    "1": "UserIDStatus"
+                }
+            },
+            "Clear": {
+                "MapsToFunc": "clear",
+                "ParamsOptional": 0,
+                "ParamsRequired": 1
+            },
+            "GetKeypadMode": {
+                "MapsToFunc": "getKeypadMode",
+                "ParamsOptional": 0,
+                "ParamsRequired": 0
+            },
+            "SetKeypadMode": {
+                "MapsToFunc": "setKeypadMode",
+                "ParamsOptional": 0,
+                "ParamsRequired": 1,
+                "ParamEnumDependency": {
+                    "0": "KeypadMode"
+                }
+            },
+            "GetMasterCode": {
+                "MapsToFunc": "getMasterCode",
+                "ParamsOptional": 0,
+                "ParamsRequired": 0
+            },
+            "SetMasterCode": {
+                "MapsToFunc": "setMasterCode",
+                "ParamsOptional": 0,
+                "ParamsRequired": 1
+            }
+        }
+    },
+    "AlarmSensor": {
+        "MapsToClass": "Alarm Sensor",
+        "Operations": {
+            "Get": {
+                "MapsToFunc": "get",
+                "ParamsOptional": 1,
+                "ParamsRequired": 0,
+                "ParamEnumDependency": {
+                    "0": "AlarmSensorType"
+                }
+            },
+            "GetSupportedSensorTypes": {
+                "MapsToFunc": "getSupportedSensorTypes",
+                "ParamsOptional": 0,
+                "ParamsRequired": 0
+            }
+        }
+    },
+    "BarrierOperator": {
+        "MapsToClass": "Barrier Operator",
+        "Operations": {
+            "Get": {
+                "MapsToFunc": "get",
+                "ParamsOptional": 0,
+                "ParamsRequired": 0
+            },
+            "Set": {
+                "MapsToFunc": "set",
+                "ParamsOptional": 0,
+                "ParamsRequired": 1,
+                "ParamEnumDependency": {
+                    "0": "BarrierState"
+                }
+            },
+            "GetSignalingCapabilities": {
+                "MapsToFunc": "getSignalingCapabilities",
+                "ParamsOptional": 0,
+                "ParamsRequired": 0
+            },
+            "GetEventSignaling": {
+                "MapsToFunc": "getEventSignaling",
+                "ParamsOptional": 1,
+                "ParamsRequired": 0,
+                "ParamEnumDependency": {
+                    "0": "SubsystemType"
+                }
+            },
+            "SetEventSignaling": {
+                "MapsToFunc": "setEventSignaling",
+                "ParamsOptional": 0,
+                "ParamsRequired": 2,
+                "ParamEnumDependency": {
+                    "0": "SubsystemType",
+                    "1": "SubsystemState"
+                }
+            }
+        }
+    },
     "MultilevelSensor": {
         "MapsToClass": "Multilevel Sensor",
         "Operations": {
@@ -85,8 +194,8 @@
         "Operations": {
             "Get": {
                 "MapsToFunc": "get",
-                "ParamsRequired": 1,
-                "ParamsOptional": 0
+                "ParamsRequired": 0,
+                "ParamsOptional": 1
             },
             "GetAll": {
                 "MapsToFunc": "getAll",
