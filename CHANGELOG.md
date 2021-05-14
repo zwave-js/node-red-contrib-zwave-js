@@ -1,6 +1,6 @@
   # node-red-contrib-zwave-js Change Log
 
-   - 3.5.0  
+  - 3.5.0  
     - Added support for **User Code** CC to Managed mode  
     - Added support for **Alarm Sensor** CC to Managed mode  
     - Added support for **Barrier Operator** CC to Managed mode  
