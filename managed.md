@@ -34,14 +34,6 @@ Currently, the supported command classes are (when using Managed mode).
 | BarrierOperator                    | GetSignalingCapabilities            |                                                       |
 | BarrierOperator                    | GetEventSignaling                   | [**SubsystemType**: Enum]                             |
 | BarrierOperator                    | SetEventSignaling                   | [**SubsystemType**: Enum, **SubsystemState**: Enum]   |
-| UserCode                           | Set                                 | [UserID: Number, **UserIDStatus**: Enum, UserCode: String] |
-| UserCode                           | GetUsersCount                       |                                                       |
-| UserCode                           | Get                                 | [UserID: Number, Multiple: Bool (Optional)]           |
-| UserCode                           | Clear (see notes)                   | [UserID: Number]                                      |
-| UserCode                           | GetKeypadMode                       |                                                       |
-| UserCode                           | SetKeypadMode                       | [**KeypadMode**: Enum]                                |
-| UserCode                           | GetMasterCode                       |                                                       |
-| UserCode                           | SetMasterCode                       | [Code: String]                                        |
 | Basic                              | Set                                 | [Number]                                              |
 | Basic                              | Get                                 |                                                       |
 | Battery                            | Get                                 |                                                       |
@@ -84,6 +76,14 @@ Currently, the supported command classes are (when using Managed mode).
 | ThermostatOperatingState           | Get                                 |                                                       | 
 | ThermostatSetback                  | Set (See Notes)                     | [**SetbackType**: Enum, Set Back State: String \| Number] | 
 | ThermostatSetback                  | Get                                 |                                                       | 
+| UserCode                           | Set                                 | [UserID: Number, **UserIDStatus**: Enum, UserCode: String] |
+| UserCode                           | GetUsersCount                       |                                                       |
+| UserCode                           | Get                                 | [UserID: Number, Multiple: Bool (Optional)]           |
+| UserCode                           | Clear (see notes)                   | [UserID: Number]                                      |
+| UserCode                           | GetKeypadMode                       |                                                       |
+| UserCode                           | SetKeypadMode                       | [**KeypadMode**: Enum]                                |
+| UserCode                           | GetMasterCode                       |                                                       |
+| UserCode                           | SetMasterCode                       | [Code: String]                                        |
 | WakeInterval                       | Set (See Notes)                     | [Seconds: Number, Controller Node ID:Number]          |
 | WakeInterval                       | Get                                 |                                                       | 
 
