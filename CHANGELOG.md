@@ -1,10 +1,15 @@
   # node-red-contrib-zwave-js Change Log
 
-  - 3.5.0  
+  - 3.5.0  **Possible Breaking Change**
     - Added support for **User Code** CC to Managed mode  
     - Added support for **Alarm Sensor** CC to Managed mode  
     - Added support for **Barrier Operator** CC to Managed mode  
     - Fixed Meter Optional param  
+    - Removed a temporary work around captruing the mismatched  **endPoint** property  
+      **endpoint** is now the required property (no longer a capital P) if specifying the endpoint.  
+      See change log for 1.3.0.
+    - Optimisations to **Duration** porcessing
+    - Bump Z-Wave JS to 7.5.0
   
   - 3.4.0 **Deprecation Warnings**
     - Added a **PollValue** method to the Unmanaged class
