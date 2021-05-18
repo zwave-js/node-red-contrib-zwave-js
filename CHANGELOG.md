@@ -5,9 +5,9 @@
     - Added support for **Alarm Sensor** CC to Managed mode  
     - Added support for **Barrier Operator** CC to Managed mode  
     - Fixed Meter Optional param  
-    - Removed a temporary work around captruing the mismatched  **endPoint** property  
+    - Removed a temporary work around capturing the mismatched  **endPoint** property  
       **endpoint** is now the required property (no longer a capital P) if specifying the endpoint.  
-      See change log for 1.3.0.
+      See change log for **1.3.0**.
     - Optimisations to **Duration** porcessing
     - Bump Z-Wave JS to 7.5.0
   
