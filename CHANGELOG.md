@@ -9,8 +9,7 @@
       **endpoint** is now the required property (no longer a capital P) if specifying the endpoint.  
       See change log for **1.3.0**.
     - Optimisations to **Duration** porcessing
-    - Bump Z-Wave JS to 7.5.0
-    - Node Red UI performance improvements (i.e fetching values for a node, is now completed with 1 call, as apposed for each property)
+    - Bump Z-Wave JS to 7.5.1
   
   - 3.4.0 **Deprecation Warnings**
     - Added a **PollValue** method to the Unmanaged class
