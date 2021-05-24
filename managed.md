@@ -40,6 +40,8 @@ Currently, the supported command classes are (when using Managed mode).
 | BinarySensor                       | Get                                 | [**BinarySensorType**: Enum]                          |
 | BinarySwitch                       | Set                                 | [Bool, **Duration**: Object (Optional)]               |
 | BinarySwitch                       | Get                                 |                                                       |
+| Clock                              | Set                                 | [Hour: Number, Minute: Number, **Weekday**: Enum (Optional)] |
+| Clock                              | Get                                 |                                                       |
 | Configuration                      | Set                                 | [ParamID: Number, Value: Number, Value Length: Number]|
 | Configuration                      | Get                                 | [ParamID: Number]                                     |
 | ColorSwitch                        | Set                                 | [**Color**: Object]                                   |

@@ -27,6 +27,7 @@ module.exports = function (RED) {
         SubsystemState:ZWaveJS.SubsystemState,
         UserIDStatus:ZWaveJS.UserIDStatus,
         KeypadMode:ZWaveJS.KeypadMode,
+        Weekday:ZWaveJS.Weekday,
 
         // node enums
         InterviewStage: ZWaveJS.InterviewStage,

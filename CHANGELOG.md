@@ -4,6 +4,7 @@
     - Added support for **User Code** CC to Managed mode  
     - Added support for **Alarm Sensor** CC to Managed mode  
     - Added support for **Barrier Operator** CC to Managed mode  
+    - Added support for **Clock** CC to Managed mode  
     - Fixed Meter Optional param  
     - Removed a temporary work around capturing the mismatched  **endPoint** property  
       **endpoint** is now the required property (no longer a capital P) if specifying the endpoint.  

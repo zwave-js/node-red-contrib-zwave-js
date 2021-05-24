@@ -1,4 +1,22 @@
 {
+    "Clock": {
+        "MapsToClass": "Clock",
+        "Operations": {
+            "Get": {
+                "MapsToFunc": "get",
+                "ParamsOptional": 0,
+                "ParamsRequired": 0
+            },
+            "Set": {
+                "MapsToFunc": "set",
+                "ParamsOptional": 1,
+                "ParamsRequired": 2,
+                "ParamEnumDependency": {
+                    "2": "Weekday"
+                }
+            }
+        }
+    },
     "UserCode": {
         "MapsToClass": "User Code",
         "Operations": {
