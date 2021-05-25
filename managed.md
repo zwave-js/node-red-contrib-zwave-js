@@ -164,7 +164,7 @@ you can enforce an update by suppplying a **forceUpdate** object, and providing
 properties normally found in **VALUE_UPDATED** events, namely **property** and sometimes **propertyKey**.  
 
 Whilst you can overwrite the force update request and set **endpoint** and **commandClass**,  
-Unless there is a specfic reason to do so, it's best to allow the system to take care of this for you.
+Unless there is a specific reason to do so, it's best to allow the system to take care of this for you.
 
 This will cause extra traffic in your network, so only use this if needed.
 
