@@ -1082,11 +1082,11 @@ module.exports = function (RED) {
 
         // Duration Fix
         function ProcessDurationClass(Class, Operation, Params) {
-            if (Params.length > 0) {
+            if (Params.length > 1) {
                 if (typeof Params[1] === "object") {
                     let Keys = Object.keys(Params[1]);
                     if (Keys.length === 1 && Keys[0] === "Duration") {
-                        let D = new Duration(Params[i].Duration.value, Params[i].Duration.unit)
+                        let D = new Duration(Params[1].Duration.value, Params[1].Duration.unit)
                         Params[1] = D;
                     }
                 }
