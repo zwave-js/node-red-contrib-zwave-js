@@ -10,7 +10,10 @@
       **endpoint** is now the required property (no longer a capital P) if specifying the endpoint.  
       See change log for **1.3.0**.
     - Optimisations to **Duration** porcessing
-    - Bump Z-Wave JS to 7.5.1
+    - The **forceUpdate** object for Managed access, can now contain any property normally found in the ValueID interface.
+      Including overwriting the **endpoint** property - which will normally be provided for you.
+    - Bump Z-Wave JS to 7.5.2  
+    - Bump Serial Ports 
   
   - 3.4.0 **Deprecation Warnings**
     - Added a **PollValue** method to the Unmanaged class

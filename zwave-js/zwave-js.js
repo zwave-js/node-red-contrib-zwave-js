@@ -564,13 +564,12 @@ module.exports = function (RED) {
 
             if(forceUpdate !== undefined){
                 let VID = {
-                    commandClass:Map.MapsToClass,
-                    endpoint:EP,
-                    property:forceUpdate.property,
+                    commandClass:CommandClasses[Map.MapsToClass],
+                    endpoint:EP
                 }
-                if(forceUpdate.propertyKey !== undefined){
-                    VID.propertyKey = forceUpdate.propertyKey
-                }
+                Object.keys(forceUpdate).forEach((VIDK) =>{
+                    VID[VIDK] = forceUpdate[VIDK]
+                })
                 Log("debug", "REDCTL", "OUT", "[FORCE-UPDATE]", printForceUpdate(Node, VID))
                 await Driver.controller.nodes.get(Node).pollValue(VID) 
             }

@@ -4,8 +4,8 @@
   "license": "MIT",
   "description": "An extremely easy to use, zero dependency and feature rich Z-Wave node for Node Red, based on Z-Wave JS.",
   "dependencies": {
-    "serialport": "9.0.7",
-    "zwave-js": "7.5.0",
+    "serialport": "9.0.8",
+    "zwave-js": "7.5.2",
     "winston": "3.3.3"
   },
   "keywords": [
