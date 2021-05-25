@@ -21,6 +21,13 @@ module.exports = function (RED) {
         ThermostatMode: ZWaveJS.ThermostatMode,
         SetPointType: ZWaveJS.ThermostatSetpointType,
         DoorLockMode: ZWaveJS.DoorLockMode,
+        AlarmSensorType: ZWaveJS.AlarmSensorType,
+        BarrierState:ZWaveJS.BarrierState,
+        SubsystemType:ZWaveJS.SubsystemType,
+        SubsystemState:ZWaveJS.SubsystemState,
+        UserIDStatus:ZWaveJS.UserIDStatus,
+        KeypadMode:ZWaveJS.KeypadMode,
+        Weekday:ZWaveJS.Weekday,
 
         // node enums
         InterviewStage: ZWaveJS.InterviewStage,
@@ -520,8 +527,6 @@ module.exports = function (RED) {
 
             if (msg.payload.hasOwnProperty("endpoint")) {
                 EP = parseInt(msg.payload.endpoint)
-            } else if (msg.payload.hasOwnProperty("endPoint")) {
-                EP = parseInt(msg.payload.endPoint)
             }
 
             if (Func.hasOwnProperty("ParamEnumDependency")) {
@@ -559,13 +564,12 @@ module.exports = function (RED) {
 
             if(forceUpdate !== undefined){
                 let VID = {
-                    commandClass:Map.MapsToClass,
-                    endpoint:EP,
-                    property:forceUpdate.property,
+                    commandClass:CommandClasses[Map.MapsToClass],
+                    endpoint:EP
                 }
-                if(forceUpdate.propertyKey !== undefined){
-                    VID.propertyKey = forceUpdate.propertyKey
-                }
+                Object.keys(forceUpdate).forEach((VIDK) =>{
+                    VID[VIDK] = forceUpdate[VIDK]
+                })
                 Log("debug", "REDCTL", "OUT", "[FORCE-UPDATE]", printForceUpdate(Node, VID))
                 await Driver.controller.nodes.get(Node).pollValue(VID) 
             }
@@ -1078,17 +1082,12 @@ module.exports = function (RED) {
 
         // Duration Fix
         function ProcessDurationClass(Class, Operation, Params) {
-            if (Params.length > 0) {
-                for (let i = 0; i < Params.length; i++) {
-                    if (typeof Params[i] === "object") {
-                        let Keys = Object.keys(Params[i]);
-                        if (Keys.length === 1) {
-                            if (Keys[0] === "Duration") {
-                                let D = new Duration(Params[i].Duration.value, Params[i].Duration.unit)
-                                Params[i] = D;
-
-                            }
-                        }
+            if (Params.length > 1) {
+                if (typeof Params[1] === "object") {
+                    let Keys = Object.keys(Params[1]);
+                    if (Keys.length === 1 && Keys[0] === "Duration") {
+                        let D = new Duration(Params[1].Duration.value, Params[1].Duration.unit)
+                        Params[1] = D;
                     }
                 }
             }

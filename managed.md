@@ -27,12 +27,21 @@ Currently, the supported command classes are (when using Managed mode).
 | Association (Deprecated)           | RemoveNodesFromAllGroups            | [NodeIDs: Number[]]                                   |
 | Association (Deprecated)           | GetGroupCount                       |                                                       |
 | AssociationGroupInfo (Deprecated)  | GetGroupName                        | [Group ID: Number]                                    |
+| AlarmSensor                        | Get                                 | [**AlarmSensorType**: Enum (Optional)]                |
+| AlarmSensor                        | GetSupportedSensorTypes             |                                                       |
+| BarrierOperator                    | Set                                 | [**BarrierState**: Enum]                              |
+| BarrierOperator                    | Get                                 |                                                       |
+| BarrierOperator                    | GetSignalingCapabilities            |                                                       |
+| BarrierOperator                    | GetEventSignaling                   | [**SubsystemType**: Enum]                             |
+| BarrierOperator                    | SetEventSignaling                   | [**SubsystemType**: Enum, **SubsystemState**: Enum]   |
 | Basic                              | Set                                 | [Number]                                              |
 | Basic                              | Get                                 |                                                       |
 | Battery                            | Get                                 |                                                       |
 | BinarySensor                       | Get                                 | [**BinarySensorType**: Enum]                          |
 | BinarySwitch                       | Set                                 | [Bool, **Duration**: Object (Optional)]               |
 | BinarySwitch                       | Get                                 |                                                       |
+| Clock                              | Set                                 | [Hour: Number, Minute: Number, **Weekday**: Enum (Optional)] |
+| Clock                              | Get                                 |                                                       |
 | Configuration                      | Set                                 | [ParamID: Number, Value: Number, Value Length: Number]|
 | Configuration                      | Get                                 | [ParamID: Number]                                     |
 | ColorSwitch                        | Set                                 | [**Color**: Object]                                   |
@@ -46,7 +55,7 @@ Currently, the supported command classes are (when using Managed mode).
 | Lock                               | Get                                 |                                                       |
 | Indicator                          | Set                                 | [Value: Number] \| [**Indicator**[]: Object]          |
 | Indicator                          | Get                                 | [Indicator: Number (Optional)]                        |
-| Meter                              | Get                                 | [**MeterOptions**: Object]                            |
+| Meter                              | Get                                 | [**MeterOptions**: Object (Optional)]                 |
 | Meter                              | GetAll                              |                                                       |
 | Meter                              | Reset                               | [**MeterResetOptions**: Object]                       |
 | MultiLevelSwitch                   | Set                                 | [Number, **Duration**: Object (Optional)]             |
@@ -67,8 +76,16 @@ Currently, the supported command classes are (when using Managed mode).
 | ThermostatSetPoint                 | Set                                 | [**SetPointType**: Enum, Value: Number, Scale: Number] |
 | ThermostatSetPoint                 | Get                                 | [**SetPointType**: Enum]                              | 
 | ThermostatOperatingState           | Get                                 |                                                       | 
-| ThermostatSetback                  | Set  (See Notes)                    | [**SetbackType**: Enum, Set Back State: String \| Number] | 
+| ThermostatSetback                  | Set (See Notes)                     | [**SetbackType**: Enum, Set Back State: String \| Number] | 
 | ThermostatSetback                  | Get                                 |                                                       | 
+| UserCode                           | Set                                 | [UserID: Number, **UserIDStatus**: Enum, UserCode: String] |
+| UserCode                           | GetUsersCount                       |                                                       |
+| UserCode                           | Get                                 | [UserID: Number, Multiple: Bool (Optional)]           |
+| UserCode                           | Clear (see notes)                   | [UserID: Number]                                      |
+| UserCode                           | GetKeypadMode                       |                                                       |
+| UserCode                           | SetKeypadMode                       | [**KeypadMode**: Enum]                                |
+| UserCode                           | GetMasterCode                       |                                                       |
+| UserCode                           | SetMasterCode                       | [Code: String]                                        |
 | WakeInterval                       | Set (See Notes)                     | [Seconds: Number, Controller Node ID:Number]          |
 | WakeInterval                       | Get                                 |                                                       | 
 
@@ -142,9 +159,12 @@ return Message
 ```
 
 ## Forcing Updates
-If you prefer Managed Mode, but have devices (or endpoints), that do not report back updated values,
+If you prefer Managed Mode, but have devices (or endpoints), that do not report back updated values,  
 you can enforce an update by suppplying a **forceUpdate** object, and providing  
-a **property** and optionally **propertyKey** - both of which are avalable in VALUE_UPDATED events.  
+properties normally found in **VALUE_UPDATED** events, namely **property** and sometimes **propertyKey**.  
+
+Whilst you can overwrite the force update request and set **endpoint** and **commandClass**,  
+Unless there is a specific reason to do so, it's best to allow the system to take care of this for you.
 
 This will cause extra traffic in your network, so only use this if needed.
 
@@ -175,15 +195,17 @@ Please see the [&#x1F517;Associations](./README.md#controllerdriver-and-associat
   - RemoveAssociations
   - RemoveNodeFromAllAssociations
 
+## Notes on UserCode -> Clear
+Specifying 0, will clear all User Codes.  
 
-## Notes on WakeInterval  
+## Notes on WakeInterval -> Set  
 When setting the interval, the **Controller Node ID** parameter will almost certainly be 1 - unless you have multiple controllers,
 and you want the wake up to be recieved by a different controller. 
 
-## Notes on GetSupportedKeys
+## Notes on EntryControl -> GetSupportedKeys
 This will return an array of ASCII codes - representing the keys that are supported on the device  
 
-## Notes on ThermostatSetback  
+## Notes on ThermostatSetback -> Set  
 If specifing a string, the valid values are: **Frost Protection** | **Energy Saving** | **Unused**
 
 ## Object Structures  

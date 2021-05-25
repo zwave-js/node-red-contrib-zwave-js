@@ -3,13 +3,14 @@
 # node-red-contrib-zwave-js
 An extremely easy to use, zero dependency and feature rich Z-Wave node for Node Red, based on Z-Wave JS.  
 The implementation is 100% javascript. it is therefore:  
-  - Very fast
+  - Extremely fast
   - Does not require a build of any static library
   - Stable
 
 Install this node via the Node Red palette menu (See [Home Assistant Install](#home-assistant-install) if this applies to you),  
 and you have Z-Wave support in Node Red.  
-  
+
+It offers a massive amount of flexibility and is packed full of features.   
 The node is straightforward to use, and removes all the complexities that you would otherwise need to deal with.
 
   - Add the node into your flow
@@ -25,8 +26,8 @@ The node is straightforward to use, and removes all the complexities that you wo
 Z-Wave JS is actively  maintained, fast and supports the security command class.
 
 ## Home Assistant Install
-Please note: This is a self contained Z-Wave driver for Node Red, it will not work along side the Z-Wave plugin for Home Assistant.  
-if this isn't your setup, then please refer to the below guide to install into the Node Red instance that HA provides.
+Please note: This is a self contained Z-Wave driver for Node Red, it will not work along side the Z-Wave add-on for Home Assistant.  
+If however, you use the Node Red add-on, and want Z-Wave to be managed from with-in Node Red, see below for instructions.  
 
   - Do not attempt to install this node, via the palette menu - it will likely not install some serial port stuff.  
   - Edit the Node Red add-on configuration as below (specifically  **system_packages** and **npm_packages**)
@@ -48,7 +49,8 @@ npm_packages:
 ## Node config (Advanced Driver Settings)
 **Custom CFG Dir**  
 Z-Wave JS allows a custom directory, that will be used to search for additonal Device configuration files.  
-Note: if an internal device config is found to have the same identifiers, the one in the custom folder will take priority.  
+Note: if an internal device config is found to have the same identifiers, the one in the directory folder will take priority.  
+Please also note, the specified directory will be recursively scanned.   
 
 **Disk IO Throttle**  
 If using **Unmanaged** Mode (see further down), the values received from **GetValue**, will be from a cache.  
@@ -189,14 +191,14 @@ let Message = {
 return Message;
 ```
 
-## Notes on StartInclusion  
+## Notes on Controller -> StartInclusion  
 By default, the include process will only include secure devices, if you want to include non-secure devices, provide a **true** value 
 
-## Notes on HardReset  
+## Notes on Controller -> HardReset  
 A one-way ticket for wiping out all the configuration on the controller.  
 Once you call this method, there is no going back - you are hearby **WARNED of the consequences**.  
 
-## Notes on ProprietaryFunc
+## Notes on Controller -> ProprietaryFunc
 The **Data** argument, must ONLY contain the data portion of the request  
 As an example, this byte array **[0x01, 0x08, 0x00, 0xF2, 0x51, 0x01, 0x00, 0x05, 0x01, 0x51]**  
 disables the LED on the GEN 5 Z-Stick, breaking it down we have:  
