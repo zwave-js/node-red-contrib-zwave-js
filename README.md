@@ -130,6 +130,7 @@ Whatever your poison, the node will inject the following events, into your flow.
 | ALL_ASSOCIATIONS_REMOVED    | The source Node ID                  |                                 | All Associations Were Removed     |  
 | VALUE_DB                    | "N/A"                               | A Structured Value DB object    | Response to GetValueDB            |  
 | NODE_NEIGHBORS              | The source Node ID                  | Array of Node IDs               | Response to GetNodeNeighbors      |  
+| NODE_KEEP_AWAKE             | The source Node ID                  | Bool : Keep Awake Status        | Response to KeepNodeAwake         |  
 
 
 And such event(s) will look like this.
@@ -169,6 +170,7 @@ Some Association methods require an Object, these are detailed at the bottom.
 | Controller                | SetNodeName                         | [Node ID: Number, Node Name: String]                  |
 | Controller                | SetNodeLocation                     | [Node ID: Number, Node Location: String]              |
 | Controller                | GetNodeNeighbors                    | [Node ID: Number]                                     |
+| Controller                | KeepNodeAwake                       | [Node ID: Number, Bool]                               |
 | Associations              | GetAssociationGroups                | [**AssociationAddress**: Object]                      |
 | Associations              | GetAllAssociationGroups             | [Node ID: Number]                                     |
 | Associations              | GetAssociations                     | [**AssociationAddress**: Object]                      |

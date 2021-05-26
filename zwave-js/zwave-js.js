@@ -714,10 +714,18 @@ module.exports = function (RED) {
                             neighbors: N.neighbors,
                             deviceConfig: N.deviceConfig,
                             isControllerNode: N.isControllerNode(),
-                            supportsBeaming: N.supportsBeaming
+                            supportsBeaming: N.supportsBeaming,
+                            keepAwake: N.keepAwake
                         })
                     });
                     Send(ReturnController, "NODE_LIST", Nodes, send);
+                    break;
+
+                case "KeepNodeAwake":
+                    NodeCheck(Params[0])
+                    ReturnNode.id = Params[0]
+                    Driver.controller.nodes.get(Params[0]).keepAwake = Params[1]
+                    Send(ReturnNode, "NODE_KEEP_AWAKE", Params[1], send)
                     break;
 
                 case "GetNodeNeighbors":

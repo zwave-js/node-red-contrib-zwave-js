@@ -1,5 +1,10 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 3.6.0
+    - Added ability to Keep Nodes Awake using a controller method of **KeepNodeAwake**
+    - Added Keep Awake Status in **NODE_LIST**
+    - Bumped Z-Wave JS to 7.6.0
+
   - 3.5.0  **Possible Breaking Change**
     - Added support for **User Code** CC to Managed mode  
     - Added support for **Alarm Sensor** CC to Managed mode  
