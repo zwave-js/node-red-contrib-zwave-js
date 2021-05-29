@@ -1,5 +1,11 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 3.7.0
+    - Added **ToggleRF** method to the **Controller** class
+    - Added **SetRFRegion** and **GetRFRegion** methods to the **Controller** class
+    - Bumped Z-Wave JS to 7.7.1
+    - Bumped Serial Ports to 9.1.0
+
   - 3.6.0
     - Added ability to Keep Nodes Awake using a controller method of **KeepNodeAwake**
     - Added Keep Awake Status in **NODE_LIST**
