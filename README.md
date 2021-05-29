@@ -131,6 +131,9 @@ Whatever your poison, the node will inject the following events, into your flow.
 | VALUE_DB                    | "N/A"                               | A Structured Value DB object    | Response to GetValueDB            |  
 | NODE_NEIGHBORS              | The source Node ID                  | Array of Node IDs               | Response to GetNodeNeighbors      |  
 | NODE_KEEP_AWAKE             | The source Node ID                  | Bool : Keep Awake Status        | Response to KeepNodeAwake         |  
+| CURRENT_RF_REGION           | "Controller"                        | The current RF Region           | Response to GetRFRegion           |  
+| RF_REGION_SET               | "Controller"                        | The RF Region that was set      | Response to SetRFRegion           |  
+| RF_STATUS                   | "Controller"                        | The RF Status                   | Response to ToggleRF              |  
 
 
 And such event(s) will look like this.
@@ -159,11 +162,11 @@ Some Association methods require an Object, these are detailed at the bottom.
 | ------------------------- | ----------------------------------- | ----------------------------------------------------- |
 | Controller                | StartHealNetwork                    |                                                       |
 | Controller                | StopHealNetwork                     |                                                       |
-| Controller                | StartInclusion (see Notes)          | [Include Non-Secure: Bool (optional)]                 |
+| Controller                | StartInclusion (See Notes)          | [Include Non-Secure: Bool (optional)]                 |
 | Controller                | StopInclusion                       |                                                       |
 | Controller                | StartExclusion                      |                                                       |
 | Controller                | StopExclusion                       |                                                       |
-| Controller                | HardReset (see Notes)               |                                                       |
+| Controller                | HardReset (See Notes)               |                                                       |
 | Controller                | ProprietaryFunc (See Notes)         | [Serial Function ID: Number, Data: Buffer]            |
 | Controller                | InterviewNode                       | [Node ID: Number]                                     |
 | Controller                | GetNodes                            |                                                       |
@@ -171,6 +174,9 @@ Some Association methods require an Object, these are detailed at the bottom.
 | Controller                | SetNodeLocation                     | [Node ID: Number, Node Location: String]              |
 | Controller                | GetNodeNeighbors                    | [Node ID: Number]                                     |
 | Controller                | KeepNodeAwake                       | [Node ID: Number, Bool]                               |
+| Controller                | GetRFRegion (See Notes)             |                                                       |
+| Controller                | SetRFRegion (See Notes)             | [**RFRegion**: Enum]                                  |
+| Controller                | ToggleRF                            | [Status: Bool]                                        |
 | Associations              | GetAssociationGroups                | [**AssociationAddress**: Object]                      |
 | Associations              | GetAllAssociationGroups             | [Node ID: Number]                                     |
 | Associations              | GetAssociations                     | [**AssociationAddress**: Object]                      |
@@ -192,6 +198,9 @@ let Message = {
 }
 return Message;
 ```
+
+## Notes on Controller -> Set/Get RF Region  
+Support for these Commands, must be proivided by your stick.  
 
 ## Notes on Controller -> StartInclusion  
 By default, the include process will only include secure devices, if you want to include non-secure devices, provide a **true** value 

@@ -29,6 +29,9 @@ module.exports = function (RED) {
         KeypadMode:ZWaveJS.KeypadMode,
         Weekday:ZWaveJS.Weekday,
 
+        // Controller Enums
+        RFRegion: ZWaveJS.RFRegion,
+
         // node enums
         InterviewStage: ZWaveJS.InterviewStage,
         NodeStatus: ZWaveJS.NodeStatus,
@@ -684,6 +687,21 @@ module.exports = function (RED) {
             let SupportsNN = false;
 
             switch (Operation) {
+
+                case "GetRFRegion":
+                    let RFR = await Driver.controller.getRFRegion();
+                    Send(ReturnController, "CURRENT_RF_REGION", Enums.RFRegion[RFR], send);
+                    break;
+
+                case "SetRFRegion":
+                    await Driver.controller.setRFRegion(Enums.RFRegion[Params[0]]);
+                    Send(ReturnController, "RF_REGION_SET", Enums.RFRegion[RFR], send);
+                    break;
+
+                case "ToggleRF":
+                    await Driver.controller.toggleRF(Params[0]);
+                    Send(ReturnController, "RF_STATUS", Params[0], send);
+                    break;
 
                 case "GetNodes":
                     let Nodes = [];
