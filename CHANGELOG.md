@@ -1,5 +1,8 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 3.7.1
+    - Fix typo in **SetRFRegion** code
+
   - 3.7.0
     - Added **ToggleRF** method to the **Controller** class
     - Added **SetRFRegion** and **GetRFRegion** methods to the **Controller** class
