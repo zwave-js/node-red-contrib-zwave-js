@@ -695,7 +695,7 @@ module.exports = function (RED) {
 
                 case "SetRFRegion":
                     await Driver.controller.setRFRegion(Enums.RFRegion[Params[0]]);
-                    Send(ReturnController, "RF_REGION_SET", Enums.RFRegion[RFR], send);
+                    Send(ReturnController, "RF_REGION_SET", Params[0], send);
                     break;
 
                 case "ToggleRF":
