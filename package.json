@@ -8,6 +8,12 @@
     "zwave-js": "7.7.3",
     "winston": "3.3.3"
   },
+  "resolutions": {
+    "serialport": "9.0.7"
+  },
+  "scripts": {
+    "preinstall": "npx npm-force-resolutions"
+  },
   "keywords": [
     "node-red",
     "zwave",
