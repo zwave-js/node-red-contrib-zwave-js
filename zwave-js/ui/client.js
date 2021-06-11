@@ -448,7 +448,7 @@ let ZwaveJsUI = (function () {
       .then(({ object }) => {
         let controllerNode = object.filter(N => N.isControllerNode)
         if (controllerNode.length > 0) {
-          makeInfo('#zwave-js-controller-info', controllerNode[0].deviceConfig)
+          makeInfo('#zwave-js-controller-info', controllerNode[0].deviceConfig,controllerNode[0].firmwareVersion)
         }
 
         $('#zwave-js-node-list')
@@ -483,12 +483,12 @@ let ZwaveJsUI = (function () {
     return i
   }
 
-  function makeInfo(elId, deviceConfig = {}) {
+  function makeInfo(elId, deviceConfig = {},firmwareVersion) {
     let el = $(elId)
 
     el.empty().append(
       $('<span>').text(`${deviceConfig.manufacturer} ${deviceConfig.label}`),
-      $('<span>').text(`(${deviceConfig.description})`)
+      $('<span>').text(`Firmware Version: ${firmwareVersion})`)
     )
 
     if (Object.keys(deviceConfig.metadata || {}).length) {
@@ -569,7 +569,7 @@ let ZwaveJsUI = (function () {
       $('#zwave-js-selected-node-location').text("")
     }
 
-    makeInfo('#zwave-js-selected-node-info', info.deviceConfig)
+    makeInfo('#zwave-js-selected-node-info', info.deviceConfig,info.firmwareVersion)
     getProperties()
     RED.comms.subscribe(`/zwave-js/${selectedController}/${selectedNode}`, handleNodeEvent)
   }
