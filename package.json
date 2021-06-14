@@ -9,7 +9,8 @@
     "winston": "3.3.3"
   },
   "resolutions": {
-    "serialport": "9.0.7"
+    "serialport": "9.0.7",
+    "@serialport/bindings": "9.0.7"
   },
   "scripts": {
     "preinstall": "npx npm-force-resolutions"
