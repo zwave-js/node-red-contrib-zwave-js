@@ -13,12 +13,40 @@ let ZwaveJsUI = (function () {
         minHeight: 75,
         buttons: {
           Yes: function () {
-            onYes?.()
             $(this).dialog('destroy')
+            onYes?.()
           },
           Cancel: function () {
-            onCancel?.()
             $(this).dialog('destroy')
+            onCancel?.()
+          }
+        }
+      })
+  }
+
+  function confirminclude(text, onYes, onCancel) {
+    $('<div>')
+      .css({ padding: 10, maxWidth: 500, wordWrap: 'break-word' })
+      .html(text)
+      .dialog({
+        draggable: false,
+        modal: true,
+        resizable: false,
+        width: 'auto',
+        title: 'Confirm',
+        minHeight: 75,
+        buttons: {
+          'Yes (Secure)': function () {
+            $(this).dialog('destroy')
+            onYes?.(false)
+          },
+          'Yes (Insecure)': function () {
+            $(this).dialog('destroy')
+            onYes?.(true)
+          },
+          Cancel: function () {
+            $(this).dialog('destroy')
+            onCancel?.()
           }
         }
       })
@@ -123,10 +151,24 @@ let ZwaveJsUI = (function () {
     // -- -- -- -- Inclusion
 
     let optInclusion = $('<div>').appendTo(controllerOpts)
-    makeControllerOption('Start Inclusion', 'StartInclusion', () => { return [$('#zwave-js-insecure-inclusion').is(':checked')] }).appendTo(optInclusion)
+
+    $('<button>')
+      .addClass('red-ui-button red-ui-button-small')
+      .css('min-width', '125px')
+      .html('Start Inclusion')
+      .click(() => {
+        confirminclude("Begin the node Inclusion process?", (Insecure) => {
+          controllerRequest({
+            class: 'Controller',
+            operation: 'StartInclusion',
+            params:[Insecure],
+            noWait: true
+          })
+        })
+      })
+      .appendTo(optInclusion)
     makeControllerOption('Stop Inclusion', 'StopInclusion').appendTo(optInclusion)
-    $('<input type="checkbox" id="zwave-js-insecure-inclusion">').css({ margin: '0 2px' }).appendTo(optInclusion)
-    $('<span>').css({ margin: '0 2px', fontSize: '14px' }).text('Insecure').appendTo(optInclusion)
+
 
     // -- -- -- -- Exclusion
 
@@ -158,7 +200,7 @@ let ZwaveJsUI = (function () {
       .html('Reset Controller')
       .click(() => {
 
-        confirm("Are you sure you wish to Reset your Controller? this action is irreversible, and will clear the Controllers data.", () => {
+        confirm("Are you sure you wish to reset your Controller? This action is irreversible, and will clear the Controllers data and configuration.", () => {
           controllerRequest({
             class: 'Controller',
             operation: 'HardReset'
@@ -324,7 +366,11 @@ let ZwaveJsUI = (function () {
                 class: 'Controller',
                 operation: 'RemoveFailedNode',
                 params: [selectedNode]
-              }).catch(err => alert(err.responseText))
+              }).catch((err) => {
+                if (err.status !== 504) {
+                  alert(err.responseText)
+                }
+              })
               selectNode(1)
             })
           )
@@ -340,11 +386,11 @@ let ZwaveJsUI = (function () {
           .css('min-width', '125px')
           .html('Replace Failed Node')
           .click(() =>
-            confirm('Are you sure you want to remove this node?', () => {
+            confirminclude('Are you sure you want to replace this node?', (Insecure) => {
               controllerRequest({
                 class: 'Controller',
-                operation: 'RemoveFailedNode',
-                params: [selectedNode]
+                operation: 'ReplaceFailedNode',
+                params: [selectedNode,Insecure]
               }).catch(err => alert(err.responseText))
               selectNode(1)
             })
