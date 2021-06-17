@@ -10,7 +10,8 @@
       - Bug Fixes
     - Added a new **Controller** Method of **ReplaceFailedNode** (in the UI Also)
     - Log Level in config is now sorted by severity
-    - The **NETWORK_HEAL_DONE** event now contains an object detailing the heal outcome.
+    - The **NETWORK_HEAL_DONE** event now contains an object detailing the Heal outcome.
+    - Bump Z-Wave JS to 7.7.5
 
 
   - 3.7.1
