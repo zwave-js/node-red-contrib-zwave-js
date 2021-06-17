@@ -6,22 +6,34 @@ const CONTROLLERS = {}
 let _RED
 
 const CONTROLLER_EVENTS = [
-  'inclusion started',
-  'inclusion failed',
-  'inclusion stopped',
-  'exclusion started',
-  'exclusion failed',
-  'exclusion stopped',
   'node added',
   'node removed',
-  'heal network progress',
-  'heal network done'
 ]
 
+var LatestStatus;
+const _SendStatus = () => {
+  _RED.comms.publish(`/zwave-js/status`, {
+    type: 'driver-status-update',
+    message: LatestStatus
+  })
+}
+
+
+
 module.exports = {
+
+  status: Message => {
+    LatestStatus = Message
+    _SendStatus();
+  },
+  
   init: RED => {
     _RED = RED
 
+    RED.httpAdmin.get('/zwave-js/fetch-driver-status', function (req, res) {
+      res.status(200).end()
+      _SendStatus()
+    })
     RED.httpAdmin.get('/zwave-js/client.js', function (req, res) {
       res.sendFile(path.join(__dirname, 'client.js'))
     })
