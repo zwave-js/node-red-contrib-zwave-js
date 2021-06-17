@@ -313,37 +313,42 @@ module.exports = function (RED) {
 
             // Network Heal
             Driver.controller.on("heal network done", () => {
-                Send(ReturnController, "NETWORK_HEAL_DONE")
+                Send(ReturnController, "NETWORK_HEAL_DONE",{Successful:Heal_Done,Failed:Heal_Failed, Skipped:Heal_Skipped})
                 node.status({ fill: "green", shape: "dot", text: "Network Heal Done."});
                 UI.status("Network Heal Done.")
                 RestoreReadyStatus();
             })
 
+            let Heal_Pending = []
+            let Heal_Done = []
+            let Heal_Failed = []
+            let Heal_Skipped = []
+
             Driver.controller.on("heal network progress", (P) => {
 
-                let Pending = []
-                let Done = []
-                let Failed = []
-                let Skipped = []
+                Heal_Pending.length = 0;
+                Heal_Done.length = 0;
+                Heal_Failed.length = 0;
+                Heal_Skipped.length = 0;
 
                 P.forEach((V,K) =>{
                     switch(V){
                         case "pending":
-                            Pending.push(K)
+                            Heal_Pending.push(K)
                             break
                         case "done":
-                            Done.push(K)
+                            Heal_Done.push(K)
                             break
                         case "failed":
-                            Failed.push(K)
+                            Heal_Failed.push(K)
                             break
                         case "skipped":
-                            Skipped.push(K)
+                            Heal_Skipped.push(K)
                             break
                     }
                 })
-                node.status({ fill: "yellow", shape: "dot", text: "Healing Network Pending:["+Pending.toString()+"], Done:["+Done.toString()+"], Skipped:["+Skipped.toString()+"], Failed:["+Failed.toString()+"]"});
-                UI.status("Healing Network Pending:["+Pending.toString()+"], Done:["+Done.toString()+"], Skipped:["+Skipped.toString()+"], Failed:["+Failed.toString()+"]")
+                node.status({ fill: "yellow", shape: "dot", text: "Healing Network Pending:["+Heal_Pending.toString()+"], Done:["+Heal_Done.toString()+"], Skipped:["+Heal_Skipped.toString()+"], Failed:["+Heal_Failed.toString()+"]"});
+                UI.status("Healing Network Pending:["+Heal_Pending.toString()+"], Done:["+Heal_Done.toString()+"], Skipped:["+Heal_Skipped.toString()+"], Failed:["+Heal_Failed.toString()+"]")
             })
 
             ShareNodeList();

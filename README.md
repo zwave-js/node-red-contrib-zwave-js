@@ -177,6 +177,8 @@ Some Association methods require an Object, these are detailed at the bottom.
 | Controller                | GetRFRegion (See Notes)             |                                                       |
 | Controller                | SetRFRegion (See Notes)             | [**RFRegion**: Enum]                                  |
 | Controller                | ToggleRF                            | [Status: Bool]                                        |
+| Controller                | RemoveFailedNode                    | [Node ID: Number]                                     |
+| Controller                | ReplaceFailedNode (See Notes)       | [Node ID: Number, Include Non-Secure: Bool (optional)]|
 | Associations              | GetAssociationGroups                | [**AssociationAddress**: Object]                      |
 | Associations              | GetAllAssociationGroups             | [Node ID: Number]                                     |
 | Associations              | GetAssociations                     | [**AssociationAddress**: Object]                      |
@@ -202,7 +204,7 @@ return Message;
 ## Notes on Controller -> Set/Get RF Region  
 Support for these Commands, must be proivided by your stick.  
 
-## Notes on Controller -> StartInclusion  
+## Notes on Controller -> StartInclusion/ReplaceFailedNode  
 By default, the include process will only include secure devices, if you want to include non-secure devices, provide a **true** value 
 
 ## Notes on Controller -> HardReset  
