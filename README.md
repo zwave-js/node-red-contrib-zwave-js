@@ -104,7 +104,7 @@ Whatever your poison, the node will inject the following events, into your flow.
 | EXCLUSION_STARTED           | "Controller"                        |                                 | Exclude Mode Started              |
 | EXCLUSION_STOPPED           | "Controller"                        |                                 | Exclude Mode Stopped              |
 | EXCLUSION_FAILED            | "Controller"                        |                                 | Exclude Failed                    |
-| NETWORK_HEAL_DONE           | "Controller"                        |                                 | Done Healing Network              |
+| NETWORK_HEAL_DONE           | "Controller"                        | The Heal outcome                | Done Healing Network              |
 | NETWORK_HEAL_STARTED        | "Controller"                        |                                 | Started Healing Network           |
 | NETWORK_HEAL_STOPPED        | "Controller"                        |                                 | Stopped Healing Network           |
 | CONTROLLER_RESET_COMPLETE   | "Controller"                        |                                 | The controller was reset          |
