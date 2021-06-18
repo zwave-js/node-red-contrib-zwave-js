@@ -13,8 +13,7 @@ const CONTROLLER_EVENTS = [
 var LatestStatus;
 const _SendStatus = () => {
   _RED.comms.publish(`/zwave-js/status`, {
-    type: 'driver-status-update',
-    message: LatestStatus
+    status: LatestStatus
   })
 }
 

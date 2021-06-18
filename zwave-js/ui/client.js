@@ -484,16 +484,20 @@ let ZwaveJsUI = (function () {
   function selectController(homeId) {
     deselectCurrentNode()
     RED.comms.unsubscribe(`/zwave-js/${selectedController}`, handleControllerEvent)
-    RED.comms.unsubscribe(`/zwave-js/status`, handleControllerEvent)
+    RED.comms.unsubscribe(`/zwave-js/status`, handleStatusUpdate)
     selectedController = homeId
     getNodes()
     RED.comms.subscribe(`/zwave-js/${homeId}`, handleControllerEvent)
-    RED.comms.subscribe(`/zwave-js/status`, handleControllerEvent)
+    RED.comms.subscribe(`/zwave-js/status`, handleStatusUpdate)
+  }
+
+  function handleStatusUpdate(topic,data){
+    $('#zwave-js-controller-status').html(data.status)
   }
 
   function handleControllerEvent(topic, data) {
     let homeId = topic.split('/')[2]
-    if (selectedController != homeId && homeId != 'status') return
+    if (selectedController != homeId) return
 
     switch (data.type) {
 
@@ -514,8 +518,6 @@ let ZwaveJsUI = (function () {
         }
         break
 
-      case 'driver-status-update':
-        $('#zwave-js-controller-status').html(data.message)
     }
   }
 
