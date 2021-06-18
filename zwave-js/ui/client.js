@@ -568,7 +568,7 @@ let ZwaveJsUI = (function () {
     let el = $(elId)
 
     el.empty().append(
-      $('<span>').text(`${deviceConfig.manufacturer} ${deviceConfig.label}. Firmware Version: ${firmwareVersion}`),
+      $('<span>').text(`${deviceConfig.manufacturer} | ${deviceConfig.label} | FW: ${firmwareVersion}`),
 
     )
 
