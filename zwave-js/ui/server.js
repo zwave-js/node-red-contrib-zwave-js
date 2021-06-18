@@ -18,8 +18,6 @@ const _SendStatus = () => {
   })
 }
 
-
-
 module.exports = {
 
   status: Message => {
@@ -91,6 +89,9 @@ module.exports = {
 
       CONTROLLER_EVENTS.forEach(event => {
         controller.on(event, (...args) => {
+          if(event === "node added"){
+            WireNodeEvents(args[0])
+          }
           _RED.comms.publish(`/zwave-js/${homeId}`, {
             type: 'controller-event',
             event
@@ -98,6 +99,7 @@ module.exports = {
         })
       })
 
+      // Node Status
       let emitNodeStatus = status => node => {
         _RED.comms.publish(`/zwave-js/${homeId}`, {
           type: 'node-status',
@@ -110,39 +112,43 @@ module.exports = {
       let emitNodeDead = emitNodeStatus('DEAD')
       let emitNodeAlive = emitNodeStatus('ALIVE')
 
+      // Node Event (Value)
       let emitNodeEvent = type => (node, payload) => {
         _RED.comms.publish(`/zwave-js/${homeId}/${node.id}`, {
           type,
           payload
         })
       }
-      let emitNodeInterview = emitNodeEvent('node-interview')
       let emitNodeValue = emitNodeEvent('node-value')
       let emitNodeMeta = emitNodeEvent('node-meta')
 
+      let WireNodeEvents = node => {
+          // Status
+          node.on('sleep', emitNodeAsleep)
+          node.on('wake up', emitNodeAwake)
+          node.on('dead', emitNodeDead)
+          node.on('alive', emitNodeAlive)
+  
+          // Readiness
+          node.on('ready', node => {
+            emitNodeStatus('ready')(node)
+          })
+  
+          // Values
+          node.on('value added', emitNodeValue)
+          node.on('value updated', emitNodeValue)
+          node.on('value removed', emitNodeValue)
+          node.on('value notification', emitNodeValue)
+          node.on('notification', emitNodeValue)
+  
+          // Meta
+          node.on('metadata update', emitNodeMeta)
+      }
+
       controller.nodes.forEach(node => {
-        // Status
-        node.on('sleep', emitNodeAsleep)
-        node.on('wake up', emitNodeAwake)
-        node.on('dead', emitNodeDead)
-        node.on('alive', emitNodeAlive)
 
-        // Readiness/Interview Stage
-        node.on('ready', node => {
-          emitNodeStatus('ready')(node)
-          emitNodeInterview(node)
-        })
-        node.on('interview completed', emitNodeInterview)
-        node.on('interview failed', emitNodeInterview)
-
-        // Values
-        node.on('value added', emitNodeValue)
-        node.on('value updated', emitNodeValue)
-        node.on('value removed', emitNodeValue)
-        node.on('value notification', emitNodeValue)
-
-        // Meta
-        node.on('metadata update', emitNodeMeta)
+        WireNodeEvents(node)
+     
       })
     })
   },

@@ -626,14 +626,6 @@ let ZwaveJsUI = (function () {
     let nodeId = topic.split('/')[3]
     if (nodeId != selectedNode) return
     switch (data.type) {
-      case 'node-interview':
-        let statusBox = $('#zwave-js-status-box-interview')
-        if (data.payload) {
-          statusBox.text(data.payload.errorMessage)
-        } else {
-          statusBox.text('ready')
-        }
-        break
       case 'node-value':
         updateValue(data.payload)
         break
