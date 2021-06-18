@@ -837,6 +837,10 @@ module.exports = function (RED) {
                     await Driver.controller.removeFailedNode(Params[0]);
                     break;
 
+                case "ReplaceFailedNode":
+                    await Driver.controller.replaceFailedNode(Params[0],Params[1]);
+                    break;
+
                 case "StartInclusion":
                     if (!canDoSecure) {
                         await Driver.controller.beginInclusion(true);
@@ -1102,32 +1106,15 @@ module.exports = function (RED) {
                 node.send({ "payload": PL });
             }
 
-            let DisallowedSubjectsForDNs = [
-                "INCLUSION_STARTED",
-                "INCLUSION_STOPPED",
-                "INCLUSION_FAILED",
-                "EXCLUSION_STARTED",
-                "EXCLUSION_STOPPED",
-                "EXCLUSION_FAILED",
-                "INTERVIEW_STARTED",
-                "INTERVIEW_COMPLETE",
-                "INTERVIEW_FAILED",
-                "NETWORK_HEAL_STARTED",
-                "NETWORK_HEAL_STOPPED",
-                "NETWORK_HEAL_DONE",
-                "NODE_LIST",
-                "CONTROLLER_RESET_COMPLETE",
-                "ASSOCIATION_GROUPS",
-                "ALL_ASSOCIATION_GROUPS",
-                "ASSOCIATIONS",
-                "ALL_ASSOCIATIONS",
-                "ASSOCIATIONS_ADDED",
-                "ASSOCIATIONS_REMOVED",
-                "ALL_ASSOCIATIONS_REMOVED",
-                "VALUE_DB"
+            let AllowedSubjectsForDNs = [
+               "VALUE_NOTIFICATION",
+               "NOTIFICATION",
+               "VALUE_UPDATED",
+               "SLEEP",
+               "WAKE_UP"
             ]
 
-            if (!DisallowedSubjectsForDNs.includes(Subject)) {
+            if (AllowedSubjectsForDNs.includes(Subject)) {
                 RED.events.emit("zwjs:node:event:" + Node.id, { "payload": PL })
             }
         }

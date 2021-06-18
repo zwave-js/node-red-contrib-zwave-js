@@ -7,10 +7,12 @@
       - Insecure Inclusion checkbox removed, and replaced with a prompt
       - The **More Info** button is now removed
       - Reset Controller can now be performed in the UI
-      - Bug Fixes
+      - Optimisations & Bug Fixes
     - Added a new **Controller** Method of **ReplaceFailedNode** (in the UI Also)
     - Log Level in config is now sorted by severity
     - The **NETWORK_HEAL_DONE** event now contains an object detailing the Heal outcome.
+    - Small Optimisations to **Z-Wave Device** node
+    - Optimisation to UI communication with the main module
     - Bump Z-Wave JS to 7.7.5
 
 

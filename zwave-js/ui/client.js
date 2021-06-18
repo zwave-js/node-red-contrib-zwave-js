@@ -391,7 +391,11 @@ let ZwaveJsUI = (function () {
                 class: 'Controller',
                 operation: 'ReplaceFailedNode',
                 params: [selectedNode,Insecure]
-              }).catch(err => alert(err.responseText))
+              }).catch((err) => {
+                if (err.status !== 504) {
+                  alert(err.responseText)
+                }
+              })
               selectNode(1)
             })
           )
