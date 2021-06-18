@@ -13,6 +13,7 @@
     - Log Level in config is now sorted by severity
     - The **NETWORK_HEAL_DONE** event now contains an object detailing the Heal outcome.
     - Small Optimisations to **Z-Wave Device** node
+    - Re-worked the Icons.
     - Bump Z-Wave JS to 7.7.5
 
   - 3.7.1
