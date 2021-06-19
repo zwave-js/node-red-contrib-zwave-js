@@ -838,7 +838,15 @@ module.exports = function (RED) {
                     break;
 
                 case "ReplaceFailedNode":
-                    await Driver.controller.replaceFailedNode(Params[0],Params[1]);
+                    if (!canDoSecure) {
+                        await Driver.controller.replaceFailedNode(Params[0],true);
+                    }
+                    else if (Params.length > 1) {
+                        await Driver.controller.replaceFailedNode(Params[0],Params[1]);
+                    }
+                    else {
+                        await Driver.controller.replaceFailedNode(Params[0],false);
+                    }
                     break;
 
                 case "StartInclusion":
