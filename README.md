@@ -17,7 +17,7 @@ It offers a massive amount of flexibility and is packed full of features.
 The node is straightforward to use, and removes all the complexities that you would otherwise need to deal with.
 
 ## Top level features
-  - 2 Different API models, catering for both experianced and inexperencd users.
+  - 2 Different API models, catering for both experienced and inexperienced users.
   - Use one node for your entire network, or a node per Z-Wave device.
   - A built in User Interface to manage your Z-Wave network, within Node-Red.
   - Access to all supported CC's provided by Z-Wave JS.
