@@ -8,17 +8,22 @@ The implementation is 100% javascript. it is therefore:
   - Stable
 
 Install this node via the Node Red palette menu (See [Home Assistant Install](#home-assistant-install) if this applies to you),  
-and you have Z-Wave support in Node Red.  
+and you have Z-Wave support in Node Red. 
+
+**node-red-contrib-zwave-js** is based on  [&#x1F517;Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/).  
+Z-Wave JS is actively  maintained, fast and supports the secure (S0) devices.
 
 It offers a massive amount of flexibility and is packed full of features.   
 The node is straightforward to use, and removes all the complexities that you would otherwise need to deal with.
 
-## The Gist
-  - 2 Different API models, catering for both experianced and inexperencd users
-  - Use one node for your entire network, or a node per z-wave device
-  - A built in User Interface to manage your Z-Wave network
+## The goody bag 
+  - 2 Different API models, catering for both experianced and inexperencd users.
+  - Use one node for your entire network, or a node per Z-Wave device.
+  - A built in User Interface to manage your Z-Wave network with ease.
+  - A built in network map
 
-  - Add the node into your flow
+## Opening the goody bag 
+  - Add the node(s) into your flow
   - Select the serial port that represents your USB Zwave radio.
   - Set an encryption key if you want to use Secure devices:  
      - Plain text (16 characters) 
@@ -26,9 +31,6 @@ The node is straightforward to use, and removes all the complexities that you wo
   - Listen for, and send commands using the node.
 
   ![Image](./Demo.png)  
-
-**node-red-contrib-zwave-js** is based on  [&#x1F517;Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/).  
-Z-Wave JS is actively  maintained, fast and supports the security command class.
 
 ## Home Assistant Install
 Please note: This is a self contained Z-Wave driver for Node Red, it will not work along side the Z-Wave add-on for Home Assistant.  
