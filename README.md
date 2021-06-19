@@ -16,11 +16,11 @@ Z-Wave JS is actively  maintained, fast and supports secure (S0) devices.
 It offers a massive amount of flexibility and is packed full of features.   
 The node is straightforward to use, and removes all the complexities that you would otherwise need to deal with.
 
-## The goody bag 
+## Top level features
   - 2 Different API models, catering for both experianced and inexperencd users.
   - Use one node for your entire network, or a node per Z-Wave device.
-  - A built in User Interface to manage your Z-Wave network with ease.
-  - A built in network map
+  - A built in User Interface to manage your Z-Wave network, within Node-Red.
+  - Access to all supported CC's provided by Z-Wave JS.
 
 ## Opening the goody bag 
   - Add the node(s) into your flow
