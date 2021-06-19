@@ -11,7 +11,7 @@ Install this node via the Node Red palette menu (See [Home Assistant Install](#h
 and you have Z-Wave support in Node Red. 
 
 **node-red-contrib-zwave-js** is based on  [&#x1F517;Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/).  
-Z-Wave JS is actively  maintained, fast and supports the secure (S0) devices.
+Z-Wave JS is actively  maintained, fast and supports secure (S0) devices.
 
 It offers a massive amount of flexibility and is packed full of features.   
 The node is straightforward to use, and removes all the complexities that you would otherwise need to deal with.
