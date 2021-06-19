@@ -22,7 +22,7 @@ The node is straightforward to use, and removes all the complexities that you wo
   - A built in User Interface to manage your Z-Wave network, within Node-Red.
   - Access to all supported CC's provided by Z-Wave JS.
 
-## Opening the goody bag 
+## The gist
   - Add the node(s) into your flow
   - Select the serial port that represents your USB Zwave radio.
   - Set an encryption key if you want to use Secure devices:  
