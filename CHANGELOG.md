@@ -1,5 +1,21 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 3.8.0
+    - Major User Interface Cleanup
+      - Controller Node status text is now repeated on the UI
+      - Firmware Version of the Controller and Devices is now displayed (replaces description)
+      - Insecure Inclusion checkbox removed, and replaced with a prompt
+      - The **More Info** button is now removed, as it never provided any useful info
+      - Reset Controller can now be performed in the UI
+      - Bug Fixes
+      - Optimisations/Improvments to UI communication with the main module
+    - Added a new **Controller** Method of **ReplaceFailedNode** (Also available in the UI)
+    - Log Level in config is now sorted by severity
+    - The **NETWORK_HEAL_DONE** event now contains an object detailing the Heal outcome.
+    - Small Optimisations to **Z-Wave Device** node
+    - Re-worked the Icons.
+    - Bump Z-Wave JS to 7.7.5
+
   - 3.7.1
     - Fix typo in **SetRFRegion** code
 

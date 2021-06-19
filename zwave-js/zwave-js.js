@@ -81,9 +81,11 @@ module.exports = function (RED) {
             RestoreReadyTimer = setTimeout(()=>{
                 if(AllNodesReady){
                     node.status({ fill: "green", shape: "dot", text: "All Nodes Ready!" });
+                    UI.status("All Nodes Ready!")
                 }
                 else{
                     node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
+                    UI.status("Nodes : " + NodesReady.toString() + " Are Ready." )
                 }
             },5000);
         }
@@ -107,6 +109,7 @@ module.exports = function (RED) {
         }
 
         node.status({ fill: "red", shape: "dot", text: "Starting Z-Wave Driver..." });
+        UI.status("Starting Z-Wave Driver...")
 
         RED.events.on("zwjs:node:command", processMessageEvent);
         async function processMessageEvent(MSG) {
@@ -240,11 +243,13 @@ module.exports = function (RED) {
         Driver.on("all nodes ready", () => {
             node.status({ fill: "green", shape: "dot", text: "All Nodes Ready!" });
             AllNodesReady = true;
+            UI.status("All Nodes Ready!")
         })
 
         Driver.once("driver ready", () => {
 
             node.status({ fill: "yellow", shape: "dot", text: "Interviewing Nodes..." });
+            UI.status("Interviewing Nodes...")
 
             let ReturnController = { id: "Controller" };
 
@@ -256,6 +261,7 @@ module.exports = function (RED) {
                 Send(N, "NODE_ADDED")
                 Send(N, "INTERVIEW_STARTED");
                 node.status({ fill: "yellow", shape: "dot", text: "Node: "+N.id+" Interview Started."});
+                UI.status("Node: "+N.id+" Interview Started.")
             })
 
             Driver.controller.on("node removed", (N) => {
@@ -267,17 +273,20 @@ module.exports = function (RED) {
             Driver.controller.on("inclusion started", (Secure) => {
                 Send(ReturnController, "INCLUSION_STARTED", { isSecureInclude: Secure })
                 node.status({ fill: "yellow", shape: "dot", text: "Inclusion Started. Secure: "+Secure });
+                UI.status("Inclusion Started. Secure: "+Secure)
             })
 
             Driver.controller.on("inclusion failed", () => {
                 Send(ReturnController, "INCLUSION_FAILED")
                 node.status({ fill: "red", shape: "dot", text: "Inclusion Failed."});
+                UI.status("Inclusion Failed.")
                 RestoreReadyStatus();
             })
 
             Driver.controller.on("inclusion stopped", () => {
                 Send(ReturnController, "INCLUSION_STOPPED")
                 node.status({ fill: "green", shape: "dot", text: "Inclusion Stopped."});
+                UI.status("Inclusion Stopped.")
                 RestoreReadyStatus();
             })
 
@@ -285,51 +294,61 @@ module.exports = function (RED) {
             Driver.controller.on("exclusion started", () => {
                 Send(ReturnController, "EXCLUSION_STARTED")
                 node.status({ fill: "yellow", shape: "dot", text: "Exclusion Started."});
+                UI.status("Exclusion Started.")
             })
 
             Driver.controller.on("exclusion failed", () => {
                 Send(ReturnController, "EXCLUSION_FAILED")
                 node.status({ fill: "red", shape: "dot", text: "Exclusion Failed."});
+                UI.status("Exclusion Failed.")
                 RestoreReadyStatus();
             })
           
             Driver.controller.on("exclusion stopped", () => {
                 Send(ReturnController, "EXCLUSION_STOPPED")
                 node.status({ fill: "green", shape: "dot", text: "Exclusion Stopped."});
+                UI.status("Exclusion Stopped.")
                 RestoreReadyStatus();
             })
 
             // Network Heal
             Driver.controller.on("heal network done", () => {
-                Send(ReturnController, "NETWORK_HEAL_DONE")
+                Send(ReturnController, "NETWORK_HEAL_DONE",{Successful:Heal_Done,Failed:Heal_Failed, Skipped:Heal_Skipped})
                 node.status({ fill: "green", shape: "dot", text: "Network Heal Done."});
+                UI.status("Network Heal Done.")
                 RestoreReadyStatus();
             })
 
+            let Heal_Pending = []
+            let Heal_Done = []
+            let Heal_Failed = []
+            let Heal_Skipped = []
+
             Driver.controller.on("heal network progress", (P) => {
 
-                let Pending = []
-                let Done = []
-                let Failed = []
-                let Skipped = []
+                Heal_Pending.length = 0;
+                Heal_Done.length = 0;
+                Heal_Failed.length = 0;
+                Heal_Skipped.length = 0;
 
                 P.forEach((V,K) =>{
                     switch(V){
                         case "pending":
-                            Pending.push(K)
+                            Heal_Pending.push(K)
                             break
                         case "done":
-                            Done.push(K)
+                            Heal_Done.push(K)
                             break
                         case "failed":
-                            Failed.push(K)
+                            Heal_Failed.push(K)
                             break
                         case "skipped":
-                            Skipped.push(K)
+                            Heal_Skipped.push(K)
                             break
                     }
                 })
-                node.status({ fill: "yellow", shape: "dot", text: "Healing Network Pending:["+Pending.toString()+"], Done:["+Done.toString()+"], Skipped:["+Skipped.toString()+"], Failed:["+Failed.toString()+"]"});
+                node.status({ fill: "yellow", shape: "dot", text: "Healing Network Pending:["+Heal_Pending.toString()+"], Done:["+Heal_Done.toString()+"], Skipped:["+Heal_Skipped.toString()+"], Failed:["+Heal_Failed.toString()+"]"});
+                UI.status("Healing Network Pending:["+Heal_Pending.toString()+"], Done:["+Heal_Done.toString()+"], Skipped:["+Heal_Skipped.toString()+"], Failed:["+Heal_Failed.toString()+"]")
             })
 
             ShareNodeList();
@@ -379,6 +398,7 @@ module.exports = function (RED) {
                 if (NodesReady.indexOf(N.id) < 0) {
                     NodesReady.push(N.id);
                     node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
+                    UI.status("Nodes : " + NodesReady.toString() + " Are Ready.")
                     RED.events.emit("zwjs:node:ready:" + N.id);
                 }
 
@@ -414,17 +434,20 @@ module.exports = function (RED) {
             Node.on("interview started", (N) => {
                 Send(N, "INTERVIEW_STARTED");
                 node.status({ fill: "yellow", shape: "dot", text: "Node: "+N.id+" Interview Started."});
+                UI.status("Node: "+N.id+" Interview Started.")
             })
 
             Node.on("interview failed", (N, Er) => {
                 Send(N, "INTERVIEW_FAILED", Er);
                 node.status({ fill: "red", shape: "dot", text: "Node: "+N.id+" Interview Failed."});
+                UI.status("Node: "+N.id+" Interview Failed.")
                 RestoreReadyStatus();
             })
 
             Node.on("interview completed", (N) => {
                 Send(N, "INTERVIEW_COMPLETE");
                 node.status({ fill: "green", shape: "dot", text: "Node: "+N.id+" Interview Completed."});
+                UI.status("Node: "+N.id+" Interview Completed.")
                 RestoreReadyStatus();
             })
         }
@@ -728,7 +751,8 @@ module.exports = function (RED) {
                             manufacturerId: N.manufacturerId,
                             productId: N.productId,
                             productType: N.productType,
-                            firmwareVersion: N.firmwareVersion,
+                            /*firmwareVersion: N.firmwareVersion,*/
+                            firmwareVersion: (N.isControllerNode() ? Driver.controller.serialApiVersion : N.firmwareVersion),
                             neighbors: N.neighbors,
                             deviceConfig: N.deviceConfig,
                             isControllerNode: N.isControllerNode(),
@@ -798,17 +822,31 @@ module.exports = function (RED) {
                     await Driver.controller.beginHealingNetwork();
                     Send(ReturnController, "NETWORK_HEAL_STARTED", undefined, send)
                     node.status({ fill: "yellow", shape: "dot", text: "Network Heal Started."});
+                    UI.status("Network Heal Started.")
                     break;
 
                 case "StopHealNetwork":
                     await Driver.controller.stopHealingNetwork();
                     Send(ReturnController, "NETWORK_HEAL_STOPPED", undefined, send)
                     node.status({ fill: "blue", shape: "dot", text: "Network Heal Stopped."});
+                    UI.status("Network Heal Stopped.")
                     RestoreReadyStatus();
                     break;
 
                 case "RemoveFailedNode":
                     await Driver.controller.removeFailedNode(Params[0]);
+                    break;
+
+                case "ReplaceFailedNode":
+                    if (!canDoSecure) {
+                        await Driver.controller.replaceFailedNode(Params[0],true);
+                    }
+                    else if (Params.length > 1) {
+                        await Driver.controller.replaceFailedNode(Params[0],Params[1]);
+                    }
+                    else {
+                        await Driver.controller.replaceFailedNode(Params[0],false);
+                    }
                     break;
 
                 case "StartInclusion":
@@ -1076,32 +1114,15 @@ module.exports = function (RED) {
                 node.send({ "payload": PL });
             }
 
-            let DisallowedSubjectsForDNs = [
-                "INCLUSION_STARTED",
-                "INCLUSION_STOPPED",
-                "INCLUSION_FAILED",
-                "EXCLUSION_STARTED",
-                "EXCLUSION_STOPPED",
-                "EXCLUSION_FAILED",
-                "INTERVIEW_STARTED",
-                "INTERVIEW_COMPLETE",
-                "INTERVIEW_FAILED",
-                "NETWORK_HEAL_STARTED",
-                "NETWORK_HEAL_STOPPED",
-                "NETWORK_HEAL_DONE",
-                "NODE_LIST",
-                "CONTROLLER_RESET_COMPLETE",
-                "ASSOCIATION_GROUPS",
-                "ALL_ASSOCIATION_GROUPS",
-                "ASSOCIATIONS",
-                "ALL_ASSOCIATIONS",
-                "ASSOCIATIONS_ADDED",
-                "ASSOCIATIONS_REMOVED",
-                "ALL_ASSOCIATIONS_REMOVED",
-                "VALUE_DB"
+            let AllowedSubjectsForDNs = [
+               "VALUE_NOTIFICATION",
+               "NOTIFICATION",
+               "VALUE_UPDATED",
+               "SLEEP",
+               "WAKE_UP"
             ]
 
-            if (!DisallowedSubjectsForDNs.includes(Subject)) {
+            if (AllowedSubjectsForDNs.includes(Subject)) {
                 RED.events.emit("zwjs:node:event:" + Node.id, { "payload": PL })
             }
         }

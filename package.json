@@ -1,11 +1,11 @@
 {
   "name": "node-red-contrib-zwave-js",
-  "version": "3.7.1",
+  "version": "3.8.0",
   "license": "MIT",
   "description": "An extremely easy to use, zero dependency and feature rich Z-Wave node for Node Red, based on Z-Wave JS.",
   "dependencies": {
     "serialport": "9.1.0",
-    "zwave-js": "7.7.1",
+    "zwave-js": "7.7.5",
     "winston": "3.3.3"
   },
   "keywords": [
@@ -36,6 +36,10 @@
     {
       "name": "hufftheweevil (Justin)",
       "url": "https://github.com/hufftheweevil"
+    },
+    {
+      "name": "crxporter",
+      "url": "https://github.com/crxporter"
     }
   ],
   "bugs": {
