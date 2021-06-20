@@ -1,5 +1,12 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 3.9.0
+    - Added Node Firmware Update UI
+    - Added Network Map UI
+    - Selection of Home ID in UI no longer required.
+    - Bump Z-Wave JS to 7.8.0
+    - Bump serialport to 9.2.1
+
   - 3.8.0
     - Major User Interface Cleanup
       - Controller Node status text is now repeated on the UI

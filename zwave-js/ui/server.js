@@ -1,8 +1,6 @@
 const path = require('path')
-const EventEmitter = require('events')
 
-const CONTROLLERS = {}
-
+const _Context = {}
 let _RED
 
 const CONTROLLER_EVENTS = [
@@ -38,24 +36,18 @@ module.exports = {
       res.sendFile(path.join(__dirname, 'styles.css'), { contentType: 'text/css' })
     })
 
-    RED.httpAdmin.get('/zwave-js/list', (req, res) => {
-      res.send(Object.keys(CONTROLLERS))
-    })
-
-    RED.httpAdmin.post('/zwave-js/:homeId', (req, res) => {
+    
+    RED.httpAdmin.post('/zwave-js/cmd', (req, res) => {
       // Handles requests from the client for Controller and Node functions.
       // Passes request to main module.
       // Requests must be structued the same as the payload that would
       //   normally be sent into the Node-RED node.
       // Response is then passed back to client.
 
-      let Controller = CONTROLLERS[req.params.homeId]
-
-      if (!Controller) return res.status(404).end() // Controller not found
-
+    
       let timeout = setTimeout(() => res.status(504).end(), 5000) // Request to controller timed out
 
-      Controller.request(
+      _Context.input(
         { payload: req.body }, // Pass request packet to controller
         zwaveRes => {
           // Response from controller...
@@ -73,6 +65,7 @@ module.exports = {
     })
   },
   register: (driver, request) => {
+
     driver.on('driver ready', () => {
       // Creates listeners for all events on Controller and all Nodes.
       // Passes events to client via comms.publish().
@@ -80,18 +73,20 @@ module.exports = {
       // Other events are published for a specific node which
       //   will only go to clients that have that node selected.
 
-      let { controller } = driver
+     
+      _Context.controller = driver.controller;
+      _Context.input = request;
 
-      let homeId = controller.homeId.toString(16)
-
-      CONTROLLERS[homeId] = { controller, request }
+      _RED.comms.publish(`/zwave-js/cmd`, {
+        type: 'controller-ready'
+      })
 
       CONTROLLER_EVENTS.forEach(event => {
-        controller.on(event, (...args) => {
+        _Context.controller.on(event, (...args) => {
           if(event === "node added"){
             WireNodeEvents(args[0])
           }
-          _RED.comms.publish(`/zwave-js/${homeId}`, {
+          _RED.comms.publish(`/zwave-js/cmd`, {
             type: 'controller-event',
             event
           })
@@ -100,7 +95,7 @@ module.exports = {
 
       // Node Status
       let emitNodeStatus = status => node => {
-        _RED.comms.publish(`/zwave-js/${homeId}`, {
+        _RED.comms.publish(`/zwave-js/cmd`, {
           type: 'node-status',
           node: node.id,
           status
@@ -113,7 +108,7 @@ module.exports = {
 
       // Node Event (Value)
       let emitNodeEvent = type => (node, payload) => {
-        _RED.comms.publish(`/zwave-js/${homeId}/${node.id}`, {
+        _RED.comms.publish(`/zwave-js/cmd/${node.id}`, {
           type,
           payload
         })
@@ -144,15 +139,13 @@ module.exports = {
           node.on('metadata update', emitNodeMeta)
       }
 
-      controller.nodes.forEach(node => {
-
+      _Context.controller.nodes.forEach(node => {
         WireNodeEvents(node)
-     
       })
     })
   },
-  unregister: homeId => {
-    delete CONTROLLERS[homeId]
-    // Driver (and listeners) will be destroyed by main module, so nothing else to do here
+  unregister: () => {
+      delete _Context.controller
+      delete _Context.input
   }
 }

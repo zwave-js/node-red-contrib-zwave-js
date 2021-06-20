@@ -363,7 +363,7 @@ module.exports = function (RED) {
 
             Log("info", "REDCTL", undefined, undefined, "Cleaning up")
 
-            UI.unregister(Driver.controller.homeId)
+            UI.unregister()
             Driver.destroy();
             RED.events.removeListener("zwjs:node:checkready", processReadyRequest);
             RED.events.removeListener("zwjs:node:command", processMessageEvent);
@@ -381,6 +381,7 @@ module.exports = function (RED) {
                 let Node = {
                     id: ZWN.id,
                     name: ZWN.name !== undefined ? ZWN.name : "No Name",
+                    location: ZWN.location !== undefined ? ZWN.location : "No Location",
                     isController: ZWN.isControllerNode()
                 }
                 NodeList.push(Node)
@@ -751,8 +752,7 @@ module.exports = function (RED) {
                             manufacturerId: N.manufacturerId,
                             productId: N.productId,
                             productType: N.productType,
-                            /*firmwareVersion: N.firmwareVersion,*/
-                            firmwareVersion: (N.isControllerNode() ? Driver.controller.serialApiVersion : N.firmwareVersion),
+                            firmwareVersion: N.firmwareVersion,
                             neighbors: N.neighbors,
                             deviceConfig: N.deviceConfig,
                             isControllerNode: N.isControllerNode(),

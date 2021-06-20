@@ -82,25 +82,12 @@ let ZwaveJsUI = (function () {
       .css({ flex: '0 0 auto', textAlign: 'left', padding: 5 })
       .appendTo(controllerPanel)
 
-    $('<select id="zwave-js-controller">')
-      .css({ height: 20, width: 100, margin: 0, padding: 0, fontSize: 12 })
-      .change(function () {
-        $(this).val() && selectController($(this).val())
-      })
-      .appendTo(controllerHeader)
-
-    $('<button>')
-      .addClass('red-ui-button red-ui-button-small')
-      .html('<i class="fa fa-refresh"></i>')
-      .click(() => getControllers())
-      .appendTo(controllerHeader)
-
     $('<input type="checkbox" id="node-properties-auto-expand">')
       .css({ margin: '0 2px' })
       .appendTo(controllerHeader)
 
     $('<span>')
-      .html('Expand properties')
+      .html('Expand CC\'s')
       .appendTo(controllerHeader)
 
     $('<button>')
@@ -146,7 +133,6 @@ let ZwaveJsUI = (function () {
 
     $('<div id="zwave-js-controller-info">').addClass('zwave-js-info-box').appendTo(controllerOpts)
     $('<div id="zwave-js-controller-status">').addClass('zwave-js-info-box').appendTo(controllerOpts).html('Waiting for update...')
- 
 
     // -- -- -- -- Inclusion
 
@@ -161,7 +147,7 @@ let ZwaveJsUI = (function () {
           controllerRequest({
             class: 'Controller',
             operation: 'StartInclusion',
-            params:[Insecure],
+            params: [Insecure],
             noWait: true
           })
         })
@@ -188,7 +174,7 @@ let ZwaveJsUI = (function () {
       .addClass('red-ui-button red-ui-button-small')
       .css('min-width', '125px')
       .html('Refresh Node List')
-      .click(() => getNodes(selectedController))
+      .click(() => getNodes())
       .appendTo(controllerOpts)
 
 
@@ -199,7 +185,6 @@ let ZwaveJsUI = (function () {
       .css('min-width', '125px')
       .html('Reset Controller')
       .click(() => {
-
         confirm("Are you sure you wish to reset your Controller? This action is irreversible, and will clear the Controllers data and configuration.", () => {
           controllerRequest({
             class: 'Controller',
@@ -207,11 +192,8 @@ let ZwaveJsUI = (function () {
           }).then(({ event }) => {
             alert('Your Controller has been Reset');
             getNodes();
-
           })
-
         })
-
       })
       .appendTo(controllerOpts)
 
@@ -390,7 +372,7 @@ let ZwaveJsUI = (function () {
               controllerRequest({
                 class: 'Controller',
                 operation: 'ReplaceFailedNode',
-                params: [selectedNode,Insecure]
+                params: [selectedNode, Insecure]
               }).catch((err) => {
                 if (err.status !== 504) {
                   alert(err.responseText)
@@ -464,42 +446,27 @@ let ZwaveJsUI = (function () {
       onchange: () => setTimeout(resizeStack, 0) // Only way I can figure out how to init the resize when tab becomes visible
     })
 
-    // Get controller list
 
-    getControllers()
+    RED.comms.subscribe(`/zwave-js/cmd`, handleControllerEvent)
+    RED.comms.subscribe(`/zwave-js/status`, handleStatusUpdate)
+
+    getNodes();
+
   }
   // Init done
 
-  function getControllers() {
-    $.get('zwave-js/list').then(res => {
-      $('#zwave-js-controller')
-        .empty()
-        .append(res.map(homeId => $(`<option value='${homeId}'>`).html(homeId)))
-        .change()
-    })
-  }
-
-  let selectedController
-
-  function selectController(homeId) {
-    deselectCurrentNode()
-    RED.comms.unsubscribe(`/zwave-js/${selectedController}`, handleControllerEvent)
-    RED.comms.unsubscribe(`/zwave-js/status`, handleStatusUpdate)
-    selectedController = homeId
-    getNodes()
-    RED.comms.subscribe(`/zwave-js/${homeId}`, handleControllerEvent)
-    RED.comms.subscribe(`/zwave-js/status`, handleStatusUpdate)
-  }
-
-  function handleStatusUpdate(topic,data){
+  function handleStatusUpdate(topic, data) {
     $('#zwave-js-controller-status').html(data.status)
   }
 
   function handleControllerEvent(topic, data) {
-    let homeId = topic.split('/')[2]
-    if (selectedController != homeId) return
+
 
     switch (data.type) {
+
+      case 'controller-ready':
+
+        breakk
 
       case 'controller-event':
         let eventType = data.event.split(' ')[0]
@@ -591,7 +558,7 @@ let ZwaveJsUI = (function () {
       $('#zwave-js-status-box-interview').text('')
 
       $('#zwave-js-node-properties').treeList('empty')
-      RED.comms.unsubscribe(`/zwave-js/${selectedController}/${selectedNode}`, handleNodeEvent)
+      RED.comms.unsubscribe(`/zwave-js/cmd/${selectedNode}`, handleNodeEvent)
     }
   }
 
@@ -621,7 +588,7 @@ let ZwaveJsUI = (function () {
 
     makeInfo('#zwave-js-selected-node-info', info.deviceConfig, info.firmwareVersion)
     getProperties()
-    RED.comms.subscribe(`/zwave-js/${selectedController}/${selectedNode}`, handleNodeEvent)
+    RED.comms.subscribe(`/zwave-js/cmd/${selectedNode}`, handleNodeEvent)
   }
 
   function handleNodeEvent(topic, data) {
@@ -1020,7 +987,7 @@ let ZwaveJsUI = (function () {
 
   function controllerRequest(req) {
     return $.ajax({
-      url: `zwave-js/${selectedController}`,
+      url: `zwave-js/cmd`,
       method: 'POST',
       contentType: 'application/json',
       data: JSON.stringify(req)
