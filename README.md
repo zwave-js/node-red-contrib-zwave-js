@@ -29,9 +29,9 @@ The node is straightforward to use, and removes all the complexities that you wo
 ## The gist
   - Add the node(s) into your flow
   - Select the serial port that represents your USB Zwave radio.
-  - Set an encryption key if you want to use Secure devices:  
-     - Plain text (16 characters) 
-     - Or hex array (16 bytes) [0x01,0x02]
+  - Set an encryption key if you want to use Secure devices.
+    - Plain text (16 characters)
+    - Or hex array (16 bytes) [0x01,0x02]
   - Listen for, and send commands using the node.
 
   ![Image](./Demo.png)  
