@@ -21,12 +21,6 @@ Currently, the supported command classes are (when using Managed mode).
 
 | class                              | operation                           | params                                                |
 | ---------------------------------- | ----------------------------------- | ----------------------------------------------------- |
-| Association (Deprecated)           | GetGroup                            | [Group ID: Number]                                    |
-| Association (Deprecated)           | AddNodes                            | [Group ID: Number, NodeIDs: Number[]]                 |
-| Association (Deprecated)           | RemoveNodes                         | [**RemoveOptions**: Object]                           |
-| Association (Deprecated)           | RemoveNodesFromAllGroups            | [NodeIDs: Number[]]                                   |
-| Association (Deprecated)           | GetGroupCount                       |                                                       |
-| AssociationGroupInfo (Deprecated)  | GetGroupName                        | [Group ID: Number]                                    |
 | AlarmSensor                        | Get                                 | [**AlarmSensorType**: Enum (Optional)]                |
 | AlarmSensor                        | GetSupportedSensorTypes             |                                                       |
 | BarrierOperator                    | Set                                 | [**BarrierState**: Enum]                              |
@@ -183,17 +177,6 @@ let Message = {
 }
 return Message
 ```
-
-## Deprecated Association and AssociationGroupInfo
-These class' and operations will be removed in a future release  
-Please see the [&#x1F517;Associations](./README.md#controllerdriver-and-association-based-operations) class of operations:  
-  - GetAssociationGroups
-  - GetAllAssociationGroups
-  - GetAssociations
-  - GetAllAssociations
-  - AddAssociations
-  - RemoveAssociations
-  - RemoveNodeFromAllAssociations
 
 ## Notes on UserCode -> Clear
 Specifying 0, will clear all User Codes.  

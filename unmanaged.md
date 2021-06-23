@@ -11,7 +11,7 @@ Here is what you can do.
 | ------------------------- | ----------------------------------- | ----------------------------------------------------- |
 | Unmanaged                 | GetDefinedValueIDs                  |                                                       | 
 | Unmanaged                 | GetValueMetadata                    | [ValueID]                                             |  
-| Unmanaged                 | SetValue                            | [ValueID, Value]                                      |
+| Unmanaged                 | SetValue                            | [ValueID, Value, **Duration**: Object (Optional)]     |
 | Unmanaged                 | GetValue                            | [ValueID]                                             |  
 | Unmanaged                 | PollValue                           | [ValueID]                                             |  
 
@@ -75,4 +75,16 @@ let Message = {
     }
 }
 return Message
+```
+
+## Object Structures 
+
+**Duration**
+```javascript
+{
+  Duration: {
+    value: Number,
+    unit: "seconds" | "minutes",
+  }
+}
 ```

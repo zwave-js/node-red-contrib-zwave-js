@@ -753,7 +753,6 @@ module.exports = function (RED) {
                             productId: N.productId,
                             productType: N.productType,
                             firmwareVersion: N.firmwareVersion,
-                            neighbors: N.neighbors,
                             deviceConfig: N.deviceConfig,
                             isControllerNode: N.isControllerNode(),
                             supportsBeaming: N.supportsBeaming,

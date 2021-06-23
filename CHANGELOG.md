@@ -1,10 +1,14 @@
   # node-red-contrib-zwave-js Change Log
 
-  - 3.9.0
+  - 4.0.0 **Possible Breaking Changes**
     - Added Node Firmware Update UI
     - Added Network Map UI
+    - Added Association Group Managment UI
     - Selection of Home ID in UI no longer required.
-    - Bump Z-Wave JS to 7.8.0
+    - **neighbors** property has now been removed in **NODE_LIST** (see Change log 3.4.0)
+    - **Association** class has now been removed (see Change log 3.3.0)
+    - Unmanaged Mode now supports a duration
+    - Bump Z-Wave JS to 7.9.0
     - Bump serialport to 9.2.1
 
   - 3.8.0
