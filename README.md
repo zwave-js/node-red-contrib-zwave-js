@@ -19,7 +19,11 @@ The node is straightforward to use, and removes all the complexities that you wo
 ## Top level features
   - 2 Different API models, catering for both experienced and inexperienced users.
   - Use one node for your entire network, or a node per Z-Wave device.
-  - A built in User Interface to manage your Z-Wave network, within Node-Red.
+  - Built in User Interface tab to manage your Z-Wave network.
+    - General Maintenance
+    - Network Mapping
+    - Firmware Updating
+    - Association Management
   - Access to all supported CC's provided by Z-Wave JS.
 
 ## The gist
