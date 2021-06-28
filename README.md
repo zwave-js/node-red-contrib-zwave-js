@@ -7,7 +7,7 @@ If you want a fully featured Z-Wave runtime in your node-red instance, look no f
 
 
   - 100% Javascript, so it's blazing fast.
-  - Does not require a build of any static library (Well, maybe glibc >= 2.28, but that is usually in the OS)
+  - Does not require a build of any static library
   - Stable
   - A Built in Node-Red User Interface tab:
     - Device Configuration
