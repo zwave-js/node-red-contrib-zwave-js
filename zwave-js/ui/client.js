@@ -1,33 +1,126 @@
 let ZwaveJsUI = (function () {
 
-  function NetworkMap(){
+  function FirmwareUpdate(){
+    let Options = {
+      draggable: true,
+      modal: true,
+      resizable: true,
+      width: '800',
+      height: '600',
+      title: "ZWave Device Firmware Updater",
+      minHeight: 75,
+      buttons: {
+        Close: function () {
+          $(this).dialog('destroy');
+        }
+      }
+    }
+
+    let Window = $('<div>').css({ padding: 10 }).html('Please wait...');
+    Window.dialog(Options)
+
+    ControllerCMD('Controller', 'GetNodes')
+    .then(({ object }) => {
+
+    })
+  }
+
+  function NetworkMap() {
 
     let Options = {
       draggable: true,
       modal: true,
       resizable: true,
       width: '800',
-      height:'600',
+      height: '600',
       title: "ZWave Network Map",
       minHeight: 75,
       buttons: {
-        Close:function(){
+        Close: function () {
           $(this).dialog('destroy');
         }
       }
     }
 
-    $('<div>').css({ padding: 10, minWidth: '100%', minHeight: '100%' }).html('Hello').dialog(Options)
+    let Window = $('<div>').css({ padding: 10 }).html('Generating Network Topology Map...');
+    Window.dialog(Options)
+
+    let Promises = [];
+    let Nodes = []
+    let Edges = []
+
+    ControllerCMD('Controller', 'GetNodes')
+      .then(({ object }) => {
+
+        // Nodes
+        object.forEach((N) => {
+          Nodes.push({ id: N.nodeId, label: N.nodeId + ' - ' + (N.name || 'No Name') })
+        })
+
+        // Neigbhours
+        object.forEach((N) => {
+          let P = new Promise((res, rej) => {
+            ControllerCMD('Controller', 'GetNodeNeighbors', [N.nodeId])
+              .then(({ node, object }) => {
+                object.forEach((NN) => {
+              
+              
+                    Edges.push({ from: node, to: NN })
+                  
+                })
+                res();
+              })
+          })
+          Promises.push(P)
+        })
+
+        // All done - Generate Network map
+        Promise.all(Promises)
+          .then(() => {
+
+            let data = {
+              nodes: Nodes,
+              edges: Edges
+            }
+            let options = {
+              nodes: {
+                shape: "dot",
+                size: 16,
+              },
+              physics: {
+                forceAtlas2Based: {
+                  gravitationalConstant: -26,
+                  centralGravity: 0.005,
+                  springLength: 230,
+                  springConstant: 0.18,
+                },
+                maxVelocity: 146,
+                solver: "forceAtlas2Based",
+                timestep: 0.35,
+                stabilization: { iterations: 150 }
+              }
+            }
+
+            let VIS = $('<div>').css({width:'100%', height:'100%'});
+            Window.html('');
+            VIS.appendTo(Window)
+
+
+            let network = new vis.Network(VIS[0], data, options);
+
+          })
+
+      })
   }
 
-  function modalAlert(message,title){
+  function modalAlert(message, title) {
     let Buts = {
-      Ok:function(){}
+      Ok: function () { }
     }
-    modalPrompt(message,title,Buts);
+    modalPrompt(message, title, Buts);
   }
 
-  
+
 
   function modalPrompt(message, title, buttons, addCancel) {
 
@@ -48,8 +141,8 @@ let ZwaveJsUI = (function () {
       }
     })
 
-    if(addCancel){
-      Options.buttons['Cancel'] = function(){
+    if (addCancel) {
+      Options.buttons['Cancel'] = function () {
         $(this).dialog('destroy');
       }
     }
@@ -184,7 +277,7 @@ let ZwaveJsUI = (function () {
         ControllerCMD('Controller', 'StartInclusion', [true], true)
       }
     }
-    modalPrompt('Begin the include process?', 'Include Mode', Buttons,true)
+    modalPrompt('Begin the include process?', 'Include Mode', Buttons, true)
   }
 
   function StopInclude() {
@@ -203,10 +296,10 @@ let ZwaveJsUI = (function () {
     let Buttons = {
       'Yes - Reset': function () {
         ControllerCMD('Controller', 'Reset')
-        .then(()=>{
-          modalAlert('Your Controller has been reset.','Reset Complete')
-          getNodes();
-        })
+          .then(() => {
+            modalAlert('Your Controller has been reset.', 'Reset Complete')
+            getNodes();
+          })
       }
     }
     modalPrompt('Are you sure you wish to reset your Controller? This action is irreversible, and will clear the Controllers data and configuration.', 'Reset Controller', Buttons, true)
@@ -217,15 +310,15 @@ let ZwaveJsUI = (function () {
     let input = $(this).prev()
     if (input.is(':visible')) {
       ControllerCMD('Controller', 'SetNodeName', [selectedNode, input.val()])
-      .then(({ node, object }) => {
-        $('#zwave-js-node-list').find(`[data-nodeid='${node}'] .zwave-js-node-row-name`).html(object)
-        if (node == selectedNode) {
-          $('#zwave-js-selected-node-name').text(object)
-        }
-        getNodes();
-        input.hide()
-        $(this).html('Set Name')
-      })
+        .then(({ node, object }) => {
+          $('#zwave-js-node-list').find(`[data-nodeid='${node}'] .zwave-js-node-row-name`).html(object)
+          if (node == selectedNode) {
+            $('#zwave-js-selected-node-name').text(object)
+          }
+          getNodes();
+          input.hide()
+          $(this).html('Set Name')
+        })
     } else {
       input.show()
       input.val($('#zwave-js-selected-node-name').text())
@@ -238,15 +331,15 @@ let ZwaveJsUI = (function () {
     let input = $(this).prev()
     if (input.is(':visible')) {
       ControllerCMD('Controller', 'SetNodeName', [selectedNode, input.val()])
-      .then(({ node, object }) => {
-        $('#zwave-js-node-list').find(`[data-nodeid='${node}'] .zwave-js-node-row-location`).html("(" + object + ")")
-        if (node == selectedNode) {
-          $('#zwave-js-selected-node-location').text(object)
-        }
-        getNodes();
-        input.hide()
-        $(this).html('Set Location')
-      })
+        .then(({ node, object }) => {
+          $('#zwave-js-node-list').find(`[data-nodeid='${node}'] .zwave-js-node-row-location`).html("(" + object + ")")
+          if (node == selectedNode) {
+            $('#zwave-js-selected-node-location').text(object)
+          }
+          getNodes();
+          input.hide()
+          $(this).html('Set Location')
+        })
     } else {
       input.show()
       input.val($('#zwave-js-selected-node-location').text())
@@ -254,24 +347,24 @@ let ZwaveJsUI = (function () {
     }
   }
 
-  function InterviewNode(){
-    ControllerCMD('Controller','InterviewNode',[selectedNode])
-    .catch((err) =>{
-      if (err.status !== 504) {
-        modalAlert(err.responseText,'Interview Error')
-      }
-    })
+  function InterviewNode() {
+    ControllerCMD('Controller', 'InterviewNode', [selectedNode])
+      .catch((err) => {
+        if (err.status !== 504) {
+          modalAlert(err.responseText, 'Interview Error')
+        }
+      })
   }
 
-  function OpenDB(){
+  function OpenDB() {
     let info = $(`.zwave-js-node-row.selected`).data('info')?.deviceConfig || {}
-        let id = [
-          '0x' + info.manufacturerId.toString(16).padStart(4, '0'),
-          '0x' + info.devices[0].productType.toString(16).padStart(4, '0'),
-          '0x' + info.devices[0].productId.toString(16).padStart(4, '0'),
-          info.firmwareVersion.min
-        ].join(':')
-        window.open(`https://devices.zwave-js.io/?jumpTo=${id}`, '_blank')
+    let id = [
+      '0x' + info.manufacturerId.toString(16).padStart(4, '0'),
+      '0x' + info.devices[0].productType.toString(16).padStart(4, '0'),
+      '0x' + info.devices[0].productId.toString(16).padStart(4, '0'),
+      info.firmwareVersion.min
+    ].join(':')
+    window.open(`https://devices.zwave-js.io/?jumpTo=${id}`, '_blank')
   }
 
   function RemoveFailedNode() {
@@ -291,7 +384,7 @@ let ZwaveJsUI = (function () {
   function ReplaceFailedNode() {
     let Buttons = {
       'Yes (Secure)': function () {
-        ControllerCMD('Controller', 'RemoveFailedNode', [selectedNode,false])
+        ControllerCMD('Controller', 'RemoveFailedNode', [selectedNode, false])
           .catch((err) => {
             if (err.status !== 504) {
               modalAlert(err.responseText, 'Could Not Replace Node')
@@ -299,7 +392,7 @@ let ZwaveJsUI = (function () {
           })
       },
       'Yes (Insecure)': function () {
-        ControllerCMD('Controller', 'RemoveFailedNode', [selectedNode,true])
+        ControllerCMD('Controller', 'RemoveFailedNode', [selectedNode, true])
           .catch((err) => {
             if (err.status !== 504) {
               modalAlert(err.responseText, 'Could Not Replace Node')
@@ -357,7 +450,7 @@ let ZwaveJsUI = (function () {
 
     // Tools
     let tools = $('<div>').css('text-align', 'center').appendTo(controllerOpts)
-    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').html('Firmware Updater').appendTo(tools)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(FirmwareUpdate).html('Firmware Updater').appendTo(tools)
     $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(NetworkMap).html('Network Map').appendTo(tools)
 
     // Node List
@@ -407,7 +500,7 @@ let ZwaveJsUI = (function () {
     // Refres Properties
     let RefresProps = $('<div>').css('text-align', 'center').appendTo(nodeOpts)
     $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').html('Refresh Property List').click(getProperties).appendTo(RefresProps)
-    
+
     // DB
     let DB = $('<div>').css('text-align', 'center').appendTo(nodeOpts)
     $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').html('View in Config Database').click(OpenDB).appendTo(DB)
@@ -421,26 +514,26 @@ let ZwaveJsUI = (function () {
     // Build stack
     panels = RED.panels.create({ container: stackContainer })
     panels.ratio(0.5)
- 
+
     let resizeStack = () => panels.resize(content.height())
     RED.events.on('sidebar:resize', resizeStack)
     $(window).on('resize', resizeStack)
     $(window).on('focus', resizeStack)
- 
+
     // Add tab
     RED.sidebar.addTab({
-       id: 'zwave-js',
-       label: ' ZWave JS',
-       name: 'Z-Wave JS',
-       content,
-       enableOnEdit: true,
-       iconClass: 'fa fa-feed',
-       onchange: () => setTimeout(resizeStack, 0) // Only way I can figure out how to init the resize when tab becomes visible
-     })
-     RED.comms.subscribe(`/zwave-js/cmd`, handleControllerEvent)
-     RED.comms.subscribe(`/zwave-js/status`, handleStatusUpdate)
- 
-     getNodes();
+      id: 'zwave-js',
+      label: ' ZWave JS',
+      name: 'Z-Wave JS',
+      content,
+      enableOnEdit: true,
+      iconClass: 'fa fa-feed',
+      onchange: () => setTimeout(resizeStack, 0) // Only way I can figure out how to init the resize when tab becomes visible
+    })
+    RED.comms.subscribe(`/zwave-js/cmd`, handleControllerEvent)
+    RED.comms.subscribe(`/zwave-js/status`, handleStatusUpdate)
+
+    getNodes();
 
   }
   // Init done
@@ -473,7 +566,7 @@ let ZwaveJsUI = (function () {
     }
   }
 
-  
+
 
   function renderNode(node) {
     return $('<div>')
