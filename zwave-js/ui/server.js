@@ -44,24 +44,29 @@ module.exports = {
       //   normally be sent into the Node-RED node.
       // Response is then passed back to client.
 
-    
-      let timeout = setTimeout(() => res.status(504).end(), 5000) // Request to controller timed out
+      if(req.body.noWait){
+        res.status(202).end()
+      }
+
+      let timeout = setTimeout(() => res.status(504).end(), 5000)
 
       _Context.input(
-        { payload: req.body }, // Pass request packet to controller
+        { payload: req.body }, 
         zwaveRes => {
-          // Response from controller...
-          clearTimeout(timeout) // Cancel timeout
-          if (!req.body.noWait) res.send(zwaveRes.payload) // Don't send if .noWait was specified
+          clearTimeout(timeout)
+          if (!req.body.noWait){
+            res.send(zwaveRes.payload) 
+          } 
         },
         err => {
           if(err){
-            clearTimeout(timeout) // Cancel timeout
-            if (!req.body.noWait) res.status(500).send(err.message) // Don't send if .noWait was specified
+            clearTimeout(timeout)
+            if (!req.body.noWait){
+              res.status(500).send(err.message)
+            }
           }
         }
       )
-      if (req.body.noWait) res.status(202).end() // Acknowledge receipt of request if not waiting for response
     })
   },
   register: (driver, request) => {
