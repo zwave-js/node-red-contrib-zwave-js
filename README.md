@@ -2,17 +2,20 @@
 
 # node-red-contrib-zwave-js
 
-THE ultimate Z-Wave node for node-red based on Z-Wave JS. If you want a fully featured Z-Wave runtime in your node-red instance, look no further.
+THE ultimate Z-Wave node for node-red based on Z-Wave JS.  
+If you want a fully featured Z-Wave runtime in your node-red instance, look no further.
 
-  - 100% Javascript, so is blazing fast
-  - Does not require a build of any static library (Well, maybe glibc >= 2.28, but that usally in the OS)
+
+  - 100% Javascript, so it's blazing fast.
+  - Does not require a build of any static library (Well, maybe glibc >= 2.28, but that is usually in the OS)
   - Stable
   - A Built in Node-Red User Interface tab:
     - Device Configuration
+    - CC Value Updating
     - Association Management
     - Firmware Updating
     - Network Map
-    - Network tools (Include, Exclude, Heal etc etc)
+    - Network Actions (Include, Exclude, Heal etc etc)
   - 2 Different API models, catering for both experienced and inexperienced users.
   - Use one node for your entire network, or a node per Z-Wave device.
   - Access to all supported CC's provided by Z-Wave JS.
