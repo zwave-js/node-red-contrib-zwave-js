@@ -1,14 +1,21 @@
 ![Image](./ReadMe.png)  
 
 # node-red-contrib-zwave-js
-An extremely easy to use, zero dependency and feature rich Z-Wave node for Node Red, based on Z-Wave JS.  
-The implementation is 100% javascript. it is therefore:  
-  - Extremely fast
-  - Does not require a build of any static library
-  - Stable
 
-Install this node via the Node Red palette menu (See [Home Assistant Install](#home-assistant-install) if this applies to you),  
-and you have Z-Wave support in Node Red. 
+THE ultimate Z-Wave node for node-red based on Z-Wave JS. If you want a fully featured Z-Wave runtime in your node-red instance, look no further.
+
+  - 100% Javascript, so is blazing fast
+  - Does not require a build of any static library (Well, maybe glibc >= 2.28, but that usally in the OS)
+  - Stable
+  - A Built in Node-Red User Interface tab:
+    - Device Configuration
+    - Association Management
+    - Firmware Updating
+    - Network Map
+    - Network tools (Include, Exclude, Heal etc etc)
+  - 2 Different API models, catering for both experienced and inexperienced users.
+  - Use one node for your entire network, or a node per Z-Wave device.
+  - Access to all supported CC's provided by Z-Wave JS.
 
 **node-red-contrib-zwave-js** is based on  [&#x1F517;Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/).  
 Z-Wave JS is actively  maintained, fast and supports secure (S0) devices.
@@ -16,15 +23,8 @@ Z-Wave JS is actively  maintained, fast and supports secure (S0) devices.
 It offers a massive amount of flexibility and is packed full of features.   
 The node is straightforward to use, and removes all the complexities that you would otherwise need to deal with.
 
-## Top level features
-  - 2 Different API models, catering for both experienced and inexperienced users.
-  - Use one node for your entire network, or a node per Z-Wave device.
-  - Built in User Interface tab to manage your Z-Wave network.
-    - General Maintenance
-    - Network Mapping
-    - Firmware Updating
-    - Association Management
-  - Access to all supported CC's provided by Z-Wave JS.
+Install this node via the Node Red palette menu (See [Home Assistant Install](#home-assistant-install) if this applies to you),  
+and you have Z-Wave support in Node Red. 
 
 ## The gist
   - Add the node(s) into your flow
