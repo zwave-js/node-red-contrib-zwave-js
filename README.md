@@ -6,7 +6,7 @@ THE ultimate Z-Wave node for node-red based on Z-Wave JS.
 If you want a fully featured Z-Wave runtime in your node-red instance, look no further.
 
 
-  - 100% Javascript, so it's blazing fast.
+  - 100% Javascript, so it's blazing fast and runs in the same memory space as your flows.
   - Does not require a build of any static library
   - Stable
   - A Built in Node-Red User Interface tab:
@@ -21,7 +21,7 @@ If you want a fully featured Z-Wave runtime in your node-red instance, look no f
   - Access to all supported CC's provided by Z-Wave JS.
 
 **node-red-contrib-zwave-js** is based on  [&#x1F517;Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/).  
-Z-Wave JS is actively  maintained, fast and supports secure (S0) devices.
+Z-Wave JS is actively  maintained, fast and supports secure (S0) devices - S2 is in the works.
 
 It offers a massive amount of flexibility and is packed full of features.   
 The node is straightforward to use, and removes all the complexities that you would otherwise need to deal with.
