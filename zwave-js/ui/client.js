@@ -53,11 +53,23 @@ let ZwaveJsUI = (function () {
       draggable: true,
       modal: true,
       resizable: true,
-      width: '800',
-      height: '600',
-      title: "ZWave Network Map",
+      width: '1024',
+      height: '768',
+      title: "ZWave Network Map. Routing is only an estimation. the signal quality also plays a part",
       minHeight: 75,
       buttons: {
+        'Export Image': function () {
+
+          let Map = $('#Network canvas')[0]
+          Map.toBlob(function (blob) {
+            var a = document.createElement("a");
+            document.body.appendChild(a);
+            a.download = "zwave-network" + ".png";
+            a.href = window.URL.createObjectURL(blob);
+            a.click();
+          });
+
+        },
         Close: function () {
           $(this).dialog('destroy');
         }
@@ -111,7 +123,13 @@ let ZwaveJsUI = (function () {
         if ((Neighbor.isListening && Neighbor.isRouting) || Neighbor.isControllerNode) {
           let AlreadyAttached = Edges.filter((E) => E.from === NN && E.to === node)
           if (AlreadyAttached.length < 1) {
-            Edges.push({ from: node, to: NN, arrows: { to: { enabled: true, type: 'arrow' } } })
+
+            let Color = {
+              highlight: NN === 1 ? 'green' : '#000000',
+              color:'#d3d3d3'
+            }
+            Edges.push({color:Color, from: node, to: NN, arrows: { to: { enabled: true, type: 'arrow' } } })
+            
           } else {
             Edges.filter((E) => E.from === NN && E.to === node)[0].arrows.from = { enabled: true, type: 'arrow' }
           }
@@ -135,11 +153,7 @@ let ZwaveJsUI = (function () {
       edges:{
         shadow:false,
         width:0.15,
-        length: 600, 
-        color:{
-          highlight:'#000000',
-          color:'#d3d3d3'
-        },
+        length: 600,
         smooth: {
           type: "discrete",
         },
@@ -154,12 +168,15 @@ let ZwaveJsUI = (function () {
       }
     }
 
-    let VIS = $('<div>').css({width:'100%', height:'100%'});
+    let VIS = $('<div>').css({width:'100%', height:'100%'}).attr('id','Network');
     Window.html('');
     VIS.appendTo(Window)
     let network = new vis.Network(VIS[0], data, options);
 
     network.stabilize()
+
+    
+
 
     return;
 
@@ -208,7 +225,12 @@ let ZwaveJsUI = (function () {
                   if ((Neighbor.isListening && Neighbor.isRouting) || Neighbor.isControllerNode) {
                     let AlreadyAttached = Edges.filter((E) => E.from === NN && E.to === node)
                     if (AlreadyAttached.length < 1) {
-                      Edges.push({ from: node, to: NN, arrows: { to: { enabled: true, type: 'arrow' } } })
+
+                      let Color = {
+                        highlight: NN === 1 ? 'green' : '#000000',
+                        color:'#d3d3d3'
+                      }
+                      Edges.push({color:Color, from: node, to: NN, arrows: { to: { enabled: true, type: 'arrow' } } })
                     } else {
                       Edges.filter((E) => E.from === NN && E.to === node)[0].arrows.from = { enabled: true, type: 'arrow' }
                     }
@@ -235,22 +257,22 @@ let ZwaveJsUI = (function () {
                   size: 8,
                 },
                 borderWidth:1,
-                physics:false,
                 shadow:true,
               },
               edges:{
                 shadow:false,
-                width:1,
-                color:{
-                  highlight:'#000000',
-                  color:'#d3d3d3'
-                }
+                width:0.15,
+                length: 600,
+                smooth: {
+                  type: "discrete",
+                },
+                physics:true
               },
               physics: {
-                enabled: true,
+                enabled: false,
                 solver: "repulsion",
                 repulsion: {
-                  nodeDistance: 400 
+                  nodeDistance: 600 // Put more distance between the nodes.
                 }
               }
             }
