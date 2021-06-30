@@ -1,3 +1,5 @@
+const { error } = require("console");
+
 module.exports = function (RED) {
     const SP = require("serialport");
     const FMaps = require('./FunctionMaps.json')
@@ -711,6 +713,13 @@ module.exports = function (RED) {
             let SupportsNN = false;
 
             switch (Operation) {
+
+                case "BeginUpdateFirmware":
+                    let Format = ZWaveJS.guessFirmwareFileFormat(Params[2],Params[3])
+                    let Firmware = ZWaveJS.extractFirmware(Params[3],Format)
+                    await Driver.controller.nodes.get(Params[0]).beginFirmwareUpdate(Firmware.data,Params[1])
+                    Send(ReturnController, "FIRMWARE_UPDATE_STARTED", {targetNode:Params[0],targetFirmware: Params[1]}, send);
+                    break;
 
                 case "GetRFRegion":
                     let RFR = await Driver.controller.getRFRegion();

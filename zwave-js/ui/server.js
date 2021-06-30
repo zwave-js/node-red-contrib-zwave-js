@@ -35,6 +35,42 @@ module.exports = {
     RED.httpAdmin.get('/zwave-js/styles.css', function (req, res) {
       res.sendFile(path.join(__dirname, 'styles.css'), { contentType: 'text/css' })
     })
+    RED.httpAdmin.post('/zwave-js/firmwareupdate/:code',function(req,res){
+
+      let _Buffer = Buffer.alloc(0);
+      req.on('data',(Data) =>{
+        _Buffer = Buffer.concat([_Buffer, Data])
+      })
+
+      req.once('end',(D)=>{
+
+        console.log(_Buffer)
+
+        let Code = req.params.code;
+        let CodeBuffer = Buffer.from(Code, 'base64');
+        let CodeString = CodeBuffer.toString('ascii');
+        let Parts = CodeString.split(":")
+
+        let PL = {
+          class:"Controller",
+          operation:"BeginUpdateFirmware",
+          params:[parseInt(Parts[0]),parseInt(Parts[1]),Parts[2],_Buffer]
+        }
+
+        let Success = () =>{
+          res.status(200).end()
+        }
+
+        let Error = (err) =>{
+          if(err) {
+            res.status(500).send(err.message)
+            console.log(err)
+          }
+        }
+        _Context.input({payload:PL},Success,Error)
+         
+      })
+    })
 
     
     RED.httpAdmin.post('/zwave-js/cmd', (req, res) => {

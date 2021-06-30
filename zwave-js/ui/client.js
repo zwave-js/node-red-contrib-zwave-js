@@ -1,5 +1,35 @@
 let ZwaveJsUI = (function () {
 
+  function PerformUpdate() {
+
+    let FE = $("#FILE_FW")[0].files[0]
+    let Filename = FE.name;
+    var reader = new FileReader();
+    reader.onload = function () {
+      let arrayBuffer = this.result
+      let array = new Uint8Array(arrayBuffer)
+      let Code = $("#NODE_FW option:selected").val() + ":" + $("#TARGET_FW").val() + ":" + Filename
+      let Options = {
+        url: `zwave-js/firmwareupdate/` + btoa(Code),
+        method: 'POST',
+        contentType: 'application/octect-stream',
+        data: array,
+        processData:false
+      }
+
+      $.ajax(Options)
+        .then(() => {
+          modalAlert("The firmware update has been accepted. It may take a few minutes for your device to finnish aapplying the latest firmware", "Firmware Accepted")
+        })
+        .catch((err) => {
+          modalAlert(err.responseText, "Firmware Rejected")
+        })
+
+
+    }
+    reader.readAsArrayBuffer(FE);
+  }
+
   function FirmwareUpdate() {
     let Options = {
       draggable: true,
@@ -10,6 +40,7 @@ let ZwaveJsUI = (function () {
       title: "ZWave Device Firmware Updater",
       minHeight: 75,
       buttons: {
+        Update:PerformUpdate,
         Close: function () {
           $(this).dialog('destroy');
         }
@@ -24,33 +55,38 @@ let ZwaveJsUI = (function () {
       .then(({ object }) => {
 
         Window.html('');
-       
-
+        
         $('<div>').css({borderWidth:1,borderColor:'red',borderStyle:'solid',marginTop:10, width:650,marginLeft:'auto',marginRight:'auto', textAlign:screenLeft,padding:5}).html('This software is provided as-is. The developer(s) of <strong>node-red-contrib-zwave-js</strong> or any libraries it<br />uses, are not responsible for any damage that may result from your attempt to upgrade the firmware.<br /><br />You are performing this upgrade, soley at your own risk.').appendTo(Window)
 
-
-
-        let Form = $('<div>').css({width:650,marginLeft:'auto',marginRight:'auto',marginTop:10, textAlign:screenLeft,padding:5}).appendTo(Window)
+       let Form = $('<div>').css({width:650,marginLeft:'auto',marginRight:'auto',marginTop:10, textAlign:screenLeft,padding:5}).appendTo(Window)
 
         let Table = $('<table>')
 
+        // TR 1 
         let TR1 = $('<tr>').appendTo(Table);
-        let TD1 = $('<td>Target Node</td>').appendTo(TR1);
+        $('<td>Target Node</td>').appendTo(TR1);
         let TD2 = $('<td>').appendTo(TR1);
-        let Select = $('<select>').appendTo(TD2);
+        let Select = $('<select id="NODE_FW">').appendTo(TD2);
         $('<option>Select Node...</option>').appendTo(Select)
-
         object.forEach((N) => {
           if (N.isControllerNode) {
             return
           }
-
           let Name = N.name ?? 'No Name'
 
           $('<option value="' + N.nodeId + '">' + N.nodeId + ' - ' + Name + '</option>').appendTo(Select)
         })
 
-        //Window.html('');
+         // TR 2
+        let TR2 = $('<tr>').appendTo(Table);
+        $('<td>Firmware Update Target</td>').appendTo(TR2);
+        $('<td><input type="number" value="0" min="0" max="2" id="TARGET_FW"/>').appendTo(TR2);
+
+        // TR 3
+        let TR3 = $('<tr>').appendTo(Table);
+        $('<td>Firmware Update File</td>').appendTo(TR3);
+        $('<td><input type="file" id="FILE_FW"/>').appendTo(TR3);
+        
         Table.appendTo(Form)
 
 
