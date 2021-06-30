@@ -21,7 +21,7 @@ module.exports = {
     LatestStatus = Message
     _SendStatus();
   },
-  
+
   init: RED => {
     _RED = RED
 
@@ -35,14 +35,14 @@ module.exports = {
     RED.httpAdmin.get('/zwave-js/styles.css', function (req, res) {
       res.sendFile(path.join(__dirname, 'styles.css'), { contentType: 'text/css' })
     })
-    RED.httpAdmin.post('/zwave-js/firmwareupdate/:code',function(req,res){
+    RED.httpAdmin.post('/zwave-js/firmwareupdate/:code', function (req, res) {
 
       let _Buffer = Buffer.alloc(0);
-      req.on('data',(Data) =>{
+      req.on('data', (Data) => {
         _Buffer = Buffer.concat([_Buffer, Data])
       })
 
-      req.once('end',(D)=>{
+      req.once('end', (D) => {
 
         console.log(_Buffer)
 
@@ -52,27 +52,24 @@ module.exports = {
         let Parts = CodeString.split(":")
 
         let PL = {
-          class:"Controller",
-          operation:"BeginUpdateFirmware",
-          params:[parseInt(Parts[0]),parseInt(Parts[1]),Parts[2],_Buffer]
+          class: "Controller",
+          operation: "BeginUpdateFirmware",
+          params: [parseInt(Parts[0]), parseInt(Parts[1]), Parts[2], _Buffer]
         }
 
-        let Success = () =>{
+        let Success = () => {
           res.status(200).end()
         }
 
-        let Error = (err) =>{
-          if(err) {
+        let Error = (err) => {
+          if (err) {
             res.status(500).send(err.message)
-            console.log(err)
           }
         }
-        _Context.input({payload:PL},Success,Error)
-         
+        _Context.input({ payload: PL }, Success, Error)
       })
     })
 
-    
     RED.httpAdmin.post('/zwave-js/cmd', (req, res) => {
       // Handles requests from the client for Controller and Node functions.
       // Passes request to main module.
@@ -80,24 +77,24 @@ module.exports = {
       //   normally be sent into the Node-RED node.
       // Response is then passed back to client.
 
-      if(req.body.noWait){
+      if (req.body.noWait) {
         res.status(202).end()
       }
 
       let timeout = setTimeout(() => res.status(504).end(), 5000)
 
       _Context.input(
-        { payload: req.body }, 
+        { payload: req.body },
         zwaveRes => {
           clearTimeout(timeout)
-          if (!req.body.noWait){
-            res.send(zwaveRes.payload) 
-          } 
+          if (!req.body.noWait) {
+            res.send(zwaveRes.payload)
+          }
         },
         err => {
-          if(err){
+          if (err) {
             clearTimeout(timeout)
-            if (!req.body.noWait){
+            if (!req.body.noWait) {
               res.status(500).send(err.message)
             }
           }
@@ -114,7 +111,7 @@ module.exports = {
       // Other events are published for a specific node which
       //   will only go to clients that have that node selected.
 
-     
+
       _Context.controller = driver.controller;
       _Context.input = request;
 
@@ -124,7 +121,7 @@ module.exports = {
 
       CONTROLLER_EVENTS.forEach(event => {
         _Context.controller.on(event, (...args) => {
-          if(event === "node added"){
+          if (event === "node added") {
             WireNodeEvents(args[0])
           }
           _RED.comms.publish(`/zwave-js/cmd`, {
@@ -158,26 +155,26 @@ module.exports = {
       let emitNodeMeta = emitNodeEvent('node-meta')
 
       let WireNodeEvents = node => {
-          // Status
-          node.on('sleep', emitNodeAsleep)
-          node.on('wake up', emitNodeAwake)
-          node.on('dead', emitNodeDead)
-          node.on('alive', emitNodeAlive)
-  
-          // Readiness
-          node.on('ready', node => {
-            emitNodeStatus('ready')(node)
-          })
-  
-          // Values
-          node.on('value added', emitNodeValue)
-          node.on('value updated', emitNodeValue)
-          node.on('value removed', emitNodeValue)
-          node.on('value notification', emitNodeValue)
-          node.on('notification', emitNodeValue)
-  
-          // Meta
-          node.on('metadata update', emitNodeMeta)
+        // Status
+        node.on('sleep', emitNodeAsleep)
+        node.on('wake up', emitNodeAwake)
+        node.on('dead', emitNodeDead)
+        node.on('alive', emitNodeAlive)
+
+        // Readiness
+        node.on('ready', node => {
+          emitNodeStatus('ready')(node)
+        })
+
+        // Values
+        node.on('value added', emitNodeValue)
+        node.on('value updated', emitNodeValue)
+        node.on('value removed', emitNodeValue)
+        node.on('value notification', emitNodeValue)
+        node.on('notification', emitNodeValue)
+
+        // Meta
+        node.on('metadata update', emitNodeMeta)
       }
 
       _Context.controller.nodes.forEach(node => {
@@ -186,7 +183,7 @@ module.exports = {
     })
   },
   unregister: () => {
-      delete _Context.controller
-      delete _Context.input
+    delete _Context.controller
+    delete _Context.input
   }
 }

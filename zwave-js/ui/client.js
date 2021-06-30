@@ -342,59 +342,7 @@ let ZwaveJsUI = (function () {
     $('<div>').css({ padding: 10, maxWidth: 500, wordWrap: 'break-word' }).html(message).dialog(Options)
   }
 
-  /*
-  function confirm(text, onYes, onCancel) {
-    $('<div>')
-      .css({ padding: 10, maxWidth: 500, wordWrap: 'break-word' })
-      .html(text)
-      .dialog({
-        draggable: false,
-        modal: true,
-        resizable: false,
-        width: 'auto',
-        title: 'Confirm',
-        minHeight: 75,
-        buttons: {
-          Yes: function () {
-            $(this).dialog('destroy')
-            onYes?.()
-          },
-          Cancel: function () {
-            $(this).dialog('destroy')
-            onCancel?.()
-          }
-        }
-      })
-  }
-
-  function confirminclude(text, onYes, onCancel) {
-    $('<div>')
-      .css({ padding: 10, maxWidth: 500, wordWrap: 'break-word' })
-      .html(text)
-      .dialog({
-        draggable: false,
-        modal: true,
-        resizable: false,
-        width: 'auto',
-        title: 'Confirm',
-        minHeight: 75,
-        buttons: {
-          'Yes (Secure)': function () {
-            $(this).dialog('destroy')
-            onYes?.(false)
-          },
-          'Yes (Insecure)': function () {
-            $(this).dialog('destroy')
-            onYes?.(true)
-          },
-          Cancel: function () {
-            $(this).dialog('destroy')
-            onCancel?.()
-          }
-        }
-      })
-  }
-  */
+ 
 
   var controllerOpts;
   var nodeOpts;
