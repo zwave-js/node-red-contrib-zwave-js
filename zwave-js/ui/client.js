@@ -1,6 +1,6 @@
 let ZwaveJsUI = (function () {
 
-  function FirmwareUpdate(){
+  function FirmwareUpdate() {
     let Options = {
       draggable: true,
       modal: true,
@@ -20,34 +20,137 @@ let ZwaveJsUI = (function () {
     Window.dialog(Options)
 
     ControllerCMD('Controller', 'GetNodes')
-    .then(({ object }) => {
 
-      let Table = $('<table>')
+      .then(({ object }) => {
 
-      let TR1 = $('<tr>').appendTo(Table);
+        Window.html('');
+       
 
-      let TD1 = $('<td>Target Node</td>').appendTo(TR1);
-      let TD2 = $('<td>').appendTo(TR1);
-      let Select = $('<select>').appendTo(TD2);
-      object.forEach((N) =>{
-        if(N.isControllerNode){
+        $('<div>').css({borderWidth:1,borderColor:'red',borderStyle:'solid',marginTop:10, width:650,marginLeft:'auto',marginRight:'auto', textAlign:screenLeft,padding:5}).html('This software is provided as-is. The developer(s) of <strong>node-red-contrib-zwave-js</strong> or any libraries it<br />uses, are not responsible for any damage that may result from your attempt to upgrade the firmware.<br /><br />You are performing this upgrade, soley at your own risk.').appendTo(Window)
+
+
+
+        let Form = $('<div>').css({width:650,marginLeft:'auto',marginRight:'auto',marginTop:10, textAlign:screenLeft,padding:5}).appendTo(Window)
+
+        let Table = $('<table>')
+
+        let TR1 = $('<tr>').appendTo(Table);
+        let TD1 = $('<td>Target Node</td>').appendTo(TR1);
+        let TD2 = $('<td>').appendTo(TR1);
+        let Select = $('<select>').appendTo(TD2);
+        $('<option>Select Node...</option>').appendTo(Select)
+
+        object.forEach((N) => {
+          if (N.isControllerNode) {
+            return
+          }
+
+          let Name = N.name ?? 'No Name'
+
+          $('<option value="' + N.nodeId + '">' + N.nodeId + ' - ' + Name + '</option>').appendTo(Select)
+        })
+
+        //Window.html('');
+        Table.appendTo(Form)
+
+
+
+      })
+  }
+
+  async function GenerateMapJSON(Nodes, Neigbhors) {
+
+    let _Promises = [];
+    let _Nodes = []
+    let _Edges = []
+
+    Nodes.forEach((N) => {
+
+      let Label = N.isControllerNode ? 'Controller' : N.nodeId + ' - ' + (N.name ?? 'No Name')
+      let name = N.isControllerNode ? 'Controller' : (N.name ?? 'No Name')
+      let Shape = N.isControllerNode ? 'box' : 'square'
+      var Color = (N.isListening && N.isRouting) ? 'limegreen' : 'orangered'
+
+      if (N.isControllerNode) {
+        Color = 'lightgray'
+      }
+      let ND = {
+        canRoute: N.isControllerNode || (N.isListening && N.isRouting),
+        isControllerNode: N.isControllerNode,
+        id: N.nodeId,
+        label: Label,
+        name: name,
+        shape: Shape,
+        color: {
+          background: Color,
+          borderColor: 'black',
+          highlight: Color
+        }
+      }
+      _Nodes.push(ND)
+    })
+
+    if (Neigbhors === undefined) {
+
+      Nodes.forEach((N) => {
+
+        if (N.isControllerNode) {
           return
         }
 
-        let Name = N.name ?? 'No Name'
-
-        $('<option value="'+N.nodeId+'">'+N.nodeId+' - '+Name+'</option>').appendTo(Select)
+        let P = new Promise((res, rej) => {
+          ControllerCMD('Controller', 'GetNodeNeighbors', [N.nodeId])
+            .then(({ node, object }) => {
+              object.forEach((NodeNeighbor) => {
+                let Neighbor = _Nodes.filter((Node) => Node.id === NodeNeighbor)[0];
+                if (Neighbor.canRoute) {
+                  let AlreadyAttached = _Edges.filter((E) => E.from === NodeNeighbor && E.to === node)
+                  if (AlreadyAttached.length < 1) {
+                    let Color = {
+                      highlight: Neighbor.isControllerNode ? 'green' : '#000000',
+                      color: '#d3d3d3'
+                    }
+                    _Edges.push({ color: Color, from: node, to: NodeNeighbor, arrows: { to: { enabled: true, type: 'arrow' } } })
+                  } else {
+                    _Edges.filter((E) => E.from === NodeNeighbor && E.to === node)[0].arrows.from = { enabled: true, type: 'arrow' }
+                  }
+                }
+              })
+              res();
+            })
+        })
+        _Promises.push(P)
       })
+      await Promise.all(_Promises)
+    }
+    else {
+      Neigbhors.forEach(({ node, object }) => {
+        if (_Nodes.filter((Node) => Node.id === node)[0].isControllerNode) {
+          return
+        }
+        object.forEach((NodeNeighbor) => {
+          let Neighbor = _Nodes.filter((Node) => Node.id === NodeNeighbor)[0];
+          if (Neighbor.canRoute) {
+            let AlreadyAttached = _Edges.filter((E) => E.from === NodeNeighbor && E.to === node)
+            if (AlreadyAttached.length < 1) {
+              let Color = {
+                highlight: Neighbor.isControllerNode ? 'green' : '#000000',
+                color: '#d3d3d3'
+              }
+              _Edges.push({ color: Color, from: node, to: NodeNeighbor, arrows: { to: { enabled: true, type: 'arrow' } } })
+            } else {
+              _Edges.filter((E) => E.from === NodeNeighbor && E.to === node)[0].arrows.from = { enabled: true, type: 'arrow' }
+            }
+          }
+        });
+      })
+    }
 
-      Window.html('');
-      Table.appendTo(Window)
-
-
-
-    })
+    return { _Nodes, _Edges }
   }
 
   function NetworkMap() {
+
 
     let Options = {
       draggable: true,
@@ -58,18 +161,6 @@ let ZwaveJsUI = (function () {
       title: "ZWave Network Map. Routing is only an estimation. the signal quality also plays a part",
       minHeight: 75,
       buttons: {
-        'Export Image': function () {
-
-          let Map = $('#Network canvas')[0]
-          Map.toBlob(function (blob) {
-            var a = document.createElement("a");
-            document.body.appendChild(a);
-            a.download = "zwave-network" + ".png";
-            a.href = window.URL.createObjectURL(blob);
-            a.click();
-          });
-
-        },
         Close: function () {
           $(this).dialog('destroy');
         }
@@ -79,176 +170,29 @@ let ZwaveJsUI = (function () {
     let Window = $('<div>').css({ padding: 10 }).html('Generating Network Topology Map...');
     Window.dialog(Options)
 
-    let Promises = [];
-    let Nodes = []
-    let Edges = []
+    //let TestNodes = [{"nodeId":1,"name":"Controller","isControllerNode":true,"isListening":false,"isRouting":false},{"nodeId":2,"name":"Chandelier","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":3,"name":"Family","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":4,"name":"FamilyCan","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":5,"name":"SmallBathLight","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":6,"name":"SmallBathFan","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":7,"name":"Zoey","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":8,"name":"BedCeiling","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":9,"name":"Sconce","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":10,"name":"BathCeiling","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":11,"name":"igBathFan","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":12,"name":"Mirror","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":13,"name":"Closet","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":14,"name":"Garage","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":15,"name":"BackPorch","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":16,"name":"Dining","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":17,"name":"Island","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":18,"name":"KitchenCan","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":19,"name":"Sink","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":20,"name":"Office","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":21,"name":"Desk","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":22,"name":"DownHall","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":23,"name":"Living","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":24,"name":"FrontPorch","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":25,"name":"SmallBathWax","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":26,"name":"tairsWax","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":27,"name":"Laundry","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":28,"name":"UpHall","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":29,"name":"BedWax","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":30,"name":"Hayley","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":31,"name":"TheaterTheFan","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":32,"name":"TheaterLight","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":33,"name":"GirlsWax","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":34,"name":"UpBathFan","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":35,"name":"UpBathLight","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":36,"name":"Playroom","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":37,"name":"AtticLight","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":38,"name":"Vanity","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":39,"name":"ClosetMotion","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":40,"name":"LaundryDoor","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":41,"name":"TheaterMotion","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":42,"name":"UpBathMotion","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":43,"name":"FrontDoor","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":44,"name":"BackDoor","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":45,"name":"GarageEntry","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":46,"name":"GDGarrett","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":47,"name":"GDHeidi","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":48,"name":"FamilySmoke","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":49,"name":"BathSmoke","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":50,"name":"FrontSmoke","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":51,"name":"No Name","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":52,"name":"No Name","isControllerNode":false,"isListening":false,"isRouting":false}]
+    //let TestNs = [{ "node": 1, "object": [3, 6, 7, 8, 9, 10, 11, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 43, 44, 45, 46, 48, 49, 50, 51, 52] }, { "node": 2, "object": [1, 3, 4, 5, 6, 7, 8, 9, 11, 14, 16, 17, 19, 21, 22, 23, 24, 26, 30, 32, 33, 34, 35, 36, 37, 40, 43, 45, 46, 47, 50, 51, 52] }, { "node": 3, "object": [1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 32, 33, 34, 35, 37, 38, 40, 43, 44, 45, 46, 47, 48, 49, 50, 51] }, { "node": 4, "object": [2, 3, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 32, 34, 35, 36, 38, 40, 41, 43, 44, 45, 46, 47, 48, 49, 50, 51] }, { "node": 5, "object": [1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 45, 46, 47, 48, 49, 50, 51, 52] }, { "node": 6, "object": [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 33, 34, 35, 36, 37, 38, 39, 40, 42, 43, 45, 46, 47, 48, 49, 50, 52] }, { "node": 7, "object": [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 40, 41, 45, 46, 47, 48, 49, 50, 51, 52] }, { "node": 8, "object": [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 14, 16, 17, 21, 22, 27, 28, 29, 30, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 43, 45, 46, 47, 48, 49, 50, 51, 52] }, { "node": 9, "object": [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 16, 18, 21, 23, 25, 26, 27, 28, 29, 30, 31, 32, 33, 35, 36, 37, 38, 40, 41, 43, 45, 46, 47, 48, 49, 50, 51, 52] }, { "node": 10, "object": [1, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 21, 22, 23, 25, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52] }, { "node": 11, "object": [1, 2, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 17, 18, 20, 21, 22, 23, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 43, 45, 46, 47, 48, 49, 50, 51, 52] }, { "node": 12, "object": [1, 3, 5, 6, 7, 8, 9, 10, 11, 13, 14, 16, 17, 18, 19, 21, 22, 23, 25, 26, 27, 28, 29, 30, 31, 32, 34, 35, 36, 37, 38, 39, 40, 41, 43, 46, 47, 48, 49, 51, 52] }, { "node": 13, "object": [1, 3, 4, 6, 7, 9, 10, 12, 15, 16, 18, 25, 28, 29, 30, 32, 33, 34, 35, 38, 39, 40, 41, 44, 46, 47, 48, 51] }, { "node": 14, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 52] }, { "node": 15, "object": [1, 3, 4, 5, 6, 7, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52] }, { "node": 16, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27, 28, 29, 30, 31, 33, 35, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52] }, { "node": 17, "object": [2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 14, 15, 16, 18, 19, 20, 21, 22, 23, 24, 25, 26, 28, 29, 30, 31, 33, 34, 35, 36, 37, 39, 40, 41, 43, 45, 46, 47, 48, 50, 52] }, { "node": 18, "object": [1, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 41, 42, 43, 45, 46, 47, 48, 49, 50, 52] }, { "node": 19, "object": [1, 2, 3, 4, 6, 15, 16, 17, 18, 21, 24, 25, 30, 31, 33, 34, 36, 37, 41, 45, 46, 48, 49, 50, 52] }, { "node": 20, "object": [1, 3, 4, 5, 6, 7, 14, 15, 16, 17, 18, 21, 22, 23, 24, 25, 30, 32, 33, 35, 36, 40, 41, 43, 45, 46, 47, 48, 50, 52] }, { "node": 21, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 40, 41, 43, 44, 45, 46, 47, 48, 49, 50, 52] }, { "node": 22, "object": [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 14, 15, 16, 17, 18, 20, 21, 23, 24, 26, 27, 28, 29, 30, 32, 33, 34, 35, 36, 37, 38, 40, 41, 43, 45, 46, 48, 49, 50, 52] }, { "node": 23, "object": [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 17, 18, 20, 21, 22, 24, 26, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 40, 41, 44, 45, 46, 47, 48, 49, 50, 52] }, { "node": 24, "object": [1, 2, 3, 4, 5, 6, 7, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 29, 30, 31, 33, 34, 35, 36, 37, 40, 41, 43, 44, 45, 46, 47, 48, 49, 50, 52] }, { "node": 25, "object": [1, 3, 4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24, 26, 27, 30, 32, 33, 34, 35, 36, 37, 40, 41, 43, 45, 46, 47, 48, 49, 52] }, { "node": 26, "object": [2, 3, 4, 5, 6, 7, 9, 11, 12, 14, 15, 18, 21, 22, 23, 24, 25, 29, 30, 31, 34, 35, 36, 37, 40, 43, 45, 46, 47, 48, 49] }, { "node": 27, "object": [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 22, 24, 25, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 43, 45, 46, 47, 48, 49, 51, 52] }, { "node": 28, "object": [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 22, 27, 29, 30, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 43, 45, 46, 47, 48, 49] }, { "node": 29, "object": [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 22, 23, 24, 26, 27, 28, 30, 31, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52] }, { "node": 30, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 33, 34, 35, 36, 37, 38, 39, 40, 41, 44, 45, 46, 47, 48, 50, 51, 52] }, { "node": 31, "object": [1, 5, 7, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 21, 23, 24, 25, 27, 29, 30, 32, 33, 34, 35, 36, 37, 40, 41, 43, 44, 45, 47, 49, 50, 52] }, { "node": 32, "object": [1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 20, 21, 22, 23, 27, 28, 31, 33, 34, 35, 36, 37, 39, 40, 41, 43, 44, 45, 47, 48, 49, 50, 51, 52] }, { "node": 33, "object": [1, 2, 3, 5, 6, 7, 8, 9, 11, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27, 28, 29, 30, 31, 32, 34, 35, 36, 37, 41, 42, 43, 45, 46, 47, 49, 50, 52] }, { "node": 34, "object": [1, 2, 3, 4, 5, 7, 8, 10, 11, 12, 13, 14, 15, 17, 18, 19, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 35, 36, 37, 38, 39, 40, 41, 42, 43, 45, 46, 47, 48, 49, 50, 51, 52] }, { "node": 35, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 18, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 36, 37, 38, 39, 40, 41, 42, 43, 45, 47, 48, 49, 50, 52] }, { "node": 36, "object": [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 37, 40, 41, 42, 43, 45, 46, 47, 48, 49, 50, 52] }, { "node": 37, "object": [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 38, 39, 40, 42] }, { "node": 38, "object": [1, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 21, 22, 23, 27, 28, 29, 30, 34, 35, 37, 39, 40] }, { "node": 39, "object": [1, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 25, 27, 28, 29, 30, 31, 32, 34, 35, 37, 38] }, { "node": 40, "object": [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38] }, { "node": 41, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 42] }, { "node": 42, "object": [1, 5, 6, 16, 33, 34, 35, 36, 37, 41] }, { "node": 43, "object": [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 20, 21, 22, 23, 24, 26, 27, 28, 29, 31, 32, 33, 34, 35, 36, 37] }, { "node": 44, "object": [1, 3, 4, 5, 6, 7, 14, 15, 16, 17, 18, 21, 23, 24, 26, 29, 30, 31, 32, 35, 37] }, { "node": 45, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 42] }, { "node": 46, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 33, 35, 36, 37, 38] }, { "node": 47, "object": [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 34, 35, 36, 37, 38, 42] }, { "node": 48, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 32, 33, 34, 35, 36, 37, 38] }, { "node": 49, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 18, 19, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 42] }, { "node": 50, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 29, 30, 31, 32, 33, 34, 35, 36, 37, 42] }, { "node": 51, "object": [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 27, 30, 32, 34, 37] }, { "node": 52, "object": [1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 29, 31, 32, 33, 34, 35, 36, 37, 42] }]
 
-    /* TEST START */
-    let TestNodes = [{"nodeId":1,"name":"1 - Controller","isControllerNode":true,"isListening":false,"isRouting":false},{"nodeId":2,"name":"2 - Chandelier","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":3,"name":"3 - Family","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":4,"name":"4 - FamilyCan","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":5,"name":"5 - SmallBathLight","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":6,"name":"6 - SmallBathFan","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":7,"name":"7 - Zoey","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":8,"name":"8 - BedCeiling","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":9,"name":"9 - Sconce","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":10,"name":"10 - BathCeiling","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":11,"name":"11 - BigBathFan","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":12,"name":"12 - Mirror","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":13,"name":"13 - Closet","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":14,"name":"14 - Garage","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":15,"name":"15 - BackPorch","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":16,"name":"16 - Dining","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":17,"name":"17 - Island","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":18,"name":"18 - KitchenCan","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":19,"name":"19 - Sink","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":20,"name":"20 - Office","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":21,"name":"21 - Desk","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":22,"name":"22 - DownHall","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":23,"name":"23 - Living","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":24,"name":"24 - FrontPorch","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":25,"name":"25 - SmallBathWax","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":26,"name":"26 - StairsWax","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":27,"name":"27 - Laundry","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":28,"name":"28 - UpHall","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":29,"name":"29 - BedWax","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":30,"name":"30 - Hayley","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":31,"name":"31 - TheaterTheFan","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":32,"name":"32 - TheaterLight","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":33,"name":"33 - GirlsWax","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":34,"name":"34 - UpBathFan","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":35,"name":"35 - UpBathLight","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":36,"name":"36 - Playroom","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":37,"name":"37 - AtticLight","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":38,"name":"38 - Vanity","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":39,"name":"39 - ClosetMotion","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":40,"name":"40 - LaundryDoor","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":41,"name":"41 - TheaterMotion","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":42,"name":"42 - UpBathMotion","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":43,"name":"43 - FrontDoor","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":44,"name":"44 - BackDoor","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":45,"name":"45 - GarageEntry","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":46,"name":"46 - GDGarrett","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":47,"name":"47 - GDHeidi","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":48,"name":"48 - FamilySmoke","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":49,"name":"49 - BathSmoke","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":50,"name":"50 - FrontSmoke","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":51,"name":"51 - No Name","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":52,"name":"52 - No Name","isControllerNode":false,"isListening":false,"isRouting":false}]
-    let TestNs = [{"node":1,"object":[3,6,7,8,9,10,11,14,15,16,17,18,19,20,21,23,24,25,28,29,30,31,32,33,34,35,36,37,38,39,40,41,43,44,45,46,48,49,50,51,52]},{"node":2,"object":[1,3,4,5,6,7,8,9,11,14,16,17,19,21,22,23,24,26,30,32,33,34,35,36,37,40,43,45,46,47,50,51,52]},{"node":3,"object":[1,2,4,5,6,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,32,33,34,35,37,38,40,43,44,45,46,47,48,49,50,51]},{"node":4,"object":[2,3,5,6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,30,32,34,35,36,38,40,41,43,44,45,46,47,48,49,50,51]},{"node":5,"object":[1,2,3,4,6,7,8,9,10,11,12,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,33,34,35,36,37,38,39,40,41,42,43,45,46,47,48,49,50,51,52]},{"node":6,"object":[1,2,3,4,5,7,8,9,10,11,12,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,33,34,35,36,37,38,39,40,42,43,45,46,47,48,49,50,52]},{"node":7,"object":[1,2,3,4,5,6,8,9,10,11,12,14,15,16,17,18,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,40,41,45,46,47,48,49,50,51,52]},{"node":8,"object":[1,2,3,4,5,6,7,9,10,11,12,14,16,17,21,22,27,28,29,30,32,33,34,35,36,37,38,39,40,41,43,45,46,47,48,49,50,51,52]},{"node":9,"object":[1,2,3,4,5,6,7,8,10,11,12,13,14,16,18,21,23,25,26,27,28,29,30,31,32,33,35,36,37,38,40,41,43,45,46,47,48,49,50,51,52]},{"node":10,"object":[1,3,4,5,6,7,8,9,11,12,13,14,16,17,18,21,22,23,25,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52]},{"node":11,"object":[1,2,4,5,6,7,8,9,10,12,14,16,17,18,20,21,22,23,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,43,45,46,47,48,49,50,51,52]},{"node":12,"object":[1,3,5,6,7,8,9,10,11,13,14,16,17,18,19,21,22,23,25,26,27,28,29,30,31,32,34,35,36,37,38,39,40,41,43,46,47,48,49,51,52]},{"node":13,"object":[1,3,4,6,7,9,10,12,15,16,18,25,28,29,30,32,33,34,35,38,39,40,41,44,46,47,48,51]},{"node":14,"object":[1,2,3,4,5,6,7,8,9,10,11,12,15,16,17,18,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,52]},{"node":15,"object":[1,3,4,5,6,7,13,14,16,17,18,19,20,21,22,23,24,25,26,29,30,31,32,33,34,35,36,37,38,39,40,41,43,44,45,46,47,48,49,50,51,52]},{"node":16,"object":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,17,18,19,20,21,22,23,24,25,27,28,29,30,31,33,35,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52]},{"node":17,"object":[2,3,4,5,6,7,8,10,11,12,14,15,16,18,19,20,21,22,23,24,25,26,28,29,30,31,33,34,35,36,37,39,40,41,43,45,46,47,48,50,52]},{"node":18,"object":[1,3,4,5,6,7,9,10,11,12,13,14,15,16,17,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,41,42,43,45,46,47,48,49,50,52]},{"node":19,"object":[1,2,3,4,6,15,16,17,18,21,24,25,30,31,33,34,36,37,41,45,46,48,49,50,52]},{"node":20,"object":[1,3,4,5,6,7,14,15,16,17,18,21,22,23,24,25,30,32,33,35,36,40,41,43,45,46,47,48,50,52]},{"node":21,"object":[1,2,3,4,5,6,7,8,9,10,11,12,14,15,16,17,18,19,20,22,23,24,25,26,28,30,31,32,33,34,35,36,37,38,40,41,43,44,45,46,47,48,49,50,52]},{"node":22,"object":[1,2,3,4,5,6,7,8,10,11,12,14,15,16,17,18,20,21,23,24,26,27,28,29,30,32,33,34,35,36,37,38,40,41,43,45,46,48,49,50,52]},{"node":23,"object":[1,2,3,4,5,6,7,9,10,11,12,14,15,16,17,18,20,21,22,24,26,28,29,30,31,32,33,34,35,36,37,38,40,41,44,45,46,47,48,49,50,52]},{"node":24,"object":[1,2,3,4,5,6,7,14,15,16,17,18,19,20,21,22,23,25,26,27,29,30,31,33,34,35,36,37,40,41,43,44,45,46,47,48,49,50,52]},{"node":25,"object":[1,3,4,5,6,7,9,10,11,12,14,15,16,17,18,19,20,21,23,24,26,27,30,32,33,34,35,36,37,40,41,43,45,46,47,48,49,52]},{"node":26,"object":[2,3,4,5,6,7,9,11,12,14,15,18,21,22,23,24,25,29,30,31,34,35,36,37,40,43,45,46,47,48,49]},{"node":27,"object":[1,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,22,24,25,28,29,30,31,32,33,34,35,36,37,38,39,40,41,43,45,46,47,48,49,51,52]},{"node":28,"object":[1,3,4,5,6,7,8,9,10,11,12,13,14,16,17,18,22,27,29,30,32,33,34,35,36,37,38,39,40,41,43,45,46,47,48,49]},{"node":29,"object":[1,2,3,5,6,7,8,9,10,11,12,13,14,16,17,18,22,23,24,26,27,28,30,31,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52]},{"node":30,"object":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,31,33,34,35,36,37,38,39,40,41,44,45,46,47,48,50,51,52]},{"node":31,"object":[1,5,7,9,10,11,12,14,15,16,17,18,19,21,23,24,25,27,29,30,32,33,34,35,36,37,40,41,43,44,45,47,49,50,52]},{"node":32,"object":[1,2,3,4,7,8,9,10,11,12,13,14,15,17,18,20,21,22,23,27,28,31,33,34,35,36,37,39,40,41,43,44,45,47,48,49,50,51,52]},{"node":33,"object":[1,2,3,5,6,7,8,9,11,14,16,17,18,19,20,21,22,23,24,25,27,28,29,30,31,32,34,35,36,37,41,42,43,45,46,47,49,50,52]},{"node":34,"object":[1,2,3,4,5,7,8,10,11,12,13,14,15,17,18,19,21,22,23,24,25,26,27,28,29,30,31,32,33,35,36,37,38,39,40,41,42,43,45,46,47,48,49,50,51,52]},{"node":35,"object":[1,2,3,4,5,6,7,8,9,10,11,13,14,15,16,18,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,36,37,38,39,40,41,42,43,45,47,48,49,50,52]},{"node":36,"object":[1,2,4,5,6,7,8,9,10,11,12,14,15,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,37,40,41,42,43,45,46,47,48,49,50,52]},{"node":37,"object":[1,2,3,5,6,7,8,9,10,11,12,14,15,16,17,18,19,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,38,39,40,42]},{"node":38,"object":[1,3,4,5,7,8,9,10,11,12,13,14,15,16,21,22,23,27,28,29,30,34,35,37,39,40]},{"node":39,"object":[1,3,5,6,7,8,9,10,11,12,13,14,15,16,25,27,28,29,30,31,32,34,35,37,38]},{"node":40,"object":[1,2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,18,20,21,22,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38]},{"node":41,"object":[1,2,3,4,5,6,7,8,9,10,11,12,14,15,16,17,18,19,20,21,23,24,26,27,28,29,30,31,32,33,34,35,36,37,42]},{"node":42,"object":[1,5,6,16,33,34,35,36,37,41]},{"node":43,"object":[1,2,3,4,5,7,8,9,10,11,12,14,15,16,17,18,20,21,22,23,24,26,27,28,29,31,32,33,34,35,36,37]},{"node":44,"object":[1,3,4,5,6,7,14,15,16,17,18,21,23,24,26,29,30,31,32,35,37]},{"node":45,"object":[1,2,3,4,5,6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,42]},{"node":46,"object":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,33,35,36,37,38]},{"node":47,"object":[1,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,23,24,25,26,27,28,29,30,31,32,34,35,36,37,38,42]},{"node":48,"object":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,32,33,34,35,36,37,38]},{"node":49,"object":[1,2,3,4,5,6,7,8,9,10,11,12,14,15,16,18,19,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,42]},{"node":50,"object":[1,2,3,4,5,6,7,8,9,11,14,16,17,18,19,20,21,22,23,24,25,26,27,29,30,31,32,33,34,35,36,37,42]},{"node":51,"object":[1,2,3,4,5,7,8,9,10,11,12,13,14,15,16,18,27,30,32,34,37]},{"node":52,"object":[1,2,5,6,7,8,9,10,11,12,15,16,17,18,19,20,21,22,23,24,25,26,27,29,31,32,33,34,35,36,37,42]}]
+ 
 
+    let GetSpread = (Number) => {
 
-    TestNodes.forEach((N) => {
-
-      let Name = N.isControllerNode ? 'Controller' : N.nodeId+' - ' + (N.name ?? 'No Name')
-      let Shape = N.isControllerNode ? 'box' : 'square' 
-      var Color = (N.isListening && N.isRouting) ? 'limegreen' : 'orangered'
-
-      if(N.isControllerNode){
-        Color = 'lightgray'
+      if(Number < 10) {
+        return 100;
       }
-      let ND = {
-        id: N.nodeId,
-        label: Name,
-        shape:Shape,
-        color:{
-          background:Color,
-          borderColor:'black',
-          highlight:Color
-        }
-      }
-      Nodes.push(ND)
-    })
+      let Spread = Number*10+100
+      return Spread
 
-
-    TestNs.forEach(({node,object}) =>{
-
-      if(TestNodes.filter((TN) =>TN.nodeId === node)[0].isControllerNode){
-        return
-      }
-
-      object.forEach((NN) => {
-
-        let Neighbor = TestNodes.filter((NID) => NID.nodeId === NN)[0];
-        if ((Neighbor.isListening && Neighbor.isRouting) || Neighbor.isControllerNode) {
-          let AlreadyAttached = Edges.filter((E) => E.from === NN && E.to === node)
-          if (AlreadyAttached.length < 1) {
-
-            let Color = {
-              highlight: NN === 1 ? 'green' : '#000000',
-              color:'#d3d3d3'
-            }
-            Edges.push({color:Color, from: node, to: NN, arrows: { to: { enabled: true, type: 'arrow' } } })
-            
-          } else {
-            Edges.filter((E) => E.from === NN && E.to === node)[0].arrows.from = { enabled: true, type: 'arrow' }
-          }
-        }
-      })
-    })
-
-    let data = {
-      nodes: new vis.DataSet(Nodes),
-      edges: new vis.DataSet(Edges)
-    }
-    let options = {
-      nodes: {
-        size: 8,
-        font: {
-          size: 8,
-        },
-        borderWidth:1,
-        shadow:true,
-      },
-      edges:{
-        shadow:false,
-        width:0.15,
-        length: 600,
-        smooth: {
-          type: "discrete",
-        },
-        physics:true
-      },
-      physics: {
-        enabled: false,
-        solver: "repulsion",
-        repulsion: {
-          nodeDistance: 600 // Put more distance between the nodes.
-        }
-      }
-    }
-
-    let VIS = $('<div>').css({width:'100%', height:'100%'}).attr('id','Network');
-    Window.html('');
-    VIS.appendTo(Window)
-    let network = new vis.Network(VIS[0], data, options);
-
-    network.stabilize()
-
-    
-
-
-    return;
-
-    /* TEST END */
-
+    } 
 
     ControllerCMD('Controller', 'GetNodes')
       .then(({ object }) => {
-
-        let _Nodes = object;
-
-        // Nodes
-        _Nodes.forEach((N) => {
-
-          let Name = N.isControllerNode ? 'Controller' : N.nodeId+' - ' + (N.name ?? 'No Name')
-          let Shape = N.isControllerNode ? 'box' : 'square' 
-          var Color = (N.isListening && N.isRouting) ? 'limegreen' : 'orangered'
-
-          if(N.isControllerNode){
-            Color = 'lightgray'
-          }
-          let ND = {
-            id: N.nodeId,
-            label: Name,
-            shape:Shape,
-            color:{
-              background:Color,
-              borderColor:'black',
-              highlight:Color
-            }
-          }
-          Nodes.push(ND)
-        })
-
-        // Neigbhours
-        _Nodes.forEach((N) => {
-          if (N.isControllerNode) {
-            return
-          }
-          let P = new Promise((res, rej) => {
-            ControllerCMD('Controller', 'GetNodeNeighbors', [N.nodeId])
-              .then(({ node, object }) => {
-                object.forEach((NN) => {
-
-                  let Neighbor = _Nodes.filter((NID) => NID.nodeId === NN)[0];
-                  if ((Neighbor.isListening && Neighbor.isRouting) || Neighbor.isControllerNode) {
-                    let AlreadyAttached = Edges.filter((E) => E.from === NN && E.to === node)
-                    if (AlreadyAttached.length < 1) {
-
-                      let Color = {
-                        highlight: NN === 1 ? 'green' : '#000000',
-                        color:'#d3d3d3'
-                      }
-                      Edges.push({color:Color, from: node, to: NN, arrows: { to: { enabled: true, type: 'arrow' } } })
-                    } else {
-                      Edges.filter((E) => E.from === NN && E.to === node)[0].arrows.from = { enabled: true, type: 'arrow' }
-                    }
-                  }
-                })
-                res();
-              })
-          })
-          Promises.push(P)
-        })
-
-        // All done - Generate Network map
-        Promise.all(Promises)
-          .then(() => {
+        GenerateMapJSON(object)
+          .then(({ _Nodes, _Edges }) => {
 
             let data = {
-              nodes: new vis.DataSet(Nodes),
-              edges: new vis.DataSet(Edges)
+              nodes: new vis.DataSet(_Nodes),
+              edges: new vis.DataSet(_Edges)
             }
             let options = {
               nodes: {
@@ -256,36 +200,72 @@ let ZwaveJsUI = (function () {
                 font: {
                   size: 8,
                 },
-                borderWidth:1,
-                shadow:true,
+                borderWidth: 1,
+                shadow: true,
               },
-              edges:{
-                shadow:false,
-                width:0.15,
-                length: 600,
+              edges: {
+                shadow: false,
+                width: 0.15,
+                length: GetSpread(object.length),
                 smooth: {
                   type: "discrete",
                 },
-                physics:true
+                physics: true
               },
               physics: {
                 enabled: false,
                 solver: "repulsion",
                 repulsion: {
-                  nodeDistance: 600 // Put more distance between the nodes.
+                  nodeDistance: GetSpread(object.length)
                 }
               }
             }
 
-            let VIS = $('<div>').css({width:'100%', height:'100%'});
+            let VIS = $('<div>').css({ width: '100%', height: '100%' }).attr('id', 'Network');
             Window.html('');
             VIS.appendTo(Window)
             let network = new vis.Network(VIS[0], data, options);
+            network.on('click', (E) => {
 
+              if (E.nodes.length > 0) {
+
+                let SelectedNode = data.nodes.get(E.nodes[0])
+
+                let RouteTargets = _Edges.filter((RT) => RT.from === SelectedNode.id)
+                let RouteChildren = _Edges.filter((RT) => RT.to === SelectedNode.id)
+
+                let Targets = []
+                RouteTargets.forEach((T) => Targets.push(T.to))
+                let Children = []
+                RouteChildren.forEach((T) => Children.push(T.from))
+
+                let HTML = '<table style="width:100%">';
+                HTML += '<tr>'
+                HTML += '<td style="width:100px">Node ID</td><td>' + SelectedNode.id + '</td>'
+                HTML += '</tr>'
+                HTML += '<tr>'
+                HTML += '<td>Name</td><td>' + SelectedNode.name + '</td>'
+                HTML += '</tr>'
+                HTML += '<tr>'
+                HTML += '<td>Can Route</td><td>' + SelectedNode.canRoute + '</td>'
+                HTML += '</tr>'
+                HTML += '<tr>'
+                HTML += '<td>Route Slaves</td><td style="word-break:break-word">' + Targets.toString() + '</td>'
+                HTML += '</tr>'
+                HTML += '<tr>'
+                HTML += '<td>Route Clients</td><td style="word-break:break-word">' + Children.toString() + '</td>'
+                HTML += '</tr>'
+
+                $('#zwave-js-map-info-box').html('')
+                $('#zwave-js-map-info-box').html(HTML)
+
+              } else {
+                $('#zwave-js-map-info-box').html('No Node Selected').appendTo(VIS);
+              }
+            })
             network.stabilize()
-
+            $('<div class="zwave-js-selected-node-map-info" id="zwave-js-map-info-box">').html('No Node Selected').appendTo(VIS);
           })
-
       })
   }
 
