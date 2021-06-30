@@ -714,6 +714,11 @@ module.exports = function (RED) {
 
             switch (Operation) {
 
+                case "AbortFirmwareUpdate":
+                    await Driver.controller.nodes.get(Params[0]).abortFirmwareUpdate()
+                    Send(ReturnController, "FIRMWARE_UPDATE_ABORTED", {targetNode:Params[0]}, send);
+                    break;
+
                 case "BeginUpdateFirmware":
                     let Format = ZWaveJS.guessFirmwareFileFormat(Params[2],Params[3])
                     let Firmware = ZWaveJS.extractFirmware(Params[3],Format)

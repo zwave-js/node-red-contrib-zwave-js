@@ -16,10 +16,9 @@ let ZwaveJsUI = (function () {
         data: array,
         processData:false
       }
-
       $.ajax(Options)
         .then(() => {
-          modalAlert("The firmware update has been accepted. It may take a few minutes for your device to finnish aapplying the latest firmware", "Firmware Accepted")
+          modalAlert("The firmware update has been accepted. It may take sometime for the update to completely transfer to the device. The device will be re-interviewed afer.", "Firmware Accepted")
         })
         .catch((err) => {
           modalAlert(err.responseText, "Firmware Rejected")
