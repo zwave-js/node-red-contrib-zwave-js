@@ -148,6 +148,10 @@ Whatever your poison, the node will inject the following events, into your flow.
 | CURRENT_RF_REGION           | "Controller"                        | The current RF Region           | Response to GetRFRegion           |  
 | RF_REGION_SET               | "Controller"                        | The RF Region that was set      | Response to SetRFRegion           |  
 | RF_STATUS                   | "Controller"                        | The RF Status                   | Response to ToggleRF              |  
+| FIRMWARE_UPDATE_COMPLETE    | The source Node ID                  | Result Status                   | Firmware Update finished          |  
+| FIRMWARE_UPDATE_STARTED     | The source Node ID                  | Target Chip                     | Firmware Update Started           |  
+| FIRMWARE_UPDATE_ABORTED     | The source Node ID                  |                                 | Firmware Update Aborted           |  
+
 
 
 And such event(s) will look like this.
@@ -193,6 +197,8 @@ Some Association methods require an Object, these are detailed at the bottom.
 | Controller                | ToggleRF                            | [Status: Bool]                                        |
 | Controller                | RemoveFailedNode                    | [Node ID: Number]                                     |
 | Controller                | ReplaceFailedNode (See Notes)       | [Node ID: Number, Include Non-Secure: Bool (optional)]|
+| Controller                | BeginUpdateFirmware                 | [Node ID: Number, Target Chip: Number, Filename: String, Data: Buffer]|
+| Controller                | AbortFirmwareUpdate                 | [Node ID: Number]                                     |
 | Associations              | GetAssociationGroups                | [**AssociationAddress**: Object]                      |
 | Associations              | GetAllAssociationGroups             | [Node ID: Number]                                     |
 | Associations              | GetAssociations                     | [**AssociationAddress**: Object]                      |

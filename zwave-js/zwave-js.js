@@ -405,6 +405,10 @@ module.exports = function (RED) {
                     RED.events.emit("zwjs:node:ready:" + N.id);
                 }
 
+                Node.on("firmware update finished", (N, S, T) => {
+                    Send(N, "FIRMWARE_UPDATE_COMPLETE", S);
+                })
+
                 Node.on("value notification", (N, VL) => {
                     Send(N, "VALUE_NOTIFICATION", VL);
                 })
@@ -715,15 +719,19 @@ module.exports = function (RED) {
             switch (Operation) {
 
                 case "AbortFirmwareUpdate":
+                    NodeCheck(Params[0])
+                    ReturnNode.id = Params[0]
                     await Driver.controller.nodes.get(Params[0]).abortFirmwareUpdate()
-                    Send(ReturnController, "FIRMWARE_UPDATE_ABORTED", {targetNode:Params[0]}, send);
+                    Send(ReturnNode, "FIRMWARE_UPDATE_ABORTED", undefined, send);
                     break;
 
                 case "BeginUpdateFirmware":
+                    NodeCheck(Params[0])
+                    ReturnNode.id = Params[0]
                     let Format = ZWaveJS.guessFirmwareFileFormat(Params[2],Params[3])
                     let Firmware = ZWaveJS.extractFirmware(Params[3],Format)
                     await Driver.controller.nodes.get(Params[0]).beginFirmwareUpdate(Firmware.data,Params[1])
-                    Send(ReturnController, "FIRMWARE_UPDATE_STARTED", {targetNode:Params[0],targetFirmware: Params[1]}, send);
+                    Send(ReturnNode, "FIRMWARE_UPDATE_STARTED", Params[1], send);
                     break;
 
                 case "GetRFRegion":
