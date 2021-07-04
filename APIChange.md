@@ -5,7 +5,6 @@ Over the last few months, I have become increasingly unhappy, in that the node h
 
 Currently, you target the various APIs using the **class** property in your message.
 
-
 ```javascript
 /* The Command Calss API Approach */
 
@@ -24,7 +23,6 @@ Currently, you target the various APIs using the **class** property in your mess
 /* The Value API Approach */
 
 /* Set */
-
 {
   payload: {
     node: 2,
@@ -35,10 +33,10 @@ Currently, you target the various APIs using the **class** property in your mess
 }
 ```
 
-Taking the above Value API approach, what is actually happening behid the scene is this:  
+Taking the above Value API approach, what is actually happening behind the scene is this:  
 ```Driver.Controller.nodes.get(2).setValue(ValueID, Value)```
 
-And the CC API approach, is using an awkward Look up table, to find the correct method.
+And the CC API approach, is using an awkward Look up table, to find the correct CC/Method.
 
 In V4, there is now a new property named ```mode```.  
 This ```mode``` property instructs the node what API should be used.
@@ -68,3 +66,13 @@ And the Value API approach
   }
 }
 ```
+
+This new design has Massive amounts of benenfit - espcially with the CC API Approach (AKA Managed)
+It means the what was called Managed Mode - can now use Any CC that is offered by Z-Wave JS
+
+here is the ```mode```
+ - CCAPI
+ - ValueAPI
+ - ControllerAPI
+ - DriverAPI
+ - AssociationsAPI
