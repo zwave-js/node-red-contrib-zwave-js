@@ -3,7 +3,6 @@ const { Console } = require("console");
 module.exports = function (RED) {
     const SP = require("serialport");
     const FMaps = require('./FunctionMaps.json')
-    const CCSpecifics = require('./CCSpecifics.json')
     const Path = require('path')
     const ModulePackage = require('../package.json')
     const ZWaveJS = require('zwave-js')
@@ -505,23 +504,23 @@ module.exports = function (RED) {
 
                     switch (Class) {
                         case "Controller":
-                            await Controller(msg, send)
+                            await OLDController(msg, send)
                             break;
 
                         case "Unmanaged":
-                            await Unmanaged(msg, send);
+                            await OLDUnmanaged(msg, send);
                             break;
 
                         case "Driver":
-                            await DriverCMD(msg, send);
+                            await OLDDriverCMD(msg, send);
                             break;
 
                         case "Associations":
-                            await Associations(msg, send);
+                            await OLDAssociations(msg, send);
                             break;
 
                         default:
-                            await NodeFunction(msg, send);
+                            await OLDNodeFunction(msg, send);
                             break;
                     }
 
@@ -593,29 +592,25 @@ module.exports = function (RED) {
             let Params = msg.payload.params || []
             let Node = msg.payload.node;
             let Endpoint = msg.payload.endpoint || 0;
+            let EnumSelection = msg.payload.enums;
+            let IsEventResponse = msg.payload.responseThroughEvent ||  true;
 
             NodeCheck(Node);
             let ReturnNode = {Node:Node}
 
-            let NoEvent = CCSpecifics.NoEvent.filter((CCS) => CCS.cc === CC && CCS.operation === Method).length > 0
-
-            var EnumConverter = CCSpecifics.EnumMap.filter((CCS) => CCS.cc === CC && CCS.operations.some((CCSO) => CCSO.operation === Method))
-            if(EnumConverter.length > 0){
-                EnumConverter = EnumConverter[0];
-                EnumConverter = EnumConverter.operations.filter((CCSO) => CCSO.operation === Method);
-                if(EnumConverter.length > 0){
-                    EnumConverter = EnumConverter[0];
-                    EnumConverter.params.forEach((P) =>{
-                        if(Params[P.param] !== undefined){
-                            let Enum = Enums[P.enum]
-                            Params[P.param] = Enum[Params[P.param]];
-                        }
-                    })
-                }
+            if(EnumSelection !== undefined){
+                let ParamIndexs = Object.keys(EnumSelection);
+                ParamIndexs.forEach((PI) =>{
+                    let EnumName = EnumSelection[PI]
+                    let Enum = ZWaveJS[EnumName]
+                    Params[PI] = Enum[Params[PI]];
+                })
             }
 
+            console.log(Params);
+
             let Result = await Driver.controller.nodes.get(Node).getEndpoint(Endpoint).invokeCCAPI(CommandClasses[CC],Method, Params)
-            if(NoEvent){
+            if(!IsEventResponse){
                 Send(ReturnNode, "VALUE_UPDATED", Result, send)
             }
             return;
@@ -639,7 +634,7 @@ module.exports = function (RED) {
         }
 
         // Node
-        async function NodeFunction(msg, send) {
+        async function OLDNodeFunction(msg, send) {
 
             let Operation = msg.payload.operation
             let Class = msg.payload.class;
@@ -769,7 +764,7 @@ module.exports = function (RED) {
         }
 
         // Driver
-        async function DriverCMD(msg, send) {
+        async function OLDDriverCMD(msg, send) {
 
             let Operation = msg.payload.operation;
             let Params = msg.payload.params || []
@@ -814,7 +809,7 @@ module.exports = function (RED) {
         }
 
         // Unmanaged
-        async function Unmanaged(msg, send) {
+        async function OLDUnmanaged(msg, send) {
 
             let Operation = msg.payload.operation
             let Node = msg.payload.node;
@@ -864,7 +859,7 @@ module.exports = function (RED) {
         }
 
         // Controller
-        async function Controller(msg, send) {
+        async function OLDController(msg, send) {
 
             let Operation = msg.payload.operation
             let Params = msg.payload.params || [];
@@ -1078,7 +1073,7 @@ module.exports = function (RED) {
       
 
         // Association
-        async function Associations(msg, send)
+        async function OLDAssociations(msg, send)
         {
             let Operation = msg.payload.operation
             let Params = msg.payload.params || [];
