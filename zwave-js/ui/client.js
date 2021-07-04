@@ -4,7 +4,7 @@ let ZwaveJsUI = (function () {
   let FWRunning = false;
   function AbortUpdate() {
     if (FWRunning) {
-      ControllerCMD('Controller', 'AbortFirmwareUpdate', [selectedNode])
+      ControllerCMD('ControllerAPI', 'abortFirmwareUpdate', [selectedNode])
         .then(() => {
           FirmwareForm.dialog('destroy');
         })
@@ -68,7 +68,7 @@ let ZwaveJsUI = (function () {
     FirmwareForm = $('<div>').css({ padding: 10 }).html('Please wait...');
     FirmwareForm.dialog(Options)
 
-    ControllerCMD('Controller', 'GetNodes')
+    ControllerCMD('ControllerAPI', 'getNodes')
 
       .then(({ object }) => {
 
@@ -159,7 +159,7 @@ let ZwaveJsUI = (function () {
         }
 
         let P = new Promise((res, rej) => {
-          ControllerCMD('Controller', 'GetNodeNeighbors', [N.nodeId])
+          ControllerCMD('ControllerAPI', 'getNodeNeighbors', [N.nodeId])
             .then(({ node, object }) => {
               object.forEach((NodeNeighbor) => {
                 let Neighbor = _Nodes.filter((Node) => Node.id === NodeNeighbor)[0];
@@ -247,7 +247,7 @@ let ZwaveJsUI = (function () {
 
     }
 
-    ControllerCMD('Controller', 'GetNodes')
+    ControllerCMD('ControllerAPI', 'getNodes')
       .then(({ object }) => {
         GenerateMapJSON(object)
           .then(({ _Nodes, _Edges }) => {
@@ -390,7 +390,7 @@ let ZwaveJsUI = (function () {
     }
   }
 
-  function ControllerCMD(cls, op, params, dontwait) {
+  function ControllerCMD(mode, method, params, dontwait) {
 
     let Options = {
       url: `zwave-js/cmd`,
@@ -399,8 +399,8 @@ let ZwaveJsUI = (function () {
     }
 
     let Payload = {
-      class: cls,
-      operation: op
+      mode: mode,
+      method: method
     }
     if (params !== undefined) {
       Payload.params = params;
@@ -416,7 +416,7 @@ let ZwaveJsUI = (function () {
 
   function GetNodes() {
 
-    ControllerCMD('Controller', 'GetNodes')
+    ControllerCMD('ControllerAPI', 'getNodes')
       .then(({ object }) => {
         let controllerNode = object.filter(N => N.isControllerNode)
         if (controllerNode.length > 0) {
@@ -432,39 +432,39 @@ let ZwaveJsUI = (function () {
   function StartInclude() {
     let Buttons = {
       'Yes (Secure)': function () {
-        ControllerCMD('Controller', 'StartInclusion', [false], true)
+        ControllerCMD('ControllerAPI', 'beginInclusion', [false], true)
       },
       'Yes (Insecure)': function () {
-        ControllerCMD('Controller', 'StartInclusion', [true], true)
+        ControllerCMD('ControllerAPI', 'beginInclusion', [true], true)
       }
     }
     modalPrompt('Begin the include process?', 'Include Mode', Buttons, true)
   }
 
   function StopInclude() {
-    ControllerCMD('Controller', 'StopInclusion', [], true)
+    ControllerCMD('ControllerAPI', 'stopInclusion', [], true)
   }
 
   function StartExclude() {
-    ControllerCMD('Controller', 'StartExclusion', [], true)
+    ControllerCMD('ControllerAPI', 'beginExclusion', [], true)
   }
 
   function StopExclude() {
-    ControllerCMD('Controller', 'StopExclusion', [], true)
+    ControllerCMD('ControllerAPI', 'stopExclusion', [], true)
   }
 
   function StartHeal() {
-    ControllerCMD('Controller', 'StartHealNetwork', [], true)
+    ControllerCMD('ControllerAPI', 'beginHealingNetwork', [], true)
   }
 
   function StopHeal() {
-    ControllerCMD('Controller', 'StopHealNetwork', [], true)
+    ControllerCMD('ControllerAPI', 'stopHealingNetwork', [], true)
   }
 
   function Reset() {
     let Buttons = {
       'Yes - Reset': function () {
-        ControllerCMD('Controller', 'Reset')
+        ControllerCMD('ControllerAPI', 'hardReset')
           .then(() => {
             modalAlert('Your Controller has been reset.', 'Reset Complete')
             GetNodes();

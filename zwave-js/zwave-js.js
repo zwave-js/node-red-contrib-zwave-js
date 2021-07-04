@@ -13,6 +13,7 @@ module.exports = function (RED) {
     const UI = require('./ui/server.js')
     UI.init(RED)
 
+    /* DEPRECATED */
     // Z-Wave JS Enum Lookups
     const Enums = {
         // CC enums
@@ -24,12 +25,12 @@ module.exports = function (RED) {
         SetPointType: ZWaveJS.ThermostatSetpointType,
         DoorLockMode: ZWaveJS.DoorLockMode,
         AlarmSensorType: ZWaveJS.AlarmSensorType,
-        BarrierState:ZWaveJS.BarrierState,
-        SubsystemType:ZWaveJS.SubsystemType,
-        SubsystemState:ZWaveJS.SubsystemState,
-        UserIDStatus:ZWaveJS.UserIDStatus,
-        KeypadMode:ZWaveJS.KeypadMode,
-        Weekday:ZWaveJS.Weekday,
+        BarrierState: ZWaveJS.BarrierState,
+        SubsystemType: ZWaveJS.SubsystemType,
+        SubsystemState: ZWaveJS.SubsystemState,
+        UserIDStatus: ZWaveJS.UserIDStatus,
+        KeypadMode: ZWaveJS.KeypadMode,
+        Weekday: ZWaveJS.Weekday,
 
         // Controller Enums
         RFRegion: ZWaveJS.RFRegion,
@@ -79,17 +80,17 @@ module.exports = function (RED) {
         var Driver;
 
         var RestoreReadyTimer;
-        function RestoreReadyStatus(){
-            RestoreReadyTimer = setTimeout(()=>{
-                if(AllNodesReady){
+        function RestoreReadyStatus() {
+            RestoreReadyTimer = setTimeout(() => {
+                if (AllNodesReady) {
                     node.status({ fill: "green", shape: "dot", text: "All Nodes Ready!" });
                     UI.status("All Nodes Ready!")
                 }
-                else{
+                else {
                     node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
-                    UI.status("Nodes : " + NodesReady.toString() + " Are Ready." )
+                    UI.status("Nodes : " + NodesReady.toString() + " Are Ready.")
                 }
-            },5000);
+            }, 5000);
         }
 
         // Create Logger (if enabled)
@@ -125,14 +126,7 @@ module.exports = function (RED) {
             }
         }
 
-        /*
-          Some Params need a little bit of magic. i.e converting to a class
-
-          Key should be Class.Operation
-          Value should be a reference to a method that is able to manipulate the params[] object,
-          and return the modifed param array.
-          the method signature should be (Class Name, Operation Name, object[])
-        */
+        /* DEPRECATED */
         const CCParamConverters = {
             "BinarySwitch.Set": ProcessDurationClass,
             "MultiLevelSwitch.Set": ProcessDurationClass,
@@ -161,20 +155,20 @@ module.exports = function (RED) {
             DriverOptions.logConfig.enabled = false;
         }
 
-        
+
         DriverOptions.storage = {};
 
         // Cache Dir
         DriverOptions.storage.cacheDir = Path.join(RED.settings.userDir, "zwave-js-cache");
 
         // Custom  Config Path
-        if(config.customConfigPath !== undefined && config.customConfigPath.length > 0){
+        if (config.customConfigPath !== undefined && config.customConfigPath.length > 0) {
             Log("debug", "REDCTL", undefined, "[OPTIONS] [storage.deviceConfigPriorityDir]", config.customConfigPath)
             DriverOptions.storage.deviceConfigPriorityDir = config.customConfigPath
         }
 
         // Disk throttle
-        if(config.valueCacheDiskThrottle !== undefined && config.valueCacheDiskThrottle.length > 0){
+        if (config.valueCacheDiskThrottle !== undefined && config.valueCacheDiskThrottle.length > 0) {
             Log("debug", "REDCTL", undefined, "[OPTIONS] [storage.throttle]", config.valueCacheDiskThrottle)
             DriverOptions.storage.throttle = config.valueCacheDiskThrottle
         }
@@ -262,8 +256,8 @@ module.exports = function (RED) {
                 WireNodeEvents(N);
                 Send(N, "NODE_ADDED")
                 Send(N, "INTERVIEW_STARTED");
-                node.status({ fill: "yellow", shape: "dot", text: "Node: "+N.id+" Interview Started."});
-                UI.status("Node: "+N.id+" Interview Started.")
+                node.status({ fill: "yellow", shape: "dot", text: "Node: " + N.id + " Interview Started." });
+                UI.status("Node: " + N.id + " Interview Started.")
             })
 
             Driver.controller.on("node removed", (N) => {
@@ -274,20 +268,20 @@ module.exports = function (RED) {
             // Include
             Driver.controller.on("inclusion started", (Secure) => {
                 Send(ReturnController, "INCLUSION_STARTED", { isSecureInclude: Secure })
-                node.status({ fill: "yellow", shape: "dot", text: "Inclusion Started. Secure: "+Secure });
-                UI.status("Inclusion Started. Secure: "+Secure)
+                node.status({ fill: "yellow", shape: "dot", text: "Inclusion Started. Secure: " + Secure });
+                UI.status("Inclusion Started. Secure: " + Secure)
             })
 
             Driver.controller.on("inclusion failed", () => {
                 Send(ReturnController, "INCLUSION_FAILED")
-                node.status({ fill: "red", shape: "dot", text: "Inclusion Failed."});
+                node.status({ fill: "red", shape: "dot", text: "Inclusion Failed." });
                 UI.status("Inclusion Failed.")
                 RestoreReadyStatus();
             })
 
             Driver.controller.on("inclusion stopped", () => {
                 Send(ReturnController, "INCLUSION_STOPPED")
-                node.status({ fill: "green", shape: "dot", text: "Inclusion Stopped."});
+                node.status({ fill: "green", shape: "dot", text: "Inclusion Stopped." });
                 UI.status("Inclusion Stopped.")
                 RestoreReadyStatus();
             })
@@ -295,28 +289,28 @@ module.exports = function (RED) {
             // Exclusion
             Driver.controller.on("exclusion started", () => {
                 Send(ReturnController, "EXCLUSION_STARTED")
-                node.status({ fill: "yellow", shape: "dot", text: "Exclusion Started."});
+                node.status({ fill: "yellow", shape: "dot", text: "Exclusion Started." });
                 UI.status("Exclusion Started.")
             })
 
             Driver.controller.on("exclusion failed", () => {
                 Send(ReturnController, "EXCLUSION_FAILED")
-                node.status({ fill: "red", shape: "dot", text: "Exclusion Failed."});
+                node.status({ fill: "red", shape: "dot", text: "Exclusion Failed." });
                 UI.status("Exclusion Failed.")
                 RestoreReadyStatus();
             })
-          
+
             Driver.controller.on("exclusion stopped", () => {
                 Send(ReturnController, "EXCLUSION_STOPPED")
-                node.status({ fill: "green", shape: "dot", text: "Exclusion Stopped."});
+                node.status({ fill: "green", shape: "dot", text: "Exclusion Stopped." });
                 UI.status("Exclusion Stopped.")
                 RestoreReadyStatus();
             })
 
             // Network Heal
             Driver.controller.on("heal network done", () => {
-                Send(ReturnController, "NETWORK_HEAL_DONE",{Successful:Heal_Done,Failed:Heal_Failed, Skipped:Heal_Skipped})
-                node.status({ fill: "green", shape: "dot", text: "Network Heal Done."});
+                Send(ReturnController, "NETWORK_HEAL_DONE", { Successful: Heal_Done, Failed: Heal_Failed, Skipped: Heal_Skipped })
+                node.status({ fill: "green", shape: "dot", text: "Network Heal Done." });
                 UI.status("Network Heal Done.")
                 RestoreReadyStatus();
             })
@@ -333,8 +327,8 @@ module.exports = function (RED) {
                 Heal_Failed.length = 0;
                 Heal_Skipped.length = 0;
 
-                P.forEach((V,K) =>{
-                    switch(V){
+                P.forEach((V, K) => {
+                    switch (V) {
                         case "pending":
                             Heal_Pending.push(K)
                             break
@@ -349,8 +343,8 @@ module.exports = function (RED) {
                             break
                     }
                 })
-                node.status({ fill: "yellow", shape: "dot", text: "Healing Network Pending:["+Heal_Pending.toString()+"], Done:["+Heal_Done.toString()+"], Skipped:["+Heal_Skipped.toString()+"], Failed:["+Heal_Failed.toString()+"]"});
-                UI.status("Healing Network Pending:["+Heal_Pending.toString()+"], Done:["+Heal_Done.toString()+"], Skipped:["+Heal_Skipped.toString()+"], Failed:["+Heal_Failed.toString()+"]")
+                node.status({ fill: "yellow", shape: "dot", text: "Healing Network Pending:[" + Heal_Pending.toString() + "], Done:[" + Heal_Done.toString() + "], Skipped:[" + Heal_Skipped.toString() + "], Failed:[" + Heal_Failed.toString() + "]" });
+                UI.status("Healing Network Pending:[" + Heal_Pending.toString() + "], Done:[" + Heal_Done.toString() + "], Skipped:[" + Heal_Skipped.toString() + "], Failed:[" + Heal_Failed.toString() + "]")
             })
 
             ShareNodeList();
@@ -440,39 +434,39 @@ module.exports = function (RED) {
 
             Node.on("interview started", (N) => {
                 Send(N, "INTERVIEW_STARTED");
-                node.status({ fill: "yellow", shape: "dot", text: "Node: "+N.id+" Interview Started."});
-                UI.status("Node: "+N.id+" Interview Started.")
+                node.status({ fill: "yellow", shape: "dot", text: "Node: " + N.id + " Interview Started." });
+                UI.status("Node: " + N.id + " Interview Started.")
             })
 
             Node.on("interview failed", (N, Er) => {
                 Send(N, "INTERVIEW_FAILED", Er);
-                node.status({ fill: "red", shape: "dot", text: "Node: "+N.id+" Interview Failed."});
-                UI.status("Node: "+N.id+" Interview Failed.")
+                node.status({ fill: "red", shape: "dot", text: "Node: " + N.id + " Interview Failed." });
+                UI.status("Node: " + N.id + " Interview Failed.")
                 RestoreReadyStatus();
             })
 
             Node.on("interview completed", (N) => {
                 Send(N, "INTERVIEW_COMPLETE");
-                node.status({ fill: "green", shape: "dot", text: "Node: "+N.id+" Interview Completed."});
-                UI.status("Node: "+N.id+" Interview Completed.")
+                node.status({ fill: "green", shape: "dot", text: "Node: " + N.id + " Interview Completed." });
+                UI.status("Node: " + N.id + " Interview Completed.")
                 RestoreReadyStatus();
             })
         }
 
-        async function NewAPI(msg, send, done, internal){
+        async function NewAPI(msg, send, done, internal) {
 
             let Mode = msg.payload.mode;
 
             switch (Mode) {
 
                 case "CCAPI":
-                    await CCAPI(msg,send);
+                    await CCAPI(msg, send);
                     break;
                 case "ValueAPI":
-                    await ValueAPI(msg,send)
+                    await ValueAPI(msg, send)
                     break;
                 case "DriverAPI":
-                    await DriverAPI(msg,send)
+                    await DriverAPI(msg, send)
                     break;
                 case "ControllerAPI":
                     break;
@@ -493,12 +487,15 @@ module.exports = function (RED) {
 
                 if (Mode !== undefined) {
 
-                   await  NewAPI(msg, send, done, internal);
+                    await NewAPI(msg, send, done, internal);
                     if (done) {
                         done()
                     }
                 }
                 else {
+
+
+                    /* DEPRECATED */
 
                     Log("debug", "REDCTL", "IN", "[ORIG: " + (internal ? "EVENT" : "DIRECT") + "] [NDE: " + Node + "]", printParams(Class, Operation, Params))
 
@@ -548,7 +545,7 @@ module.exports = function (RED) {
             let Node = msg.payload.node;
 
             NodeCheck(Node);
-            let ReturnNode = {Node:Node}
+            let ReturnNode = { Node: Node }
 
             switch (Method) {
 
@@ -585,7 +582,7 @@ module.exports = function (RED) {
             }
         }
 
-        async function CCAPI(msg,send){
+        async function CCAPI(msg, send) {
 
             let CC = msg.payload.cc;
             let Method = msg.payload.method;
@@ -593,22 +590,22 @@ module.exports = function (RED) {
             let Node = msg.payload.node;
             let Endpoint = msg.payload.endpoint || 0;
             let EnumSelection = msg.payload.enums;
-            let IsEventResponse = msg.payload.responseThroughEvent ||  true;
+            let IsEventResponse = msg.payload.responseThroughEvent || true;
 
             NodeCheck(Node);
-            let ReturnNode = {Node:Node}
+            let ReturnNode = { Node: Node }
 
-            if(EnumSelection !== undefined){
+            if (EnumSelection !== undefined) {
                 let ParamIndexs = Object.keys(EnumSelection);
-                ParamIndexs.forEach((PI) =>{
+                ParamIndexs.forEach((PI) => {
                     let EnumName = EnumSelection[PI]
                     let Enum = ZWaveJS[EnumName]
                     Params[PI] = Enum[Params[PI]];
                 })
             }
 
-            let Result = await Driver.controller.nodes.get(Node).getEndpoint(Endpoint).invokeCCAPI(CommandClasses[CC],Method, Params)
-            if(!IsEventResponse){
+            let Result = await Driver.controller.nodes.get(Node).getEndpoint(Endpoint).invokeCCAPI(CommandClasses[CC], Method, Params)
+            if (!IsEventResponse) {
                 Send(ReturnNode, "VALUE_UPDATED", Result, send)
             }
             return;
@@ -621,17 +618,17 @@ module.exports = function (RED) {
                 throw new Error(ErrorMSG);
             }
 
-            if(!SkipReady){
+            if (!SkipReady) {
 
                 if (!Driver.controller.nodes.get(ID).ready) {
                     let ErrorMSG = "Node " + ID + " is not yet ready to receive commands.";
                     throw new Error(ErrorMSG);
                 }
             }
-           
+
         }
 
-        // Node
+        /* DEPRECATED */
         async function OLDNodeFunction(msg, send) {
 
             let Operation = msg.payload.operation
@@ -688,10 +685,10 @@ module.exports = function (RED) {
             Log("debug", "REDCTL", undefined, "[MAP]", "Class: " + Class + "=" + Map.MapsToClass + ", Operation: " + Operation + "=" + Func.MapsToFunc)
 
             let WaitForResponse = (Func.hasOwnProperty("NoEvent") && Func.NoEvent);
-            if(WaitForResponse){
+            if (WaitForResponse) {
                 Log("debug", "REDCTL", undefined, "[MAP]", "Will wait for result")
             }
-            else{
+            else {
                 Log("debug", "REDCTL", undefined, "[MAP]", "Result will be delivered via an event")
             }
             if (WaitForResponse) {
@@ -702,22 +699,22 @@ module.exports = function (RED) {
                 await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
             }
 
-            if(forceUpdate !== undefined){
+            if (forceUpdate !== undefined) {
                 let VID = {
-                    commandClass:CommandClasses[Map.MapsToClass],
-                    endpoint:EP
+                    commandClass: CommandClasses[Map.MapsToClass],
+                    endpoint: EP
                 }
-                Object.keys(forceUpdate).forEach((VIDK) =>{
+                Object.keys(forceUpdate).forEach((VIDK) => {
                     VID[VIDK] = forceUpdate[VIDK]
                 })
                 Log("debug", "REDCTL", "OUT", "[FORCE-UPDATE]", printForceUpdate(Node, VID))
-                await Driver.controller.nodes.get(Node).pollValue(VID) 
+                await Driver.controller.nodes.get(Node).pollValue(VID)
             }
 
             return;
         }
 
-        async function DriverAPI(msg,send){
+        async function DriverAPI(msg, send) {
 
             let Operation = msg.payload.operation;
             let Params = msg.payload.params || []
@@ -733,24 +730,24 @@ module.exports = function (RED) {
 
                     let Result = [];
 
-                    if(Params.length < 1){
+                    if (Params.length < 1) {
                         Driver.controller.nodes.forEach((N, NI) => {
                             Params.push(N.id)
                         });
                     }
-                    Params.forEach((NID) =>{
+                    Params.forEach((NID) => {
                         let G = {
-                            nodeId:NID,
-                            nodeName:getNodeInfoForPayload(NID,'name'),
-                            nodeLocation:getNodeInfoForPayload(NID,'location'),
-                            values:[]
+                            nodeId: NID,
+                            nodeName: getNodeInfoForPayload(NID, 'name'),
+                            nodeLocation: getNodeInfoForPayload(NID, 'location'),
+                            values: []
                         }
                         const VIDs = Driver.controller.nodes.get(NID).getDefinedValueIDs();
-                        VIDs.forEach((VID) =>{
+                        VIDs.forEach((VID) => {
                             let V = Driver.controller.nodes.get(NID).getValue(VID);
                             let VI = {
-                                currentValue:V,
-                                valueId:VID
+                                currentValue: V,
+                                valueId: VID
                             }
                             G.values.push(VI)
                         })
@@ -761,7 +758,7 @@ module.exports = function (RED) {
             }
         }
 
-        // Driver
+        /* DEPRECATED */
         async function OLDDriverCMD(msg, send) {
 
             let Operation = msg.payload.operation;
@@ -778,24 +775,24 @@ module.exports = function (RED) {
 
                     let Result = [];
 
-                    if(Params.length < 1){
+                    if (Params.length < 1) {
                         Driver.controller.nodes.forEach((N, NI) => {
                             Params.push(N.id)
                         });
                     }
-                    Params.forEach((NID) =>{
+                    Params.forEach((NID) => {
                         let G = {
-                            nodeId:NID,
-                            nodeName:getNodeInfoForPayload(NID,'name'),
-                            nodeLocation:getNodeInfoForPayload(NID,'location'),
-                            values:[]
+                            nodeId: NID,
+                            nodeName: getNodeInfoForPayload(NID, 'name'),
+                            nodeLocation: getNodeInfoForPayload(NID, 'location'),
+                            values: []
                         }
                         const VIDs = Driver.controller.nodes.get(NID).getDefinedValueIDs();
-                        VIDs.forEach((VID) =>{
+                        VIDs.forEach((VID) => {
                             let V = Driver.controller.nodes.get(NID).getValue(VID);
                             let VI = {
-                                currentValue:V,
-                                valueId:VID
+                                currentValue: V,
+                                valueId: VID
                             }
                             G.values.push(VI)
                         })
@@ -806,7 +803,7 @@ module.exports = function (RED) {
             }
         }
 
-        // Unmanaged
+        /* DEPRECATED */
         async function OLDUnmanaged(msg, send) {
 
             let Operation = msg.payload.operation
@@ -856,7 +853,7 @@ module.exports = function (RED) {
             return;
         }
 
-        // Controller
+        /* DEPRECATED */
         async function OLDController(msg, send) {
 
             let Operation = msg.payload.operation
@@ -879,9 +876,9 @@ module.exports = function (RED) {
                 case "BeginUpdateFirmware":
                     NodeCheck(Params[0])
                     ReturnNode.id = Params[0]
-                    let Format = ZWaveJS.guessFirmwareFileFormat(Params[2],Params[3])
-                    let Firmware = ZWaveJS.extractFirmware(Params[3],Format)
-                    await Driver.controller.nodes.get(Params[0]).beginFirmwareUpdate(Firmware.data,Params[1])
+                    let Format = ZWaveJS.guessFirmwareFileFormat(Params[2], Params[3])
+                    let Firmware = ZWaveJS.extractFirmware(Params[3], Format)
+                    await Driver.controller.nodes.get(Params[0]).beginFirmwareUpdate(Firmware.data, Params[1])
                     Send(ReturnNode, "FIRMWARE_UPDATE_STARTED", Params[1], send);
                     break;
 
@@ -953,7 +950,7 @@ module.exports = function (RED) {
                     NodeCheck(Params[0])
                     Driver.controller.nodes.get(Params[0]).name = Params[1]
                     SupportsNN = Driver.controller.nodes.get(Params[0]).supportsCC(CommandClasses["Node Naming and Location"])
-                    if(SupportsNN){
+                    if (SupportsNN) {
                         await Driver.controller.nodes.get(Params[0]).commandClasses["Node Naming and Location"].setName(Params[1]);
                     }
                     ReturnNode.id = Params[0]
@@ -965,7 +962,7 @@ module.exports = function (RED) {
                     NodeCheck(Params[0])
                     Driver.controller.nodes.get(Params[0]).location = Params[1]
                     SupportsNN = Driver.controller.nodes.get(Params[0]).supportsCC(CommandClasses["Node Naming and Location"])
-                    if(SupportsNN){
+                    if (SupportsNN) {
                         await Driver.controller.nodes.get(Params[0]).commandClasses["Node Naming and Location"].setLocation(Params[1]);
                     }
                     ReturnNode.id = Params[0]
@@ -993,14 +990,14 @@ module.exports = function (RED) {
                 case "StartHealNetwork":
                     await Driver.controller.beginHealingNetwork();
                     Send(ReturnController, "NETWORK_HEAL_STARTED", undefined, send)
-                    node.status({ fill: "yellow", shape: "dot", text: "Network Heal Started."});
+                    node.status({ fill: "yellow", shape: "dot", text: "Network Heal Started." });
                     UI.status("Network Heal Started.")
                     break;
 
                 case "StopHealNetwork":
                     await Driver.controller.stopHealingNetwork();
                     Send(ReturnController, "NETWORK_HEAL_STOPPED", undefined, send)
-                    node.status({ fill: "blue", shape: "dot", text: "Network Heal Stopped."});
+                    node.status({ fill: "blue", shape: "dot", text: "Network Heal Stopped." });
                     UI.status("Network Heal Stopped.")
                     RestoreReadyStatus();
                     break;
@@ -1011,13 +1008,13 @@ module.exports = function (RED) {
 
                 case "ReplaceFailedNode":
                     if (!canDoSecure) {
-                        await Driver.controller.replaceFailedNode(Params[0],true);
+                        await Driver.controller.replaceFailedNode(Params[0], true);
                     }
                     else if (Params.length > 1) {
-                        await Driver.controller.replaceFailedNode(Params[0],Params[1]);
+                        await Driver.controller.replaceFailedNode(Params[0], Params[1]);
                     }
                     else {
-                        await Driver.controller.replaceFailedNode(Params[0],false);
+                        await Driver.controller.replaceFailedNode(Params[0], false);
                     }
                     break;
 
@@ -1062,52 +1059,50 @@ module.exports = function (RED) {
                     await Driver.sendMessage(ZWaveMessage, MessageSettings)
                     break;
 
-             
+
             }
 
             return;
         }
 
-      
 
-        // Association
-        async function OLDAssociations(msg, send)
-        {
+
+        /* DEPRECATED */
+        async function OLDAssociations(msg, send) {
             let Operation = msg.payload.operation
             let Params = msg.payload.params || [];
 
             let ReturnNode = { id: "" };
-            switch(Operation)
-            {
+            switch (Operation) {
                 case "GetAssociationGroups":
                     NodeCheck(Params[0].nodeId);
                     var ResultData = Driver.controller.getAssociationGroups(Params[0])
                     var PL = []
-                    ResultData.forEach((FV,FK) =>{
+                    ResultData.forEach((FV, FK) => {
                         let A = {
-                            GroupID:FK,
-                            AssociationGroupInfo:FV
+                            GroupID: FK,
+                            AssociationGroupInfo: FV
                         }
                         PL.push(A);
                     })
 
                     ReturnNode.id = Params[0].nodeId
-                    Send(ReturnNode,"ASSOCIATION_GROUPS",{SourceAddress:Params[0],Groups:PL},send)
+                    Send(ReturnNode, "ASSOCIATION_GROUPS", { SourceAddress: Params[0], Groups: PL }, send)
                     break;
 
                 case "GetAllAssociationGroups":
                     NodeCheck(Params[0]);
                     var ResultData = Driver.controller.getAllAssociationGroups(Params[0])
                     var PL = [];
-                    ResultData.forEach((FV,FK) =>{
+                    ResultData.forEach((FV, FK) => {
                         let A = {
-                            Endpoint:FK,
-                            Groups:[]
+                            Endpoint: FK,
+                            Groups: []
                         }
-                        FV.forEach((SV, SK) =>{
+                        FV.forEach((SV, SK) => {
                             let B = {
-                                GroupID:SK,
-                                AssociationGroupInfo:SV
+                                GroupID: SK,
+                                AssociationGroupInfo: SV
                             }
                             A.Groups.push(B)
                         })
@@ -1115,19 +1110,19 @@ module.exports = function (RED) {
                     })
 
                     ReturnNode.id = Params[0]
-                    Send(ReturnNode,"ALL_ASSOCIATION_GROUPS",PL,send)
+                    Send(ReturnNode, "ALL_ASSOCIATION_GROUPS", PL, send)
                     break;
 
                 case "GetAssociations":
                     NodeCheck(Params[0].nodeId);
                     var ResultData = Driver.controller.getAssociations(Params[0])
                     var PL = []
-                    ResultData.forEach((FV, FK) =>{
+                    ResultData.forEach((FV, FK) => {
                         let A = {
-                            GroupID:FK,
-                            AssociationAddress:[]
+                            GroupID: FK,
+                            AssociationAddress: []
                         }
-                        FV.forEach((AA) =>{
+                        FV.forEach((AA) => {
                             A.AssociationAddress.push(AA);
                         });
 
@@ -1135,17 +1130,17 @@ module.exports = function (RED) {
                     })
 
                     ReturnNode.id = Params[0].nodeId
-                    Send(ReturnNode,"ASSOCIATIONS",{SourceAddress:Params[0],Associations:PL},send)
+                    Send(ReturnNode, "ASSOCIATIONS", { SourceAddress: Params[0], Associations: PL }, send)
                     break;
 
                 case "GetAllAssociations":
                     NodeCheck(Params[0]);
                     var ResultData = Driver.controller.getAllAssociations(Params[0]);
                     var PL = []
-                    ResultData.forEach((FV, FK) =>{
+                    ResultData.forEach((FV, FK) => {
                         let A = {
-                            AssociationAddress:FK,
-                            Associations:[]
+                            AssociationAddress: FK,
+                            Associations: []
                         }
                         FV.forEach((SV, SK) => {
                             let B = {
@@ -1158,34 +1153,34 @@ module.exports = function (RED) {
                     })
 
                     ReturnNode.id = Params[0]
-                    Send(ReturnNode,"ALL_ASSOCIATIONS",PL,send)
+                    Send(ReturnNode, "ALL_ASSOCIATIONS", PL, send)
                     break;
 
                 case "AddAssociations":
                     NodeCheck(Params[0].nodeId);
-                    Params[2].forEach((A) =>{
-                        if(!Driver.controller.isAssociationAllowed(Params[0], Params[1], A)){
-                            let ErrorMSG = "Association: Source "+JSON.stringify(Params[0]); +", Group "+Params[1]+", Destination "+SON.stringify(A)+" is not allowed."
+                    Params[2].forEach((A) => {
+                        if (!Driver.controller.isAssociationAllowed(Params[0], Params[1], A)) {
+                            let ErrorMSG = "Association: Source " + JSON.stringify(Params[0]); +", Group " + Params[1] + ", Destination " + SON.stringify(A) + " is not allowed."
                             throw new Error(ErrorMSG);
                         }
                     })
                     await Driver.controller.addAssociations(Params[0], Params[1], Params[2])
                     ReturnNode.id = Params[0].nodeId
-                    Send(ReturnNode,"ASSOCIATIONS_ADDED",undefined,send)
+                    Send(ReturnNode, "ASSOCIATIONS_ADDED", undefined, send)
                     break;
-            
+
                 case "RemoveAssociations":
                     NodeCheck(Params[0].nodeId);
                     await Driver.controller.removeAssociations(Params[0], Params[1], Params[2])
                     ReturnNode.id = Params[0].nodeId
-                    Send(ReturnNode,"ASSOCIATIONS_REMOVED",undefined,send)
+                    Send(ReturnNode, "ASSOCIATIONS_REMOVED", undefined, send)
                     break;
 
                 case "RemoveNodeFromAllAssociations":
                     NodeCheck(Params[0]);
                     await Driver.controller.removeNodeFromAllAssociations(Params[0])
                     ReturnNode.id = Params[0]
-                    Send(ReturnNode,"ALL_ASSOCIATIONS_REMOVED",undefined,send)
+                    Send(ReturnNode, "ALL_ASSOCIATIONS_REMOVED", undefined, send)
                     break;
             }
 
@@ -1251,28 +1246,28 @@ module.exports = function (RED) {
         }
 
 
-        function getNodeInfoForPayload(NodeID, Property){
+        function getNodeInfoForPayload(NodeID, Property) {
             let Prop = Driver.controller.nodes.get(parseInt(NodeID))[Property];
             return Prop
         }
 
         function Send(Node, Subject, Value, send) {
 
-            let PL = {"node": Node.id}
-            if(Node.id !== 'N/A' && Node.id !== 'Controller'){
+            let PL = { "node": Node.id }
+            if (Node.id !== 'N/A' && Node.id !== 'Controller') {
 
-                let N = getNodeInfoForPayload(Node.id,'name');
-                if(N !== undefined){
+                let N = getNodeInfoForPayload(Node.id, 'name');
+                if (N !== undefined) {
                     PL.nodeName = N;
                 }
 
-                let L = getNodeInfoForPayload(Node.id,'location')
-                if(L !== undefined){
+                let L = getNodeInfoForPayload(Node.id, 'location')
+                if (L !== undefined) {
                     PL.nodeLocation = L
                 }
             }
             PL.event = Subject,
-            PL.timestamp = new Date().toJSON()
+                PL.timestamp = new Date().toJSON()
             if (Value !== undefined) {
                 PL.object = Value;
             }
@@ -1287,11 +1282,11 @@ module.exports = function (RED) {
             }
 
             let AllowedSubjectsForDNs = [
-               "VALUE_NOTIFICATION",
-               "NOTIFICATION",
-               "VALUE_UPDATED",
-               "SLEEP",
-               "WAKE_UP"
+                "VALUE_NOTIFICATION",
+                "NOTIFICATION",
+                "VALUE_UPDATED",
+                "SLEEP",
+                "WAKE_UP"
             ]
 
             if (AllowedSubjectsForDNs.includes(Subject)) {
@@ -1299,7 +1294,7 @@ module.exports = function (RED) {
             }
         }
 
-        // Duration Fix
+        /* DEPRECATED */
         function ProcessDurationClass(Class, Operation, Params) {
             if (Params.length > 1) {
                 if (typeof Params[1] === "object") {
@@ -1313,7 +1308,7 @@ module.exports = function (RED) {
             return Params;
         }
 
-        // Meter Fix
+        /* DEPRECATED */
         function ParseMeterOptions(Class, Operation, Params) {
             if (typeof Params[0] === "object") {
                 Params[0].rateType = Enums.RateType[Params[0].rateType];

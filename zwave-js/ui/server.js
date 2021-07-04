@@ -68,8 +68,8 @@ module.exports = {
         let Parts = CodeString.split(":")
 
         let PL = {
-          class: "Controller",
-          operation: "BeginUpdateFirmware",
+          mode: "ControllerAPI",
+          method: "beginFirmwareUpdate",
           params: [parseInt(Parts[0]), parseInt(Parts[1]), Parts[2], _Buffer]
         }
 
