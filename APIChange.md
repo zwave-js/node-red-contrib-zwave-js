@@ -1,6 +1,6 @@
 # Please transition to the new API's
 
-In V4, I have decided to comletely overhall the APIs that this node exposes.  
+In V4, I have decided to completely overhall the APIs that this node exposes.  
 Over the last few months, I have become increasingly unhappy, in that the node hides the methods and CC names, that are actually being called up on.
 
 Currently, you target the various APIs using the **class** property in your message.
