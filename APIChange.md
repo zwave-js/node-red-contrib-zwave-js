@@ -3,7 +3,7 @@
 In V4, I have decided to completely overhall the APIs that this node exposes.  
 Over the last few months, I have become increasingly unhappy, in that the node hides the methods and CC names, that are actually being called up on.
 
-The old APIs are now set for removal and will be removed in 4.1.0
+The old APIs are now set for removal and will be removed in the next major release (wich will fairly quickly)
 
 Currently, you target the various APIs using the **class** property in your message.
 
