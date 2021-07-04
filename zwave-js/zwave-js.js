@@ -494,6 +494,9 @@ module.exports = function (RED) {
                 if (Mode !== undefined) {
 
                    await  NewAPI(msg, send, done, internal);
+                    if (done) {
+                        done()
+                    }
                 }
                 else {
 
