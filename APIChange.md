@@ -68,11 +68,17 @@ And the Value API approach
 ```
 
 This new design has Massive amounts of benenfit - espcially with the CC API Approach (AKA Managed)
-It means the what was called Managed Mode - can now use Any CC that is offered by Z-Wave JS
+It means, the what was called Managed Mode - can now use Any CC that is offered by Z-Wave JS
 
-here is the ```mode```
+here is the ```mode``` list
  - CCAPI
  - ValueAPI
  - ControllerAPI
  - DriverAPI
  - AssociationsAPI
+
+any operation or class will now use the Real name as used in Z-Wave JS
+Exampe CC: ```WakeInterval``` -> ```Wake Up```
+Exampple Operation: ```Set``` -> ```setInterval```
+
+
