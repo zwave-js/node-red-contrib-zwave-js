@@ -67,12 +67,18 @@ And the Value API approach
 }
 ```
 
-This new design has Massive amounts of benenfit - espcially with the CC API Approach (AKA Managed)
+This new design has Massive amounts of benenfit - espcially with the CC API Approach (AKA Managed)  
 It means, the what was called Managed Mode - can now use Any CC that is offered by Z-Wave JS
 
-here is the ```mode``` list
+Here is the ```mode``` and ```operation``` list
  - CCAPI
+   - ```operation``` is only limited to what is supported on the ```class```
  - ValueAPI
+   - getDefinedValueIDs
+   - getValueMetadata
+   - getValue
+   - setValue
+   - pollValue
  - ControllerAPI
  - DriverAPI
  - AssociationsAPI
