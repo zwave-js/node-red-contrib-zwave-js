@@ -1,9 +1,8 @@
-# Managed Mode.  
+# The Command Class API (mode: CCAPI).  
 
  - Uses the Z-Wave JS Command Classes API
  - Does not verify that any Set commands have been confirmed by your device,  
    its upto the device to send a value update (specifications suggest they should).
- - Command Class support is specifically developed (listed below)
  - The Node Red plugin its self, is doing a lot of the heavy lifting
   
 Some CCs require a JSON Object, which are documented at the bottom.  
@@ -216,14 +215,6 @@ If specifing a string, the valid values are: **Frost Protection** | **Energy Sav
   notificationEvent: Number,
   eventParameters: Buffer (Optional),
   sequenceNumber: Number (Optional)
-}
-```
-
-**RemoveOptions**
-```javascript
-{
-  groupId: Number,
-  nodeIds: Number[]
 }
 ```
 
