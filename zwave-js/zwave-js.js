@@ -1,8 +1,9 @@
-const { error } = require("console");
+const { Console } = require("console");
 
 module.exports = function (RED) {
     const SP = require("serialport");
     const FMaps = require('./FunctionMaps.json')
+    const CCSpecifics = require('./CCSpecifics.json')
     const Path = require('path')
     const ModulePackage = require('../package.json')
     const ZWaveJS = require('zwave-js')
@@ -596,12 +597,25 @@ module.exports = function (RED) {
             NodeCheck(Node);
             let ReturnNode = {Node:Node}
 
-            let NoEvents = [
-                "Entry Control.getSupportedKeys"
-            ]
+            let NoEvent = CCSpecifics.NoEvent.filter((CCS) => CCS.cc === CC && CCS.operation === Method).length > 0
+
+            var EnumConverter = CCSpecifics.EnumMap.filter((CCS) => CCS.cc === CC && CCS.operations.some((CCSO) => CCSO.operation === Method))
+            if(EnumConverter.length > 0){
+                EnumConverter = EnumConverter[0];
+                EnumConverter = EnumConverter.operations.filter((CCSO) => CCSO.operation === Method);
+                if(EnumConverter.length > 0){
+                    EnumConverter = EnumConverter[0];
+                    EnumConverter.params.forEach((P) =>{
+                        if(Params[P.param] !== undefined){
+                            let Enum = Enums[P.enum]
+                            Params[P.param] = Enum[Params[P.param]];
+                        }
+                    })
+                }
+            }
 
             let Result = await Driver.controller.nodes.get(Node).getEndpoint(Endpoint).invokeCCAPI(CommandClasses[CC],Method, Params)
-            if(NoEvents.includes(CC+"."+Method)){
+            if(NoEvent){
                 Send(ReturnNode, "VALUE_UPDATED", Result, send)
             }
             return;

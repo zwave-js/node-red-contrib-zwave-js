@@ -1,0 +1,97 @@
+{
+    "NoEvent": [
+        {
+            "cc": "Entry Control",
+            "operation": "getSupportedKeys"
+        }
+    ],
+    "EnumMap": [
+        {
+            "cc": "Clock",
+            "operations": [
+                {
+                    "operation": "set",
+                    "params": [
+                        {
+                            "param": 2,
+                            "enum": "Weekday"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "cc": "User Code",
+            "operations": [
+                {
+                    "operation": "set",
+                    "params": [
+                        {
+                            "param": 1,
+                            "enum": "UserIDStatus"
+                        }
+                    ]
+                },
+                {
+                    "operation": "setKeypadMode",
+                    "params": [
+                        {
+                            "param": 0,
+                            "enum": "KeypadMode"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "cc": "Alarm Sensor",
+            "operations": [
+                {
+                    "operation": "get",
+                    "params": [
+                        {
+                            "param": 0,
+                            "enum": "AlarmSensorType"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "cc": "Barrier Operator",
+            "operations": [
+                {
+                    "operation": "set",
+                    "params": [
+                        {
+                            "param": 0,
+                            "enum": "BarrierState"
+                        }
+                    ]
+                },
+                {
+                    "operation": "getEventSignaling",
+                    "params": [
+                        {
+                            "param": 0,
+                            "enum": "SubsystemType"
+                        }
+                    ]
+                },
+                {
+                    "operation": "setEventSignaling",
+                    "params": [
+                        {
+                            "param": 0,
+                            "enum": "SubsystemType"
+                        },
+                        {
+                            "param": 1,
+                            "enum": "SubsystemState"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

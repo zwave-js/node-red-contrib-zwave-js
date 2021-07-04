@@ -3,7 +3,7 @@
 In V4, I have decided to completely overhall the APIs that this node exposes.  
 Over the last few months, I have become increasingly unhappy, in that the node hides the methods and CC names, that are actually being called up on.
 
-The old APIs are now set for removal and will no longer receive updates!
+The old APIs are now set for removal  and will no longer receive updates!
 
 Currently, you target the various APIs using the **class** property in your message.
 
@@ -50,8 +50,8 @@ Let's look at the Wake Up CC using the new API
   payload: {
     node: 2,
     mode: "CCAPI",
-    class: "Wake Up",
-    operation: "setInterval",
+    cc: "Wake Up",
+    method: "setInterval",
     params: [3600] 
   }
 }
@@ -63,7 +63,7 @@ And the Value API approach
   payload: {
     node: 2,
     mode: "ValueAPI",
-    operation: "setValue",
+    method: "setValue",
     params: [ValueID,3600] 
   }
 }
@@ -72,9 +72,9 @@ And the Value API approach
 This new design has Massive amounts of benenfit - espcially with the CC API Approach (AKA Managed)  
 It means, the what was called Managed Mode - can now use Any CC that is offered by Z-Wave JS
 
-Here is the ```mode``` and ```operation``` list
+Here is the ```mode``` and ```method``` list
  - CCAPI
-   - ```operation``` is only limited to what is supported on the ```class``` and ```class``` is only limited by Z-Wave JS
+   - ```method``` is only limited to what is supported on the ```cc``` and ```cc``` is only limited by Z-Wave JS
  - ValueAPI
    - getDefinedValueIDs
    - getValueMetadata
@@ -115,10 +115,10 @@ Here is the ```mode``` and ```operation``` list
    - removeAssociations
    - removeNodeFromAllAssociations
 
-Any ```operation``` or ```class``` will now use the **Real** name as used in Z-Wave JS  
+Any ```method``` or ```cc``` will now use the **Real** name as used in Z-Wave JS  
 [See here for CC names](https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) - minus the "CC" part
 
 Example CC: ```WakeInterval``` -> ```Wake Up```  
-Example Operation: ```Set``` -> ```setInterval```
+Example Method: ```Set``` -> ```setInterval```
 
 
