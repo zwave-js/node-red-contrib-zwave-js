@@ -10,11 +10,10 @@ Currently, you target the various APIs using the **class** property in your mess
 /* The Command Calss API Approach */
 
 /* Wake Up CC */
-/
 {
   payload: {
     node: 2,
-    class: "WakeInterval"
+    class: "WakeInterval",
     operation: "Set",
     params: [3600] 
   }
@@ -29,7 +28,7 @@ Currently, you target the various APIs using the **class** property in your mess
 {
   payload: {
     node: 2,
-    class: "Unmanaged"
+    class: "Unmanaged",
     operation: "Set",
     params: [ValueID, Value] 
   }
@@ -42,5 +41,30 @@ Taking the above Value API approach, what is actually happening behid the scene 
 And the CC API approach, is using an awkward Look up table, to find the correct method.
 
 In V4, there is now a new property named ```mode```.  
-This mode property tell the node to what API you are using.
+This ```mode``` property instructs the node what API should be used.
 
+Let's look at the Wake Up CC using the new API
+```javascript
+/* Wake Up CC */
+{
+  payload: {
+    node: 2,
+    mode: "CCAPI",
+    class: "Wake Up",
+    operation: "setInterval",
+    params: [3600] 
+  }
+}
+```
+
+And the Value API approach
+```javascript
+{
+  payload: {
+    node: 2,
+    mode: "ValueAPI",
+    operation: "setValue",
+    params: [ValueID,3600] 
+  }
+}
+```
