@@ -94,8 +94,24 @@ Here is the ```mode``` and ```operation``` list
    - hardReset
    - beginHealingNetwork
    - stopHealingNetwork
+   - removeFailedNode
+   - replaceFailedNode
+   - beginInclusion
+   - stopInclusion
+   - beginExclusion
+   - stopExclusion
+   - proprietaryFunction
  - DriverAPI
+   - getEnums
+   - getValueDB
  - AssociationsAPI
+   - getAssociationGroups
+   - getAllAssociationGroups
+   - getAssociations
+   - getAllAssociations
+   - addAssociations
+   - removeAssociations
+   - removeNodeFromAllAssociations
 
 Any ```operation``` or ```class``` will now use the **Real** name as used in Z-Wave JS  
 [See here for CC names](https://zwave-js.github.io/node-zwave-js/#/api/CCs/index)
