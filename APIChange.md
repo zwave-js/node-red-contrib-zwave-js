@@ -114,7 +114,7 @@ Here is the ```mode``` and ```operation``` list
    - removeNodeFromAllAssociations
 
 Any ```operation``` or ```class``` will now use the **Real** name as used in Z-Wave JS  
-[See here for CC names](https://zwave-js.github.io/node-zwave-js/#/api/CCs/index)
+[See here for CC names](https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) - minus the "CC" part
 
 Example CC: ```WakeInterval``` -> ```Wake Up```  
 Example Operation: ```Set``` -> ```setInterval```
