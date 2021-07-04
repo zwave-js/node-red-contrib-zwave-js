@@ -37,7 +37,7 @@ and will as a result, update the cache.
 let Message = {
     payload: {
         node: 2,
-        mode: "ValueAPI"
+        mode: "ValueAPI",
         method: "getDefinedValueIDs"
     }
 }
