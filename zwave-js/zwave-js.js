@@ -472,6 +472,7 @@ module.exports = function (RED) {
                     await ValueAPI(msg,send)
                     break;
                 case "DriverAPI":
+                    await DriverAPI(msg,send)
                     break;
                 case "ControllerAPI":
                     break;
@@ -704,6 +705,50 @@ module.exports = function (RED) {
             }
 
             return;
+        }
+
+        async function DriverAPI(msg,send){
+
+            let Operation = msg.payload.operation;
+            let Params = msg.payload.params || []
+            let ReturnNode = { id: "N/A" };
+
+            switch (Operation) {
+
+                case "getEnums":
+                    Send(ReturnNode, "ENUM_LIST", Enums, send);
+                    break;
+
+                case "getValueDB":
+
+                    let Result = [];
+
+                    if(Params.length < 1){
+                        Driver.controller.nodes.forEach((N, NI) => {
+                            Params.push(N.id)
+                        });
+                    }
+                    Params.forEach((NID) =>{
+                        let G = {
+                            nodeId:NID,
+                            nodeName:getNodeInfoForPayload(NID,'name'),
+                            nodeLocation:getNodeInfoForPayload(NID,'location'),
+                            values:[]
+                        }
+                        const VIDs = Driver.controller.nodes.get(NID).getDefinedValueIDs();
+                        VIDs.forEach((VID) =>{
+                            let V = Driver.controller.nodes.get(NID).getValue(VID);
+                            let VI = {
+                                currentValue:V,
+                                valueId:VID
+                            }
+                            G.values.push(VI)
+                        })
+                        Result.push(G);
+                    })
+                    Send(ReturnNode, "VALUE_DB", Result, send);
+                    break;
+            }
         }
 
         // Driver
