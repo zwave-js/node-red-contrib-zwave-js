@@ -95,10 +95,10 @@ Multiple copies of this node, can be used across different flows.
 The first 2 of these modes, is probably what you're intersted in.  
 Each have there own pros and cons.  
 
-[&#x1F517;Managed](./managed.md) (Z-Wave JS Command Classes API)  
+[&#x1F517;CC API](./CCAPI.md) (Z-Wave JS Command Classes API)  
 This mode is quick to get up and running, and is a good starting point.
 
-[&#x1F517;Unmanaged](./unmanaged.md) (Z-Wave JS Value API)  
+[&#x1F517;Value API](./ValueAPI.md) (Z-Wave JS Value API)  
 This mode requires a little more understanding, but is preferred by the pros.
 
 [&#x1F517;GUI](./GUI.md)   
@@ -167,11 +167,11 @@ And such event(s) will look like this.
 }
 ```
 
-## Controller/Driver and Association based operations
+## Controller/Driver and Association based methods
 Accessing the UI, will provide you with most of the network management operations.  
 But, if you prefer, you can action them via a node message.  
   
-The **ControllerAPI**, **DriverAPI** and **AssociationsAPI** API's do not require a **node** ID.  
+The **ControllerAPI**, **DriverAPI** and **AssociationsAPI** modes do not require a **node** ID.  
 However! Some Controller and Association methods themself, actually need a Node ID as part of the required params.  
 
 Some Association methods require an Object, these are detailed at the bottom.
@@ -214,7 +214,7 @@ To start an in-secure Inclusion, you will do.
 let Message = {
     payload: {
         mode: "ControllerAPI",
-        operation: "startInclusion",
+        method: "startInclusion",
         params: [true]
     }
 }
