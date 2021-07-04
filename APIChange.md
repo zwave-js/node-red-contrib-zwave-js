@@ -98,6 +98,7 @@ Here is the ```mode``` and ```operation``` list
  - AssociationsAPI
 
 Any ```operation``` or ```class``` will now use the **Real** name as used in Z-Wave JS  
+[See here for CC names](https://zwave-js.github.io/node-zwave-js/#/api/CCs/index)
 
 Example CC: ```WakeInterval``` -> ```Wake Up```  
 Example Operation: ```Set``` -> ```setInterval```
