@@ -40,7 +40,7 @@ Taking the above Value API approach, what is actually happening behind the scene
 
 And the CC API approach, is using an awkward Look up table, to find the correct CC/Method.
 
-In V4, there is now a new property named ```mode```.  
+In V4, there now new properties named ```mode```, ```cc``` & ```method```.  
 This ```mode``` property instructs the node what API should be used.
 
 Let's look at the Wake Up CC using the new API
