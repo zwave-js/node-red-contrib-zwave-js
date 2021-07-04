@@ -171,67 +171,67 @@ And such event(s) will look like this.
 Accessing the UI, will provide you with most of the network management operations.  
 But, if you prefer, you can action them via a node message.  
   
-The **Controller**, **Driver** and **Associations** classes do not require a **node** ID.  
+The **ControllerAPI**, **DriverAPI** and **AssociationsAPI** API's do not require a **node** ID.  
 However! Some Controller and Association methods themself, actually need a Node ID as part of the required params.  
 
 Some Association methods require an Object, these are detailed at the bottom.
 
-| class                     | operation                           | params                                                |
-| ------------------------- | ----------------------------------- | ----------------------------------------------------- |
-| Controller                | StartHealNetwork                    |                                                       |
-| Controller                | StopHealNetwork                     |                                                       |
-| Controller                | StartInclusion (See Notes)          | [Include Non-Secure: Bool (optional)]                 |
-| Controller                | StopInclusion                       |                                                       |
-| Controller                | StartExclusion                      |                                                       |
-| Controller                | StopExclusion                       |                                                       |
-| Controller                | HardReset (See Notes)               |                                                       |
-| Controller                | ProprietaryFunc (See Notes)         | [Serial Function ID: Number, Data: Buffer]            |
-| Controller                | InterviewNode                       | [Node ID: Number]                                     |
-| Controller                | GetNodes                            |                                                       |
-| Controller                | SetNodeName                         | [Node ID: Number, Node Name: String]                  |
-| Controller                | SetNodeLocation                     | [Node ID: Number, Node Location: String]              |
-| Controller                | GetNodeNeighbors                    | [Node ID: Number]                                     |
-| Controller                | KeepNodeAwake                       | [Node ID: Number, Bool]                               |
-| Controller                | GetRFRegion (See Notes)             |                                                       |
-| Controller                | SetRFRegion (See Notes)             | [**RFRegion**: Enum]                                  |
-| Controller                | ToggleRF                            | [Status: Bool]                                        |
-| Controller                | RemoveFailedNode                    | [Node ID: Number]                                     |
-| Controller                | ReplaceFailedNode (See Notes)       | [Node ID: Number, Include Non-Secure: Bool (optional)]|
-| Controller                | BeginUpdateFirmware                 | [Node ID: Number, Target Chip: Number, Filename: String, Data: Buffer]|
-| Controller                | AbortFirmwareUpdate                 | [Node ID: Number]                                     |
-| Associations              | GetAssociationGroups                | [**AssociationAddress**: Object]                      |
-| Associations              | GetAllAssociationGroups             | [Node ID: Number]                                     |
-| Associations              | GetAssociations                     | [**AssociationAddress**: Object]                      |
-| Associations              | GetAllAssociations                  | [Node ID: Number]                                     |
-| Associations              | AddAssociations                     | [**AssociationAddress**: Object, Group  ID: Number, **AssociationAddress**: Object[]] |
-| Associations              | RemoveAssociations                  | [**AssociationAddress**: Object, Group  ID: Number, **AssociationAddress**: Object[]] |
-| Associations              | RemoveNodeFromAllAssociations       | [Node ID: Number]                                     |
-| Driver                    | GetEnums                            |                                                       |
-| Driver                    | GetValueDB                          | [Node ID: Number[] (Optional)]                        |
+| mode                         | method                              | params                                                |
+| ---------------------------- | ----------------------------------- | ----------------------------------------------------- |
+| ControllerAPI                | beginHealingNetwork                 |                                                       |
+| ControllerAPI                | stopHealingNetwork                  |                                                       |
+| ControllerAPI                | beginInclusion (See Notes)          | [Include Non-Secure: Bool (optional)]                 |
+| ControllerAPI                | stopInclusion                       |                                                       |
+| ControllerAPI                | beginExclusion                      |                                                       |
+| ControllerAPI                | stopExclusion                       |                                                       |
+| ControllerAPI                | hardReset (See Notes)               |                                                       |
+| ControllerAPI                | proprietaryFunction (See Notes)     | [Serial Function ID: Number, Data: Buffer]            |
+| ControllerAPI                | refreshInfo                         | [Node ID: Number]                                     |
+| ControllerAPI                | getNodes                            |                                                       |
+| ControllerAPI                | setNodeName                         | [Node ID: Number, Node Name: String]                  |
+| ControllerAPI                | setNodeLocation                     | [Node ID: Number, Node Location: String]              |
+| ControllerAPI                | getNodeNeighbors                    | [Node ID: Number]                                     |
+| ControllerAPI                | keepNodeAwake                       | [Node ID: Number, Bool]                               |
+| ControllerAPI                | getRFRegion (See Notes)             |                                                       |
+| ControllerAPI                | setRFRegion (See Notes)             | [**RFRegion**: Enum]                                  |
+| ControllerAPI                | toggleRF                            | [Status: Bool]                                        |
+| ControllerAPI                | removeFailedNode                    | [Node ID: Number]                                     |
+| ControllerAPI                | replaceFailedNode (See Notes)       | [Node ID: Number, Include Non-Secure: Bool (optional)]|
+| ControllerAPI                | beginFirmwareUpdate                 | [Node ID: Number, Target Chip: Number, Filename: String, Data: Buffer]|
+| ControllerAPI                | abortFirmwareUpdate                 | [Node ID: Number]                                     |
+| AssociationsAPI              | getAssociationGroups                | [**AssociationAddress**: Object]                      |
+| AssociationsAPI              | getAllAssociationGroups             | [Node ID: Number]                                     |
+| AssociationsAPI              | getAssociations                     | [**AssociationAddress**: Object]                      |
+| AssociationsAPI              | getAllAssociations                  | [Node ID: Number]                                     |
+| AssociationsAPI              | addAssociations                     | [**AssociationAddress**: Object, Group  ID: Number, **AssociationAddress**: Object[]] |
+| AssociationsAPI              | removeAssociations                  | [**AssociationAddress**: Object, Group  ID: Number, **AssociationAddress**: Object[]] |
+| AssociationsAPI              | removeNodeFromAllAssociations       | [Node ID: Number]                                     |
+| DriverAPI                    | getEnums                            |                                                       |
+| DriverAPI                    | getValueDB                          | [Node ID: Number[] (Optional)]                        |
 
 To start an in-secure Inclusion, you will do.  
 ```javascript
 let Message = {
     payload: {
-        class: "Controller",
-        operation: "StartInclusion",
+        mode: "ControllerAPI",
+        operation: "startInclusion",
         params: [true]
     }
 }
 return Message;
 ```
 
-## Notes on Controller -> Set/Get RF Region  
+## Notes on ControllerAPI -> Set/Get RF Region  
 Support for these Commands, must be proivided by your stick.  
 
-## Notes on Controller -> StartInclusion/ReplaceFailedNode  
+## Notes on ControllerAPI -> beginInclusion/replaceFailedNode  
 By default, the include process will only include secure devices, if you want to include non-secure devices, provide a **true** value 
 
-## Notes on Controller -> HardReset  
+## Notes on ControllerAPI -> hardReset  
 A one-way ticket for wiping out all the configuration on the controller.  
 Once you call this method, there is no going back - you are hearby **WARNED of the consequences**.  
 
-## Notes on Controller -> ProprietaryFunc
+## Notes on ControllerAPI -> proprietaryFunction
 The **Data** argument, must ONLY contain the data portion of the request  
 As an example, this byte array **[0x01, 0x08, 0x00, 0xF2, 0x51, 0x01, 0x00, 0x05, 0x01, 0x51]**  
 disables the LED on the GEN 5 Z-Stick, breaking it down we have:  
@@ -263,8 +263,8 @@ let _Buf_ON = Buffer.from([0x51, 0x01, 0x01, 0x05, 0x01])
 let Message = {
     payload: {
         node: 2,
-        class: "Controller",
-        operation: "ProprietaryFunc",
+        mode: "ControllerAPI",
+        method: "proprietaryFunction",
         params: [0xF2, _Buf_OFF]
     }
 }
