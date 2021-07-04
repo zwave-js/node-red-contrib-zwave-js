@@ -78,7 +78,7 @@ here is the ```mode``` list
  - AssociationsAPI
 
 Any operation or class will now use the **Real** name as used in Z-Wave JS  
-Exampe CC: ```WakeInterval``` -> ```Wake Up```
-Exampple Operation: ```Set``` -> ```setInterval```
+Example CC: ```WakeInterval``` -> ```Wake Up```  
+Example Operation: ```Set``` -> ```setInterval```
 
 
