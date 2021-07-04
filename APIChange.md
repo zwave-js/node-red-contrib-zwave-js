@@ -72,7 +72,7 @@ It means, the what was called Managed Mode - can now use Any CC that is offered 
 
 Here is the ```mode``` and ```operation``` list
  - CCAPI
-   - ```operation``` is only limited to what is supported on the ```class```
+   - ```operation``` is only limited to what is supported on the ```class``` and ```class``` is only limited by Z-Wave JS
  - ValueAPI
    - getDefinedValueIDs
    - getValueMetadata
@@ -80,10 +80,25 @@ Here is the ```mode``` and ```operation``` list
    - setValue
    - pollValue
  - ControllerAPI
+   - beginFirmwareUpdate
+   - abortFirmwareUpdate
+   - getRFRegion
+   - setRFRegion
+   - toggleRF
+   - getNodes
+   - keepNodeAwake
+   - getNodeNeighbors 
+   - setNodeName
+   - setNodeLocation
+   - refreshInfo
+   - hardReset
+   - beginHealingNetwork
+   - stopHealingNetwork
  - DriverAPI
  - AssociationsAPI
 
-Any operation or class will now use the **Real** name as used in Z-Wave JS  
+Any ```operation``` or ```class``` will now use the **Real** name as used in Z-Wave JS  
+
 Example CC: ```WakeInterval``` -> ```Wake Up```  
 Example Operation: ```Set``` -> ```setInterval```
 
