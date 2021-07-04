@@ -607,8 +607,6 @@ module.exports = function (RED) {
                 })
             }
 
-            console.log(Params);
-
             let Result = await Driver.controller.nodes.get(Node).getEndpoint(Endpoint).invokeCCAPI(CommandClasses[CC],Method, Params)
             if(!IsEventResponse){
                 Send(ReturnNode, "VALUE_UPDATED", Result, send)

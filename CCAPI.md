@@ -63,7 +63,7 @@ let Message = {
     payload: {
         node: 2,
         cc: "Binary Switch",
-        method: "Set",
+        method: "set",
         endpoint: 1, // zero based index. 0 - First outlet, 1 - second outlet and so on.
         params: [true]
     }
@@ -107,7 +107,7 @@ let Message = {
         node: 12,
         mode: "CCAPI",
         cc: "Binary Switch",
-        method: "Set",
+        method: "set",
         endpoint: 2,
         forceUpdate: {
           property: "currentValue"
