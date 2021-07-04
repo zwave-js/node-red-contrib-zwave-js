@@ -77,7 +77,7 @@ here is the ```mode``` list
  - DriverAPI
  - AssociationsAPI
 
-any operation or class will now use the Real name as used in Z-Wave JS
+Any operation or class will now use the **Real** name as used in Z-Wave JS  
 Exampe CC: ```WakeInterval``` -> ```Wake Up```
 Exampple Operation: ```Set``` -> ```setInterval```
 
