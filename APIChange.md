@@ -124,5 +124,5 @@ Example Method: ```Set``` -> ```setInterval```
 ## The 'What should I do' approach
  - Add a new ```mode``` property this should be either:  CCAPI | ControllerAPI | DriverAPI | AssociationsAPI | ValueAPI
  - ```class``` should now be renamed to ```cc``` - and only be used for the CCAPI ```mode```
- - ```operation``` should now be renamed to ```method``` this value is determined by what mode (and ```cc``` if using CCAPI) you are using.
+ - ```operation``` should now be renamed to ```method``` this value is determined by what ```mode``` (and ```cc``` if using CCAPI) you are using.
 
