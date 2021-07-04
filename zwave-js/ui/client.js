@@ -1,64 +1,82 @@
 let ZwaveJsUI = (function () {
 
+  var FirmwareForm;
+  let FWRunning = false;
+  function AbortUpdate() {
+    if (FWRunning) {
+      ControllerCMD('Controller', 'AbortFirmwareUpdate', [selectedNode])
+        .then(() => {
+          FirmwareForm.dialog('destroy');
+        })
+    }
+    else {
+      FirmwareForm.dialog('destroy');
+    }
+    FWRunning = false;
+  }
+
   function PerformUpdate() {
 
     let FE = $("#FILE_FW")[0].files[0]
+    let NID = parseInt($("#NODE_FW option:selected").val());
+    let Target = $("#TARGET_FW").val();
     let Filename = FE.name;
+    let Code = NID + ":" + Target + ":" + Filename
+
     var reader = new FileReader();
     reader.onload = function () {
       let arrayBuffer = this.result
       let array = new Uint8Array(arrayBuffer)
-      let Code = $("#NODE_FW option:selected").val() + ":" + $("#TARGET_FW").val() + ":" + Filename
       let Options = {
         url: `zwave-js/firmwareupdate/` + btoa(Code),
         method: 'POST',
         contentType: 'application/octect-stream',
         data: array,
-        processData:false
+        processData: false
       }
       $.ajax(Options)
         .then(() => {
-          modalAlert("The firmware update has been accepted. It may take sometime for the update to completely transfer to the device. The device will be re-interviewed afer.", "Firmware Accepted")
+          FWRunning = true;
+          selectNode(NID)
+          $("#FWForm").append('<div id="progressbar"><div></div></div>')
         })
         .catch((err) => {
           modalAlert(err.responseText, "Firmware Rejected")
         })
-
-
     }
     reader.readAsArrayBuffer(FE);
   }
 
   function FirmwareUpdate() {
     let Options = {
-      draggable: true,
+      draggable: false,
       modal: true,
-      resizable: true,
+      resizable: false,
       width: '800',
       height: '600',
       title: "ZWave Device Firmware Updater",
       minHeight: 75,
       buttons: {
-        Update:PerformUpdate,
+        Update: PerformUpdate,
+        Abort: AbortUpdate,
         Close: function () {
           $(this).dialog('destroy');
         }
       }
     }
 
-    let Window = $('<div>').css({ padding: 10 }).html('Please wait...');
-    Window.dialog(Options)
+    FirmwareForm = $('<div>').css({ padding: 10 }).html('Please wait...');
+    FirmwareForm.dialog(Options)
 
     ControllerCMD('Controller', 'GetNodes')
 
       .then(({ object }) => {
 
-        Window.html('');
-        
-        $('<div>').css({borderWidth:1,borderColor:'red',borderStyle:'solid',marginTop:10, width:650,marginLeft:'auto',marginRight:'auto', textAlign:screenLeft,padding:5}).html('This software is provided as-is. The developer(s) of <strong>node-red-contrib-zwave-js</strong> or any libraries it<br />uses, are not responsible for any damage that may result from your attempt to upgrade the firmware.<br /><br />You are performing this upgrade, soley at your own risk.').appendTo(Window)
+        FirmwareForm.html('');
 
-       let Form = $('<div>').css({width:650,marginLeft:'auto',marginRight:'auto',marginTop:10, textAlign:screenLeft,padding:5}).appendTo(Window)
+        $('<div>').css({ borderWidth: 1, borderColor: 'red', borderStyle: 'solid', marginTop: 10, width: 650, marginLeft: 'auto', marginRight: 'auto', textAlign: screenLeft, padding: 5 }).html('This software is provided as-is. The developer(s) of <strong>node-red-contrib-zwave-js</strong> or any libraries it<br />uses, are not responsible for any damage that may result from your attempt to upgrade the firmware.<br /><br />You are performing this upgrade, soley at your own risk.').appendTo(FirmwareForm)
 
+        let Form = $('<div id="FWForm">').css({ width: 650, marginLeft: 'auto', marginRight: 'auto', marginTop: 10, textAlign: screenLeft, padding: 5 }).appendTo(FirmwareForm)
         let Table = $('<table>')
 
         // TR 1 
@@ -76,7 +94,7 @@ let ZwaveJsUI = (function () {
           $('<option value="' + N.nodeId + '">' + N.nodeId + ' - ' + Name + '</option>').appendTo(Select)
         })
 
-         // TR 2
+        // TR 2
         let TR2 = $('<tr>').appendTo(Table);
         $('<td>Firmware Update Target</td>').appendTo(TR2);
         $('<td><input type="number" value="0" min="0" max="2" id="TARGET_FW"/>').appendTo(TR2);
@@ -85,10 +103,8 @@ let ZwaveJsUI = (function () {
         let TR3 = $('<tr>').appendTo(Table);
         $('<td>Firmware Update File</td>').appendTo(TR3);
         $('<td><input type="file" id="FILE_FW"/>').appendTo(TR3);
-        
+
         Table.appendTo(Form)
-
-
 
       })
   }
@@ -103,6 +119,7 @@ let ZwaveJsUI = (function () {
 
       let Label = N.isControllerNode ? 'Controller' : N.nodeId + ' - ' + (N.name ?? 'No Name')
       let name = N.isControllerNode ? 'Controller' : (N.name ?? 'No Name')
+      let location = N.location ?? ''
       let Shape = N.isControllerNode ? 'box' : 'square'
       var Color = (N.isListening && N.isRouting) ? 'limegreen' : 'orangered'
 
@@ -115,12 +132,20 @@ let ZwaveJsUI = (function () {
         id: N.nodeId,
         label: Label,
         name: name,
+        location: location,
         shape: Shape,
+        manufacturer: 'Unknown',
+        model: 'Unknown',
+        status: N.status,
         color: {
           background: Color,
           borderColor: 'black',
           highlight: Color
         }
+      }
+      if (N.deviceConfig !== undefined) {
+        ND.manufacturer = N.deviceConfig.manufacturer
+        ND.model = N.deviceConfig.label
       }
       _Nodes.push(ND)
     })
@@ -186,6 +211,7 @@ let ZwaveJsUI = (function () {
 
   function NetworkMap() {
 
+    var Network;
 
     let Options = {
       draggable: true,
@@ -193,10 +219,11 @@ let ZwaveJsUI = (function () {
       resizable: true,
       width: '1024',
       height: '768',
-      title: "ZWave Network Map. Routing is only an estimation. the signal quality also plays a part",
+      title: "ZWave Network Map. Routing is only an estimation, external influences can affect routing.",
       minHeight: 75,
       buttons: {
         Close: function () {
+          Network.destroy();
           $(this).dialog('destroy');
         }
       }
@@ -204,21 +231,21 @@ let ZwaveJsUI = (function () {
 
     let Window = $('<div>').css({ padding: 10 }).html('Generating Network Topology Map...');
     Window.dialog(Options)
+    Window.on('dialogclose', () => { Network.destroy(); })
 
     //let TestNodes = [{"nodeId":1,"name":"Controller","isControllerNode":true,"isListening":false,"isRouting":false},{"nodeId":2,"name":"Chandelier","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":3,"name":"Family","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":4,"name":"FamilyCan","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":5,"name":"SmallBathLight","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":6,"name":"SmallBathFan","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":7,"name":"Zoey","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":8,"name":"BedCeiling","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":9,"name":"Sconce","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":10,"name":"BathCeiling","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":11,"name":"igBathFan","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":12,"name":"Mirror","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":13,"name":"Closet","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":14,"name":"Garage","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":15,"name":"BackPorch","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":16,"name":"Dining","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":17,"name":"Island","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":18,"name":"KitchenCan","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":19,"name":"Sink","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":20,"name":"Office","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":21,"name":"Desk","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":22,"name":"DownHall","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":23,"name":"Living","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":24,"name":"FrontPorch","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":25,"name":"SmallBathWax","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":26,"name":"tairsWax","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":27,"name":"Laundry","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":28,"name":"UpHall","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":29,"name":"BedWax","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":30,"name":"Hayley","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":31,"name":"TheaterTheFan","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":32,"name":"TheaterLight","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":33,"name":"GirlsWax","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":34,"name":"UpBathFan","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":35,"name":"UpBathLight","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":36,"name":"Playroom","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":37,"name":"AtticLight","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":38,"name":"Vanity","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":39,"name":"ClosetMotion","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":40,"name":"LaundryDoor","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":41,"name":"TheaterMotion","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":42,"name":"UpBathMotion","isControllerNode":false,"isListening":true,"isRouting":true},{"nodeId":43,"name":"FrontDoor","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":44,"name":"BackDoor","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":45,"name":"GarageEntry","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":46,"name":"GDGarrett","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":47,"name":"GDHeidi","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":48,"name":"FamilySmoke","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":49,"name":"BathSmoke","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":50,"name":"FrontSmoke","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":51,"name":"No Name","isControllerNode":false,"isListening":false,"isRouting":false},{"nodeId":52,"name":"No Name","isControllerNode":false,"isListening":false,"isRouting":false}]
     //let TestNs = [{ "node": 1, "object": [3, 6, 7, 8, 9, 10, 11, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 43, 44, 45, 46, 48, 49, 50, 51, 52] }, { "node": 2, "object": [1, 3, 4, 5, 6, 7, 8, 9, 11, 14, 16, 17, 19, 21, 22, 23, 24, 26, 30, 32, 33, 34, 35, 36, 37, 40, 43, 45, 46, 47, 50, 51, 52] }, { "node": 3, "object": [1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 32, 33, 34, 35, 37, 38, 40, 43, 44, 45, 46, 47, 48, 49, 50, 51] }, { "node": 4, "object": [2, 3, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 32, 34, 35, 36, 38, 40, 41, 43, 44, 45, 46, 47, 48, 49, 50, 51] }, { "node": 5, "object": [1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 45, 46, 47, 48, 49, 50, 51, 52] }, { "node": 6, "object": [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 33, 34, 35, 36, 37, 38, 39, 40, 42, 43, 45, 46, 47, 48, 49, 50, 52] }, { "node": 7, "object": [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 40, 41, 45, 46, 47, 48, 49, 50, 51, 52] }, { "node": 8, "object": [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 14, 16, 17, 21, 22, 27, 28, 29, 30, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 43, 45, 46, 47, 48, 49, 50, 51, 52] }, { "node": 9, "object": [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 16, 18, 21, 23, 25, 26, 27, 28, 29, 30, 31, 32, 33, 35, 36, 37, 38, 40, 41, 43, 45, 46, 47, 48, 49, 50, 51, 52] }, { "node": 10, "object": [1, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 21, 22, 23, 25, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52] }, { "node": 11, "object": [1, 2, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 17, 18, 20, 21, 22, 23, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 43, 45, 46, 47, 48, 49, 50, 51, 52] }, { "node": 12, "object": [1, 3, 5, 6, 7, 8, 9, 10, 11, 13, 14, 16, 17, 18, 19, 21, 22, 23, 25, 26, 27, 28, 29, 30, 31, 32, 34, 35, 36, 37, 38, 39, 40, 41, 43, 46, 47, 48, 49, 51, 52] }, { "node": 13, "object": [1, 3, 4, 6, 7, 9, 10, 12, 15, 16, 18, 25, 28, 29, 30, 32, 33, 34, 35, 38, 39, 40, 41, 44, 46, 47, 48, 51] }, { "node": 14, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 52] }, { "node": 15, "object": [1, 3, 4, 5, 6, 7, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52] }, { "node": 16, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27, 28, 29, 30, 31, 33, 35, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52] }, { "node": 17, "object": [2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 14, 15, 16, 18, 19, 20, 21, 22, 23, 24, 25, 26, 28, 29, 30, 31, 33, 34, 35, 36, 37, 39, 40, 41, 43, 45, 46, 47, 48, 50, 52] }, { "node": 18, "object": [1, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 41, 42, 43, 45, 46, 47, 48, 49, 50, 52] }, { "node": 19, "object": [1, 2, 3, 4, 6, 15, 16, 17, 18, 21, 24, 25, 30, 31, 33, 34, 36, 37, 41, 45, 46, 48, 49, 50, 52] }, { "node": 20, "object": [1, 3, 4, 5, 6, 7, 14, 15, 16, 17, 18, 21, 22, 23, 24, 25, 30, 32, 33, 35, 36, 40, 41, 43, 45, 46, 47, 48, 50, 52] }, { "node": 21, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 25, 26, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 40, 41, 43, 44, 45, 46, 47, 48, 49, 50, 52] }, { "node": 22, "object": [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 14, 15, 16, 17, 18, 20, 21, 23, 24, 26, 27, 28, 29, 30, 32, 33, 34, 35, 36, 37, 38, 40, 41, 43, 45, 46, 48, 49, 50, 52] }, { "node": 23, "object": [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 17, 18, 20, 21, 22, 24, 26, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 40, 41, 44, 45, 46, 47, 48, 49, 50, 52] }, { "node": 24, "object": [1, 2, 3, 4, 5, 6, 7, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 25, 26, 27, 29, 30, 31, 33, 34, 35, 36, 37, 40, 41, 43, 44, 45, 46, 47, 48, 49, 50, 52] }, { "node": 25, "object": [1, 3, 4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24, 26, 27, 30, 32, 33, 34, 35, 36, 37, 40, 41, 43, 45, 46, 47, 48, 49, 52] }, { "node": 26, "object": [2, 3, 4, 5, 6, 7, 9, 11, 12, 14, 15, 18, 21, 22, 23, 24, 25, 29, 30, 31, 34, 35, 36, 37, 40, 43, 45, 46, 47, 48, 49] }, { "node": 27, "object": [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 22, 24, 25, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 43, 45, 46, 47, 48, 49, 51, 52] }, { "node": 28, "object": [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 22, 27, 29, 30, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 43, 45, 46, 47, 48, 49] }, { "node": 29, "object": [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 22, 23, 24, 26, 27, 28, 30, 31, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52] }, { "node": 30, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 33, 34, 35, 36, 37, 38, 39, 40, 41, 44, 45, 46, 47, 48, 50, 51, 52] }, { "node": 31, "object": [1, 5, 7, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 21, 23, 24, 25, 27, 29, 30, 32, 33, 34, 35, 36, 37, 40, 41, 43, 44, 45, 47, 49, 50, 52] }, { "node": 32, "object": [1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 20, 21, 22, 23, 27, 28, 31, 33, 34, 35, 36, 37, 39, 40, 41, 43, 44, 45, 47, 48, 49, 50, 51, 52] }, { "node": 33, "object": [1, 2, 3, 5, 6, 7, 8, 9, 11, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27, 28, 29, 30, 31, 32, 34, 35, 36, 37, 41, 42, 43, 45, 46, 47, 49, 50, 52] }, { "node": 34, "object": [1, 2, 3, 4, 5, 7, 8, 10, 11, 12, 13, 14, 15, 17, 18, 19, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 35, 36, 37, 38, 39, 40, 41, 42, 43, 45, 46, 47, 48, 49, 50, 51, 52] }, { "node": 35, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 18, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 36, 37, 38, 39, 40, 41, 42, 43, 45, 47, 48, 49, 50, 52] }, { "node": 36, "object": [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 37, 40, 41, 42, 43, 45, 46, 47, 48, 49, 50, 52] }, { "node": 37, "object": [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 38, 39, 40, 42] }, { "node": 38, "object": [1, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 21, 22, 23, 27, 28, 29, 30, 34, 35, 37, 39, 40] }, { "node": 39, "object": [1, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 25, 27, 28, 29, 30, 31, 32, 34, 35, 37, 38] }, { "node": 40, "object": [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38] }, { "node": 41, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 42] }, { "node": 42, "object": [1, 5, 6, 16, 33, 34, 35, 36, 37, 41] }, { "node": 43, "object": [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 20, 21, 22, 23, 24, 26, 27, 28, 29, 31, 32, 33, 34, 35, 36, 37] }, { "node": 44, "object": [1, 3, 4, 5, 6, 7, 14, 15, 16, 17, 18, 21, 23, 24, 26, 29, 30, 31, 32, 35, 37] }, { "node": 45, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 42] }, { "node": 46, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 33, 35, 36, 37, 38] }, { "node": 47, "object": [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 34, 35, 36, 37, 38, 42] }, { "node": 48, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 32, 33, 34, 35, 36, 37, 38] }, { "node": 49, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 18, 19, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 42] }, { "node": 50, "object": [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 29, 30, 31, 32, 33, 34, 35, 36, 37, 42] }, { "node": 51, "object": [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 27, 30, 32, 34, 37] }, { "node": 52, "object": [1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 29, 31, 32, 33, 34, 35, 36, 37, 42] }]
 
- 
 
     let GetSpread = (Number) => {
 
-      if(Number < 10) {
+      if (Number < 10) {
         return 100;
       }
-      let Spread = Number*10+100
+      let Spread = Number * 10 + 100
       return Spread
 
-    } 
+    }
 
     ControllerCMD('Controller', 'GetNodes')
       .then(({ object }) => {
@@ -241,7 +268,7 @@ let ZwaveJsUI = (function () {
               edges: {
                 shadow: false,
                 width: 0.15,
-                length: GetSpread(object.length),
+                length: GetSpread(_Nodes.length),
                 smooth: {
                   type: "discrete",
                 },
@@ -251,7 +278,7 @@ let ZwaveJsUI = (function () {
                 enabled: false,
                 solver: "repulsion",
                 repulsion: {
-                  nodeDistance: GetSpread(object.length)
+                  nodeDistance: GetSpread(_Nodes.length)
                 }
               }
             }
@@ -259,8 +286,8 @@ let ZwaveJsUI = (function () {
             let VIS = $('<div>').css({ width: '100%', height: '100%' }).attr('id', 'Network');
             Window.html('');
             VIS.appendTo(Window)
-            let network = new vis.Network(VIS[0], data, options);
-            network.on('click', (E) => {
+            Network = new vis.Network(VIS[0], data, options);
+            Network.on('click', (E) => {
 
               if (E.nodes.length > 0) {
 
@@ -274,31 +301,26 @@ let ZwaveJsUI = (function () {
                 let Children = []
                 RouteChildren.forEach((T) => Children.push(T.from))
 
-                let HTML = '<table style="width:100%">';
-                HTML += '<tr>'
-                HTML += '<td style="width:100px">Node ID</td><td>' + SelectedNode.id + '</td>'
-                HTML += '</tr>'
-                HTML += '<tr>'
-                HTML += '<td>Name</td><td>' + SelectedNode.name + '</td>'
-                HTML += '</tr>'
-                HTML += '<tr>'
-                HTML += '<td>Can Route</td><td>' + SelectedNode.canRoute + '</td>'
-                HTML += '</tr>'
-                HTML += '<tr>'
-                HTML += '<td>Route Slaves</td><td style="word-break:break-word">' + Targets.toString() + '</td>'
-                HTML += '</tr>'
-                HTML += '<tr>'
-                HTML += '<td>Route Clients</td><td style="word-break:break-word">' + Children.toString() + '</td>'
-                HTML += '</tr>'
+                let Table = $('<table style="width:100%">')
+                Table.append('<tr><td style="width:120px; vertical-align:top">Node ID</td><td>' + SelectedNode.id + '</td></tr>')
+                Table.append('<tr><td style="width:120px; vertical-align:top">Name</td><td>' + SelectedNode.name + '</td></tr>')
+                Table.append('<tr><td style="width:120px; vertical-align:top">Location</td><td>' + SelectedNode.location + '</td></tr>')
+                Table.append('<tr><td style="width:120px; vertical-align:top">Manufacturer/Model</td><td>' + SelectedNode.manufacturer + ' / ' + SelectedNode.model + '</td></tr>')
+                Table.append('<tr><td style="width:120px; vertical-align:top">Status</td><td>' + SelectedNode.status + '</td></tr>')
+                Table.append('<tr><td style="width:120px; vertical-align:top">Route Slaves</td><td style="word-break:break-word">' + Targets.toString() + '</td></tr>')
+
+                if (SelectedNode.canRoute) {
+                  Table.append('<tr><td style="width:120px; vertical-align:top">Route Clients</td><td style="word-break:break-word">' + Children.toString() + '</td></tr>')
+                }
 
                 $('#zwave-js-map-info-box').html('')
-                $('#zwave-js-map-info-box').html(HTML)
+                $('#zwave-js-map-info-box').append(Table)
 
               } else {
                 $('#zwave-js-map-info-box').html('No Node Selected').appendTo(VIS);
               }
             })
-            network.stabilize()
+            Network.stabilize()
             $('<div class="zwave-js-selected-node-map-info" id="zwave-js-map-info-box">').html('No Node Selected').appendTo(VIS);
           })
       })
@@ -341,7 +363,7 @@ let ZwaveJsUI = (function () {
     $('<div>').css({ padding: 10, maxWidth: 500, wordWrap: 'break-word' }).html(message).dialog(Options)
   }
 
- 
+
 
   var controllerOpts;
   var nodeOpts;
@@ -392,7 +414,7 @@ let ZwaveJsUI = (function () {
 
   }
 
-  function getNodes() {
+  function GetNodes() {
 
     ControllerCMD('Controller', 'GetNodes')
       .then(({ object }) => {
@@ -431,13 +453,21 @@ let ZwaveJsUI = (function () {
     ControllerCMD('Controller', 'StopExclusion', [], true)
   }
 
+  function StartHeal() {
+    ControllerCMD('Controller', 'StartHealNetwork', [], true)
+  }
+
+  function StopHeal() {
+    ControllerCMD('Controller', 'StopHealNetwork', [], true)
+  }
+
   function Reset() {
     let Buttons = {
       'Yes - Reset': function () {
         ControllerCMD('Controller', 'Reset')
           .then(() => {
             modalAlert('Your Controller has been reset.', 'Reset Complete')
-            getNodes();
+            GetNodes();
           })
       }
     }
@@ -454,7 +484,7 @@ let ZwaveJsUI = (function () {
           if (node == selectedNode) {
             $('#zwave-js-selected-node-name').text(object)
           }
-          getNodes();
+          GetNodes();
           input.hide()
           $(this).html('Set Name')
         })
@@ -469,13 +499,13 @@ let ZwaveJsUI = (function () {
 
     let input = $(this).prev()
     if (input.is(':visible')) {
-      ControllerCMD('Controller', 'SetNodeName', [selectedNode, input.val()])
+      ControllerCMD('Controller', 'SetNodeLocation', [selectedNode, input.val()])
         .then(({ node, object }) => {
           $('#zwave-js-node-list').find(`[data-nodeid='${node}'] .zwave-js-node-row-location`).html("(" + object + ")")
           if (node == selectedNode) {
             $('#zwave-js-selected-node-location').text(object)
           }
-          getNodes();
+          GetNodes();
           input.hide()
           $(this).html('Set Location')
         })
@@ -579,12 +609,12 @@ let ZwaveJsUI = (function () {
 
     // Heal
     let optHeal = $('<div>').css('text-align', 'center').appendTo(controllerOpts)
-    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').html('Start Network Heal').appendTo(optHeal)
-    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').html('Stop Network Heal').appendTo(optHeal)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(StartHeal).html('Start Network Heal').appendTo(optHeal)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(StopHeal).html('Stop Network Heal').appendTo(optHeal)
 
     // Refresh, Reset
     let optRefreshReset = $('<div>').css('text-align', 'center').appendTo(controllerOpts)
-    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').html('Refresh Node List').appendTo(optRefreshReset)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(GetNodes).html('Refresh Node List').appendTo(optRefreshReset)
     $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(Reset).html('Reset Controller').appendTo(optRefreshReset)
 
     // Tools
@@ -605,7 +635,7 @@ let ZwaveJsUI = (function () {
     $('<span id="zwave-js-selected-node-id">').appendTo(nodeHeader)
     $('<span id="zwave-js-selected-node-name">').appendTo(nodeHeader)
     $('<span id="zwave-js-selected-node-location">').appendTo(nodeHeader)
-    $('<button>').addClass('red-ui-button red-ui-button-small').css({ float: 'right' }).html('Show Node Options').click(ShowHideNodeOptions).appendTo(nodeHeader)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css({ float: 'right' }).click(ShowHideNodeOptions).html('Show Node Options').appendTo(nodeHeader)
 
     // node Options
     nodeOpts = $('<div>').appendTo(nodeHeader).hide()
@@ -616,33 +646,33 @@ let ZwaveJsUI = (function () {
     // Rename
     let rename = $('<div>').css('text-align', 'center').appendTo(nodeOpts)
     $('<input>').addClass('red-ui-searchBox-input').hide().appendTo(rename)
-    $('<button id="zwave-js-set-node-name">').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').html('Set Name').click(RenameNode).appendTo(rename)
+    $('<button id="zwave-js-set-node-name">').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(RenameNode).html('Set Name').appendTo(rename)
 
     // Location
     let location = $('<div>').css('text-align', 'center').appendTo(nodeOpts)
     $('<input>').addClass('red-ui-searchBox-input').hide().appendTo(location)
-    $('<button id="zwave-js-set-node-location">').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').html('Set Location').click(SetNodeLocation).appendTo(location)
+    $('<button id="zwave-js-set-node-location">').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(SetNodeLocation).html('Set Location').appendTo(location)
 
     // Interview
     let optInterview = $('<div>').css('text-align', 'center').appendTo(nodeOpts)
-    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').html('Interview Node').click(InterviewNode).appendTo(optInterview)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(InterviewNode).html('Interview Node').appendTo(optInterview)
 
     // Remove
     let RemoveFailed = $('<div>').css('text-align', 'center').appendTo(nodeOpts)
-    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').html('Remove Failed Node').click(RemoveFailedNode).appendTo(RemoveFailed)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(RemoveFailedNode).html('Remove Failed Node').appendTo(RemoveFailed)
 
     // Remove
     let ReplaceFailed = $('<div>').css('text-align', 'center').appendTo(nodeOpts)
-    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').html('Remove Failed Node').click(ReplaceFailedNode).appendTo(ReplaceFailed)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(ReplaceFailedNode).html('Remove Failed Node').appendTo(ReplaceFailed)
 
 
     // Refres Properties
     let RefresProps = $('<div>').css('text-align', 'center').appendTo(nodeOpts)
-    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').html('Refresh Property List').click(getProperties).appendTo(RefresProps)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(getProperties).html('Refresh Property List').appendTo(RefresProps)
 
     // DB
     let DB = $('<div>').css('text-align', 'center').appendTo(nodeOpts)
-    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').html('View in Config Database').click(OpenDB).appendTo(DB)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(OpenDB).html('View in Config Database').appendTo(DB)
 
     // Endpoint Filter
     $('<div id="zwave-js-node-endpoint-filter">').appendTo(nodeOpts)
@@ -672,7 +702,7 @@ let ZwaveJsUI = (function () {
     RED.comms.subscribe(`/zwave-js/cmd`, handleControllerEvent)
     RED.comms.subscribe(`/zwave-js/status`, handleStatusUpdate)
 
-    getNodes();
+    GetNodes();
 
   }
   // Init done
@@ -689,13 +719,13 @@ let ZwaveJsUI = (function () {
         let eventType = data.event.split(' ')[0]
         switch (eventType) {
           case 'node':
-            getNodes()
+            GetNodes()
         }
         break
 
       case 'node-status':
         let nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${data.node}']`)
-        if (data.status == 'ready') {
+        if (data.status == 'READY') {
           nodeRow.find('.zwave-js-node-row-ready').html(renderReadyIcon(true))
         } else {
           nodeRow.find('.zwave-js-node-row-status').html(data.status.toUpperCase())
@@ -796,12 +826,40 @@ let ZwaveJsUI = (function () {
     let nodeId = topic.split('/')[3]
     if (nodeId != selectedNode) return
     switch (data.type) {
+
       case 'node-value':
         updateValue(data.payload)
         break
+
       case 'node-meta':
         updateMeta(data.payload, data.payload.metadata)
         break
+
+      case 'node-fwu-progress':
+        let Sent = data.payload.sent;
+        let Remain = data.payload.remain;
+        let Percent = (Sent / Remain) * 100;
+        $("#progressbar > div").css({ 'width': Percent + '%' })
+        break
+
+      case 'node-fwu-completed':
+        deselectCurrentNode();
+        FWRunning = false;
+        FirmwareForm.dialog('destroy');
+        switch (data.payload.status) {
+          case 253:
+            modalAlert('The firmware for node ' + nodeId + ' has been updated. Activation is pending.', 'ZWave Device Firmware Update')
+            break;
+          case 254:
+            modalAlert('The firmware for node ' + nodeId + ' has been updated.', 'ZWave Device Firmware Update')
+            break;
+          case 255:
+            modalAlert('The firmware for node ' + nodeId + ' has been updated. A restart is required (which may happen automatically)', 'ZWave Device Firmware Update')
+            break;
+          default:
+            modalAlert('The firmware for node ' + nodeId + ' failed to get updated. Error Code: ' + data.payload.status, 'ZWave Device Firmware Update')
+        }
+        break;
     }
   }
 
@@ -1129,43 +1187,49 @@ let ZwaveJsUI = (function () {
             return $('<div>').append(makeSetButton(val), labelSpan)
           })
         )
-      } else if (meta.type == 'number') {
-        // NUMBER
-        editor.append(
-          input,
-          makeSetButton(),
-          $('<span>').text(
-            makeInfoStr(['Default', 'default'], ['Min', 'min'], ['Max', 'max'], ['Step', 'step'])
-          )
-        )
-      } else if (meta.type == 'boolean') {
-        // BOOLEAN
-        editor.append(
-          $('<div>').append(
-            makeSetButton(true),
-            $('<span>').addClass('zwave-js-property-value-type-boolean').text('True')
-          ),
-          $('<div>').append(
-            makeSetButton(false),
-            $('<span>').addClass('zwave-js-property-value-type-boolean').text('False')
-          )
-        )
-      } else if (meta.type == 'string') {
-        // STRING
-        editor.append(
-          input,
-          makeSetButton(),
-          $('<span>').text(makeInfoStr(['Min Length', 'minLength'], ['Max Length', 'maxLength']))
-        )
-      } else if (meta.type == 'any') {
-        // ANY
-        editor.append(input, makeSetButton(), $('<span>').html('Caution: ValueType is "Any"'))
-        return
-      } else {
-        // How did you get here?
-        editor.append('Missing ValueType')
-        return
       }
+
+      if (meta.allowManualEntry === undefined ||  meta.allowManualEntry ) {
+        if (meta.type == 'number') {
+          // Number
+          editor.append(
+            input,
+            makeSetButton(),
+            $('<span>').text(
+              makeInfoStr(['Default', 'default'], ['Min', 'min'], ['Max', 'max'], ['Step', 'step'])
+            )
+          )
+        } else if (meta.type == 'boolean') {
+          // BOOLEAN
+          editor.append(
+            $('<div>').append(
+              makeSetButton(true),
+              $('<span>').addClass('zwave-js-property-value-type-boolean').text('True')
+            ),
+            $('<div>').append(
+              makeSetButton(false),
+              $('<span>').addClass('zwave-js-property-value-type-boolean').text('False')
+            )
+          )
+        } else if (meta.type == 'string') {
+          // STRING
+          editor.append(
+            input,
+            makeSetButton(),
+            $('<span>').text(makeInfoStr(['Min Length', 'minLength'], ['Max Length', 'maxLength']))
+          )
+        } else if (meta.type == 'any') {
+          // ANY
+          editor.append(input, makeSetButton(), $('<span>').html('Caution: ValueType is "Any"'))
+          return
+        } else {
+          // How did you get here?
+          editor.append('Missing ValueType')
+          return
+        }
+      }
+
+
     }
   }
 

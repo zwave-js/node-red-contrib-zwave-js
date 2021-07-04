@@ -459,6 +459,27 @@ module.exports = function (RED) {
             })
         }
 
+        async function NewAPI(msg, send, done, internal){
+
+            let Mode = msg.payload.mode;
+
+            switch (Mode) {
+
+                case "CCAPI":
+                    await CCAPI(msg,send);
+                    break;
+                case "ValueAPI":
+                    await ValueAPI(msg,send)
+                    break;
+                case "DriverAPI":
+                    break;
+                case "ControllerAPI":
+                    break;
+                case "AssociationsAPI":
+                    break;
+            }
+        }
+
         async function Input(msg, send, done, internal) {
 
             try {
@@ -467,33 +488,41 @@ module.exports = function (RED) {
                 let Class = msg.payload.class;
                 let Operation = msg.payload.operation;
                 let Params = msg.payload.params || []
+                let Mode = msg.payload.mode;
 
-                Log("debug", "REDCTL", "IN", "[ORIG: " + (internal ? "EVENT" : "DIRECT") + "] [NDE: " + Node + "]", printParams(Class, Operation, Params))
+                if (Mode !== undefined) {
 
-                switch (Class) {
-                    case "Controller":
-                        await Controller(msg, send)
-                        break;
-
-                    case "Unmanaged":
-                        await Unmanaged(msg, send);
-                        break;
-
-                    case "Driver":
-                        await DriverCMD(msg, send);
-                        break;
-
-                    case "Associations":
-                        await Associations(msg, send);
-                        break;
-
-                    default:
-                        await NodeFunction(msg, send);
-                        break;
+                   await  NewAPI(msg, send, done, internal);
                 }
+                else {
 
-                if (done) {
-                    done()
+                    Log("debug", "REDCTL", "IN", "[ORIG: " + (internal ? "EVENT" : "DIRECT") + "] [NDE: " + Node + "]", printParams(Class, Operation, Params))
+
+                    switch (Class) {
+                        case "Controller":
+                            await Controller(msg, send)
+                            break;
+
+                        case "Unmanaged":
+                            await Unmanaged(msg, send);
+                            break;
+
+                        case "Driver":
+                            await DriverCMD(msg, send);
+                            break;
+
+                        case "Associations":
+                            await Associations(msg, send);
+                            break;
+
+                        default:
+                            await NodeFunction(msg, send);
+                            break;
+                    }
+
+                    if (done) {
+                        done()
+                    }
                 }
             }
             catch (er) {
@@ -505,7 +534,74 @@ module.exports = function (RED) {
                     node.error(er);
                 }
             }
-        };
+
+        }
+
+        async function ValueAPI(msg, send) {
+
+            let Method = msg.payload.method;
+            let Params = msg.payload.params || []
+            let Node = msg.payload.node;
+
+            NodeCheck(Node);
+            let ReturnNode = {Node:Node}
+
+            switch (Method) {
+
+                case "getDefinedValueIDs":
+                    const VIDs = Driver.controller.nodes.get(Node).getDefinedValueIDs();
+                    Send(ReturnNode, "VALUE_ID_LIST", VIDs, send);
+                    break;
+
+                case "getValueMetadata":
+                    let M = Driver.controller.nodes.get(Node).getValueMetadata(Params[0]);
+                    let ReturnObjectM = {
+                        response: M,
+                        valueId: Params[0]
+                    }
+                    Send(ReturnNode, "GET_VALUE_METADATA_RESPONSE", ReturnObjectM, send);
+                    break;
+
+                case "getValue":
+                    let V = Driver.controller.nodes.get(Node).getValue(Params[0]);
+                    let ReturnObject = {
+                        response: V,
+                        valueId: Params[0]
+                    }
+                    Send(ReturnNode, "GET_VALUE_RESPONSE", ReturnObject, send);
+                    break;
+
+                case "setValue":
+                    await Driver.controller.nodes.get(Node).setValue(Params[0], Params[1]);
+                    break;
+
+                case "pollValue":
+                    await Driver.controller.nodes.get(Node).pollValue(Params[0]);
+                    break;;
+            }
+        }
+
+        async function CCAPI(msg,send){
+
+            let CC = msg.payload.cc;
+            let Method = msg.payload.method;
+            let Params = msg.payload.params || []
+            let Node = msg.payload.node;
+            let Endpoint = msg.payload.endpoint || 0;
+
+            NodeCheck(Node);
+            let ReturnNode = {Node:Node}
+
+            let NoEvents = [
+                "Entry Control.getSupportedKeys"
+            ]
+
+            let Result = await Driver.controller.nodes.get(Node).getEndpoint(Endpoint).invokeCCAPI(CommandClasses[CC],Method, Params)
+            if(NoEvents.includes(CC+"."+Method)){
+                Send(ReturnNode, "VALUE_UPDATED", Result, send)
+            }
+            return;
+        }
 
         function NodeCheck(ID, SkipReady) {
 

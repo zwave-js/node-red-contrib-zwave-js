@@ -3,6 +3,7 @@ const path = require('path')
 const _Context = {}
 let _RED
 
+
 const CONTROLLER_EVENTS = [
   'node added',
   'node removed',
@@ -12,6 +13,23 @@ var LatestStatus;
 const _SendStatus = () => {
   _RED.comms.publish(`/zwave-js/status`, {
     status: LatestStatus
+  })
+}
+
+
+let SendNodeStatus = (node, status) => {
+  _RED.comms.publish(`/zwave-js/cmd`, {
+    type: 'node-status',
+    node: node.id,
+    status: status
+  });
+}
+
+
+let SendNodeEvent = (type, node, payload) => {
+  _RED.comms.publish(`/zwave-js/cmd/${node.id}`, {
+    type: type,
+    payload: payload
   })
 }
 
@@ -44,8 +62,6 @@ module.exports = {
 
       req.once('end', (D) => {
 
-        console.log(_Buffer)
-
         let Code = req.params.code;
         let CodeBuffer = Buffer.from(Code, 'base64');
         let CodeString = CodeBuffer.toString('ascii');
@@ -59,6 +75,7 @@ module.exports = {
 
         let Success = () => {
           res.status(200).end()
+          SendNodeStatus({id:Parts[0]},"UPDATING FIRMWARE")
         }
 
         let Error = (err) => {
@@ -71,11 +88,6 @@ module.exports = {
     })
 
     RED.httpAdmin.post('/zwave-js/cmd', (req, res) => {
-      // Handles requests from the client for Controller and Node functions.
-      // Passes request to main module.
-      // Requests must be structued the same as the payload that would
-      //   normally be sent into the Node-RED node.
-      // Response is then passed back to client.
 
       if (req.body.noWait) {
         res.status(202).end()
@@ -105,19 +117,9 @@ module.exports = {
   register: (driver, request) => {
 
     driver.on('driver ready', () => {
-      // Creates listeners for all events on Controller and all Nodes.
-      // Passes events to client via comms.publish().
-      // Some events are published for the controller (even if node-related).
-      // Other events are published for a specific node which
-      //   will only go to clients that have that node selected.
-
 
       _Context.controller = driver.controller;
       _Context.input = request;
-
-      _RED.comms.publish(`/zwave-js/cmd`, {
-        type: 'controller-ready'
-      })
 
       CONTROLLER_EVENTS.forEach(event => {
         _Context.controller.on(event, (...args) => {
@@ -126,55 +128,33 @@ module.exports = {
           }
           _RED.comms.publish(`/zwave-js/cmd`, {
             type: 'controller-event',
-            event
+            event: event
           })
         })
       })
 
-      // Node Status
-      let emitNodeStatus = status => node => {
-        _RED.comms.publish(`/zwave-js/cmd`, {
-          type: 'node-status',
-          node: node.id,
-          status
-        })
-      }
-      let emitNodeAsleep = emitNodeStatus('ASLEEP')
-      let emitNodeAwake = emitNodeStatus('AWAKE')
-      let emitNodeDead = emitNodeStatus('DEAD')
-      let emitNodeAlive = emitNodeStatus('ALIVE')
-
-      // Node Event (Value)
-      let emitNodeEvent = type => (node, payload) => {
-        _RED.comms.publish(`/zwave-js/cmd/${node.id}`, {
-          type,
-          payload
-        })
-      }
-      let emitNodeValue = emitNodeEvent('node-value')
-      let emitNodeMeta = emitNodeEvent('node-meta')
+      
 
       let WireNodeEvents = node => {
-        // Status
-        node.on('sleep', emitNodeAsleep)
-        node.on('wake up', emitNodeAwake)
-        node.on('dead', emitNodeDead)
-        node.on('alive', emitNodeAlive)
 
-        // Readiness
-        node.on('ready', node => {
-          emitNodeStatus('ready')(node)
-        })
+        // Status
+        node.on('sleep', (node) => { SendNodeStatus(node, 'ASLEEP') })
+        node.on('wake up', (node) => { SendNodeStatus(node, 'AWAKE') })
+        node.on('dead', (node) => { SendNodeStatus(node, 'DEAD') })
+        node.on('alive', (node) => { SendNodeStatus(node, 'ALIVE') })
+        node.on('ready', (node) => { SendNodeStatus(node, 'READY') })
 
         // Values
-        node.on('value added', emitNodeValue)
-        node.on('value updated', emitNodeValue)
-        node.on('value removed', emitNodeValue)
-        node.on('value notification', emitNodeValue)
-        node.on('notification', emitNodeValue)
+        node.on('value added', (node, value) => { SendNodeEvent('node-value', node, value) })
+        node.on('value updated', (node, value) => { SendNodeEvent('node-value', node, value) })
+        node.on('value removed', (node, value) => { SendNodeEvent('node-value', node, value) })
+        node.on('value notification', (node, value) => { SendNodeEvent('node-value', node, value) })
+        node.on('notification', (node, value) => { SendNodeEvent('node-value', node, value) })
+        node.on('firmware update progress', (node, S, R) => { SendNodeEvent('node-fwu-progress', node,{sent:S, remain:R} ) })
+        node.on('firmware update finished', (node, Status) => { SendNodeEvent('node-fwu-completed', node,{status:Status} ) })
 
         // Meta
-        node.on('metadata update', emitNodeMeta)
+        node.on('metadata update', (node, value) => { SendNodeEvent('node-meta', node, value) })
       }
 
       _Context.controller.nodes.forEach(node => {
