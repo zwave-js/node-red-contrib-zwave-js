@@ -2,15 +2,15 @@
   
  - Uses the Z-Wave JS Value API
  - Ensures any Set method is followed up with an Updated value event
- - A little more involved.
+ - A little tricker for beginners.
 
-Here is what you can do.
+This mode can be seen as 'bossing it', its a little more involved, but is preferred by the pro's
 
 | method                              | params                                                |
 | ----------------------------------- | ----------------------------------------------------- |
 | getDefinedValueIDs                  |                                                       | 
 | getValueMetadata                    | [ValueID]                                             |  
-| setValue                            | [ValueID, Value, **Duration**: Object (Optional)]     |
+| setValue                            | [ValueID, Value, Options (Optional)]                  |
 | getValue                            | [ValueID]                                             |  
 | pollValue                           | [ValueID]                                             |  
 
@@ -47,12 +47,16 @@ return Message
 ```javascript
 /* Set a value */
 
+let Options = {
+    transitionDuration:"1m10s"
+}
+
 let Message = {
     payload: {
         node: 2,
         mode: "ValueAPI",
         method: "setValue",
-        params: [ValueID, Value, Duration (Optional)]
+        params: [ValueID, Value, Options]
     }
 }
 return Message
@@ -72,16 +76,4 @@ let Message = {
     }
 }
 return Message
-```
-
-## Object Structures 
-
-**Duration**
-```javascript
-{
-  Duration: {
-    value: Number,
-    unit: "seconds" | "minutes",
-  }
-}
 ```
