@@ -29,7 +29,7 @@ Lastly, the class names should now be as they appear in Z-Wave JS.
 
 ## ```operation``` is now ```method```
 This property now specfies the method that is to be called, and will differ based on the ```mode``` (and ```cc``` if using ```CCAPI```) that you are using.  
-The method names are now as they appear in Z-Wave JS.
+The method names should be as they appear in Z-Wave JS.
 
 ## Right!! so what do i do
 ```javascript
