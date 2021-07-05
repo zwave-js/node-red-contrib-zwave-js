@@ -25,8 +25,8 @@ If you were using a named ZWave class i.e ```BasicSwitch```, this new property i
 not only that - but the class names are now as they appear in Z-Wave JS.
 
 ## ```operation``` is now ```method```
-This property now specfies the method that is to be used, and will differ based on the ```mode``` (and ```cc``` if using ```CCAPI```) that you are using.  
-the method names are now  as they appear in Z-Wave JS.
+This property now specfies the method that is to be called, and will differ based on the ```mode``` (and ```cc``` if using ```CCAPI```) that you are using.  
+The method names are now as they appear in Z-Wave JS.
 
 ## Right!! so what do i do
 ```javascript
