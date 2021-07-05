@@ -1,5 +1,3 @@
-const { Console } = require("console");
-
 module.exports = function (RED) {
     const SP = require("serialport");
     const FMaps = require('./FunctionMaps.json')
