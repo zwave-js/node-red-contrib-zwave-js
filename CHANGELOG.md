@@ -1,7 +1,7 @@
   # node-red-contrib-zwave-js Change Log
 
   - 4.0.0 **Possible Breaking Changes**, **Deprecation Warnings**
-    - MAJOR API Transition : [PLEASE READ](/APIChange.md)
+    - MAJOR API Transition : [PLEASE SEE MIGRATION GUIDE](/APIChange.md)
     - Added Node Firmware Update UI
     - Added Network Map UI
     - Added Association Group Managment UI
