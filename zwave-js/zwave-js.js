@@ -1299,7 +1299,7 @@ module.exports = function (RED) {
             let Node = msg.payload.node;
 
             NodeCheck(Node);
-            let ReturnNode = { Node: Node }
+            let ReturnNode = { id: Node }
 
             switch (Method) {
 
@@ -1347,12 +1347,15 @@ module.exports = function (RED) {
             let Method = msg.payload.method;
             let Params = msg.payload.params || []
             let Node = msg.payload.node;
-            let Endpoint = msg.payload.endpoint || 0;
+            let Endpoint = msg.payload.endpoint || 0
             let EnumSelection = msg.payload.enums;
-            let IsEventResponse = msg.payload.responseThroughEvent || true;
+            let IsEventResponse  = true;
+            if(msg.payload.responseThroughEvent !== undefined){
+                IsEventResponse = msg.payload.responseThroughEvent;
+            }
 
             NodeCheck(Node);
-            let ReturnNode = { Node: Node }
+            let ReturnNode = { id: Node }
 
             if (EnumSelection !== undefined) {
                 let ParamIndexs = Object.keys(EnumSelection);
