@@ -2,7 +2,7 @@
   
  - Uses the Z-Wave JS Value API
  - Ensures any Set method is followed up with an Updated value event
- - A little tricker for beginners.
+ - A little trickier for beginners.
 
 This mode can be seen as 'bossing it', its a little more involved, but is preferred by the pro's
 
@@ -28,7 +28,7 @@ But if you're recovering from some downtime, the cahced values may be too far ou
 and will as a result, update the cache.
 
 ## Example 101  
-**NOTE:** You do not need to specify the ```node``` property IF the message, is going through the **ZWave Device** node.  
+**NOTE:** You do not need to specify the ```node``` property IF! the message, is going through the **ZWave Device** node.  
 
 ```javascript
 /* Get all ValueID's for a node */
@@ -56,7 +56,7 @@ let Message = {
         node: 2,
         mode: "ValueAPI",
         method: "setValue",
-        params: [ValueID, Value, Options]
+        params: [ValueID, Value, Options] // Options is not required
     }
 }
 return Message

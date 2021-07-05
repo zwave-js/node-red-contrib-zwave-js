@@ -67,7 +67,7 @@ Note: if an internal device config is found to have the same identifiers, the on
 Please also note, the specified directory will be recursively scanned.   
 
 **Disk IO Throttle**  
-If using **Unmanaged** Mode (see further down), the values received from **GetValue**, will be from a cache.  
+If using the **ValueAPI** Mode (see further down), the values received from **getValue**, will be from a cache.  
 This cache is periodically written to disk. This setting allows you to control that behavioir.  
 Unless there is a specific reason to do so - its best to leave it as 'Normal'
 

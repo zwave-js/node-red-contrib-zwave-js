@@ -117,3 +117,5 @@ let Message = {
 }
 return Message
 ```
+
+For a list of CC's, please view the Z-Wave JS documentation [Here](https://zwave-js.github.io/node-zwave-js/#/api/CCs/index)
