@@ -24,7 +24,7 @@ Possible values are:
  
 ## New ```cc``` property
 If you were using a named ZWave class i.e ```BasicSwitch```, this new property is used to specify such class.  
-This property is only requied if ```mode``` is set to ```CCAPI```.  
+This property is only required if ```mode``` is set to ```CCAPI```.  
 Lastly, the class names should now be as they appear in Z-Wave JS.
 
 ## ```operation``` is now ```method```
