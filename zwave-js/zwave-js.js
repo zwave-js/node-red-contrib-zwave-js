@@ -573,7 +573,12 @@ module.exports = function (RED) {
                     break;
 
                 case "setValue":
-                    await Driver.controller.nodes.get(Node).setValue(Params[0], Params[1]);
+                    if(Params.length > 2){
+                        await Driver.controller.nodes.get(Node).setValue(Params[0], Params[1],Params[2]);
+                    }
+                    else{
+                        await Driver.controller.nodes.get(Node).setValue(Params[0], Params[1]);
+                    }
                     break;
 
                 case "pollValue":
