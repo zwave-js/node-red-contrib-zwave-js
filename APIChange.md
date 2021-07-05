@@ -22,8 +22,8 @@ Possible values are:
 
  So, with that in mind, this is what you do.
 
- ```class: "Unmanaged"```        --> ```mode: "ValueAPI"```  
- ```class: "Some-ZWAVE-Class"``` --> ```mode: "CCAPI"```
+ ```class: "Unmanaged"``` is now ```mode: "ValueAPI"```  
+ ```class: "Some-ZWAVE-Class"``` is now ```mode: "CCAPI"```
  
 
 
