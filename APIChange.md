@@ -6,6 +6,8 @@ Over the last few months, I have become increasingly unhappy, in that the node h
 The old APIs are now set for removal and will be removed in the next major release (wich will happen fairly rapidly).  
 Below, I set out the changes that you will need to make - and I suggest you make these changes after updating to V4.
 
+without further ado.  
+
 ## ```class``` is now ```mode```
 Currently, a ```class``` property specifies the area of interest that you are targeting.  
 This can be ```Unmanaged```, ```Controller```, ```Driver```, ```Associations``` or a name of a Z-Wave Class.
