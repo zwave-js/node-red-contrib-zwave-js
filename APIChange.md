@@ -11,7 +11,7 @@ Currently, a ```class``` property specifies the area of interest that you are ta
 This can be ```Unmanaged```, ```Controller```, ```Driver```, ```Associations``` or a name of a Z-Wave Class.
 
 This is wrong! And is now scrapped - it has been replaced with a ```mode``` property.  
-This ```mode``` property now instructs the module as to what API is to be used, for your message.
+This ```mode``` property now instructs the module as to what API is to be used for your message.
 
 Possible values are:
  - ```CCAPI``` : The Z-Wave JS Command Class API
