@@ -11,7 +11,7 @@ Currently, a ```class``` property specifies the area of interest that you are ta
 This can be ```Unmanaged```, ```Controller```, ```Driver```, ```Associations``` or a name of a Z-Wave Class.
 
 This is wrong! And is now scrapped - it has been replaced with a ```mode``` property.  
-this ```mode``` now instructs the module as to what API is to be used, for your message.
+this ```mode``` property now instructs the module as to what API is to be used, for your message.
 
 Possible values are:
  - ```CCAPI``` : The Z-Wave JS Command Class API
@@ -25,8 +25,34 @@ If you were using a named ZWave class i.e ```BasicSwitch```, this new property i
 not only that - but the class names are now as they appear in Z-Wave JS.
 
 ## ```operation``` is now ```method```
-This property now specfies the method that is to be used, and will differ based on the ```mode``` that you are using.  
+This property now specfies the method that is to be used, and will differ based on the ```mode``` (and ```cc``` if using ```CCAPI```) that you are using.  
 the method names are now  as they appear in Z-Wave JS.
+
+## Right!! so what do i do
+```javascript
+/* This */
+let Message = {
+    payload: {
+        node: 5,
+        class: "WakeInterval",
+        operation: "Set",
+        params: [3600]
+    }
+}
+return Message;
+
+/* Is now this */
+let Message = {
+    payload: {
+        node: 5,
+        mode: "CCAPI"
+        class: "Wake Up",
+        operation: "setInterval",
+        params: [3600]
+    }
+}
+return Message;
+```
 
 
 ```javascript
