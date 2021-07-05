@@ -116,7 +116,6 @@ Here is the ```mode``` and ```method``` list
    - stopExclusion
    - proprietaryFunction
  - DriverAPI
-   - getEnums
    - getValueDB
  - AssociationsAPI
    - getAssociationGroups
@@ -126,7 +125,6 @@ Here is the ```mode``` and ```method``` list
    - addAssociations
    - removeAssociations
    - removeNodeFromAllAssociations
-
 
 ## Duration is no longer an Object
 Specifying a duration is no longer achieved using an Object, it is now a string.
