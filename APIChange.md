@@ -78,6 +78,52 @@ let Message = {
 return Message;
 ```
 
+This new design has massive amounts of benefit - espcially with the CC API Approach (fomerly Managed)  
+It means, any CC that is offered by Z-Wave JS, can now be used without needing to use the Value API (fomerly Unmanaged)  
+
+Here is the ```mode``` and ```method``` list
+ - CCAPI
+   - ```method``` is only limited to what is supported on the ```cc``` and ```cc``` is only limited by Z-Wave JS
+ - ValueAPI
+   - getDefinedValueIDs
+   - getValueMetadata
+   - getValue
+   - setValue
+   - pollValue
+ - ControllerAPI
+   - beginFirmwareUpdate
+   - abortFirmwareUpdate
+   - getRFRegion
+   - setRFRegion
+   - toggleRF
+   - getNodes
+   - keepNodeAwake
+   - getNodeNeighbors 
+   - setNodeName
+   - setNodeLocation
+   - refreshInfo
+   - hardReset
+   - beginHealingNetwork
+   - stopHealingNetwork
+   - removeFailedNode
+   - replaceFailedNode
+   - beginInclusion
+   - stopInclusion
+   - beginExclusion
+   - stopExclusion
+   - proprietaryFunction
+ - DriverAPI
+   - getEnums
+   - getValueDB
+ - AssociationsAPI
+   - getAssociationGroups
+   - getAllAssociationGroups
+   - getAssociations
+   - getAllAssociations
+   - addAssociations
+   - removeAssociations
+   - removeNodeFromAllAssociations
+
 
 ```javascript
 /* The Command Calss API Approach */
@@ -141,51 +187,9 @@ And the Value API approach
 }
 ```
 
-This new design has Massive amounts of benenfit - espcially with the CC API Approach (AKA Managed)  
-It means, the what was called Managed Mode - can now use Any CC that is offered by Z-Wave JS
 
-Here is the ```mode``` and ```method``` list
- - CCAPI
-   - ```method``` is only limited to what is supported on the ```cc``` and ```cc``` is only limited by Z-Wave JS
- - ValueAPI
-   - getDefinedValueIDs
-   - getValueMetadata
-   - getValue
-   - setValue
-   - pollValue
- - ControllerAPI
-   - beginFirmwareUpdate
-   - abortFirmwareUpdate
-   - getRFRegion
-   - setRFRegion
-   - toggleRF
-   - getNodes
-   - keepNodeAwake
-   - getNodeNeighbors 
-   - setNodeName
-   - setNodeLocation
-   - refreshInfo
-   - hardReset
-   - beginHealingNetwork
-   - stopHealingNetwork
-   - removeFailedNode
-   - replaceFailedNode
-   - beginInclusion
-   - stopInclusion
-   - beginExclusion
-   - stopExclusion
-   - proprietaryFunction
- - DriverAPI
-   - getEnums
-   - getValueDB
- - AssociationsAPI
-   - getAssociationGroups
-   - getAllAssociationGroups
-   - getAssociations
-   - getAllAssociations
-   - addAssociations
-   - removeAssociations
-   - removeNodeFromAllAssociations
+
+
 
 Any ```method``` or ```cc``` will now use the **Real** name as used in Z-Wave JS  
 [See here for CC names](https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) - minus the "CC" part
