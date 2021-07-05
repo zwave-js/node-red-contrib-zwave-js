@@ -9,7 +9,8 @@
     - Fixed UI bug that stopped manaual entry for params with predefined values
     - **neighbors** property has now been removed in **NODE_LIST** (see Change log 3.4.0)
     - **Association** class has now been removed (see Change log 3.3.0)
-    - Unmanaged Mode now supports a duration
+    - Value API Mode now supports a duration
+    - Added ability to receive network statistics
     - Bump Z-Wave JS to 7.10.1
     - Bump serialport to 9.2.1
 

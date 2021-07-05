@@ -10,35 +10,7 @@ module.exports = function (RED) {
 
     const UI = require('./ui/server.js')
     UI.init(RED)
-
-    let NodeList = []; // used by HTTP Get Nodes (for device nodes)
-    var Logger;
-    var FileTransport; // Needed for Z-Wave JS logging.
-
-    // Log function
-    const Log = function (level, label, direction, tag1, msg, tag2) {
-
-        if (Logger !== undefined) {
-            let logEntry = {
-                direction: "  ",
-                message: msg,
-                level: level,
-                label: label,
-                timestamp: new Date().toJSON(),
-                multiline: Array.isArray(msg)
-            }
-            if (direction !== undefined) {
-                logEntry.direction = (direction === "IN" ? "« " : "» ")
-            }
-            if (tag1 !== undefined) {
-                logEntry.primaryTags = tag1
-            }
-            if (tag2 !== undefined) {
-                logEntry.secondaryTags = tag2
-            }
-            Logger.log(logEntry)
-        }
-    }
+    let NodeList = [];
 
     function Init(config) {
 
@@ -48,6 +20,33 @@ module.exports = function (RED) {
         const NodesReady = [];
         let AllNodesReady = false;
         var Driver;
+        var Logger;
+        var FileTransport;
+
+        // Log function
+        const Log = function (level, label, direction, tag1, msg, tag2) {
+
+            if (Logger !== undefined) {
+                let logEntry = {
+                    direction: "  ",
+                    message: msg,
+                    level: level,
+                    label: label,
+                    timestamp: new Date().toJSON(),
+                    multiline: Array.isArray(msg)
+                }
+                if (direction !== undefined) {
+                    logEntry.direction = (direction === "IN" ? "« " : "» ")
+                }
+                if (tag1 !== undefined) {
+                    logEntry.primaryTags = tag1
+                }
+                if (tag2 !== undefined) {
+                    logEntry.secondaryTags = tag2
+                }
+                Logger.log(logEntry)
+            }
+        }
 
         /* START DEPRECATION */
 
@@ -72,7 +71,7 @@ module.exports = function (RED) {
 
         }
 
-         async function OLDAssociations(msg, send) {
+        async function OLDAssociations(msg, send) {
 
             let Operation = msg.payload.operation
             let Params = msg.payload.params || [];
@@ -404,7 +403,7 @@ module.exports = function (RED) {
             return;
         }
 
-         async function OLDUnmanaged(msg, send) {
+        async function OLDUnmanaged(msg, send) {
 
             let Operation = msg.payload.operation
             let Node = msg.payload.node;
@@ -1064,7 +1063,7 @@ module.exports = function (RED) {
                             await ControllerAPI(msg, send)
                             break;
                         case "AssociationsAPI":
-                            await AssociationsAPI(msg,send);
+                            await AssociationsAPI(msg, send);
                             break;
                     }
                 }
@@ -1084,7 +1083,7 @@ module.exports = function (RED) {
             }
         }
 
-        async function ControllerAPI(msg, send) { 
+        async function ControllerAPI(msg, send) {
 
             let Method = msg.payload.method
             let Params = msg.payload.params || [];
@@ -1349,11 +1348,13 @@ module.exports = function (RED) {
             let Node = msg.payload.node;
             let Endpoint = msg.payload.endpoint || 0
             let EnumSelection = msg.payload.enums;
-            let IsEventResponse  = true;
-            if(msg.payload.responseThroughEvent !== undefined){
+            let ForceUpdate = msg.payload.forceUpdate
+
+            let IsEventResponse = true;
+            if (msg.payload.responseThroughEvent !== undefined) {
                 IsEventResponse = msg.payload.responseThroughEvent;
             }
-
+            
             NodeCheck(Node);
             let ReturnNode = { id: Node }
 
@@ -1366,10 +1367,25 @@ module.exports = function (RED) {
                 })
             }
 
-            let Result = await Driver.controller.nodes.get(Node).getEndpoint(Endpoint).invokeCCAPI(CommandClasses[CC], Method, Params)
-            if (!IsEventResponse) {
+            let Result = await Driver.controller.nodes.get(Node).getEndpoint(Endpoint).invokeCCAPI(CommandClasses[CC], Method, ...Params)
+            if (!IsEventResponse && ForceUpdate === undefined) {
                 Send(ReturnNode, "VALUE_UPDATED", Result, send)
             }
+
+            if(ForceUpdate !== undefined){
+
+                let ValueID = {
+                    endpoint:Endpoint,
+                    commandClass:CommandClasses[CC]
+                }
+                Object.keys(ForceUpdate).forEach((VIDK) =>{
+                    ValueID[VIDK] = ForceUpdate[VIDK]
+                })
+                await Driver.controller.nodes.get(Node).pollValue(ValueID) 
+
+            }
+
+
             return;
         }
 
@@ -1413,7 +1429,7 @@ module.exports = function (RED) {
             }
         }
 
-        async function AssociationsAPI(msg, send){
+        async function AssociationsAPI(msg, send) {
 
             let Method = msg.payload.method
             let Params = msg.payload.params || [];
@@ -1532,9 +1548,9 @@ module.exports = function (RED) {
 
             return;
 
-        } 
+        }
 
-       
+
         function printParams(Class, Operation, params) {
 
             let Lines = [];
@@ -1642,7 +1658,7 @@ module.exports = function (RED) {
             }
         }
 
-        
+
 
         Log("info", "REDCTL", undefined, undefined, "Starting 'Driver'")
         Driver.start()
