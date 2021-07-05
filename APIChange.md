@@ -156,6 +156,11 @@ Here is the ```mode``` and ```method``` list
    return Message;
    ```
 
+   One of the aims with these API changes, was to allow more dynamic handling with Z-Wave JS, i.e if a new CC becomes supported,  
+   it will 'just work' after bumping the Z-Wave JS lib without any needs to code for specifics (as was the old way).
+
+   Keep that in mind, for the next 2 chapters :)
+
    ## New ```responseThroughEvent``` property.
    In Z-Wave JS, a majority of results trigger an event, and it is the contents of that event, that is passed in to your flow.  
    For that reason, the call you make, is not doing the return its self - the triggered event is.  
@@ -178,4 +183,7 @@ Here is the ```mode``` and ```method``` list
    }
    return Message;
    ```
+
+    ## New ```enums``` property.
+
 
