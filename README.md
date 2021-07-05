@@ -206,7 +206,6 @@ Some Association methods require an Object, these are detailed at the bottom.
 | AssociationsAPI              | addAssociations                     | [**AssociationAddress**: Object, Group  ID: Number, **AssociationAddress**: Object[]] |
 | AssociationsAPI              | removeAssociations                  | [**AssociationAddress**: Object, Group  ID: Number, **AssociationAddress**: Object[]] |
 | AssociationsAPI              | removeNodeFromAllAssociations       | [Node ID: Number]                                     |
-| DriverAPI                    | getEnums                            |                                                       |
 | DriverAPI                    | getValueDB                          | [Node ID: Number[] (Optional)]                        |
 
 To start an in-secure Inclusion, you will do.  
