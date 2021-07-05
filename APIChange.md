@@ -125,80 +125,33 @@ Here is the ```mode``` and ```method``` list
    - removeNodeFromAllAssociations
 
 
-```javascript
-/* The Command Calss API Approach */
+   ## Duration is no longer an Object
+   Specifying a duration is no longer achived using an Object, it is now a string.
 
-/* Wake Up CC */
-{
-  payload: {
-    node: 2,
-    class: "BinarySwitch",
-    operation: "Set",
-    params: [3600] 
-  }
+   ```javascript
+/* This */
+let MyDuration = {
+    Duration: {
+        value: 70,
+        unit: "seconds"
+    }
 }
-```
 
-```javascript
-/* The Value API Approach */
-
-/* Set */
-{
-  payload: {
-    node: 2,
-    class: "Unmanaged",
-    operation: "Set",
-    params: [ValueID, Value] 
-  }
+let Message = {
+    payload: {
+        ....
+        params: [35, MuDuration]
+    }
 }
-```
+return Message;
 
-Taking the above Value API approach, what is actually happening behind the scene is this:  
-```Driver.Controller.nodes.get(2).setValue(ValueID, Value)```
-
-And the CC API approach, is using an awkward Look up table, to find the correct CC/Method.
-
-In V4, there are now new properties named ```mode```, ```cc``` & ```method```.  
-This ```mode``` property instructs the node what API should be used.
-
-Let's look at the Wake Up CC using the new API
-```javascript
-/* Wake Up CC */
-{
-  payload: {
-    node: 2,
-    mode: "CCAPI",
-    cc: "Wake Up",
-    method: "setInterval",
-    params: [3600] 
-  }
+/* Is now this */
+let Message = {
+    payload: {
+        ....
+        params: [35, "1m10s"]
+    }
 }
-```
-
-And the Value API approach
-```javascript
-{
-  payload: {
-    node: 2,
-    mode: "ValueAPI",
-    method: "setValue",
-    params: [ValueID,3600] 
-  }
-}
-```
-
-
-
-
-
-Any ```method``` or ```cc``` will now use the **Real** name as used in Z-Wave JS  
-[See here for CC names](https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) - minus the "CC" part
-
-Example CC: ```WakeInterval``` -> ```Wake Up```  
-Example Method: ```Set``` -> ```setInterval```
-
-## The 'What should I do' approach
- - Add a new ```mode``` property this should be either:  CCAPI | ControllerAPI | DriverAPI | AssociationsAPI | ValueAPI
- - ```class``` should now be renamed to ```cc``` - and only be used for the CCAPI ```mode```
- - ```operation``` should now be renamed to ```method``` this value is determined by what ```mode``` (and ```cc``` if using CCAPI) you are using.
+return Message;
+   ```
 
