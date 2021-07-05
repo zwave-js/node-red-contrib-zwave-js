@@ -136,11 +136,10 @@ let MyDuration = {
         unit: "seconds"
     }
 }
-
 let Message = {
     payload: {
-        
-        params: [35, MuDuration]
+        ....
+        params: [35, MyDuration]
     }
 }
 return Message;
@@ -148,7 +147,7 @@ return Message;
 /* Is now this */
 let Message = {
     payload: {
-        
+        ....
         params: [35, "1m10s"]
     }
 }
