@@ -31,7 +31,7 @@ Lastly, the class names should now be as they appear in Z-Wave JS.
 This property now specfies the method that is to be called, and will differ based on the ```mode``` (and ```cc``` if using ```CCAPI```) that you are using.  
 The method names should be as they appear in Z-Wave JS.
 
-## Right!! so what do i do
+## Right!! so what do i do (we'll use the Wake Up CC for demonstration)
 ```javascript
 /* This */
 let Message = {
@@ -64,7 +64,7 @@ let Message = {
         node: 5,
         class: "Unmanaged",
         operation: "SetValue",
-        params: [ValueAPI,3600]
+        params: [<ValueAPI>,3600]
     }
 }
 return Message;
@@ -75,7 +75,7 @@ let Message = {
         node: 5,
         mode: "ValueAPI",
         method: "setValue",
-        params: [ValueID,3600]
+        params: [<ValueID>,3600]
     }
 }
 return Message;
