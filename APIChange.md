@@ -199,5 +199,23 @@ Here is the ```mode``` and ```method``` list
     }
     ```
 
-    
+    Previously, this module for node red, referenced and converted the values based on known Enums for specific CCs.  
+    Now however, we no longer know the values in advanced, so you specify the enum to use within the message, allowing a suddenly introdcued CC (that uses Enums) to be used.  
+    This is done with an ```enums``` property - lest see how we use it.
 
+   ```javascript
+   let Message = {
+       payload: {
+           node: 5,
+           mode: "CCAPI",
+           cc: "User Code",
+           method: "set",
+           enums: {1:"UserIDStatus"}, // {Paramater Index: Enum name, Paramater Index: Enum name}
+           params: [5,"Enabled","1234"] // User 5, User Status, User Code
+
+       }
+   }
+   return Message;
+   ```
+
+   The above will convert parameter 1 (the 2nd parameter) to 0x01
