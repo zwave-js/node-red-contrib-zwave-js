@@ -129,7 +129,7 @@ Here is the ```mode``` and ```method``` list
 
 
 ## Duration is no longer an Object
-Specifying a duration is no longer achived using an Object, it is now a string.
+Specifying a duration is no longer achieved using an Object, it is now a string.
 
 ```javascript
 /* This */
