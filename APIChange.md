@@ -128,95 +128,94 @@ Here is the ```mode``` and ```method``` list
    - removeNodeFromAllAssociations
 
 
-   ## Duration is no longer an Object
-   Specifying a duration is no longer achived using an Object, it is now a string.
+## Duration is no longer an Object
+Specifying a duration is no longer achived using an Object, it is now a string.
 
-   ```javascript
-   /* This */
-   let MyDuration = {
-       Duration: {
-           value: 70,
-           unit: "seconds"
-       }
+```javascript
+/* This */
+let MyDuration = {
+    Duration: {
+       value: 70,
+       unit: "seconds"
    }
-   let Message = {
-       payload: {
-           ....
-           params: [35, MyDuration]
-       }
-   }
-   return Message;
-
-   /* Is now this */
-   let Message = {
-       payload: {
-           ....
-           params: [35, "1m10s"]
-       }
-   }
-   return Message;
-   ```
-
-   One of the aims with these API changes, was to allow more dynamic handling with Z-Wave JS, i.e if a new CC becomes supported,  
-   it will 'just work' after bumping the Z-Wave JS lib without any needs to code for specifics (as was the old way).
-
-   Keep that in mind, for the next 2 chapters :)
-
-   ## New ```responseThroughEvent``` property.
-   In Z-Wave JS, a majority of results trigger an event, and it is the contents of that event, that is passed in to your flow.  
-   For that reason, the call you make, is not doing the return its self - the triggered event is.  
-   If we were to return the contents of your call, you will end up with duplicated messages (one from the generated event, and one from the call)
-
-   However! some methods don't trigger an event, so for these, we do need to return the value that your call produces.  
-   One example is ```Entry Control``` -> ```getSupportedKeys```, it does not trigger an event.
-
-   So, to return the value we set ```responseThroughEvent``` to ```false``` (default is ```true```)
-
-   ```javascript
-   let Message = {
-       payload: {
-           node: 5,
-           mode: "CCAPI",
-           cc: "Entry Control",
-           method: "getSupportedKeys",
-           responseThroughEvent: false
-       }
-   }
-   return Message;
-   ```
-
-    ## New ```enums``` property.
-    Some of the CC's use enums for there values, an example is the ```User Code``` CC.  
-    When creating a new user, you specify the user status, and Z-Wave JS makes it easy to to so, using an Enum as below.
-
-    ```typescript
-    export enum UserIDStatus {
-	    Available = 0x00,
-	    Enabled,
-	    Disabled,
-	    Messaging,
-	    PassageMode,
-	    StatusNotAvailable = 0xfe,
+}
+let Message = {
+    payload: {
+       ....
+       params: [35, MyDuration]
     }
-    ```
+}
+return Message;
 
-    Previously, this module for node red, referenced and converted the values based on known Enums for specific CCs.  
-    Now however, we no longer know the values in advanced, so you specify the enum to use within the message, allowing a suddenly introdcued CC (that uses Enums) to be used.  
-    This is done with an ```enums``` property - lest see how we use it.
+/* Is now this */
+let Message = {
+    payload: {
+        ....
+        params: [35, "1m10s"]
+    }
+}
+return Message;
+```
 
-   ```javascript
-   let Message = {
-       payload: {
-           node: 5,
-           mode: "CCAPI",
-           cc: "User Code",
-           method: "set",
-           enums: {1:"UserIDStatus"}, // {Paramater Index: Enum name, Paramater Index: Enum name}
-           params: [5,"Enabled","1234"] // User 5, User Status, User Code
+One of the aims with these API changes, was to allow more dynamic handling with Z-Wave JS, i.e if a new CC becomes supported,  
+it will 'just work' after bumping the Z-Wave JS lib without any needs to code for specifics (as was the old way).
 
-       }
+Keep that in mind, for the next 2 chapters :)
+
+## New ```responseThroughEvent``` property.
+In Z-Wave JS, a majority of results trigger an event, and it is the contents of that event, that is passed in to your flow.  
+For that reason, the call you make, is not doing the return its self - the triggered event is.  
+If we were to return the contents of your call, you will end up with duplicated messages (one from the generated event, and one from the call)
+
+However! some methods don't trigger an event, so for these, we do need to return the value that your call produces.  
+One example is ```Entry Control``` -> ```getSupportedKeys```, it does not trigger an event.
+
+So, to return the value we set ```responseThroughEvent``` to ```false``` (default is ```true```)
+
+```javascript
+let Message = {
+    payload: {
+       node: 5,
+       mode: "CCAPI",
+       cc: "Entry Control",
+       method: "getSupportedKeys",
+       responseThroughEvent: false
    }
-   return Message;
-   ```
+}
+return Message;
+```
 
-   The above will convert parameter 1 (the 2nd parameter) to 0x01
+## New ```enums``` property.
+Some of the CC's use enums for there values, an example is the ```User Code``` CC.  
+When creating a new user, you specify the user status, and Z-Wave JS makes it easy to to so, using an Enum as below.
+
+```typescript
+export enum UserIDStatus {
+    Available = 0x00,
+    Enabled,
+    Disabled,
+    Messaging,
+    PassageMode,
+    StatusNotAvailable = 0xfe,
+}
+```
+
+Previously, this module for node red, referenced and converted the values based on known Enums for specific CCs.  
+Now however, we no longer know the values in advanced, so you specify the enum to use within the message, allowing a suddenly introdcued CC (that uses Enums) to be used.  
+This is done with an ```enums``` property - lest see how we use it.
+
+```javascript
+let Message = {
+    payload: {
+        node: 5,
+        mode: "CCAPI",
+        cc: "User Code",
+        method: "set",
+        enums: {1:"UserIDStatus"}, // {Paramater Index: Enum name, Paramater Index: Enum name}
+        params: [5,"Enabled","1234"] // User 5, User Status, User Code
+    }
+}
+return Message;
+```
+
+The above will convert parameter 1 (the 2nd parameter) to 0x01
