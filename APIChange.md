@@ -128,29 +128,29 @@ Here is the ```mode``` and ```method``` list
    ## Duration is no longer an Object
    Specifying a duration is no longer achived using an Object, it is now a string.
 
-```javascript
-/* This */
-let MyDuration = {
-    Duration: {
-        value: 70,
-        unit: "seconds"
-    }
-}
-let Message = {
-    payload: {
-        ....
-        params: [35, MyDuration]
-    }
-}
-return Message;
+   ```javascript
+   /* This */
+   let MyDuration = {
+       Duration: {
+           value: 70,
+           unit: "seconds"
+       }
+   }
+   let Message = {
+       payload: {
+           ....
+           params: [35, MyDuration]
+       }
+   }
+   return Message;
 
-/* Is now this */
-let Message = {
-    payload: {
-        ....
-        params: [35, "1m10s"]
-    }
-}
-return Message;
-```
+   /* Is now this */
+   let Message = {
+       payload: {
+           ....
+           params: [35, "1m10s"]
+       }
+   }
+   return Message;
+   ```
 
