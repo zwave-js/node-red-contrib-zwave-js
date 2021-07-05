@@ -45,10 +45,34 @@ return Message;
 let Message = {
     payload: {
         node: 5,
-        mode: "CCAPI"
-        class: "Wake Up",
-        operation: "setInterval",
+        mode: "CCAPI",
+        cc: "Wake Up",
+        method: "setInterval",
         params: [3600]
+    }
+}
+return Message;
+```
+
+```javascript
+/* And this */
+let Message = {
+    payload: {
+        node: 5,
+        class: "Unmanaged",
+        operation: "SetValue",
+        params: [ValueAPI,3600]
+    }
+}
+return Message;
+
+/* Is now this */
+let Message = {
+    payload: {
+        node: 5,
+        mode: "ValueAPI",
+        method: "setValue",
+        params: [ValueID,3600]
     }
 }
 return Message;
