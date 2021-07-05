@@ -8,19 +8,26 @@ Below, I set out the changes that you will need to make - and I suggest you make
 
 ## New 'mode' property
 Currently, a ```class``` property specifies the area of interest that you are targeting.  
-This can be 'Unmanaged', 'Controller', 'Driver', 'Associations' or a name of a Z-Wave Class.
+This can be ```Unmanaged```, ```Controller```, ```Driver```, ```Associations``` or a name of a Z-Wave Class.
 
 This is wrong! And is now scrapped - it has been replaced with a ```mode``` property.  
 this ```mode``` now instructs the module as to what API is to be used, for your message.
 
 Possible values are:
- - CCAPI : The Z-Wave JS Command Class API
- - ValueAPI : The Z-Wave JS Value API
- - ControllerAPI : Controller Based functions
- - DriverAPI : Driver based functions
- - AssociationsAPI : Association based functions
+ - ```CCAPI``` : The Z-Wave JS Command Class API
+ - ```ValueAPI``` : The Z-Wave JS Value API
+ - ```ControllerAPI``` : Controller based functions
+ - ```DriverAPI``` : Driver based functions
+ - ```AssociationsAPI``` : Association based functions
 
+ So, with that in mind, this is what you do.
+
+ ```class: "Unmanaged"```        --> ```mode: "ValueAPI"```
+ ```class: "Some-ZWAVE-Class"``` --> ```mode: "CCAPI"```
  
+
+
+
 
 
 ```javascript
