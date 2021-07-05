@@ -1,11 +1,27 @@
-# Please transition to the new API's
+# New API Migration Guide
 
 In V4, I have decided to completely overhall the APIs that this node exposes.  
 Over the last few months, I have become increasingly unhappy, in that the node hides the methods and CC names, that are actually being called up on.
 
-The old APIs are now set for removal and will be removed in the next major release (wich will happen fairly rapidly)
+The old APIs are now set for removal and will be removed in the next major release (wich will happen fairly rapidly).  
+Below, I set out the changes that you will need to make - and I suggest you make these changes after updating to V4.
 
-Currently, you target the various APIs using the **class** property in your message.
+## New 'mode' property
+Currently, a ```class``` property specifies the area of interest that you are targeting.  
+This can be 'Unmanaged', 'Controller', 'Driver', 'Associations' or a name of a Z-Wave Class.
+
+This is wrong! And is now scrapped - it has been replaced with a ```mode``` property.  
+this ```mode``` now instructs the module as to what API is to be used, for your message.
+
+Possible values are:
+ - CCAPI : The Z-Wave JS Command Class API
+ - ValueAPI : The Z-Wave JS Value API
+ - ControllerAPI : Controller Based functions
+ - DriverAPI : Driver based functions
+ - AssociationsAPI : Association based functions
+
+ 
+
 
 ```javascript
 /* The Command Calss API Approach */
@@ -14,7 +30,7 @@ Currently, you target the various APIs using the **class** property in your mess
 {
   payload: {
     node: 2,
-    class: "WakeInterval",
+    class: "BinarySwitch",
     operation: "Set",
     params: [3600] 
   }
