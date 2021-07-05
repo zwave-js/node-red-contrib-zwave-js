@@ -22,7 +22,7 @@ Possible values are:
 
  So, with that in mind, this is what you do.
 
- ```class: "Unmanaged"```        --> ```mode: "ValueAPI"```
+ ```class: "Unmanaged"```        --> ```mode: "ValueAPI"```  
  ```class: "Some-ZWAVE-Class"``` --> ```mode: "CCAPI"```
  
 
