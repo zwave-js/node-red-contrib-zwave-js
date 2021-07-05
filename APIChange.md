@@ -6,7 +6,7 @@ Over the last few months, I have become increasingly unhappy, in that the node h
 The old APIs are now set for removal and will be removed in the next major release (wich will happen fairly rapidly).  
 Below, I set out the changes that you will need to make - and I suggest you make these changes after updating to V4.
 
-## New 'mode' property
+## 'class' is now 'mode'
 Currently, a ```class``` property specifies the area of interest that you are targeting.  
 This can be ```Unmanaged```, ```Controller```, ```Driver```, ```Associations``` or a name of a Z-Wave Class.
 
@@ -19,15 +19,14 @@ Possible values are:
  - ```ControllerAPI``` : Controller based functions
  - ```DriverAPI``` : Driver based functions
  - ```AssociationsAPI``` : Association based functions
-
- So, with that in mind, this is what you do.
-
- ```class: "Unmanaged"``` is now ```mode: "ValueAPI"```  
- ```class: "Some-ZWAVE-Class"``` is now ```mode: "CCAPI"```
  
+## New 'cc' property
+If you were using a named ZWave class i.e ```BasicSwitch```, this new property is used to specify such class.  
+not only that - but the class names are now as they appear in Z-Wave JS.
 
-
-
+## ```operation``` is now ```method```
+This property now specfies the method that is to be used, and will differ based on the ```mode``` that you are using.  
+the method names are now  as they appear in Z-Wave JS.
 
 
 ```javascript
