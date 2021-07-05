@@ -185,5 +185,19 @@ Here is the ```mode``` and ```method``` list
    ```
 
     ## New ```enums``` property.
+    Some of the CC's use enums for there values, an example is the ```User Code``` CC.  
+    When creating a new user, you specify the user status, and Z-Wave JS makes it easy to to so, using an Enum as below.
 
+    ```typescript
+    export enum UserIDStatus {
+	    Available = 0x00,
+	    Enabled,
+	    Disabled,
+	    Messaging,
+	    PassageMode,
+	    StatusNotAvailable = 0xfe,
+    }
+    ```
+
+    
 
