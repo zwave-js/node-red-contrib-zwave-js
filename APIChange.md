@@ -156,3 +156,26 @@ Here is the ```mode``` and ```method``` list
    return Message;
    ```
 
+   ## New ```responseThroughEvent``` property.
+   In Z-Wave JS, a majority of results trigger an event, and it is the contents of that event, that is passed in to your flow.  
+   For that reason, the call you make, is not doing the return its self - the triggered event is.  
+   If we were to return the contents of your call, you will end up with duplicated messages (one from the generated event, and one from the call)
+
+   However! some methods don't trigger an event, so for these, we do need to return the value that your call produces.  
+   One example is ```Entry Control``` -> ```getSupportedKeys```, it does not trigger an event.
+
+   So, to return the value we set ```responseThroughEvent``` to ```false``` (default is ```true```)
+
+   ```javascript
+   let Message = {
+       payload: {
+           node: 5,
+           mode: "CCAPI",
+           cc: "Entry Control",
+           method: "getSupportedKeys",
+           responseThroughEvent: false
+       }
+   }
+   return Message;
+   ```
+
