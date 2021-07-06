@@ -4,7 +4,7 @@ let ZwaveJsUI = (function () {
   let FWRunning = false;
   function AbortUpdate() {
     if (FWRunning) {
-      ControllerCMD('ControllerAPI', 'abortFirmwareUpdate', [selectedNode])
+      ControllerCMD('ControllerAPI', 'abortFirmwareUpdate',undefined, [selectedNode])
         .then(() => {
           FirmwareForm.dialog('destroy');
         })
@@ -45,6 +45,26 @@ let ZwaveJsUI = (function () {
         })
     }
     reader.readAsArrayBuffer(FE);
+  }
+
+  function AssociationMGMT(){
+    let Options = {
+      draggable: false,
+      modal: true,
+      resizable: false,
+      width: '800',
+      height: '600',
+      title: "ZWave Association Management",
+      minHeight: 75,
+      buttons: {
+        Close: function () {
+          $(this).dialog('destroy');
+        }
+      }
+    }
+
+    let Form = $('<div>').css({ padding: 10 }).html('Please wait...');
+    Form.dialog(Options);
   }
 
   function FirmwareUpdate() {
@@ -159,7 +179,7 @@ let ZwaveJsUI = (function () {
         }
 
         let P = new Promise((res, rej) => {
-          ControllerCMD('ControllerAPI', 'getNodeNeighbors', [N.nodeId])
+          ControllerCMD('ControllerAPI', 'getNodeNeighbors', undefined,[N.nodeId])
             .then(({ node, object }) => {
               object.forEach((NodeNeighbor) => {
                 let Neighbor = _Nodes.filter((Node) => Node.id === NodeNeighbor)[0];
@@ -390,7 +410,7 @@ let ZwaveJsUI = (function () {
     }
   }
 
-  function ControllerCMD(mode, method, params, dontwait) {
+  function ControllerCMD(mode, method, node, params, dontwait) {
 
     let Options = {
       url: `zwave-js/cmd`,
@@ -401,6 +421,9 @@ let ZwaveJsUI = (function () {
     let Payload = {
       mode: mode,
       method: method
+    }
+    if (node !== undefined) {
+      Payload.node = node;
     }
     if (params !== undefined) {
       Payload.params = params;
@@ -432,33 +455,33 @@ let ZwaveJsUI = (function () {
   function StartInclude() {
     let Buttons = {
       'Yes (Secure)': function () {
-        ControllerCMD('ControllerAPI', 'beginInclusion', [false], true)
+        ControllerCMD('ControllerAPI', 'beginInclusion', undefined,[false], true)
       },
       'Yes (Insecure)': function () {
-        ControllerCMD('ControllerAPI', 'beginInclusion', [true], true)
+        ControllerCMD('ControllerAPI', 'beginInclusion', undefined,[true], true)
       }
     }
     modalPrompt('Begin the include process?', 'Include Mode', Buttons, true)
   }
 
   function StopInclude() {
-    ControllerCMD('ControllerAPI', 'stopInclusion', [], true)
+    ControllerCMD('ControllerAPI', 'stopInclusion', undefined,undefined, true)
   }
 
   function StartExclude() {
-    ControllerCMD('ControllerAPI', 'beginExclusion', [], true)
+    ControllerCMD('ControllerAPI', 'beginExclusion', undefined,undefined, true)
   }
 
   function StopExclude() {
-    ControllerCMD('ControllerAPI', 'stopExclusion', [], true)
+    ControllerCMD('ControllerAPI', 'stopExclusion', undefined,undefined, true)
   }
 
   function StartHeal() {
-    ControllerCMD('ControllerAPI', 'beginHealingNetwork', [], true)
+    ControllerCMD('ControllerAPI', 'beginHealingNetwork', undefined,undefined, true)
   }
 
   function StopHeal() {
-    ControllerCMD('ControllerAPI', 'stopHealingNetwork', [], true)
+    ControllerCMD('ControllerAPI', 'stopHealingNetwork', undefined,undefined, true)
   }
 
   function Reset() {
@@ -478,7 +501,7 @@ let ZwaveJsUI = (function () {
 
     let input = $(this).prev()
     if (input.is(':visible')) {
-      ControllerCMD('Controller', 'SetNodeName', [selectedNode, input.val()])
+      ControllerCMD('ControllerAPI', 'setNodeName',undefined, [selectedNode, input.val()])
         .then(({ node, object }) => {
           $('#zwave-js-node-list').find(`[data-nodeid='${node}'] .zwave-js-node-row-name`).html(object)
           if (node == selectedNode) {
@@ -499,7 +522,7 @@ let ZwaveJsUI = (function () {
 
     let input = $(this).prev()
     if (input.is(':visible')) {
-      ControllerCMD('Controller', 'SetNodeLocation', [selectedNode, input.val()])
+      ControllerCMD('ControllerAPI', 'setNodeLocation', undefined,[selectedNode, input.val()])
         .then(({ node, object }) => {
           $('#zwave-js-node-list').find(`[data-nodeid='${node}'] .zwave-js-node-row-location`).html("(" + object + ")")
           if (node == selectedNode) {
@@ -517,7 +540,7 @@ let ZwaveJsUI = (function () {
   }
 
   function InterviewNode() {
-    ControllerCMD('Controller', 'InterviewNode', [selectedNode])
+    ControllerCMD('ControllerAPI', 'refreshInfo', undefined,[selectedNode])
       .catch((err) => {
         if (err.status !== 504) {
           modalAlert(err.responseText, 'Interview Error')
@@ -539,7 +562,7 @@ let ZwaveJsUI = (function () {
   function RemoveFailedNode() {
     let Buttons = {
       'Yes - Remove': function () {
-        ControllerCMD('Controller', 'RemoveFailedNode', [selectedNode])
+        ControllerCMD('ControllerAPI', 'removeFailedNode', undefined,[selectedNode])
           .catch((err) => {
             if (err.status !== 504) {
               modalAlert(err.responseText, 'Could Not Remove Node')
@@ -553,7 +576,7 @@ let ZwaveJsUI = (function () {
   function ReplaceFailedNode() {
     let Buttons = {
       'Yes (Secure)': function () {
-        ControllerCMD('Controller', 'RemoveFailedNode', [selectedNode, false])
+        ControllerCMD('ControllerAPI', 'replaceFailedNode', undefined,[selectedNode, false])
           .catch((err) => {
             if (err.status !== 504) {
               modalAlert(err.responseText, 'Could Not Replace Node')
@@ -561,7 +584,7 @@ let ZwaveJsUI = (function () {
           })
       },
       'Yes (Insecure)': function () {
-        ControllerCMD('Controller', 'RemoveFailedNode', [selectedNode, true])
+        ControllerCMD('ControllerAPI', 'replaceFailedNode',undefined, [selectedNode, true])
           .catch((err) => {
             if (err.status !== 504) {
               modalAlert(err.responseText, 'Could Not Replace Node')
@@ -663,8 +686,11 @@ let ZwaveJsUI = (function () {
 
     // Remove
     let ReplaceFailed = $('<div>').css('text-align', 'center').appendTo(nodeOpts)
-    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(ReplaceFailedNode).html('Remove Failed Node').appendTo(ReplaceFailed)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(ReplaceFailedNode).html('Replace Failed Node').appendTo(ReplaceFailed)
 
+    // Association
+    let Association = $('<div>').css('text-align', 'center').appendTo(nodeOpts)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(AssociationMGMT).html('Association Management').appendTo(Association)
 
     // Refres Properties
     let RefresProps = $('<div>').css('text-align', 'center').appendTo(nodeOpts)
@@ -873,13 +899,12 @@ let ZwaveJsUI = (function () {
   }
 
   function getProperties() {
+
     updateNodeFetchStatus('Fetching properties...')
 
-    controllerRequest({
-      node: selectedNode,
-      class: 'Unmanaged',
-      operation: 'GetDefinedValueIDs'
-    }).then(({ object }) => buildPropertyTree(object))
+    ControllerCMD('ValueAPI','getDefinedValueIDs', selectedNode)
+    .then(({object}) => buildPropertyTree(object))
+
   }
 
   let uniqBy = (collection, ...props) => {
@@ -1010,28 +1035,19 @@ let ZwaveJsUI = (function () {
   }
 
   function getValue(valueId) {
-    // First get raw value
-    controllerRequest({
-      node: selectedNode,
-      class: 'Unmanaged',
-      operation: 'GetValue',
-      params: [valueId]
-    }).then(({ node, object: { valueId, response: value } }) => {
-      if (node != selectedNode) return
-      updateValue({ ...valueId, value })
 
-      // Then get meta data which will:
-      // 1. translate the value if possible
-      // 2. add tooltips for references
-      // 3. add edit options (if writable)
-      controllerRequest({
-        node: selectedNode,
-        class: 'Unmanaged',
-        operation: 'GetValueMetadata',
-        params: [valueId]
-      }).then(({ node, object: { valueId, response: meta } }) => {
-        if (!meta) return
-        if (node != selectedNode) return
+    ControllerCMD('ValueAPI','getValue',selectedNode,[valueId])
+    .then(({node, object: { valueId, response: value }}) =>{
+
+      if (node != selectedNode){
+        return
+      }
+      updateValue({ ...valueId, value })
+      ControllerCMD('ValueAPI','getValueMetadata',selectedNode,[valueId])
+      .then(({node, object: { valueId, response: meta } }) =>{
+        if(!meta || node != selectedNode){
+          return;
+        }
         updateMeta(valueId, meta)
       })
     })
@@ -1153,18 +1169,13 @@ let ZwaveJsUI = (function () {
           .css({ marginRight: 5 })
           .html('Set')
           .click(() => {
+
             if (val == undefined) val = input.val()
             if (meta.type == 'number') val = +val
 
-            // Step 3: Send value change request and close editor
-            controllerRequest({
-              node: selectedNode,
-              class: 'Unmanaged',
-              operation: 'SetValue',
-              params: [valueId, val],
-              noWait: true
-            })
-            editor.remove()
+            ControllerCMD('ValueAPI','setValue',selectedNode,[valueId,val],true)
+            editor.remove();
+
           })
       }
       function makeInfoStr(...fields) {
@@ -1248,15 +1259,6 @@ let ZwaveJsUI = (function () {
 
   function getPropertyRow(valueId) {
     return $(`#zwave-js-node-properties [data-propertyId="${makePropertyId(valueId)}"]`)
-  }
-
-  function controllerRequest(req) {
-    return $.ajax({
-      url: `zwave-js/cmd`,
-      method: 'POST',
-      contentType: 'application/json',
-      data: JSON.stringify(req)
-    })
   }
 
   function getLatestStatus(req) {

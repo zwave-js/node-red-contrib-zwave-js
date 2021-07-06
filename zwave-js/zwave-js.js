@@ -23,6 +23,9 @@ module.exports = function (RED) {
         var Logger;
         var FileTransport;
 
+        let NodeStats = {}
+        var ControllerStats;
+
         // Log function
         const Log = function (level, label, direction, tag1, msg, tag2) {
 
@@ -834,6 +837,11 @@ module.exports = function (RED) {
                 Send(N, "NODE_REMOVED")
             })
 
+            // Stats
+            Driver.controller.on("statistics updated",(S) =>{
+                ControllerStats = S
+            })
+
             // Include
             Driver.controller.on("inclusion started", (Secure) => {
                 Send(ReturnController, "INCLUSION_STARTED", { isSecureInclude: Secure })
@@ -967,6 +975,10 @@ module.exports = function (RED) {
                     UI.status("Nodes : " + NodesReady.toString() + " Are Ready.")
                     RED.events.emit("zwjs:node:ready:" + N.id);
                 }
+
+                Node.on("statistics updated",(S) =>{
+                    NodeStats[Node.id] = S
+                })
 
                 Node.on("firmware update finished", (N, S, T) => {
                     Send(N, "FIRMWARE_UPDATE_COMPLETE", S);
@@ -1112,11 +1124,11 @@ module.exports = function (RED) {
 
                 case "getRFRegion":
                     let RFR = await Driver.controller.getRFRegion();
-                    Send(ReturnController, "CURRENT_RF_REGION", Enums.RFRegion[RFR], send);
+                    Send(ReturnController, "CURRENT_RF_REGION", ZWaveJS.RFRegion[RFR], send);
                     break;
 
                 case "setRFRegion":
-                    await Driver.controller.setRFRegion(Enums.RFRegion[Params[0]]);
+                    await Driver.controller.setRFRegion(ZWaveJS.RFRegion[Params[0]]);
                     Send(ReturnController, "RF_REGION_SET", Params[0], send);
                     break;
 
@@ -1338,6 +1350,8 @@ module.exports = function (RED) {
                     await Driver.controller.nodes.get(Node).pollValue(Params[0]);
                     break;;
             }
+
+            return;
         }
 
         async function CCAPI(msg, send) {
@@ -1375,8 +1389,8 @@ module.exports = function (RED) {
             if(ForceUpdate !== undefined){
 
                 let ValueID = {
-                    endpoint:Endpoint,
-                    commandClass:CommandClasses[CC]
+                    commandClass:CommandClasses[CC],
+                    endpoint:Endpoint
                 }
                 Object.keys(ForceUpdate).forEach((VIDK) =>{
                     ValueID[VIDK] = ForceUpdate[VIDK]
@@ -1398,9 +1412,27 @@ module.exports = function (RED) {
             switch (Method) {
 
                 case "getNodeStatistics":
+                    if(Params.length < 1){
+                        Send(ReturnNode, "NODE_STATISTICS", NodeStats, send);
+                    }
+                    else{
+                        let Stats = {};
+                        Params.forEach((NID) =>{
+                            if(NodeStats.hasOwnProperty(NID)){
+                                Stats[NID] = NodeStats[NID];
+                            }
+                        })
+                        Send(ReturnNode, "NODE_STATISTICS", Stats, send);
+                    }
                     break;
 
                 case "getControllerStatistics":
+                    if(ControllerStats === undefined){
+                        Send(ReturnNode, "CONTROLER_STATISTICS", "Statistics Are Pending", send);
+                    }
+                    else{
+                        Send(ReturnNode, "CONTROLER_STATISTICS", ControllerStats, send);
+                    }
                     break;
 
 
