@@ -1397,10 +1397,15 @@ module.exports = function (RED) {
 
             switch (Method) {
 
+                case "getNodeStatistics":
+                    break;
+
+                case "getControllerStatistics":
+                    break;
+
+
                 case "getValueDB":
-
                     let Result = [];
-
                     if (Params.length < 1) {
                         Driver.controller.nodes.forEach((N, NI) => {
                             Params.push(N.id)
@@ -1427,6 +1432,8 @@ module.exports = function (RED) {
                     Send(ReturnNode, "VALUE_DB", Result, send);
                     break;
             }
+
+            return;
         }
 
         async function AssociationsAPI(msg, send) {

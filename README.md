@@ -130,27 +130,28 @@ Whatever your poison, the node will inject the following events, into your flow.
 | INTERVIEW_COMPLETE          | The source Node ID                  |                                 | The node has been interviewed     |
 | INTERVIEW_FAILED            | The source Node ID                  | Detailed Error Info             | Could not interview node          |
 | INTERVIEW_STARTED           | The source Node ID                  |                                 | Node interview started            |
-| NODE_LIST                   | "Controller"                        | ZWaveNode[]                     | Response to GetNodes              | 
-| VALUE_ID_LIST               | The source Node ID                  | ValueID[]                       | Response to GetDefinedValueIDs    | 
-| GET_VALUE_RESPONSE          | The source Node ID                  | Value & Value ID                | Response to GetValue              | 
-| GET_VALUE_METADATA_RESPONSE | The source Node ID                  | Metadata & Value ID             | Response to GetValueMetadata      | 
-| ENUM_LIST                   | "N/A"                               | All valid Enum Values           | Response to GetEnums              | 
-| ASSOCIATION_GROUPS          | The source Node ID                  | Association Group Info[]        | Response to GetAssociations       |  
-| ALL_ASSOCIATION_GROUPS      | The source Node ID                  | Association Group Info[]        | Response to GetAllAssociations    |  
-| ASSOCIATIONS                | The source Node ID                  | Configured Associations         | Response to GetAssociations       |  
-| ALL_ASSOCIATIONS            | The source Node ID                  | Configured Associations         | Response to GetAllAssociations    |  
+| NODE_LIST                   | "Controller"                        | ZWaveNode[]                     | Response to getNodes              | 
+| VALUE_ID_LIST               | The source Node ID                  | ValueID[]                       | Response to getDefinedValueIDs    | 
+| GET_VALUE_RESPONSE          | The source Node ID                  | Value & Value ID                | Response to getValue              | 
+| GET_VALUE_METADATA_RESPONSE | The source Node ID                  | Metadata & Value ID             | Response to getValueMetadata      | 
+| ASSOCIATION_GROUPS          | The source Node ID                  | Association Group Info[]        | Response to getAssociations       |  
+| ALL_ASSOCIATION_GROUPS      | The source Node ID                  | Association Group Info[]        | Response to getAllAssociations    |  
+| ASSOCIATIONS                | The source Node ID                  | Configured Associations         | Response to getAssociations       |  
+| ALL_ASSOCIATIONS            | The source Node ID                  | Configured Associations         | Response to getAllAssociations    |  
 | ASSOCIATIONS_ADDED          | The source Node ID                  |                                 | Associations Were Added           |  
 | ASSOCIATIONS_REMOVED        | The source Node ID                  |                                 | Associations Were Removed         |  
 | ALL_ASSOCIATIONS_REMOVED    | The source Node ID                  |                                 | All Associations Were Removed     |  
-| VALUE_DB                    | "N/A"                               | A Structured Value DB object    | Response to GetValueDB            |  
-| NODE_NEIGHBORS              | The source Node ID                  | Array of Node IDs               | Response to GetNodeNeighbors      |  
-| NODE_KEEP_AWAKE             | The source Node ID                  | Bool : Keep Awake Status        | Response to KeepNodeAwake         |  
-| CURRENT_RF_REGION           | "Controller"                        | The current RF Region           | Response to GetRFRegion           |  
-| RF_REGION_SET               | "Controller"                        | The RF Region that was set      | Response to SetRFRegion           |  
-| RF_STATUS                   | "Controller"                        | The RF Status                   | Response to ToggleRF              |  
+| VALUE_DB                    | "N/A"                               | A Structured Value DB object    | Response to getValueDB            |  
+| NODE_NEIGHBORS              | The source Node ID                  | Array of Node IDs               | Response to getNodeNeighbors      |  
+| NODE_KEEP_AWAKE             | The source Node ID                  | Bool : Keep Awake Status        | Response to keepNodeAwake         |  
+| CURRENT_RF_REGION           | "Controller"                        | The current RF Region           | Response to getRFRegion           |  
+| RF_REGION_SET               | "Controller"                        | The RF Region that was set      | Response to setRFRegion           |  
+| RF_STATUS                   | "Controller"                        | The RF Status                   | Response to toggleRF              |  
 | FIRMWARE_UPDATE_COMPLETE    | The source Node ID                  | Result Status                   | Firmware Update finished          |  
 | FIRMWARE_UPDATE_STARTED     | The source Node ID                  | Target Chip                     | Firmware Update Started           |  
 | FIRMWARE_UPDATE_ABORTED     | The source Node ID                  |                                 | Firmware Update Aborted           |  
+| NODE_STATISTICS             | "N/A"                               | Stats object                    | Response to getNodeStatistics     |  
+| CONTROLER_STATISTICS        | "N/A"                               | Stats object                    | Response to getControllerStatistics |  
 
 
 
@@ -206,7 +207,9 @@ Some Association methods require an Object, these are detailed at the bottom.
 | AssociationsAPI              | addAssociations                     | [**AssociationAddress**: Object, Group  ID: Number, **AssociationAddress**: Object[]] |
 | AssociationsAPI              | removeAssociations                  | [**AssociationAddress**: Object, Group  ID: Number, **AssociationAddress**: Object[]] |
 | AssociationsAPI              | removeNodeFromAllAssociations       | [Node ID: Number]                                     |
-| DriverAPI                    | getValueDB                          | [Node ID: Number[] (Optional)]                        |
+| DriverAPI                    | getValueDB                          | [Node ID: ...Number (Optional)]                       |
+| DriverAPI                    | getNodeStatistics                   | [Node ID: ...Number (Optional)]                       |
+| DriverAPI                    | getControllerStatistics             |                                                       |
 
 To start an in-secure Inclusion, you will do.  
 ```javascript

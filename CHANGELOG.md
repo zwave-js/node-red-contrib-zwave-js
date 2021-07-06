@@ -10,7 +10,7 @@
     - **neighbors** property has now been removed in **NODE_LIST** (see Change log 3.4.0)
     - **Association** class has now been removed (see Change log 3.3.0)
     - Value API Mode now supports a duration
-    - Added ability to receive network statistics
+    - Added 2 more DriverAPI methods to retrieve network performance stats: **getNodeStatistics**, and **getControllerStatistics**
     - Bump Z-Wave JS to 7.10.1
     - Bump serialport to 9.2.1
 
