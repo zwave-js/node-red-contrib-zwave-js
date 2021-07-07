@@ -47,26 +47,6 @@ let ZwaveJsUI = (function () {
     reader.readAsArrayBuffer(FE);
   }
 
-  function AssociationMGMT(){
-    let Options = {
-      draggable: false,
-      modal: true,
-      resizable: false,
-      width: '800',
-      height: '600',
-      title: "ZWave Association Management",
-      minHeight: 75,
-      buttons: {
-        Close: function () {
-          $(this).dialog('destroy');
-        }
-      }
-    }
-
-    let Form = $('<div>').css({ padding: 10 }).html('Please wait...');
-    Form.dialog(Options);
-  }
-
   function FirmwareUpdate() {
     let Options = {
       draggable: false,
@@ -94,37 +74,101 @@ let ZwaveJsUI = (function () {
 
         FirmwareForm.html('');
 
-        $('<div>').css({ borderWidth: 1, borderColor: 'red', borderStyle: 'solid', marginTop: 10, width: 650, marginLeft: 'auto', marginRight: 'auto', textAlign: screenLeft, padding: 5 }).html('This software is provided as-is. The developer(s) of <strong>node-red-contrib-zwave-js</strong> or any libraries it<br />uses, are not responsible for any damage that may result from your attempt to upgrade the firmware.<br /><br />You are performing this upgrade, soley at your own risk.').appendTo(FirmwareForm)
+        let Template = $('#TPL_Firmware').html();
+        let templateScript = Handlebars.compile(Template);
+        let HTML = templateScript({nodes:object});
 
-        let Form = $('<div id="FWForm">').css({ width: 650, marginLeft: 'auto', marginRight: 'auto', marginTop: 10, textAlign: screenLeft, padding: 5 }).appendTo(FirmwareForm)
-        let Table = $('<table>')
+        FirmwareForm.append(HTML)
 
-        // TR 1 
-        let TR1 = $('<tr>').appendTo(Table);
-        $('<td>Target Node</td>').appendTo(TR1);
-        let TD2 = $('<td>').appendTo(TR1);
-        let Select = $('<select id="NODE_FW">').appendTo(TD2);
-        $('<option>Select Node...</option>').appendTo(Select)
-        object.forEach((N) => {
-          if (N.isControllerNode) {
-            return
-          }
-          let Name = N.name ?? 'No Name'
+      })
+  }
 
-          $('<option value="' + N.nodeId + '">' + N.nodeId + ' - ' + Name + '</option>').appendTo(Select)
+  let Groups = {}
+
+  function GMEndPointSelected() {
+
+    let Endpoint = $(event.target).val()
+    let GroupIDs = Object.keys(Groups[Endpoint])
+
+    let GroupSelector = $("#NODE_G")
+    GroupSelector.empty();
+    $('<option>Select Group...</option>').appendTo(GroupSelector)
+
+    GroupIDs.forEach((GID) => {
+      let Group = Groups[Endpoint][GID];
+      $('<option value="' + GID + '">' + GID + ' - ' + Group.label + '</option>').appendTo(GroupSelector)
+    })
+
+  }
+
+  function GMGroupSelected() {
+
+    let Endpoint = parseInt($("#NODE_EP").val());
+    let Group = parseInt($("#NODE_G").val());
+    
+    let AA = {
+      nodeId: parseInt(selectedNode),
+      endpoint: Endpoint
+    }
+
+    ControllerCMD('AssociationsAPI', 'getAssociations', undefined, [AA])
+      .then(({ object }) => {
+
+        let Targets = object.Associations.filter((A) => A.GroupID === Group)
+
+        // shoukd only be 1
+        Targets.forEach((AG) => {
+          AG.AssociationAddress.forEach((AD) => {
+            $("#zwave-js-associations-table").append('<tr><td>' + AD.nodeId + '</td><td>' + (AD.endpoint ?? '0 (Root Device)') + '</td><td><input class="ui-button ui-corner-all ui-widget" type="button" value="Delete"></td></tr>')
+          })
         })
+      });
 
-        // TR 2
-        let TR2 = $('<tr>').appendTo(Table);
-        $('<td>Firmware Update Target</td>').appendTo(TR2);
-        $('<td><input type="number" value="0" min="0" max="2" id="TARGET_FW"/>').appendTo(TR2);
 
-        // TR 3
-        let TR3 = $('<tr>').appendTo(Table);
-        $('<td>Firmware Update File</td>').appendTo(TR3);
-        $('<td><input type="file" id="FILE_FW"/>').appendTo(TR3);
 
-        Table.appendTo(Form)
+  }
+
+  function AssociationMGMT(){
+    let Options = {
+      draggable: false,
+      modal: true,
+      resizable: false,
+      width: '800',
+      height: '600',
+      title: "ZWave Association Management: Node "+selectedNode,
+      minHeight: 75,
+      buttons: {
+        Close: function () {
+          $(this).dialog('destroy');
+        }
+      }
+    }
+
+    let Form = $('<div>').css({ padding: 60 }).html('Please wait...');
+    Form.dialog(Options);
+
+    ControllerCMD('AssociationsAPI','getAllAssociationGroups',undefined,[selectedNode])
+      .then(({ object }) => {
+
+        let Template = $('#TPL_Associations').html();
+        let templateScript = Handlebars.compile(Template);
+        let HTML = templateScript({ endpoints: object });
+
+        Form.html('')
+        Form.append(HTML);
+
+        $("#NODE_EP").change(GMEndPointSelected)
+        $("#NODE_G").change(GMGroupSelected)
+
+        object.forEach((EP) => {
+          Groups[EP.Endpoint] = {}
+          EP.Groups.forEach((AG) => {
+            Groups[EP.Endpoint][AG.GroupID] = {
+              label: AG.AssociationGroupInfo.label,
+              maxNodes: AG.AssociationGroupInfo.maxNodes
+            }
+          })
+        })
 
       })
   }
@@ -303,10 +347,14 @@ let ZwaveJsUI = (function () {
               }
             }
 
-            let VIS = $('<div>').css({ width: '100%', height: '100%' }).attr('id', 'Network');
+            let Template = $('#TPL_Map').html();
+            let templateScript = Handlebars.compile(Template);
+            let HTML = templateScript({});
+
             Window.html('');
-            VIS.appendTo(Window)
-            Network = new vis.Network(VIS[0], data, options);
+            Window.append(HTML)
+
+            Network = new vis.Network($('#Network')[0], data, options);
             Network.on('click', (E) => {
 
               if (E.nodes.length > 0) {
@@ -321,27 +369,27 @@ let ZwaveJsUI = (function () {
                 let Children = []
                 RouteChildren.forEach((T) => Children.push(T.from))
 
-                let Table = $('<table style="width:100%">')
-                Table.append('<tr><td style="width:120px; vertical-align:top">Node ID</td><td>' + SelectedNode.id + '</td></tr>')
-                Table.append('<tr><td style="width:120px; vertical-align:top">Name</td><td>' + SelectedNode.name + '</td></tr>')
-                Table.append('<tr><td style="width:120px; vertical-align:top">Location</td><td>' + SelectedNode.location + '</td></tr>')
-                Table.append('<tr><td style="width:120px; vertical-align:top">Manufacturer/Model</td><td>' + SelectedNode.manufacturer + ' / ' + SelectedNode.model + '</td></tr>')
-                Table.append('<tr><td style="width:120px; vertical-align:top">Status</td><td>' + SelectedNode.status + '</td></tr>')
-                Table.append('<tr><td style="width:120px; vertical-align:top">Route Slaves</td><td style="word-break:break-word">' + Targets.toString() + '</td></tr>')
-
-                if (SelectedNode.canRoute) {
-                  Table.append('<tr><td style="width:120px; vertical-align:top">Route Clients</td><td style="word-break:break-word">' + Children.toString() + '</td></tr>')
-                }
-
-                $('#zwave-js-map-info-box').html('')
-                $('#zwave-js-map-info-box').append(Table)
-
+                $("#NM_ID").html(SelectedNode.id)
+                $("#NM_Name").html(SelectedNode.name)
+                $("#NM_LOC").html(SelectedNode.location)
+                $("#NM_MOD").html(SelectedNode.manufacturer + ' / ' + SelectedNode.model)
+                $("#NM_Status").html(SelectedNode.status)
+                $("#NM_Slaves").html(Targets.toString())
+                $("#NM_Clients").html(Children.toString())
+              
               } else {
-                $('#zwave-js-map-info-box').html('No Node Selected').appendTo(VIS);
+                $("#NM_ID").html('No Node Selected')
+                $("#NM_Name").html('&nbsp;')
+                $("#NM_LOC").html('&nbsp;')
+                $("#NM_MOD").html('&nbsp;')
+                $("#NM_Status").html('&nbsp;')
+                $("#NM_Slaves").html('&nbsp;')
+                $("#NM_Clients").html('&nbsp;')
               }
             })
+
             Network.stabilize()
-            $('<div class="zwave-js-selected-node-map-info" id="zwave-js-map-info-box">').html('No Node Selected').appendTo(VIS);
+
           })
       })
   }

@@ -47,9 +47,19 @@ module.exports = {
       res.status(200).end()
       _SendStatus()
     })
+
+    /* Scripts */
     RED.httpAdmin.get('/zwave-js/client.js', function (req, res) {
       res.sendFile(path.join(__dirname, 'client.js'))
     })
+    RED.httpAdmin.get('/zwave-js/vis-network.min.js', function (req, res) {
+      res.sendFile(path.join(__dirname, 'vis-network.min.js'))
+    })
+    RED.httpAdmin.get('/zwave-js/handlebars.min.js', function (req, res) {
+      res.sendFile(path.join(__dirname, 'handlebars.min.js'))
+    })
+   /* Scripts */
+   
     RED.httpAdmin.get('/zwave-js/styles.css', function (req, res) {
       res.sendFile(path.join(__dirname, 'styles.css'), { contentType: 'text/css' })
     })

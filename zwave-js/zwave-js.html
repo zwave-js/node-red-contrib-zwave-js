@@ -1,6 +1,133 @@
 ﻿
-<script src="zwave-js/client.js"></script>
-<script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<script type="text/javascript"  src="zwave-js/client.js"></script>
+<script type="text/javascript" src="zwave-js/vis-network.min.js"></script>
+<script type="text/javascript" src="zwave-js/handlebars.min.js"></script>
+
+<!-- templates used for modal dialogs *-->
+
+<!--Associations-->
+<script id="TPL_Associations" type="text/x-handlebars-template">
+
+    <table>
+        <tbody>
+            <tr>
+                <td>Endpoint</td>
+                <td>
+                    <select id="NODE_EP">
+                        <option>Select Endpoint...</option>
+                        {{#endpoints}}
+                          <option value="{{Endpoint}}">{{Endpoint}}</option>
+                        {{/endpoints}}
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>Association Group</td>
+                <td>
+                    <select id="NODE_G">
+                        <option>Select Group...</option>
+                    </select>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <br />
+    <br />
+    Target Node(s) for selected Endpoint &amp; Association Group
+    <table id="zwave-js-associations-table" cellpadding="5" cellspacing="0">
+        <tr>
+            <td style="width: 33%;">Node ID</td>
+            <td style="width: 33%;">Endpoint</td>
+            <td style="width: 33%;">Options</td>
+        </tr>
+        
+        
+    </table>
+    <div style="text-align: right;">
+        <input class="ui-button ui-corner-all ui-widget" type="button" value="Add">
+    </div>
+
+</script>
+
+<!--Map-->
+<script id="TPL_Map" type="text/x-handlebars-template">
+
+    <div class="zwave-js-selected-node-map-info">
+        <table style="width:100%">
+            <tr>
+                <td style="width:120px; vertical-align:top">Node ID</td>
+                <td id="NM_ID">No Node Selected</td>
+            </tr>
+            <tr>
+                <td style="width:120px; vertical-align:top">Name</td>
+                <td id="NM_Name">&nbsp;</td>
+            </tr>
+            <tr>
+                <td style="width:120px; vertical-align:top">Location</td>
+                <td id="NM_LOC">&nbsp;</td>
+            </tr>
+            <tr>
+                <td style="width:120px; vertical-align:top">Manufacturer/Model</td>
+                <td id="NM_MOD">&nbsp;</td>
+            </tr>
+            <tr>
+                <td style="width:120px; vertical-align:top">Status</td>
+                <td id="NM_Status">&nbsp;</td>
+            </tr>
+            <tr>
+                <td style="width:120px; vertical-align:top">Route Slaves</td>
+                <td id="NM_Slaves">&nbsp;</td>
+            </tr>
+            <tr>
+                <td style="width:120px; vertical-align:top">Route Clients</td>
+                <td id="NM_Clients">&nbsp;</td>
+            </tr>
+
+        </table>
+    </div>
+
+    <div id="Network" style="width: 100%; height: 100%;">
+    </div>
+
+</script>
+
+<!--Firmware-->
+<script id="TPL_Firmware" type="text/x-handlebars-template">
+
+    <div style="border: 1px solid red; margin-top: 10px; width: 650px; margin-left: auto; margin-right: auto; padding: 5px;">
+        This software is provided as-is. The developer(s) of <strong>node-red-contrib-zwave-js</strong> or any libraries it<br>
+        uses, are not responsible for any damage that may result from your attempt to upgrade the firmware.<br><br>You are performing this upgrade, soley at your own risk.
+    </div>
+
+    <div id="FWForm" style="width: 650px; margin-left: auto; margin-right: auto; margin-top: 10px; padding: 5px;">
+        <table>
+            <tbody>
+                <tr>
+                    <td>Target Node</td>
+                    <td>
+                        <select id="NODE_FW">
+                         <option>Select Node...</option>
+                            {{#nodes}}
+                                <option value="{{nodeId}}">{{nodeId}} - {{name}}</option>
+                            {{/nodes}}
+                        </select>
+                    </td>
+                    </tr>
+                    <tr>
+                        <td>Firmware Update Target</td>
+                        <td>
+                            <input type="number" value="0" min="0" max="2" id="TARGET_FW">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Firmware Update File</td>
+                        <td><input type="file" id="FILE_FW"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div> 
+</script>
 
 <link rel="stylesheet" href="zwave-js/styles.css">
 <script type="text/javascript">
