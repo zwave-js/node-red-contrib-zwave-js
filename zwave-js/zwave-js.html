@@ -1,5 +1,4 @@
-﻿
-<script type="text/javascript"  src="zwave-js/client.js"></script>
+﻿<script type="text/javascript"  src="zwave-js/client.js"></script>
 <script type="text/javascript" src="zwave-js/vis-network.min.js"></script>
 <script type="text/javascript" src="zwave-js/handlebars.min.js"></script>
 
@@ -325,13 +324,14 @@
 
     <p>
         <code>Input:</code><br />
-        A <strong>payload</strong> object containing a command to send to a ZWave device.<br />
-        <strong>params</strong> will be dependant on the <strong>class</strong> and <strong>operation</strong> being performed.
+        A <strong>payload</strong> object containing a command.<br />
+        <strong>params</strong> will be dependant on the type of command you are sending.
 <pre>
 {
    node: 2,
-   class: "Configuration",
-   operation: "Set",
+   mode: "CCAPI",
+   cc: "Configuration",
+   method: "set",
    params: [0x18,0x03,1]
 }
 </pre>
