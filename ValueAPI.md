@@ -3,6 +3,7 @@
  - Uses the Z-Wave JS Value API
  - Ensures any Set method is followed up with an Updated value event
  - A little trickier for beginners.
+ - May not work with all CC's (especially those with complex values)
 
 This mode can be seen as 'bossing it', its a little more involved, but is preferred by the pro's
 
