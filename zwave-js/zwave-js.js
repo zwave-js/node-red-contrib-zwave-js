@@ -489,14 +489,10 @@ module.exports = function (RED) {
         }
 
 
-        async function OldInput(msg, send, internal) {
+        async function OldInput(msg, send) {
 
-            let Node = msg.payload.node || "N/A"
+
             let Class = msg.payload.class;
-            let Operation = msg.payload.operation;
-            let Params = msg.payload.params || []
-
-            Log("debug", "REDCTL", "IN", "[ORIG: " + (internal ? "EVENT" : "DIRECT") + "] [NDE: " + Node + "]", printParams(Class, Operation, Params))
 
             switch (Class) {
                 case "Controller":
@@ -577,15 +573,8 @@ module.exports = function (RED) {
 
             let ZWJSC = Driver.controller.nodes.get(Node).getEndpoint(EP).commandClasses[Map.MapsToClass];
 
-            Log("debug", "REDCTL", undefined, "[MAP]", "Class: " + Class + "=" + Map.MapsToClass + ", Operation: " + Operation + "=" + Func.MapsToFunc)
-
             let WaitForResponse = (Func.hasOwnProperty("NoEvent") && Func.NoEvent);
-            if (WaitForResponse) {
-                Log("debug", "REDCTL", undefined, "[MAP]", "Will wait for result")
-            }
-            else {
-                Log("debug", "REDCTL", undefined, "[MAP]", "Result will be delivered via an event")
-            }
+
             if (WaitForResponse) {
                 let Result = await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
                 Send(ReturnNode, "VALUE_UPDATED", Result, send)
@@ -602,7 +591,6 @@ module.exports = function (RED) {
                 Object.keys(forceUpdate).forEach((VIDK) => {
                     VID[VIDK] = forceUpdate[VIDK]
                 })
-                Log("debug", "REDCTL", "OUT", "[FORCE-UPDATE]", printForceUpdate(Node, VID))
                 await Driver.controller.nodes.get(Node).pollValue(VID)
             }
 
@@ -731,32 +719,34 @@ module.exports = function (RED) {
         DriverOptions.storage = {};
 
         // Cache Dir
+        Log("debug", "NDERED", undefined, "[options] [storage.cacheDir]", Path.join(RED.settings.userDir, "zwave-js-cache"))
         DriverOptions.storage.cacheDir = Path.join(RED.settings.userDir, "zwave-js-cache");
+        
 
         // Custom  Config Path
         if (config.customConfigPath !== undefined && config.customConfigPath.length > 0) {
-            Log("debug", "REDCTL", undefined, "[OPTIONS] [storage.deviceConfigPriorityDir]", config.customConfigPath)
+            Log("debug", "NDERED", undefined, "[options] [storage.deviceConfigPriorityDir]", config.customConfigPath)
             DriverOptions.storage.deviceConfigPriorityDir = config.customConfigPath
         }
 
         // Disk throttle
         if (config.valueCacheDiskThrottle !== undefined && config.valueCacheDiskThrottle.length > 0) {
-            Log("debug", "REDCTL", undefined, "[OPTIONS] [storage.throttle]", config.valueCacheDiskThrottle)
+            Log("debug", "NDERED", undefined, "[options] [storage.throttle]", config.valueCacheDiskThrottle)
             DriverOptions.storage.throttle = config.valueCacheDiskThrottle
         }
 
         // Timeout 
         DriverOptions.timeouts = {};
         if (config.ackTimeout !== undefined && config.ackTimeout.length > 0) {
-            Log("debug", "REDCTL", undefined, "[OPTIONS] [timeouts.ack]", config.ackTimeout)
+            Log("debug", "NDERED", undefined, "[options] [timeouts.ack]", config.ackTimeout)
             DriverOptions.timeouts.ack = parseInt(config.ackTimeout);
         }
         if (config.controllerTimeout !== undefined && config.controllerTimeout.length > 0) {
-            Log("debug", "REDCTL", undefined, "[OPTIONS] [timeouts.response] ", config.controllerTimeout)
+            Log("debug", "NDERED", undefined, "[options] [timeouts.response]", config.controllerTimeout)
             DriverOptions.timeouts.response = parseInt(config.controllerTimeout);
         }
         if (config.sendResponseTimeout !== undefined && config.sendResponseTimeout.length > 0) {
-            Log("debug", "REDCTL", undefined, "[OPTIONS] [timeouts.report]", config.sendResponseTimeout)
+            Log("debug", "NDERED", undefined, "[options] [timeouts.report]", config.sendResponseTimeout)
             DriverOptions.timeouts.report = parseInt(config.sendResponseTimeout);
         }
 
@@ -765,38 +755,39 @@ module.exports = function (RED) {
             let RemoveBrackets = config.encryptionKey.replace("[", "").replace("]", "");
             let _Array = RemoveBrackets.split(",");
 
+            Log("debug", "NDERED", undefined, "[options] [networkKey]", "Provided as array","["+_Array+" bytes]")
+
             let _Buffer = [];
             for (let i = 0; i < _Array.length; i++) {
                 _Buffer.push(parseInt(_Array[i].trim()));
             }
 
-            Log("debug", "REDCTL", undefined, "[OPTIONS] [networkKey]", "Provided as Number[]", "(" + _Buffer.length + " bytes)")
             DriverOptions.networkKey = Buffer.from(_Buffer);
             canDoSecure = true;
         }
         else if (config.encryptionKey !== undefined && config.encryptionKey.length > 0) {
 
-            Log("debug", "REDCTL", undefined, "[OPTIONS] [networkKey]", "Provided as String", "(" + config.encryptionKey.length + " characters)")
+            Log("debug", "NDERED", undefined, "[options] [networkKey]", "Provided as string","["+config.encryptionKey.length+" characters]")
             DriverOptions.networkKey = Buffer.from(config.encryptionKey);
             canDoSecure = true;
         }
 
         try {
 
-            Log("info", "REDCTL", undefined, undefined, "Instantiating 'Driver' class", "(" + config.serialPort + ")")
+            Log("info", "NDERED", undefined, undefined, "Initializing Driver...")
             Driver = new ZWaveJS.Driver(config.serialPort, DriverOptions);
 
             if (config.sendUsageStatistics !== undefined && config.sendUsageStatistics) {
-                Log("info", "REDCTL", undefined, "[TELEMETRY]", "Enabling analytics reporting")
+                Log("info", "NDERED", undefined, "[TELEMETRY]", "Enabling...")
                 Driver.enableStatistics({ applicationName: ModulePackage.name, applicationVersion: ModulePackage.version })
             }
             else {
-                Log("info", "REDCTL", undefined, "[TELEMETRY]", "Disabling analytics reporting")
+                Log("info", "NDERED", undefined, "[TELEMETRY]", "Disabling...")
                 Driver.disableStatistics();
             }
         }
         catch (e) {
-            Log("error", "REDCTL", undefined, "[ERROR] [INIT]", "Instantiating 'Driver' failed: " + e.message)
+            Log("error", "NDERED", undefined, "[ERROR] [INIT]", e.message)
             node.error(e);
             return;
         }
@@ -804,7 +795,7 @@ module.exports = function (RED) {
         UI.register(Driver, Input)
 
         Driver.on("error", (e) => {
-            Log("error", "REDCTL", undefined, "[ERROR] [EVENT]", "'Driver' threw: " + e.message)
+            Log("error", "NDERED", undefined, "[ERROR] [DRIVER]", e.message)
             node.error(e);
         });
 
@@ -838,7 +829,7 @@ module.exports = function (RED) {
             })
 
             // Stats
-            Driver.controller.on("statistics updated",(S) =>{
+            Driver.controller.on("statistics updated", (S) => {
                 ControllerStats = S
             })
 
@@ -932,10 +923,10 @@ module.exports = function (RED) {
 
         });
 
-        node.on('close', (done) => {
+        node.on('close', (removed,done) => {
 
-            Log("info", "REDCTL", undefined, undefined, "Cleaning up")
-
+            let Type = (removed ? "DELETE" : "RESTART")
+            Log("info", "NDERED", undefined, "[SHUTDOWN] ["+Type+"]", "Cleaning up...")
             UI.unregister()
             Driver.destroy();
             RED.events.removeListener("zwjs:node:checkready", processReadyRequest);
@@ -976,7 +967,7 @@ module.exports = function (RED) {
                     RED.events.emit("zwjs:node:ready:" + N.id);
                 }
 
-                Node.on("statistics updated",(S) =>{
+                Node.on("statistics updated", (S) => {
                     NodeStats[Node.id] = S
                 })
 
@@ -1053,6 +1044,13 @@ module.exports = function (RED) {
 
         async function Input(msg, send, done, internal) {
 
+            var Type = "CONTROLLER";
+            if(internal !== undefined && internal){
+                Type = "EVENT"
+            }
+
+            Log("debug", "NDERED", "IN", "["+Type+"]", "Payload received.")
+
             try {
 
                 if (msg.payload.mode === undefined) {
@@ -1085,7 +1083,9 @@ module.exports = function (RED) {
                 }
             }
             catch (er) {
-                Log("error", "REDCTL", undefined, "[ERROR] [INPUT]", "Could not process payload: " + er.message)
+
+                Log("error", "NDERED", undefined, "[ERROR] [INPUT]", er.message)
+
                 if (done) {
                     done(er);
                 }
@@ -1101,6 +1101,8 @@ module.exports = function (RED) {
             let Params = msg.payload.params || [];
             let ReturnController = { id: "Controller" };
             let ReturnNode = { id: "" };
+
+            Log("debug", "NDERED", "IN", undefined, printParams("ControllerAPI", undefined, Method, Params))
 
             let SupportsNN = false;
 
@@ -1309,6 +1311,8 @@ module.exports = function (RED) {
             let Params = msg.payload.params || []
             let Node = msg.payload.node;
 
+            Log("debug", "NDERED", "IN", "[Node: " + Node + "]", printParams("ValueAPI", undefined, Method, Params))
+
             NodeCheck(Node);
             let ReturnNode = { id: Node }
 
@@ -1364,11 +1368,13 @@ module.exports = function (RED) {
             let EnumSelection = msg.payload.enums;
             let ForceUpdate = msg.payload.forceUpdate
 
+            Log("debug", "NDERED", "IN", "[Node: " + Node + "]", printParams("CCAPI", CC, Method, Params))
+
             let IsEventResponse = true;
             if (msg.payload.responseThroughEvent !== undefined) {
                 IsEventResponse = msg.payload.responseThroughEvent;
             }
-            
+
             NodeCheck(Node);
             let ReturnNode = { id: Node }
 
@@ -1386,16 +1392,17 @@ module.exports = function (RED) {
                 Send(ReturnNode, "VALUE_UPDATED", Result, send)
             }
 
-            if(ForceUpdate !== undefined){
+            if (ForceUpdate !== undefined) {
 
                 let ValueID = {
-                    commandClass:CommandClasses[CC],
-                    endpoint:Endpoint
+                    commandClass: CommandClasses[CC],
+                    endpoint: Endpoint
                 }
-                Object.keys(ForceUpdate).forEach((VIDK) =>{
+                Object.keys(ForceUpdate).forEach((VIDK) => {
                     ValueID[VIDK] = ForceUpdate[VIDK]
                 })
-                await Driver.controller.nodes.get(Node).pollValue(ValueID) 
+                Log("debug", "NDERED", undefined, "[POLL]", printForceUpdate(Node,ValueID))
+                await Driver.controller.nodes.get(Node).pollValue(ValueID)
 
             }
 
@@ -1409,16 +1416,18 @@ module.exports = function (RED) {
             let Params = msg.payload.params || []
             let ReturnNode = { id: "N/A" };
 
+            Log("debug", "NDERED", "IN", undefined, printParams("DriverAPI", undefined, Method, Params))
+
             switch (Method) {
 
                 case "getNodeStatistics":
-                    if(Params.length < 1){
+                    if (Params.length < 1) {
                         Send(ReturnNode, "NODE_STATISTICS", NodeStats, send);
                     }
-                    else{
+                    else {
                         let Stats = {};
-                        Params.forEach((NID) =>{
-                            if(NodeStats.hasOwnProperty(NID)){
+                        Params.forEach((NID) => {
+                            if (NodeStats.hasOwnProperty(NID)) {
                                 Stats[NID] = NodeStats[NID];
                             }
                         })
@@ -1427,10 +1436,10 @@ module.exports = function (RED) {
                     break;
 
                 case "getControllerStatistics":
-                    if(ControllerStats === undefined){
+                    if (ControllerStats === undefined) {
                         Send(ReturnNode, "CONTROLER_STATISTICS", "Statistics Are Pending", send);
                     }
-                    else{
+                    else {
                         Send(ReturnNode, "CONTROLER_STATISTICS", ControllerStats, send);
                     }
                     break;
@@ -1472,6 +1481,8 @@ module.exports = function (RED) {
 
             let Method = msg.payload.method
             let Params = msg.payload.params || [];
+
+            Log("debug", "NDERED", "IN", undefined, printParams("AssociationsAPI", undefined, Method, Params))
 
             let ReturnNode = { id: "" };
             switch (Method) {
@@ -1590,16 +1601,22 @@ module.exports = function (RED) {
         }
 
 
-        function printParams(Class, Operation, params) {
+        function printParams(Mode, CC, Method, Params) {
 
             let Lines = [];
-            Lines.push("[CLS: " + Class + "] [OP: " + Operation + "]")
+            if (CC !== undefined) {
+                Lines.push("[API: " + Mode + "] [CC: " + CC + "] [Method: " + Method + "]")
+            }
+            else {
+                Lines.push("[API: " + Mode + "] [Method: " + Method + "]")
+            }
 
-            if (params.length > 0) {
+
+            if (Params.length > 0) {
 
                 Lines.push("└─[params]")
                 let i = 0;
-                params.forEach((P) => {
+                Params.forEach((P) => {
 
                     if (typeof P === 'object') {
                         Lines.push("    " + (i + ": ") + JSON.stringify(P));
@@ -1614,27 +1631,10 @@ module.exports = function (RED) {
             return Lines
         }
 
-        function printObject(Event, Value) {
-
-            let Lines = [];
-            Lines.push("[EVT: " + Event + "]")
-
-            if (Value !== undefined) {
-
-                Lines.push("└─[object]")
-
-                let OBKeys = Object.keys(Value);
-                OBKeys.forEach((K) => {
-                    Lines.push("    " + (K + ": ") + Value[K]);
-                })
-            }
-            return Lines;
-        }
-
         function printForceUpdate(NID, Value) {
 
             let Lines = [];
-            Lines.push("[NDE: " + NID + "]")
+            Lines.push("[Node: " + NID + "]")
 
             if (Value !== undefined) {
 
@@ -1675,7 +1675,15 @@ module.exports = function (RED) {
                 PL.object = Value;
             }
 
-            Log("debug", "REDCTL", "OUT", "[NDE: " + Node.id + "]", printObject(Subject, Value))
+            let _Subject = ""
+            if(Node.id !== 'N/A' && Node.id !== 'Controller' ){
+                _Subject = "[Node: "+Node.id+"] ["+Subject+"]"
+            }
+            else{
+                _Subject = "["+Subject+"]"
+            }
+
+            Log("debug","NDERED","OUT",_Subject,"Forwarding payload...")
 
             if (send) {
                 send({ "payload": PL })
@@ -1702,10 +1710,9 @@ module.exports = function (RED) {
 
 
 
-        Log("info", "REDCTL", undefined, undefined, "Starting 'Driver'")
+        Log("info", "NDERED", undefined, undefined, "Starting Driver")
         Driver.start()
             .catch((e) => {
-                Log("error", "REDCTL", undefined, "[ERROR] [START]", "'Driver' threw: " + e.message)
                 node.error(e);
 
             })
