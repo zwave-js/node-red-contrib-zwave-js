@@ -1048,7 +1048,6 @@ let ZwaveJsUI = (function () {
 
         return {
           element: renderCommandClassElement(commandClass, commandClassName),
-          /* expanded: !AUTO_HIDE_CC.includes(commandClassName.replace(/\s/g, ' ')),*/
           expanded: $("#node-properties-auto-expand").is(':checked'),
           children: propsInCC.map(valueId => {
             return { element: renderPropertyElement(valueId) }
