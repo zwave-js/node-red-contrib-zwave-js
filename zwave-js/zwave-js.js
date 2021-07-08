@@ -1054,7 +1054,7 @@ module.exports = function (RED) {
             try {
 
                 if (msg.payload.mode === undefined) {
-                    await OldInput(msg, send, internal)
+                    await OldInput(msg, send)
                 }
                 else {
 
