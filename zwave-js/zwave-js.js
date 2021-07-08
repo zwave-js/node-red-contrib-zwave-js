@@ -1710,9 +1710,10 @@ module.exports = function (RED) {
 
 
 
-        Log("info", "NDERED", undefined, undefined, "Starting Driver")
+        Log("info", "NDERED", undefined, undefined, "Starting Driver...")
         Driver.start()
             .catch((e) => {
+                Log("error", "NDERED", undefined, "[ERROR] [DRIVER]", e.message)
                 node.error(e);
 
             })
