@@ -82,9 +82,9 @@ let Report = {
 Let Message = {
     payload: {
         node: 2,
-        mode: "CCAPI"
+        mode: "CCAPI",
         cc: "Notification",
-        operation: "sendReport",
+        method: "sendReport",
         params: [Report]
     }
 }
