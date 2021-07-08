@@ -1689,7 +1689,10 @@ module.exports = function (RED) {
                 "NOTIFICATION",
                 "VALUE_UPDATED",
                 "SLEEP",
-                "WAKE_UP"
+                "WAKE_UP",
+                "VALUE_ID_LIST",
+                "GET_VALUE_RESPONSE",
+                "GET_VALUE_METADATA_RESPONSE"
             ]
 
             if (AllowedSubjectsForDNs.includes(Subject)) {

@@ -23,11 +23,11 @@ module.exports = function (RED) {
         node.on('input', Input);
         async function Input(msg, send, done) {
 
-            let DisallowedClasses = ["Controller","Driver","Associations"]
+            let AllowedModes = ["CCAPI","ValueAPI"]
 
-            if(DisallowedClasses.includes(msg.payload.class)){
+            if(!AllowedModes.includes(msg.payload.mode)){
 
-                let ErrorMSG = "Classes "+DisallowedClasses+ " must be sent directly to the Controller Node.";
+                let ErrorMSG = "Only modes: "+AllowedModes+" are allowed through this node type.";
                 let Err =  new Error(ErrorMSG);
 
                 if (done) {

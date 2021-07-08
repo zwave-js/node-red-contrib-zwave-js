@@ -8,12 +8,12 @@
 <!--Associations-->
 <script id="TPL_Associations" type="text/x-handlebars-template">
 
-    <table>
+    <table style="margin-bottom: 20px;">
         <tbody>
             <tr>
                 <td>Endpoint</td>
                 <td>
-                    <select id="NODE_EP">
+                    <select id="NODE_EP" style="width: 150px;">
                         <option>Select Endpoint...</option>
                         {{#endpoints}}
                           <option value="{{Endpoint}}">{{Endpoint}}</option>
@@ -24,7 +24,7 @@
             <tr>
                 <td>Association Group</td>
                 <td>
-                    <select id="NODE_G">
+                    <select id="NODE_G" style="width: 150px;">
                         <option>Select Group...</option>
                     </select>
                 </td>
@@ -32,20 +32,19 @@
         </tbody>
     </table>
 
-    <br />
-    <br />
+
     Target Node(s) for selected Endpoint &amp; Association Group
     <table id="zwave-js-associations-table" cellpadding="5" cellspacing="0">
         <tr>
             <td style="width: 33%;">Node ID</td>
             <td style="width: 33%;">Endpoint</td>
-            <td style="width: 33%;">Options</td>
+            <td style="width: 33%;">&nbsp;</td>
         </tr>
         
         
     </table>
     <div style="text-align: right;">
-        <input class="ui-button ui-corner-all ui-widget" type="button" value="Add">
+        <input id="AMAddBTN" class="ui-button ui-corner-all ui-widget" type="button" value="Add">
     </div>
 
 </script>

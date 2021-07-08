@@ -1,5 +1,40 @@
 let ZwaveJsUI = (function () {
 
+  function modalAlert(message, title) {
+    let Buts = {
+      Ok: function () { }
+    }
+    modalPrompt(message, title, Buts);
+  }
+
+  function modalPrompt(message, title, buttons, addCancel) {
+
+    let Options = {
+      draggable: false,
+      modal: true,
+      resizable: false,
+      width: 'auto',
+      title: title,
+      minHeight: 75,
+      buttons: {}
+    }
+
+    Object.keys(buttons).forEach((BT) => {
+      Options.buttons[BT] = function () {
+        $(this).dialog('destroy');
+        buttons[BT]();
+      }
+    })
+
+    if (addCancel) {
+      Options.buttons['Cancel'] = function () {
+        $(this).dialog('destroy');
+      }
+    }
+
+    $('<div>').css({ padding: 10, maxWidth: 500, wordWrap: 'break-word' }).html(message).dialog(Options)
+  }
+
   var FirmwareForm;
   let FWRunning = false;
   function AbortUpdate() {
@@ -85,6 +120,64 @@ let ZwaveJsUI = (function () {
 
   let Groups = {}
 
+  function AddAssociation(){
+
+    let NI = $('<input>').attr('type','number').attr('value',1).attr('min',1)
+    let EI = $('<input>').attr('type','number').attr('value',0).attr('min',0)
+
+    let Buttons = {
+      Add: function () {
+        let PL = [
+          { nodeId: selectedNode, endpoint: parseInt($("#NODE_EP").val()) },
+          parseInt($("#NODE_G").val()),
+          [{ nodeId: parseInt(NI.val())}]
+        ]
+
+        if(parseInt(EI.val()) > 0){
+          PL[2][0].endpoint = EI.val(parseInt(EI.val()))
+        }
+
+        ControllerCMD('AssociationsAPI', 'addAssociations', undefined, PL)
+          .then(() => { GMGroupSelected() })
+          .catch((err) => {
+            modalAlert(err.responseText, "Association could not be added.")
+          })
+      }
+    }
+
+    let HTML = $('<div>').append('Node ID: ')
+    NI.appendTo(HTML)
+    HTML.append(' Endpoint: ');
+    EI.appendTo(HTML);
+
+    modalPrompt(HTML,'New Association',Buttons,true);
+  }
+
+  function DeleteAssociation() {
+
+    let Association = JSON.parse($(this).attr('data-address'))
+
+    let PL = [
+      { nodeId: selectedNode, endpoint: parseInt($("#NODE_EP").val()) },
+      parseInt($("#NODE_G").val()),
+      [Association]
+    ]
+
+    let Buttons = {
+      Yes: function () {
+        ControllerCMD('AssociationsAPI', 'removeAssociations', undefined, PL)
+          .then(() => { GMGroupSelected() })
+          .catch((err) => {
+            modalAlert(err.responseText, "Association Removal Failed")
+          })
+      }
+    }
+
+    modalPrompt('Are you sure you wish to remove this Association', 'Remove Association', Buttons, true)
+    
+
+  }
+
   function GMEndPointSelected() {
 
     let Endpoint = $(event.target).val()
@@ -101,6 +194,8 @@ let ZwaveJsUI = (function () {
 
   }
 
+  
+
   function GMGroupSelected() {
 
     let Endpoint = parseInt($("#NODE_EP").val());
@@ -116,11 +211,21 @@ let ZwaveJsUI = (function () {
 
         let Targets = object.Associations.filter((A) => A.GroupID === Group)
 
+        $("#zwave-js-associations-table").find("tr:gt(0)").remove();
+
         // shoukd only be 1
         Targets.forEach((AG) => {
           AG.AssociationAddress.forEach((AD) => {
-            $("#zwave-js-associations-table").append('<tr><td>' + AD.nodeId + '</td><td>' + (AD.endpoint ?? '0 (Root Device)') + '</td><td><input class="ui-button ui-corner-all ui-widget" type="button" value="Delete"></td></tr>')
-          })
+
+            let TR = $('<tr>')
+            $('<td>').html(AD.nodeId).appendTo(TR)
+            $('<td>').html(AD.endpoint ?? '0 (Root Device)').appendTo(TR)
+            let TD3 = $('<td>').css({textAlign:'right'}).appendTo(TR)
+            $('<input>').attr('type','button').addClass('ui-button ui-corner-all ui-widget').attr('value','Delete').attr('data-address',JSON.stringify(AD)).click(DeleteAssociation).appendTo(TD3)
+
+            $("#zwave-js-associations-table").append(TR)
+
+           })
         })
       });
 
@@ -144,7 +249,7 @@ let ZwaveJsUI = (function () {
       }
     }
 
-    let Form = $('<div>').css({ padding: 60 }).html('Please wait...');
+    let Form = $('<div>').css({ padding: 60,paddingTop:30 }).html('Please wait...');
     Form.dialog(Options);
 
     ControllerCMD('AssociationsAPI','getAllAssociationGroups',undefined,[selectedNode])
@@ -156,6 +261,8 @@ let ZwaveJsUI = (function () {
 
         Form.html('')
         Form.append(HTML);
+
+        $("#AMAddBTN").click(AddAssociation)
 
         $("#NODE_EP").change(GMEndPointSelected)
         $("#NODE_G").change(GMGroupSelected)
@@ -394,42 +501,7 @@ let ZwaveJsUI = (function () {
       })
   }
 
-  function modalAlert(message, title) {
-    let Buts = {
-      Ok: function () { }
-    }
-    modalPrompt(message, title, Buts);
-  }
-
-
-
-  function modalPrompt(message, title, buttons, addCancel) {
-
-    let Options = {
-      draggable: false,
-      modal: true,
-      resizable: false,
-      width: 'auto',
-      title: title,
-      minHeight: 75,
-      buttons: {}
-    }
-
-    Object.keys(buttons).forEach((BT) => {
-      Options.buttons[BT] = function () {
-        $(this).dialog('destroy');
-        buttons[BT]();
-      }
-    })
-
-    if (addCancel) {
-      Options.buttons['Cancel'] = function () {
-        $(this).dialog('destroy');
-      }
-    }
-
-    $('<div>').css({ padding: 10, maxWidth: 500, wordWrap: 'break-word' }).html(message).dialog(Options)
-  }
+ 
 
 
 
@@ -786,7 +858,6 @@ let ZwaveJsUI = (function () {
   }
 
   function handleControllerEvent(topic, data) {
-
 
     switch (data.type) {
       case 'controller-event':
