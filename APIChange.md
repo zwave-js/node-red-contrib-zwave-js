@@ -117,6 +117,8 @@ Here is the ```mode``` and ```method``` list
    - proprietaryFunction
  - DriverAPI
    - getValueDB
+   - getNodeStatistics
+   - getControllerStatistics
  - AssociationsAPI
    - getAssociationGroups
    - getAllAssociationGroups
