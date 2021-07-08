@@ -1,4 +1,4 @@
-# New API Migration Guide
+# New API (4.0.0) Migration Guide
 
 In V4, I have decided to completely overhall the APIs that this node exposes.  
 Over the last few months, I have become increasingly unhappy, in that the node hides the methods and CC names, that are actually being called up on.
