@@ -3,7 +3,7 @@
 In V4, I have decided to completely overhall the APIs that this node exposes.  
 Over the last few months, I have become increasingly unhappy, in that the node hides the methods and CC names, that are actually being called up on.
 
-The old APIs are now set for removal and will be removed in the next major release (wich will happen fairly rapidly).  
+The old APIs are now set for removal and will be removed very quicky.  
 Below, I set out the changes that you will need to make - and I suggest you make these changes after updating to V4.
 
 without further ado.  
