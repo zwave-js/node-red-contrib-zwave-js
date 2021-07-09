@@ -42,6 +42,8 @@ let ZwaveJsUI = (function () {
       ControllerCMD('ControllerAPI', 'abortFirmwareUpdate',undefined, [selectedNode])
         .then(() => {
           FirmwareForm.dialog('destroy');
+          let nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${selectedNode}']`)
+          nodeRow.find('.zwave-js-node-row-status').html('UPDATE ABORTED')
         })
     }
     else {
@@ -73,6 +75,8 @@ let ZwaveJsUI = (function () {
         .then(() => {
           FWRunning = true;
           selectNode(NID)
+          $(":button:contains('Close')").prop("disabled", true).addClass("ui-state-disabled");
+          $(":button:contains('Begin Update')").prop("disabled", true).addClass("ui-state-disabled");
           $("#FWForm").append('<div id="progressbar"><div></div></div>')
         })
         .catch((err) => {
@@ -92,7 +96,7 @@ let ZwaveJsUI = (function () {
       title: "ZWave Device Firmware Updater",
       minHeight: 75,
       buttons: {
-        Update: PerformUpdate,
+        'Begin Update': PerformUpdate,
         Abort: AbortUpdate,
         Close: function () {
           $(this).dialog('destroy');
@@ -1015,18 +1019,25 @@ let ZwaveJsUI = (function () {
         deselectCurrentNode();
         FWRunning = false;
         FirmwareForm.dialog('destroy');
+
+        let nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${nodeId}']`)
+        
         switch (data.payload.status) {
           case 253:
             modalAlert('The firmware for node ' + nodeId + ' has been updated. Activation is pending.', 'ZWave Device Firmware Update')
+            nodeRow.find('.zwave-js-node-row-status').html('FIRMWARE UPDATED')
             break;
           case 254:
             modalAlert('The firmware for node ' + nodeId + ' has been updated.', 'ZWave Device Firmware Update')
+            nodeRow.find('.zwave-js-node-row-status').html('FIRMWARE UPDATED')
             break;
           case 255:
             modalAlert('The firmware for node ' + nodeId + ' has been updated. A restart is required (which may happen automatically)', 'ZWave Device Firmware Update')
+            nodeRow.find('.zwave-js-node-row-status').html('FIRMWARE UPDATED')
             break;
           default:
             modalAlert('The firmware for node ' + nodeId + ' failed to get updated. Error Code: ' + data.payload.status, 'ZWave Device Firmware Update')
+            nodeRow.find('.zwave-js-node-row-status').html('UPDATE FAILED')
         }
         break;
     }
