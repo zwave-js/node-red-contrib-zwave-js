@@ -30,12 +30,12 @@ Install this node via the Node Red palette menu (See [Home Assistant Install](#h
 and you have Z-Wave support in Node Red.
 
 ## Environment Requirements
-  - glibc >= 2.28 (for linux only)
+
   - NodeJS >= 10.24.1
   - Node Red >= 1.3.0
 
-The serial port package, that this node (and what Z-Wave JS) uses, will be built from source, therefore, ensure your build environment has:
   - Unix
+    - glibc >= 2.28
     - Python v3.6, v3.7, v3.8, or v3.9
     - make
     - A proper C/C++ compiler toolchain, like GCC
