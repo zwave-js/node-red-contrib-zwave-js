@@ -480,8 +480,16 @@ let ZwaveJsUI = (function () {
                 $("#NM_Status").html(SelectedNode.status)
                 $("#NM_Slaves").html(Targets.toString())
                 $("#NM_Clients").html(Children.toString())
-              
+
+                if(SelectedNode.isControllerNode){
+                  GetControllerStats()
+                }
+                else{
+                  GetNodeStats(SelectedNode.id)
+                }
+
               } else {
+                $("#zwave-js-selected-node-map-info-stats").html('RX:0, <span style="color: red;">RXD:0</span>, TX:0, <span style="color: red;">TXD:0</span>, <span style="color: red;">TO:0</span>')
                 $("#NM_ID").html('No Node Selected')
                 $("#NM_Name").html('&nbsp;')
                 $("#NM_LOC").html('&nbsp;')
@@ -498,6 +506,25 @@ let ZwaveJsUI = (function () {
       })
   }
 
+  function GetControllerStats() {
+    ControllerCMD('DriverAPI', 'getControllerStatistics', undefined)
+      .then(({ object }) => {
+        $("#zwave-js-selected-node-map-info-stats").html('RX:' + object.messagesRX + ', <span style="color: red;">RXD:' + object.messagesDroppedRX + '</span>, TX:' + object.messagesTX + ', <span style="color: red;">TXD:' + object.messagesDroppedTX + '</span>, <span style="color: red;">TO:' + object.timeoutResponse + '</span>')
+      });
+  }
+
+  function GetNodeStats(NodeID){
+    ControllerCMD('DriverAPI','getNodeStatistics',undefined,[NodeID])
+    .then(({object}) =>{
+      if(object.hasOwnProperty(NodeID.toString())){
+        let Stats = object[NodeID.toString()];
+        $("#zwave-js-selected-node-map-info-stats").html('RX:'+Stats.commandsRX+', <span style="color: red;">RXD:'+Stats.commandsDroppedRX+'</span>, TX:'+Stats.commandsTX+', <span style="color: red;">TXD:'+Stats.commandsDroppedTX+'</span>, <span style="color: red;">TO:'+Stats.timeoutResponse+'</span>')
+      }
+      else{
+        $("#zwave-js-selected-node-map-info-stats").html('RX:0, <span style="color: red;">RXD:0</span>, TX:0, <span style="color: red;">TXD:0</span>, <span style="color: red;">TO:0</span>')
+      }
+    })
+  }
  
 
 
