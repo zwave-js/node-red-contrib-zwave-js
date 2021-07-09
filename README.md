@@ -27,7 +27,21 @@ It offers a massive amount of flexibility and is packed full of features.
 The node is straightforward to use, and removes all the complexities that you would otherwise need to deal with.
 
 Install this node via the Node Red palette menu (See [Home Assistant Install](#home-assistant-install) if this applies to you),  
-and you have Z-Wave support in Node Red. 
+and you have Z-Wave support in Node Red.
+
+## Environment Requirements
+  - glibc >= 2.28 (for linux only)
+  - NodeJS >= 10.24.1
+  - Node Red >= 1.3.0
+
+The serial port package, that this node (and what Z-Wave JS) uses, will be built from source, therefore, ensure your build environment has:
+  - Unix
+    - Python v3.6, v3.7, v3.8, or v3.9
+    - make
+    - A proper C/C++ compiler toolchain, like GCC
+  - OSX
+    - Python v3.6, v3.7, v3.8, or v3.9
+    - XCode Command Line Tool
 
 ## The gist
   - Add the node(s) into your flow

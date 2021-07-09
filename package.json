@@ -8,6 +8,9 @@
     "zwave-js": "7.11.0",
     "winston": "3.3.3"
   },
+  "scripts": {
+    "preinstall": "npm install @serialport/bindings@9.2.0 --build-from-source  && npm install serialport@9.2.0 --build-from-source"
+  },
   "keywords": [
     "node-red",
     "zwave",
