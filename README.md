@@ -28,11 +28,6 @@ The node is straightforward to use, and removes all the complexities that you wo
 Install this node via the Node Red palette menu (See [Home Assistant Install](#home-assistant-install) if this applies to you),  
 and you have Z-Wave support in Node Red.
 
-<!--
-zypper install -t pattern devel_C_C++
-zypper install nodejs-devel
--->
-
 ## Environment Requirements
 
   - NodeJS >= 10.24.1
@@ -44,6 +39,7 @@ Host Specific
     - Python v3.6, v3.7, v3.8, or v3.9
     - make
     - A proper C/C++ compiler toolchain/environment, like GCC
+    - if your host is **openSUSE**, you will also need: **nodejs-devel**, **devel_C_C++**
   - OSX
     - Python v3.6, v3.7, v3.8, or v3.9
     - XCode Command Line Tool
