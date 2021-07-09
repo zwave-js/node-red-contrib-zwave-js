@@ -288,49 +288,6 @@
             }
         }
     },
-    "Association": {
-        "MapsToClass": "Association",
-        "Operations": {
-            "GetGroup": {
-                "MapsToFunc": "getGroup",
-                "ParamsRequired": 1,
-                "ParamsOptional": 0,
-                "NoEvent": true
-            },
-            "AddNodes": {
-                "MapsToFunc": "addNodeIds",
-                "ParamsRequired": 2,
-                "ParamsOptional": 0
-            },
-            "RemoveNodesFromAllGroups": {
-                "MapsToFunc": "removeNodeIdsFromAllGroups",
-                "ParamsRequired": 1,
-                "ParamsOptional": 0
-            },
-            "RemoveNodes": {
-                "MapsToFunc": "removeNodeIds",
-                "ParamsRequired": 1,
-                "ParamsOptional": 0
-            },
-            "GetGroupCount": {
-                "MapsToFunc": "getGroupCount",
-                "ParamsRequired": 0,
-                "ParamsOptional": 0,
-                "NoEvent": true
-            }
-        }
-    },
-    "AssociationGroupInfo": {
-        "MapsToClass": "Association Group Information",
-        "Operations": {
-            "GetGroupName": {
-                "MapsToFunc": "getGroupName",
-                "ParamsRequired": 1,
-                "ParamsOptional": 0,
-                "NoEvent": true
-            }
-        }
-    },
     "BinarySensor": {
         "MapsToClass": "Binary Sensor",
         "Operations": {

@@ -72,11 +72,12 @@
     <p>
         <code>Input:</code><br />
         A <strong>payload</strong> object containing a command to send.<br />
-        <strong>params</strong> will be dependant on the <strong>class</strong> and <strong>operation</strong> being performed.
+        <strong>params</strong> will be dependant on the type of command you are sending.
 <pre>
 {
-   class: "Configuration",
-   operation: "Set",
+   mode: "CCAPI",
+   cc: "Configuration",
+   method: "set",
    params: [0x18,0x03,1]
 }
 </pre>

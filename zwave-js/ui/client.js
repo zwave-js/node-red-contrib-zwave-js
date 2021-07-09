@@ -1,449 +1,860 @@
 let ZwaveJsUI = (function () {
 
-  function confirm(text, onYes, onCancel) {
-    $('<div>')
-      .css({ padding: 10, maxWidth: 500, wordWrap: 'break-word' })
-      .html(text)
-      .dialog({
-        draggable: false,
-        modal: true,
-        resizable: false,
-        width: 'auto',
-        title: 'Confirm',
-        minHeight: 75,
-        buttons: {
-          Yes: function () {
-            $(this).dialog('destroy')
-            onYes?.()
-          },
-          Cancel: function () {
-            $(this).dialog('destroy')
-            onCancel?.()
-          }
-        }
-      })
+  function modalAlert(message, title) {
+    let Buts = {
+      Ok: function () { }
+    }
+    modalPrompt(message, title, Buts);
   }
 
-  function confirminclude(text, onYes, onCancel) {
-    $('<div>')
-      .css({ padding: 10, maxWidth: 500, wordWrap: 'break-word' })
-      .html(text)
-      .dialog({
-        draggable: false,
-        modal: true,
-        resizable: false,
-        width: 'auto',
-        title: 'Confirm',
-        minHeight: 75,
-        buttons: {
-          'Yes (Secure)': function () {
-            $(this).dialog('destroy')
-            onYes?.(false)
-          },
-          'Yes (Insecure)': function () {
-            $(this).dialog('destroy')
-            onYes?.(true)
-          },
-          Cancel: function () {
-            $(this).dialog('destroy')
-            onCancel?.()
-          }
-        }
-      })
-  }
+  function modalPrompt(message, title, buttons, addCancel) {
 
-  function init() {
-    // Sidebar container
-
-    let content = $('<div>').addClass('red-ui-sidebar-info').css({
-      position: 'relative',
-      height: '100%',
-      overflowY: 'hidden',
-      display: 'flex',
-      flexDirection: 'column'
-    })
-
-    let stackContainer = $('<div>').addClass('red-ui-sidebar-info-stack').appendTo(content)
-
-    // -- Controller panel
-
-    let controllerPanel = $('<div>')
-      .css({
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column'
-      })
-      .appendTo(stackContainer)
-
-    // -- -- Controller header (selector + opts button)
-
-    let controllerHeader = $('<div>')
-      .addClass('red-ui-sidebar-header')
-      .css({ flex: '0 0 auto', textAlign: 'left', padding: 5 })
-      .appendTo(controllerPanel)
-
-    $('<select id="zwave-js-controller">')
-      .css({ height: 20, width: 100, margin: 0, padding: 0, fontSize: 12 })
-      .change(function () {
-        $(this).val() && selectController($(this).val())
-      })
-      .appendTo(controllerHeader)
-
-    $('<button>')
-      .addClass('red-ui-button red-ui-button-small')
-      .html('<i class="fa fa-refresh"></i>')
-      .click(() => getControllers())
-      .appendTo(controllerHeader)
-
-    $('<input type="checkbox" id="node-properties-auto-expand">')
-      .css({ margin: '0 2px' })
-      .appendTo(controllerHeader)
-
-    $('<span>')
-      .html('Expand properties')
-      .appendTo(controllerHeader)
-
-    $('<button>')
-      .addClass('red-ui-button red-ui-button-small')
-      .css({ float: 'right' })
-      .html('Show Controller Options')
-      .click(function () {
-        if (controllerOpts.is(':visible')) {
-          $(this).html('Show Controller Options')
-          controllerOpts.hide()
-        } else {
-          $(this).html('Hide Controller Options')
-
-          controllerOpts.show()
-          getLatestStatus();
-        }
-      })
-      .appendTo(controllerHeader)
-
-    // -- -- -- Controller options
-
-    let controllerOpts = $('<div>').appendTo(controllerHeader).hide()
-
-    function makeControllerOption(text, operation, paramGenerator) {
-      return $('<button>')
-        .addClass('red-ui-button red-ui-button-small')
-        .css('min-width', '125px')
-        .html(text)
-        .click(() => {
-          let params = paramGenerator ? paramGenerator() : undefined
-          console.log({ params })
-          controllerRequest({
-            class: 'Controller',
-            operation,
-            params,
-            noWait: true
-          })
-        })
+    let Options = {
+      draggable: false,
+      modal: true,
+      resizable: false,
+      width: 'auto',
+      title: title,
+      minHeight: 75,
+      buttons: {}
     }
 
-    // -- -- -- -- Controller info
+    Object.keys(buttons).forEach((BT) => {
+      Options.buttons[BT] = function () {
+        $(this).dialog('destroy');
+        buttons[BT]();
+      }
+    })
+
+    if (addCancel) {
+      Options.buttons['Cancel'] = function () {
+        $(this).dialog('destroy');
+      }
+    }
+
+    $('<div>').css({ padding: 10, maxWidth: 500, wordWrap: 'break-word' }).html(message).dialog(Options)
+  }
+
+  var FirmwareForm;
+  let FWRunning = false;
+  function AbortUpdate() {
+    if (FWRunning) {
+      ControllerCMD('ControllerAPI', 'abortFirmwareUpdate',undefined, [selectedNode])
+        .then(() => {
+          FirmwareForm.dialog('destroy');
+          let nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${selectedNode}']`)
+          nodeRow.find('.zwave-js-node-row-status').html('UPDATE ABORTED')
+        })
+    }
+    else {
+      FirmwareForm.dialog('destroy');
+    }
+    FWRunning = false;
+  }
+
+  function PerformUpdate() {
+
+    let FE = $("#FILE_FW")[0].files[0]
+    let NID = parseInt($("#NODE_FW option:selected").val());
+    let Target = $("#TARGET_FW").val();
+    let Filename = FE.name;
+    let Code = NID + ":" + Target + ":" + Filename
+
+    var reader = new FileReader();
+    reader.onload = function () {
+      let arrayBuffer = this.result
+      let array = new Uint8Array(arrayBuffer)
+      let Options = {
+        url: `zwave-js/firmwareupdate/` + btoa(Code),
+        method: 'POST',
+        contentType: 'application/octect-stream',
+        data: array,
+        processData: false
+      }
+      $.ajax(Options)
+        .then(() => {
+          FWRunning = true;
+          selectNode(NID)
+          $(":button:contains('Close')").prop("disabled", true).addClass("ui-state-disabled");
+          $(":button:contains('Begin Update')").prop("disabled", true).addClass("ui-state-disabled");
+          $("#FWForm").append('<div id="progressbar"><div></div></div>')
+        })
+        .catch((err) => {
+          modalAlert(err.responseText, "Firmware Rejected")
+        })
+    }
+    reader.readAsArrayBuffer(FE);
+  }
+
+  function FirmwareUpdate() {
+    let Options = {
+      draggable: false,
+      modal: true,
+      resizable: false,
+      width: '800',
+      height: '600',
+      title: "ZWave Device Firmware Updater",
+      minHeight: 75,
+      buttons: {
+        'Begin Update': PerformUpdate,
+        Abort: AbortUpdate,
+        Close: function () {
+          $(this).dialog('destroy');
+        }
+      }
+    }
+
+    FirmwareForm = $('<div>').css({ padding: 10 }).html('Please wait...');
+    FirmwareForm.dialog(Options)
+
+    ControllerCMD('ControllerAPI', 'getNodes')
+
+      .then(({ object }) => {
+
+        FirmwareForm.html('');
+
+        let Template = $('#TPL_Firmware').html();
+        let templateScript = Handlebars.compile(Template);
+        let HTML = templateScript({nodes:object});
+
+        FirmwareForm.append(HTML)
+
+      })
+  }
+
+  let Groups = {}
+
+  function AddAssociation(){
+
+    let NI = $('<input>').attr('type','number').attr('value',1).attr('min',1)
+    let EI = $('<input>').attr('type','number').attr('value',0).attr('min',0)
+
+    let Buttons = {
+      Add: function () {
+        let PL = [
+          { nodeId: selectedNode, endpoint: parseInt($("#NODE_EP").val()) },
+          parseInt($("#NODE_G").val()),
+          [{ nodeId: parseInt(NI.val())}]
+        ]
+
+        if(parseInt(EI.val()) > 0){
+          PL[2][0].endpoint = EI.val(parseInt(EI.val()))
+        }
+
+        ControllerCMD('AssociationsAPI', 'addAssociations', undefined, PL)
+          .then(() => { GMGroupSelected() })
+          .catch((err) => {
+            modalAlert(err.responseText, "Association could not be added.")
+          })
+      }
+    }
+
+    let HTML = $('<div>').append('Node ID: ')
+    NI.appendTo(HTML)
+    HTML.append(' Endpoint: ');
+    EI.appendTo(HTML);
+
+    modalPrompt(HTML,'New Association',Buttons,true);
+  }
+
+  function DeleteAssociation() {
+
+    let Association = JSON.parse($(this).attr('data-address'))
+
+    let PL = [
+      { nodeId: selectedNode, endpoint: parseInt($("#NODE_EP").val()) },
+      parseInt($("#NODE_G").val()),
+      [Association]
+    ]
+
+    let Buttons = {
+      Yes: function () {
+        ControllerCMD('AssociationsAPI', 'removeAssociations', undefined, PL)
+          .then(() => { GMGroupSelected() })
+          .catch((err) => {
+            modalAlert(err.responseText, "Association Removal Failed")
+          })
+      }
+    }
+
+    modalPrompt('Are you sure you wish to remove this Association', 'Remove Association', Buttons, true)
+    
+
+  }
+
+  function GMEndPointSelected() {
+
+    let Endpoint = $(event.target).val()
+    let GroupIDs = Object.keys(Groups[Endpoint])
+
+    let GroupSelector = $("#NODE_G")
+    GroupSelector.empty();
+    $('<option>Select Group...</option>').appendTo(GroupSelector)
+
+    GroupIDs.forEach((GID) => {
+      let Group = Groups[Endpoint][GID];
+      $('<option value="' + GID + '">' + GID + ' - ' + Group.label + '</option>').appendTo(GroupSelector)
+    })
+
+  }
+
+  
+
+  function GMGroupSelected() {
+
+    let Endpoint = parseInt($("#NODE_EP").val());
+    let Group = parseInt($("#NODE_G").val());
+    
+    let AA = {
+      nodeId: parseInt(selectedNode),
+      endpoint: Endpoint
+    }
+
+    ControllerCMD('AssociationsAPI', 'getAssociations', undefined, [AA])
+      .then(({ object }) => {
+
+        let Targets = object.Associations.filter((A) => A.GroupID === Group)
+
+        $("#zwave-js-associations-table").find("tr:gt(0)").remove();
+
+        // shoukd only be 1
+        Targets.forEach((AG) => {
+          AG.AssociationAddress.forEach((AD) => {
+
+            let TR = $('<tr>')
+            $('<td>').html(AD.nodeId).appendTo(TR)
+            $('<td>').html(AD.endpoint ?? '0 (Root Device)').appendTo(TR)
+            let TD3 = $('<td>').css({textAlign:'right'}).appendTo(TR)
+            $('<input>').attr('type','button').addClass('ui-button ui-corner-all ui-widget').attr('value','Delete').attr('data-address',JSON.stringify(AD)).click(DeleteAssociation).appendTo(TD3)
+
+            $("#zwave-js-associations-table").append(TR)
+
+           })
+        })
+      });
 
 
-    $('<div id="zwave-js-controller-info">').addClass('zwave-js-info-box').appendTo(controllerOpts)
-    $('<div id="zwave-js-controller-status">').addClass('zwave-js-info-box').appendTo(controllerOpts).html('Waiting for update...')
+
+  }
+
+  function AssociationMGMT(){
+    let Options = {
+      draggable: false,
+      modal: true,
+      resizable: false,
+      width: '800',
+      height: '600',
+      title: "ZWave Association Management: Node "+selectedNode,
+      minHeight: 75,
+      buttons: {
+        Close: function () {
+          $(this).dialog('destroy');
+        }
+      }
+    }
+
+    let Form = $('<div>').css({ padding: 60,paddingTop:30 }).html('Please wait...');
+    Form.dialog(Options);
+
+    ControllerCMD('AssociationsAPI','getAllAssociationGroups',undefined,[selectedNode])
+      .then(({ object }) => {
+
+        let Template = $('#TPL_Associations').html();
+        let templateScript = Handlebars.compile(Template);
+        let HTML = templateScript({ endpoints: object });
+
+        Form.html('')
+        Form.append(HTML);
+
+        $("#AMAddBTN").click(AddAssociation)
+
+        $("#NODE_EP").change(GMEndPointSelected)
+        $("#NODE_G").change(GMGroupSelected)
+
+        object.forEach((EP) => {
+          Groups[EP.Endpoint] = {}
+          EP.Groups.forEach((AG) => {
+            Groups[EP.Endpoint][AG.GroupID] = {
+              label: AG.AssociationGroupInfo.label,
+              maxNodes: AG.AssociationGroupInfo.maxNodes
+            }
+          })
+        })
+
+      })
+  }
+
+  async function GenerateMapJSON(Nodes, Neigbhors) {
+
+    let _Promises = [];
+    let _Nodes = []
+    let _Edges = []
+
+    Nodes.forEach((N) => {
+
+      let Label = N.isControllerNode ? 'Controller' : N.nodeId + ' - ' + (N.name ?? 'No Name')
+      let name = N.isControllerNode ? 'Controller' : (N.name ?? 'No Name')
+      let location = N.location ?? ''
+      let Shape = N.isControllerNode ? 'box' : 'square'
+      var Color = (N.isListening && N.isRouting) ? 'limegreen' : 'orangered'
+
+      if (N.isControllerNode) {
+        Color = 'lightgray'
+      }
+      let ND = {
+        canRoute: N.isControllerNode || (N.isListening && N.isRouting),
+        isControllerNode: N.isControllerNode,
+        id: N.nodeId,
+        label: Label,
+        name: name,
+        location: location,
+        shape: Shape,
+        manufacturer: 'Unknown',
+        model: 'Unknown',
+        status: N.status,
+        color: {
+          background: Color,
+          borderColor: 'black',
+          highlight: Color
+        }
+      }
+      if (N.deviceConfig !== undefined) {
+        ND.manufacturer = N.deviceConfig.manufacturer
+        ND.model = N.deviceConfig.label
+      }
+      _Nodes.push(ND)
+    })
+
+    if (Neigbhors === undefined) {
+
+      Nodes.forEach((N) => {
+
+        if (N.isControllerNode) {
+          return
+        }
+
+        let P = new Promise((res, rej) => {
+          ControllerCMD('ControllerAPI', 'getNodeNeighbors', undefined,[N.nodeId])
+            .then(({ node, object }) => {
+              object.forEach((NodeNeighbor) => {
+                let Neighbor = _Nodes.filter((Node) => Node.id === NodeNeighbor)[0];
+                if (Neighbor.canRoute) {
+                  let AlreadyAttached = _Edges.filter((E) => E.from === NodeNeighbor && E.to === node)
+                  if (AlreadyAttached.length < 1) {
+                    let Color = {
+                      highlight: Neighbor.isControllerNode ? 'green' : '#000000',
+                      color: '#d3d3d3'
+                    }
+                    _Edges.push({ color: Color, from: node, to: NodeNeighbor, arrows: { to: { enabled: true, type: 'arrow' } } })
+                  } else {
+                    _Edges.filter((E) => E.from === NodeNeighbor && E.to === node)[0].arrows.from = { enabled: true, type: 'arrow' }
+                  }
+                }
+              })
+              res();
+            })
+        })
+        _Promises.push(P)
+      })
+      await Promise.all(_Promises)
+    }
+    else {
+      Neigbhors.forEach(({ node, object }) => {
+        if (_Nodes.filter((Node) => Node.id === node)[0].isControllerNode) {
+          return
+        }
+        object.forEach((NodeNeighbor) => {
+          let Neighbor = _Nodes.filter((Node) => Node.id === NodeNeighbor)[0];
+          if (Neighbor.canRoute) {
+            let AlreadyAttached = _Edges.filter((E) => E.from === NodeNeighbor && E.to === node)
+            if (AlreadyAttached.length < 1) {
+              let Color = {
+                highlight: Neighbor.isControllerNode ? 'green' : '#000000',
+                color: '#d3d3d3'
+              }
+              _Edges.push({ color: Color, from: node, to: NodeNeighbor, arrows: { to: { enabled: true, type: 'arrow' } } })
+            } else {
+              _Edges.filter((E) => E.from === NodeNeighbor && E.to === node)[0].arrows.from = { enabled: true, type: 'arrow' }
+            }
+          }
+        });
+      })
+    }
+
+    return { _Nodes, _Edges }
+  }
+
+  function NetworkMap() {
+
+    var Network;
+
+    let Options = {
+      draggable: true,
+      modal: true,
+      resizable: true,
+      width: '1024',
+      height: '768',
+      title: "ZWave Network Map. Routing is only an estimation, external influences can affect routing.",
+      minHeight: 75,
+      buttons: {
+        Close: function () {
+          Network.destroy();
+          $(this).dialog('destroy');
+        }
+      }
+    }
+
+    let Window = $('<div>').css({ padding: 10 }).html('Generating Network Topology Map...');
+    Window.dialog(Options)
+    Window.on('dialogclose', () => { Network.destroy(); })
+
+
+    let GetSpread = (Number) => {
+
+      if (Number < 10) {
+        return 100;
+      }
+      let Spread = Number * 10 + 100
+      return Spread
+
+    }
+
+    ControllerCMD('ControllerAPI', 'getNodes')
+      .then(({ object }) => {
+        GenerateMapJSON(object)
+          .then(({ _Nodes, _Edges }) => {
+
+            let data = {
+              nodes: new vis.DataSet(_Nodes),
+              edges: new vis.DataSet(_Edges)
+            }
+            let options = {
+              nodes: {
+                size: 8,
+                font: {
+                  size: 8,
+                },
+                borderWidth: 1,
+                shadow: true,
+              },
+              edges: {
+                shadow: false,
+                width: 0.15,
+                length: GetSpread(_Nodes.length),
+                smooth: {
+                  type: "discrete",
+                },
+                physics: true
+              },
+              physics: {
+                enabled: false,
+                solver: "repulsion",
+                repulsion: {
+                  nodeDistance: GetSpread(_Nodes.length)
+                }
+              }
+            }
+
+            let Template = $('#TPL_Map').html();
+            let templateScript = Handlebars.compile(Template);
+            let HTML = templateScript({});
+
+            Window.html('');
+            Window.append(HTML)
+
+            Network = new vis.Network($('#Network')[0], data, options);
+            Network.on('click', (E) => {
+
+              if (E.nodes.length > 0) {
+
+                let SelectedNode = data.nodes.get(E.nodes[0])
+
+                let RouteTargets = _Edges.filter((RT) => RT.from === SelectedNode.id)
+                let RouteChildren = _Edges.filter((RT) => RT.to === SelectedNode.id)
+
+                let Targets = []
+                RouteTargets.forEach((T) => Targets.push(T.to))
+                let Children = []
+                RouteChildren.forEach((T) => Children.push(T.from))
+
+                $("#NM_ID").html(SelectedNode.id)
+                $("#NM_Name").html(SelectedNode.name)
+                $("#NM_LOC").html(SelectedNode.location)
+                $("#NM_MOD").html(SelectedNode.manufacturer + ' / ' + SelectedNode.model)
+                $("#NM_Status").html(SelectedNode.status)
+                $("#NM_Slaves").html(Targets.toString())
+                $("#NM_Clients").html(Children.toString())
+
+                if(SelectedNode.isControllerNode){
+                  GetControllerStats()
+                }
+                else{
+                  GetNodeStats(SelectedNode.id)
+                }
+
+              } else {
+                $("#zwave-js-selected-node-map-info-stats").html('RX:0, <span style="color: red;">RXD:0</span>, TX:0, <span style="color: red;">TXD:0</span>, <span style="color: red;">TO:0</span>')
+                $("#NM_ID").html('No Node Selected')
+                $("#NM_Name").html('&nbsp;')
+                $("#NM_LOC").html('&nbsp;')
+                $("#NM_MOD").html('&nbsp;')
+                $("#NM_Status").html('&nbsp;')
+                $("#NM_Slaves").html('&nbsp;')
+                $("#NM_Clients").html('&nbsp;')
+              }
+            })
+
+            Network.stabilize()
+
+          })
+      })
+  }
+
+  function GetControllerStats() {
+    ControllerCMD('DriverAPI', 'getControllerStatistics', undefined)
+      .then(({ object }) => {
+        $("#zwave-js-selected-node-map-info-stats").html('RX:' + object.messagesRX + ', <span style="color: red;">RXD:' + object.messagesDroppedRX + '</span>, TX:' + object.messagesTX + ', <span style="color: red;">TXD:' + object.messagesDroppedTX + '</span>, <span style="color: red;">TO:' + object.timeoutResponse + '</span>')
+      });
+  }
+
+  function GetNodeStats(NodeID){
+    ControllerCMD('DriverAPI','getNodeStatistics',undefined,[NodeID])
+    .then(({object}) =>{
+      if(object.hasOwnProperty(NodeID.toString())){
+        let Stats = object[NodeID.toString()];
+        $("#zwave-js-selected-node-map-info-stats").html('RX:'+Stats.commandsRX+', <span style="color: red;">RXD:'+Stats.commandsDroppedRX+'</span>, TX:'+Stats.commandsTX+', <span style="color: red;">TXD:'+Stats.commandsDroppedTX+'</span>, <span style="color: red;">TO:'+Stats.timeoutResponse+'</span>')
+      }
+      else{
+        $("#zwave-js-selected-node-map-info-stats").html('RX:0, <span style="color: red;">RXD:0</span>, TX:0, <span style="color: red;">TXD:0</span>, <span style="color: red;">TO:0</span>')
+      }
+    })
+  }
  
 
-    // -- -- -- -- Inclusion
 
-    let optInclusion = $('<div>').appendTo(controllerOpts)
 
-    $('<button>')
-      .addClass('red-ui-button red-ui-button-small')
-      .css('min-width', '125px')
-      .html('Start Inclusion')
-      .click(() => {
-        confirminclude("Begin the node Inclusion process?", (Insecure) => {
-          controllerRequest({
-            class: 'Controller',
-            operation: 'StartInclusion',
-            params:[Insecure],
-            noWait: true
+  var controllerOpts;
+  var nodeOpts;
+
+  function ShowHideNodeOptions() {
+    if (nodeOpts.is(':visible')) {
+      cancelSetName()
+      $(this).html('Show Node Options')
+      nodeOpts.hide()
+    } else {
+      $(this).html('Hide Node Options')
+      nodeOpts.show()
+    }
+  }
+
+  function ShowHideController() {
+    if (controllerOpts.is(':visible')) {
+      $(this).html('Show Controller Options')
+      controllerOpts.hide()
+    } else {
+      $(this).html('Hide Controller Options')
+      controllerOpts.show()
+      getLatestStatus();
+    }
+  }
+
+  function ControllerCMD(mode, method, node, params, dontwait) {
+
+    let Options = {
+      url: `zwave-js/cmd`,
+      method: 'POST',
+      contentType: 'application/json',
+    }
+
+    let Payload = {
+      mode: mode,
+      method: method
+    }
+    if (node !== undefined) {
+      Payload.node = node;
+    }
+    if (params !== undefined) {
+      Payload.params = params;
+    }
+    if (dontwait !== undefined) {
+      Payload.noWait = dontwait;
+    }
+
+    Options.data = JSON.stringify(Payload)
+    return $.ajax(Options)
+
+  }
+
+  function GetNodes() {
+
+    ControllerCMD('ControllerAPI', 'getNodes')
+      .then(({ object }) => {
+        let controllerNode = object.filter(N => N.isControllerNode)
+        if (controllerNode.length > 0) {
+          makeInfo('#zwave-js-controller-info', controllerNode[0].deviceConfig, controllerNode[0].firmwareVersion)
+        }
+        $('#zwave-js-node-list').empty().append(object.filter(node => node && !node.isControllerNode).map(renderNode))
+      })
+      .catch((err) => {
+        console.error(err);
+      })
+  }
+
+  function StartInclude() {
+    let Buttons = {
+      'Yes (Secure)': function () {
+        ControllerCMD('ControllerAPI', 'beginInclusion', undefined,[false], true)
+      },
+      'Yes (Insecure)': function () {
+        ControllerCMD('ControllerAPI', 'beginInclusion', undefined,[true], true)
+      }
+    }
+    modalPrompt('Begin the include process?', 'Include Mode', Buttons, true)
+  }
+
+  function StopInclude() {
+    ControllerCMD('ControllerAPI', 'stopInclusion', undefined,undefined, true)
+  }
+
+  function StartExclude() {
+    ControllerCMD('ControllerAPI', 'beginExclusion', undefined,undefined, true)
+  }
+
+  function StopExclude() {
+    ControllerCMD('ControllerAPI', 'stopExclusion', undefined,undefined, true)
+  }
+
+  function StartHeal() {
+    ControllerCMD('ControllerAPI', 'beginHealingNetwork', undefined,undefined, true)
+  }
+
+  function StopHeal() {
+    ControllerCMD('ControllerAPI', 'stopHealingNetwork', undefined,undefined, true)
+  }
+
+  function Reset() {
+    let Buttons = {
+      'Yes - Reset': function () {
+        ControllerCMD('ControllerAPI', 'hardReset')
+          .then(() => {
+            modalAlert('Your Controller has been reset.', 'Reset Complete')
+            GetNodes();
           })
+      }
+    }
+    modalPrompt('Are you sure you wish to reset your Controller? This action is irreversible, and will clear the Controllers data and configuration.', 'Reset Controller', Buttons, true)
+  }
+
+  function RenameNode() {
+
+    let input = $(this).prev()
+    if (input.is(':visible')) {
+      ControllerCMD('ControllerAPI', 'setNodeName',undefined, [selectedNode, input.val()])
+        .then(({ node, object }) => {
+          $('#zwave-js-node-list').find(`[data-nodeid='${node}'] .zwave-js-node-row-name`).html(object)
+          if (node == selectedNode) {
+            $('#zwave-js-selected-node-name').text(object)
+          }
+          GetNodes();
+          input.hide()
+          $(this).html('Set Name')
         })
+    } else {
+      input.show()
+      input.val($('#zwave-js-selected-node-name').text())
+      $(this).html('Go')
+    }
+  }
+
+  function SetNodeLocation() {
+
+    let input = $(this).prev()
+    if (input.is(':visible')) {
+      ControllerCMD('ControllerAPI', 'setNodeLocation', undefined,[selectedNode, input.val()])
+        .then(({ node, object }) => {
+          $('#zwave-js-node-list').find(`[data-nodeid='${node}'] .zwave-js-node-row-location`).html("(" + object + ")")
+          if (node == selectedNode) {
+            $('#zwave-js-selected-node-location').text(object)
+          }
+          GetNodes();
+          input.hide()
+          $(this).html('Set Location')
+        })
+    } else {
+      input.show()
+      input.val($('#zwave-js-selected-node-location').text())
+      $(this).html('Go')
+    }
+  }
+
+  function InterviewNode() {
+    ControllerCMD('ControllerAPI', 'refreshInfo', undefined,[selectedNode])
+      .catch((err) => {
+        if (err.status !== 504) {
+          modalAlert(err.responseText, 'Interview Error')
+        }
       })
-      .appendTo(optInclusion)
-    makeControllerOption('Stop Inclusion', 'StopInclusion').appendTo(optInclusion)
+  }
 
+  function OpenDB() {
+    let info = $(`.zwave-js-node-row.selected`).data('info')?.deviceConfig || {}
+    let id = [
+      '0x' + info.manufacturerId.toString(16).padStart(4, '0'),
+      '0x' + info.devices[0].productType.toString(16).padStart(4, '0'),
+      '0x' + info.devices[0].productId.toString(16).padStart(4, '0'),
+      info.firmwareVersion.min
+    ].join(':')
+    window.open(`https://devices.zwave-js.io/?jumpTo=${id}`, '_blank')
+  }
 
-    // -- -- -- -- Exclusion
-
-    let optExclusion = $('<div>').appendTo(controllerOpts)
-    makeControllerOption('Start Exclusion', 'StartExclusion').appendTo(optExclusion)
-    makeControllerOption('Stop Exclusion', 'StopExclusion').appendTo(optExclusion)
-
-    // -- -- -- -- Heal network
-
-    let optHeal = $('<div>').appendTo(controllerOpts)
-    makeControllerOption('Start Heal Network', 'StartHealNetwork').appendTo(optHeal)
-    makeControllerOption('Stop Heal Network', 'StopHealNetwork').appendTo(optHeal)
-
-    // -- -- -- -- Refresh node list
-
-    $('<button>')
-      .addClass('red-ui-button red-ui-button-small')
-      .css('min-width', '125px')
-      .html('Refresh Node List')
-      .click(() => getNodes(selectedController))
-      .appendTo(controllerOpts)
-
-
-    // -- -- -- -- Reset
-
-    $('<button>')
-      .addClass('red-ui-button red-ui-button-small')
-      .css('min-width', '125px')
-      .html('Reset Controller')
-      .click(() => {
-
-        confirm("Are you sure you wish to reset your Controller? This action is irreversible, and will clear the Controllers data and configuration.", () => {
-          controllerRequest({
-            class: 'Controller',
-            operation: 'HardReset'
-          }).then(({ event }) => {
-            alert('Your Controller has been Reset');
-            getNodes();
-
+  function RemoveFailedNode() {
+    let Buttons = {
+      'Yes - Remove': function () {
+        ControllerCMD('ControllerAPI', 'removeFailedNode', undefined,[selectedNode])
+          .catch((err) => {
+            if (err.status !== 504) {
+              modalAlert(err.responseText, 'Could Not Remove Node')
+            }
           })
+      }
+    }
+    modalPrompt('Are you sure you wish to remove this node?', 'Remove Failed Node', Buttons, true);
+  }
 
-        })
+  function ReplaceFailedNode() {
+    let Buttons = {
+      'Yes (Secure)': function () {
+        ControllerCMD('ControllerAPI', 'replaceFailedNode', undefined,[selectedNode, false])
+          .catch((err) => {
+            if (err.status !== 504) {
+              modalAlert(err.responseText, 'Could Not Replace Node')
+            }
+          })
+      },
+      'Yes (Insecure)': function () {
+        ControllerCMD('ControllerAPI', 'replaceFailedNode',undefined, [selectedNode, true])
+          .catch((err) => {
+            if (err.status !== 504) {
+              modalAlert(err.responseText, 'Could Not Replace Node')
+            }
+          })
+      }
+    }
+    modalPrompt('Are you sure you wish to replace this node?', 'Replace Failed Node', Buttons, true);
+  }
 
-      })
-      .appendTo(controllerOpts)
 
-    // -- -- Controller node list
+  function init() {
 
-    $('<div id="zwave-js-node-list">')
-      .css({ flex: '1 1 auto', display: 'flex', flexDirection: 'column', overflowY: 'auto' })
-      .appendTo(controllerPanel)
+    // Container(s)
+    let content = $('<div>').addClass('red-ui-sidebar-info').css({ position: 'relative', height: '100%', overflowY: 'hidden', display: 'flex', flexDirection: 'column' })
+    let stackContainer = $('<div>').addClass('red-ui-sidebar-info-stack').appendTo(content)
 
-    // -- Node panel
+    // Main Panel
+    let mainPanel = $('<div>').css({ overflow: 'hidden', display: 'flex', flexDirection: 'column' }).appendTo(stackContainer)
 
-    let nodePanel = $('<div>')
-      .css({
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column'
-      })
-      .appendTo(stackContainer)
+    /* ---------- Controller Section ---------- */
 
-    // -- -- Node header (name + opts button)
+    // Controller Header
+    let controllerHeader = $('<div>').addClass('red-ui-sidebar-header').css({ flex: '0 0 auto', textAlign: 'left', padding: 5 }).appendTo(mainPanel)
+    $('<input type="checkbox" id="node-properties-auto-expand">').css({ margin: '0 2px' }).appendTo(controllerHeader)
+    $('<span>').html('Expand CC\'s').appendTo(controllerHeader)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css({ float: 'right' }).html('Show Controller Options').click(ShowHideController).appendTo(controllerHeader)
 
-    nodeHeader = $('<div>', { class: 'red-ui-palette-header red-ui-info-header' })
-      .css({ flex: '0 0 auto' })
-      .appendTo(nodePanel)
+    // Controller Options
+    controllerOpts = $('<div>').appendTo(controllerHeader).hide()
 
+    // Info
+    $('<div id="zwave-js-controller-info">').addClass('zwave-js-info-box').appendTo(controllerOpts)
+    $('<div id="zwave-js-controller-status">').addClass('zwave-js-info-box').html('Waiting for update...').appendTo(controllerOpts)
+
+    // Include
+    let optInclusion = $('<div>').css('text-align', 'center').appendTo(controllerOpts)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(StartInclude).html('Start Inclusion').appendTo(optInclusion)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(StopInclude).html('Stop Inclusion').appendTo(optInclusion)
+
+    // Exclude
+    let optExclusion = $('<div>').css('text-align', 'center').appendTo(controllerOpts)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(StartExclude).html('Start Exclusion').appendTo(optExclusion)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(StopExclude).html('Stop Exclusion').appendTo(optExclusion)
+
+    // Heal
+    let optHeal = $('<div>').css('text-align', 'center').appendTo(controllerOpts)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(StartHeal).html('Start Network Heal').appendTo(optHeal)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(StopHeal).html('Stop Network Heal').appendTo(optHeal)
+
+    // Refresh, Reset
+    let optRefreshReset = $('<div>').css('text-align', 'center').appendTo(controllerOpts)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(GetNodes).html('Refresh Node List').appendTo(optRefreshReset)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(Reset).html('Reset Controller').appendTo(optRefreshReset)
+
+    // Tools
+    let tools = $('<div>').css('text-align', 'center').appendTo(controllerOpts)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(FirmwareUpdate).html('Firmware Updater').appendTo(tools)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(NetworkMap).html('Network Map').appendTo(tools)
+
+    // Node List
+    $('<div id="zwave-js-node-list">').css({ flex: '1 1 auto', display: 'flex', flexDirection: 'column', overflowY: 'auto' }).appendTo(mainPanel)
+
+    /* ---------- Node Section ---------- */
+
+    // Node Panel
+    let nodePanel = $('<div>').css({ overflow: 'hidden', display: 'flex', flexDirection: 'column' }).appendTo(stackContainer)
+
+    // Node Header
+    let nodeHeader = $('<div>', { class: 'red-ui-palette-header red-ui-info-header' }).css({ flex: '0 0 auto' }).appendTo(nodePanel)
     $('<span id="zwave-js-selected-node-id">').appendTo(nodeHeader)
     $('<span id="zwave-js-selected-node-name">').appendTo(nodeHeader)
     $('<span id="zwave-js-selected-node-location">').appendTo(nodeHeader)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css({ float: 'right' }).click(ShowHideNodeOptions).html('Show Node Options').appendTo(nodeHeader)
 
-    $('<button>')
-      .addClass('red-ui-button red-ui-button-small')
-      .css({ float: 'right' })
-      .html('Show Node Options')
-      .click(function () {
-        if (nodeOpts.is(':visible')) {
-          cancelSetName()
-          $(this).html('Show Node Options')
-          nodeOpts.hide()
-        } else {
-          $(this).html('Hide Node Options')
-          nodeOpts.show()
-        }
-      })
-      .appendTo(nodeHeader)
+    // node Options
+    nodeOpts = $('<div>').appendTo(nodeHeader).hide()
 
-    // -- -- -- Node options
-
-    let nodeOpts = $('<div>').appendTo(nodeHeader).hide()
-
-    // -- -- -- -- Node info
-
+    // Info
     $('<div id="zwave-js-selected-node-info">').addClass('zwave-js-info-box').appendTo(nodeOpts)
 
-    // -- -- -- -- Set name
-
-    let rename = $('<div>').appendTo(nodeOpts)
+    // Rename
+    let rename = $('<div>').css('text-align', 'center').appendTo(nodeOpts)
     $('<input>').addClass('red-ui-searchBox-input').hide().appendTo(rename)
-    $('<button id="zwave-js-set-node-name">')
-      .addClass('red-ui-button red-ui-button-small')
-      .css('min-width', '125px')
-      .html('Set Name')
-      .click(function () {
-        let input = $(this).prev()
-        if (input.is(':visible')) {
-          controllerRequest({
-            class: 'Controller',
-            operation: 'SetNodeName',
-            params: [selectedNode, input.val()]
-          }).then(({ node, object }) => {
-            // `object` is actually a string with the new name
-            // (should be the same as input.val(), but let's be sure)
-            $('#zwave-js-node-list')
-              .find(`[data-nodeid='${node}'] .zwave-js-node-row-name`)
-              .html(object)
-            if (node == selectedNode) $('#zwave-js-selected-node-name').text(object)
+    $('<button id="zwave-js-set-node-name">').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(RenameNode).html('Set Name').appendTo(rename)
 
-            getNodes();
-          })
-          input.hide()
-          $(this).html('Set Name')
-        } else {
-          input.show()
-          input.val($('#zwave-js-selected-node-name').text())
-          $(this).html('Go')
-        }
-      })
-      .appendTo(rename)
+    // Location
+    let location = $('<div>').css('text-align', 'center').appendTo(nodeOpts)
+    $('<input>').addClass('red-ui-searchBox-input').hide().appendTo(location)
+    $('<button id="zwave-js-set-node-location">').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(SetNodeLocation).html('Set Location').appendTo(location)
 
-    // -- -- -- -- Set location
+    // Interview
+    let optInterview = $('<div>').css('text-align', 'center').appendTo(nodeOpts)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(InterviewNode).html('Interview Node').appendTo(optInterview)
 
-    let relocation = $('<div>').appendTo(nodeOpts)
-    $('<input>').addClass('red-ui-searchBox-input').hide().appendTo(relocation)
-    $('<button id="zwave-js-set-node-location">')
-      .addClass('red-ui-button red-ui-button-small')
-      .css('min-width', '125px')
-      .html('Set Location')
-      .click(function () {
-        let input = $(this).prev()
-        if (input.is(':visible')) {
-          controllerRequest({
-            class: 'Controller',
-            operation: 'SetNodeLocation',
-            params: [selectedNode, input.val()]
-          }).then(({ node, object }) => {
-            if (node == selectedNode) $('#zwave-js-selected-node-location').text("(" + object + ")")
+    // Remove
+    let RemoveFailed = $('<div>').css('text-align', 'center').appendTo(nodeOpts)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(RemoveFailedNode).html('Remove Failed Node').appendTo(RemoveFailed)
 
-            getNodes();
-          })
-          input.hide()
-          $(this).html('Set Location')
-        } else {
-          input.show()
-          input.val($('#zwave-js-selected-node-location').text().replace(/\(/g, '').replace(/\)/g, ''))
-          $(this).html('Go')
-        }
-      })
-      .appendTo(relocation)
+    // Remove
+    let ReplaceFailed = $('<div>').css('text-align', 'center').appendTo(nodeOpts)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(ReplaceFailedNode).html('Replace Failed Node').appendTo(ReplaceFailed)
 
-    // -- -- -- -- Interview node
+    // Association
+    let Association = $('<div>').css('text-align', 'center').appendTo(nodeOpts)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(AssociationMGMT).html('Association Management').appendTo(Association)
 
-    let optInterview = $('<div>').appendTo(nodeOpts)
-    $('<button>')
-      .addClass('red-ui-button red-ui-button-small')
-      .css('min-width', '125px')
-      .html('Interview Node')
-      .click(() => {
-        controllerRequest({
-          class: 'Controller',
-          operation: 'InterviewNode',
-          params: [+selectedNode]
-        }).catch((err) => {
-          if (err.status !== 504) {
-            alert(err.responseText)
-          }
-        })
-      })
-      .appendTo(optInterview)
+    // Refres Properties
+    let RefresProps = $('<div>').css('text-align', 'center').appendTo(nodeOpts)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(getProperties).html('Refresh Property List').appendTo(RefresProps)
 
+    // DB
+    let DB = $('<div>').css('text-align', 'center').appendTo(nodeOpts)
+    $('<button>').addClass('red-ui-button red-ui-button-small').css('min-width', '125px').click(OpenDB).html('View in Config Database').appendTo(DB)
 
-    // -- -- -- -- Remove failed node
-
-    $('<div>')
-      .appendTo(nodeOpts)
-      .append(
-        $('<button>')
-          .addClass('red-ui-button red-ui-button-small')
-          .css('min-width', '125px')
-          .html('Remove Failed Node')
-          .click(() =>
-            confirm('Are you sure you want to remove this node?', () => {
-              controllerRequest({
-                class: 'Controller',
-                operation: 'RemoveFailedNode',
-                params: [selectedNode]
-              }).catch((err) => {
-                if (err.status !== 504) {
-                  alert(err.responseText)
-                }
-              })
-              selectNode(1)
-            })
-          )
-      )
-
-    // -- -- -- -- Replace failed node
-
-    $('<div>')
-      .appendTo(nodeOpts)
-      .append(
-        $('<button>')
-          .addClass('red-ui-button red-ui-button-small')
-          .css('min-width', '125px')
-          .html('Replace Failed Node')
-          .click(() =>
-            confirminclude('Are you sure you want to replace this node?', (Insecure) => {
-              controllerRequest({
-                class: 'Controller',
-                operation: 'ReplaceFailedNode',
-                params: [selectedNode,Insecure]
-              }).catch((err) => {
-                if (err.status !== 504) {
-                  alert(err.responseText)
-                }
-              })
-              selectNode(1)
-            })
-          )
-      )
-
-    // -- -- -- -- Refresh property list
-
-    $('<div>')
-      .appendTo(nodeOpts)
-      .append(
-        $('<button>')
-          .addClass('red-ui-button red-ui-button-small')
-          .css('min-width', '125px')
-          .html('Refresh Property List')
-          .click(() => getProperties())
-      )
-
-    // -- -- -- -- View in config db
-
-    $('<button>')
-      .addClass('red-ui-button red-ui-button-small')
-      .css('min-width', '125px')
-      .html('View in Config Database')
-      .click(() => {
-        let info = $(`.zwave-js-node-row.selected`).data('info')?.deviceConfig || {}
-        let id = [
-          '0x' + info.manufacturerId.toString(16).padStart(4, '0'),
-          '0x' + info.devices[0].productType.toString(16).padStart(4, '0'),
-          '0x' + info.devices[0].productId.toString(16).padStart(4, '0'),
-          info.firmwareVersion.min
-        ].join(':')
-        window.open(`https://devices.zwave-js.io/?jumpTo=${id}`, '_blank')
-      })
-      .appendTo(nodeOpts)
-
-    // -- -- -- -- Filter by endpoint
-
+    // Endpoint Filter
     $('<div id="zwave-js-node-endpoint-filter">').appendTo(nodeOpts)
 
-    // -- -- Node property list
-
-    $('<div id="zwave-js-node-properties">')
-      .css({ width: '100%', height: '100%' })
-      .appendTo(nodePanel)
-      .treeList({ data: [] })
+    // Node Proeprties List
+    $('<div id="zwave-js-node-properties">').css({ width: '100%', height: '100%' }).appendTo(nodePanel).treeList({ data: [] })
 
     // Build stack
-
     panels = RED.panels.create({ container: stackContainer })
     panels.ratio(0.5)
 
@@ -453,65 +864,41 @@ let ZwaveJsUI = (function () {
     $(window).on('focus', resizeStack)
 
     // Add tab
-
     RED.sidebar.addTab({
       id: 'zwave-js',
-      label: ' zwave-js',
+      label: ' ZWave JS',
       name: 'Z-Wave JS',
       content,
       enableOnEdit: true,
       iconClass: 'fa fa-feed',
       onchange: () => setTimeout(resizeStack, 0) // Only way I can figure out how to init the resize when tab becomes visible
     })
+    RED.comms.subscribe(`/zwave-js/cmd`, handleControllerEvent)
+    RED.comms.subscribe(`/zwave-js/status`, handleStatusUpdate)
 
-    // Get controller list
+    GetNodes();
 
-    getControllers()
   }
   // Init done
 
-  function getControllers() {
-    $.get('zwave-js/list').then(res => {
-      $('#zwave-js-controller')
-        .empty()
-        .append(res.map(homeId => $(`<option value='${homeId}'>`).html(homeId)))
-        .change()
-    })
-  }
-
-  let selectedController
-
-  function selectController(homeId) {
-    deselectCurrentNode()
-    RED.comms.unsubscribe(`/zwave-js/${selectedController}`, handleControllerEvent)
-    RED.comms.unsubscribe(`/zwave-js/status`, handleStatusUpdate)
-    selectedController = homeId
-    getNodes()
-    RED.comms.subscribe(`/zwave-js/${homeId}`, handleControllerEvent)
-    RED.comms.subscribe(`/zwave-js/status`, handleStatusUpdate)
-  }
-
-  function handleStatusUpdate(topic,data){
+  function handleStatusUpdate(topic, data) {
     $('#zwave-js-controller-status').html(data.status)
   }
 
   function handleControllerEvent(topic, data) {
-    let homeId = topic.split('/')[2]
-    if (selectedController != homeId) return
 
     switch (data.type) {
-
       case 'controller-event':
         let eventType = data.event.split(' ')[0]
         switch (eventType) {
           case 'node':
-            getNodes()
+            GetNodes()
         }
         break
 
       case 'node-status':
         let nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${data.node}']`)
-        if (data.status == 'ready') {
+        if (data.status == 'READY') {
           nodeRow.find('.zwave-js-node-row-ready').html(renderReadyIcon(true))
         } else {
           nodeRow.find('.zwave-js-node-row-status').html(data.status.toUpperCase())
@@ -521,23 +908,7 @@ let ZwaveJsUI = (function () {
     }
   }
 
-  function getNodes() {
-    controllerRequest({
-      class: 'Controller',
-      operation: 'GetNodes'
-    })
-      .then(({ object }) => {
-        let controllerNode = object.filter(N => N.isControllerNode)
-        if (controllerNode.length > 0) {
-          makeInfo('#zwave-js-controller-info', controllerNode[0].deviceConfig, controllerNode[0].firmwareVersion)
-        }
 
-        $('#zwave-js-node-list')
-          .empty()
-          .append(object.filter(node => node && !node.isControllerNode).map(renderNode))
-      })
-      .catch(console.error)
-  }
 
   function renderNode(node) {
     return $('<div>')
@@ -591,7 +962,7 @@ let ZwaveJsUI = (function () {
       $('#zwave-js-status-box-interview').text('')
 
       $('#zwave-js-node-properties').treeList('empty')
-      RED.comms.unsubscribe(`/zwave-js/${selectedController}/${selectedNode}`, handleNodeEvent)
+      RED.comms.unsubscribe(`/zwave-js/cmd/${selectedNode}`, handleNodeEvent)
     }
   }
 
@@ -621,19 +992,54 @@ let ZwaveJsUI = (function () {
 
     makeInfo('#zwave-js-selected-node-info', info.deviceConfig, info.firmwareVersion)
     getProperties()
-    RED.comms.subscribe(`/zwave-js/${selectedController}/${selectedNode}`, handleNodeEvent)
+    RED.comms.subscribe(`/zwave-js/cmd/${selectedNode}`, handleNodeEvent)
   }
 
   function handleNodeEvent(topic, data) {
     let nodeId = topic.split('/')[3]
     if (nodeId != selectedNode) return
     switch (data.type) {
+
       case 'node-value':
         updateValue(data.payload)
         break
+
       case 'node-meta':
         updateMeta(data.payload, data.payload.metadata)
         break
+
+      case 'node-fwu-progress':
+        let Sent = data.payload.sent;
+        let Remain = data.payload.remain;
+        let Percent = (Sent / Remain) * 100;
+        $("#progressbar > div").css({ 'width': Percent + '%' })
+        break
+
+      case 'node-fwu-completed':
+        deselectCurrentNode();
+        FWRunning = false;
+        FirmwareForm.dialog('destroy');
+
+        let nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${nodeId}']`)
+        
+        switch (data.payload.status) {
+          case 253:
+            modalAlert('The firmware for node ' + nodeId + ' has been updated. Activation is pending.', 'ZWave Device Firmware Update')
+            nodeRow.find('.zwave-js-node-row-status').html('FIRMWARE UPDATED')
+            break;
+          case 254:
+            modalAlert('The firmware for node ' + nodeId + ' has been updated.', 'ZWave Device Firmware Update')
+            nodeRow.find('.zwave-js-node-row-status').html('FIRMWARE UPDATED')
+            break;
+          case 255:
+            modalAlert('The firmware for node ' + nodeId + ' has been updated. A restart is required (which may happen automatically)', 'ZWave Device Firmware Update')
+            nodeRow.find('.zwave-js-node-row-status').html('FIRMWARE UPDATED')
+            break;
+          default:
+            modalAlert('The firmware for node ' + nodeId + ' failed to get updated. Error Code: ' + data.payload.status, 'ZWave Device Firmware Update')
+            nodeRow.find('.zwave-js-node-row-status').html('UPDATE FAILED')
+        }
+        break;
     }
   }
 
@@ -647,13 +1053,12 @@ let ZwaveJsUI = (function () {
   }
 
   function getProperties() {
+
     updateNodeFetchStatus('Fetching properties...')
 
-    controllerRequest({
-      node: selectedNode,
-      class: 'Unmanaged',
-      operation: 'GetDefinedValueIDs'
-    }).then(({ object }) => buildPropertyTree(object))
+    ControllerCMD('ValueAPI','getDefinedValueIDs', selectedNode)
+    .then(({object}) => buildPropertyTree(object))
+
   }
 
   let uniqBy = (collection, ...props) => {
@@ -681,7 +1086,6 @@ let ZwaveJsUI = (function () {
 
         return {
           element: renderCommandClassElement(commandClass, commandClassName),
-          /* expanded: !AUTO_HIDE_CC.includes(commandClassName.replace(/\s/g, ' ')),*/
           expanded: $("#node-properties-auto-expand").is(':checked'),
           children: propsInCC.map(valueId => {
             return { element: renderPropertyElement(valueId) }
@@ -784,28 +1188,19 @@ let ZwaveJsUI = (function () {
   }
 
   function getValue(valueId) {
-    // First get raw value
-    controllerRequest({
-      node: selectedNode,
-      class: 'Unmanaged',
-      operation: 'GetValue',
-      params: [valueId]
-    }).then(({ node, object: { valueId, response: value } }) => {
-      if (node != selectedNode) return
-      updateValue({ ...valueId, value })
 
-      // Then get meta data which will:
-      // 1. translate the value if possible
-      // 2. add tooltips for references
-      // 3. add edit options (if writable)
-      controllerRequest({
-        node: selectedNode,
-        class: 'Unmanaged',
-        operation: 'GetValueMetadata',
-        params: [valueId]
-      }).then(({ node, object: { valueId, response: meta } }) => {
-        if (!meta) return
-        if (node != selectedNode) return
+    ControllerCMD('ValueAPI','getValue',selectedNode,[valueId])
+    .then(({node, object: { valueId, response: value }}) =>{
+
+      if (node != selectedNode){
+        return
+      }
+      updateValue({ ...valueId, value })
+      ControllerCMD('ValueAPI','getValueMetadata',selectedNode,[valueId])
+      .then(({node, object: { valueId, response: meta } }) =>{
+        if(!meta || node != selectedNode){
+          return;
+        }
         updateMeta(valueId, meta)
       })
     })
@@ -927,18 +1322,13 @@ let ZwaveJsUI = (function () {
           .css({ marginRight: 5 })
           .html('Set')
           .click(() => {
+
             if (val == undefined) val = input.val()
             if (meta.type == 'number') val = +val
 
-            // Step 3: Send value change request and close editor
-            controllerRequest({
-              node: selectedNode,
-              class: 'Unmanaged',
-              operation: 'SetValue',
-              params: [valueId, val],
-              noWait: true
-            })
-            editor.remove()
+            ControllerCMD('ValueAPI','setValue',selectedNode,[valueId,val],true)
+            editor.remove();
+
           })
       }
       function makeInfoStr(...fields) {
@@ -961,43 +1351,49 @@ let ZwaveJsUI = (function () {
             return $('<div>').append(makeSetButton(val), labelSpan)
           })
         )
-      } else if (meta.type == 'number') {
-        // NUMBER
-        editor.append(
-          input,
-          makeSetButton(),
-          $('<span>').text(
-            makeInfoStr(['Default', 'default'], ['Min', 'min'], ['Max', 'max'], ['Step', 'step'])
-          )
-        )
-      } else if (meta.type == 'boolean') {
-        // BOOLEAN
-        editor.append(
-          $('<div>').append(
-            makeSetButton(true),
-            $('<span>').addClass('zwave-js-property-value-type-boolean').text('True')
-          ),
-          $('<div>').append(
-            makeSetButton(false),
-            $('<span>').addClass('zwave-js-property-value-type-boolean').text('False')
-          )
-        )
-      } else if (meta.type == 'string') {
-        // STRING
-        editor.append(
-          input,
-          makeSetButton(),
-          $('<span>').text(makeInfoStr(['Min Length', 'minLength'], ['Max Length', 'maxLength']))
-        )
-      } else if (meta.type == 'any') {
-        // ANY
-        editor.append(input, makeSetButton(), $('<span>').html('Caution: ValueType is "Any"'))
-        return
-      } else {
-        // How did you get here?
-        editor.append('Missing ValueType')
-        return
       }
+
+      if (meta.allowManualEntry === undefined ||  meta.allowManualEntry ) {
+        if (meta.type == 'number') {
+          // Number
+          editor.append(
+            input,
+            makeSetButton(),
+            $('<span>').text(
+              makeInfoStr(['Default', 'default'], ['Min', 'min'], ['Max', 'max'], ['Step', 'step'])
+            )
+          )
+        } else if (meta.type == 'boolean') {
+          // BOOLEAN
+          editor.append(
+            $('<div>').append(
+              makeSetButton(true),
+              $('<span>').addClass('zwave-js-property-value-type-boolean').text('True')
+            ),
+            $('<div>').append(
+              makeSetButton(false),
+              $('<span>').addClass('zwave-js-property-value-type-boolean').text('False')
+            )
+          )
+        } else if (meta.type == 'string') {
+          // STRING
+          editor.append(
+            input,
+            makeSetButton(),
+            $('<span>').text(makeInfoStr(['Min Length', 'minLength'], ['Max Length', 'maxLength']))
+          )
+        } else if (meta.type == 'any') {
+          // ANY
+          editor.append(input, makeSetButton(), $('<span>').html('Caution: ValueType is "Any"'))
+          return
+        } else {
+          // How did you get here?
+          editor.append('Missing ValueType')
+          return
+        }
+      }
+
+
     }
   }
 
@@ -1016,15 +1412,6 @@ let ZwaveJsUI = (function () {
 
   function getPropertyRow(valueId) {
     return $(`#zwave-js-node-properties [data-propertyId="${makePropertyId(valueId)}"]`)
-  }
-
-  function controllerRequest(req) {
-    return $.ajax({
-      url: `zwave-js/${selectedController}`,
-      method: 'POST',
-      contentType: 'application/json',
-      data: JSON.stringify(req)
-    })
   }
 
   function getLatestStatus(req) {

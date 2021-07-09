@@ -1,9 +1,8 @@
 const path = require('path')
-const EventEmitter = require('events')
 
-const CONTROLLERS = {}
-
+const _Context = {}
 let _RED
+
 
 const CONTROLLER_EVENTS = [
   'node added',
@@ -17,13 +16,30 @@ const _SendStatus = () => {
   })
 }
 
+
+let SendNodeStatus = (node, status) => {
+  _RED.comms.publish(`/zwave-js/cmd`, {
+    type: 'node-status',
+    node: node.id,
+    status: status
+  });
+}
+
+
+let SendNodeEvent = (type, node, payload) => {
+  _RED.comms.publish(`/zwave-js/cmd/${node.id}`, {
+    type: type,
+    payload: payload
+  })
+}
+
 module.exports = {
 
   status: Message => {
     LatestStatus = Message
     _SendStatus();
   },
-  
+
   init: RED => {
     _RED = RED
 
@@ -31,128 +47,133 @@ module.exports = {
       res.status(200).end()
       _SendStatus()
     })
+
+    /* Scripts */
     RED.httpAdmin.get('/zwave-js/client.js', function (req, res) {
       res.sendFile(path.join(__dirname, 'client.js'))
     })
+    RED.httpAdmin.get('/zwave-js/vis-network.min.js', function (req, res) {
+      res.sendFile(path.join(__dirname, 'vis-network.min.js'))
+    })
+    RED.httpAdmin.get('/zwave-js/handlebars.min.js', function (req, res) {
+      res.sendFile(path.join(__dirname, 'handlebars.min.js'))
+    })
+   /* Scripts */
+   
     RED.httpAdmin.get('/zwave-js/styles.css', function (req, res) {
       res.sendFile(path.join(__dirname, 'styles.css'), { contentType: 'text/css' })
     })
+    RED.httpAdmin.post('/zwave-js/firmwareupdate/:code', function (req, res) {
 
-    RED.httpAdmin.get('/zwave-js/list', (req, res) => {
-      res.send(Object.keys(CONTROLLERS))
+      let _Buffer = Buffer.alloc(0);
+      req.on('data', (Data) => {
+        _Buffer = Buffer.concat([_Buffer, Data])
+      })
+
+      req.once('end', (D) => {
+
+        let Code = req.params.code;
+        let CodeBuffer = Buffer.from(Code, 'base64');
+        let CodeString = CodeBuffer.toString('ascii');
+        let Parts = CodeString.split(":")
+
+        let PL = {
+          mode: "ControllerAPI",
+          method: "beginFirmwareUpdate",
+          params: [parseInt(Parts[0]), parseInt(Parts[1]), Parts[2], _Buffer]
+        }
+
+        let Success = () => {
+          res.status(200).end()
+          SendNodeStatus({id:Parts[0]},"UPDATING FIRMWARE")
+        }
+
+        let Error = (err) => {
+          if (err) {
+            res.status(500).send(err.message)
+          }
+        }
+        _Context.input({ payload: PL }, Success, Error)
+      })
     })
 
-    RED.httpAdmin.post('/zwave-js/:homeId', (req, res) => {
-      // Handles requests from the client for Controller and Node functions.
-      // Passes request to main module.
-      // Requests must be structued the same as the payload that would
-      //   normally be sent into the Node-RED node.
-      // Response is then passed back to client.
+    RED.httpAdmin.post('/zwave-js/cmd', (req, res) => {
 
-      let Controller = CONTROLLERS[req.params.homeId]
+      if (req.body.noWait) {
+        res.status(202).end()
+      }
 
-      if (!Controller) return res.status(404).end() // Controller not found
+      let timeout = setTimeout(() => res.status(504).end(), 5000)
 
-      let timeout = setTimeout(() => res.status(504).end(), 5000) // Request to controller timed out
-
-      Controller.request(
-        { payload: req.body }, // Pass request packet to controller
+      _Context.input(
+        { payload: req.body },
         zwaveRes => {
-          // Response from controller...
-          clearTimeout(timeout) // Cancel timeout
-          if (!req.body.noWait) res.send(zwaveRes.payload) // Don't send if .noWait was specified
+          clearTimeout(timeout)
+          if (!req.body.noWait) {
+            res.send(zwaveRes.payload)
+          }
         },
         err => {
-          if(err){
-            clearTimeout(timeout) // Cancel timeout
-            if (!req.body.noWait) res.status(500).send(err.message) // Don't send if .noWait was specified
+          if (err) {
+            clearTimeout(timeout)
+            if (!req.body.noWait) {
+              res.status(500).send(err.message)
+            }
           }
         }
       )
-      if (req.body.noWait) res.status(202).end() // Acknowledge receipt of request if not waiting for response
     })
   },
   register: (driver, request) => {
+
     driver.on('driver ready', () => {
-      // Creates listeners for all events on Controller and all Nodes.
-      // Passes events to client via comms.publish().
-      // Some events are published for the controller (even if node-related).
-      // Other events are published for a specific node which
-      //   will only go to clients that have that node selected.
 
-      let { controller } = driver
-
-      let homeId = controller.homeId.toString(16)
-
-      CONTROLLERS[homeId] = { controller, request }
+      _Context.controller = driver.controller;
+      _Context.input = request;
 
       CONTROLLER_EVENTS.forEach(event => {
-        controller.on(event, (...args) => {
-          if(event === "node added"){
+        _Context.controller.on(event, (...args) => {
+          if (event === "node added") {
             WireNodeEvents(args[0])
           }
-          _RED.comms.publish(`/zwave-js/${homeId}`, {
+          _RED.comms.publish(`/zwave-js/cmd`, {
             type: 'controller-event',
-            event
+            event: event
           })
         })
       })
 
-      // Node Status
-      let emitNodeStatus = status => node => {
-        _RED.comms.publish(`/zwave-js/${homeId}`, {
-          type: 'node-status',
-          node: node.id,
-          status
-        })
-      }
-      let emitNodeAsleep = emitNodeStatus('ASLEEP')
-      let emitNodeAwake = emitNodeStatus('AWAKE')
-      let emitNodeDead = emitNodeStatus('DEAD')
-      let emitNodeAlive = emitNodeStatus('ALIVE')
-
-      // Node Event (Value)
-      let emitNodeEvent = type => (node, payload) => {
-        _RED.comms.publish(`/zwave-js/${homeId}/${node.id}`, {
-          type,
-          payload
-        })
-      }
-      let emitNodeValue = emitNodeEvent('node-value')
-      let emitNodeMeta = emitNodeEvent('node-meta')
+      
 
       let WireNodeEvents = node => {
-          // Status
-          node.on('sleep', emitNodeAsleep)
-          node.on('wake up', emitNodeAwake)
-          node.on('dead', emitNodeDead)
-          node.on('alive', emitNodeAlive)
-  
-          // Readiness
-          node.on('ready', node => {
-            emitNodeStatus('ready')(node)
-          })
-  
-          // Values
-          node.on('value added', emitNodeValue)
-          node.on('value updated', emitNodeValue)
-          node.on('value removed', emitNodeValue)
-          node.on('value notification', emitNodeValue)
-          node.on('notification', emitNodeValue)
-  
-          // Meta
-          node.on('metadata update', emitNodeMeta)
+
+        // Status
+        node.on('sleep', (node) => { SendNodeStatus(node, 'ASLEEP') })
+        node.on('wake up', (node) => { SendNodeStatus(node, 'AWAKE') })
+        node.on('dead', (node) => { SendNodeStatus(node, 'DEAD') })
+        node.on('alive', (node) => { SendNodeStatus(node, 'ALIVE') })
+        node.on('ready', (node) => { SendNodeStatus(node, 'READY') })
+
+        // Values
+        node.on('value added', (node, value) => { SendNodeEvent('node-value', node, value) })
+        node.on('value updated', (node, value) => { SendNodeEvent('node-value', node, value) })
+        node.on('value removed', (node, value) => { SendNodeEvent('node-value', node, value) })
+        node.on('value notification', (node, value) => { SendNodeEvent('node-value', node, value) })
+        node.on('notification', (node, value) => { SendNodeEvent('node-value', node, value) })
+        node.on('firmware update progress', (node, S, R) => { SendNodeEvent('node-fwu-progress', node,{sent:S, remain:R} ) })
+        node.on('firmware update finished', (node, Status) => { SendNodeEvent('node-fwu-completed', node,{status:Status} ) })
+
+        // Meta
+        node.on('metadata update', (node, value) => { SendNodeEvent('node-meta', node, value) })
       }
 
-      controller.nodes.forEach(node => {
-
+      _Context.controller.nodes.forEach(node => {
         WireNodeEvents(node)
-     
       })
     })
   },
-  unregister: homeId => {
-    delete CONTROLLERS[homeId]
-    // Driver (and listeners) will be destroyed by main module, so nothing else to do here
+  unregister: () => {
+    delete _Context.controller
+    delete _Context.input
   }
 }

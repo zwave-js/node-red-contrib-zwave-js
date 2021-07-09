@@ -65,3 +65,72 @@
   text-transform: uppercase;
   font-size: smaller;
 }
+
+.zwave-js-selected-node-map-info{
+  width: 300px;
+  font-size: 12px;
+  height: 260px;
+  background-color: whitesmoke;
+  border-style: solid;
+  border-width: 1px;
+  border-color: black;
+  padding: 5px;
+  overflow: hidden;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  -webkit-box-shadow: 10px 10px 24px -15px rgba(0,0,0,0.9);
+  -moz-box-shadow: 10px 10px 24px -15px rgba(0,0,0,0.9);
+  box-shadow: 10px 10px 24px -15px rgba(0,0,0,0.9);   
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 200;
+  opacity: 0.7;
+  transition-duration: 0.5s;
+}
+.zwave-js-selected-node-map-info:hover{
+  opacity: 1.0;
+}
+
+#progressbar {
+  background-color: #bbb;
+  -webkit-border-radius: 8px;
+  -moz-border-radius: 8px;
+  border-radius: 8px;
+padding: 3px;
+margin-top: 20px;
+}
+
+
+#progressbar>div {
+  background-color: gray;
+  width: 0%;
+  height: 20px;
+  -webkit-border-radius: 6px;
+-moz-border-radius: 6px;
+border-radius: 6px;
+  }
+
+
+
+  table#zwave-js-associations-table{
+
+    margin-top: 10px;
+    width: 100%;
+    border-radius: 4px;
+    border-style: solid;
+    border-width: 2px;
+    }
+
+
+
+  table#zwave-js-associations-table tr:first-of-type{
+background-color: #eee;
+border-bottom:1px solid black
+  }
+
+.ui-button.ui-corner-all.ui-widget.ui-button-icon-only.ui-dialog-titlebar-close {
+    display: none;
+}
+

@@ -1,5 +1,20 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 4.0.0 **Possible Breaking Changes**, **Deprecation Warnings**
+    - MAJOR API Transition : [PLEASE SEE MIGRATION GUIDE](/APIChange.md)
+    - Added Node Firmware Update UI
+    - Added Network Map UI
+    - Added Association Group Managment UI
+    - Selection of Home ID in the UI is no longer required.
+    - Fixed UI bug that stopped manaual entry for params with predefined values
+    - **neighbors** property has now been removed in **NODE_LIST** (see Change log 3.4.0)
+    - **Association** class has now been removed (see Change log 3.3.0)
+    - Value API Mode now supports a duration
+    - Added 2 more **DriverAPI** methods to retrieve network performance stats: **getNodeStatistics**, and **getControllerStatistics**
+    - Bump Z-Wave JS to 7.11.0
+    - Bump serialport to 9.2.0
+
+
   - 3.8.0
     - Major User Interface Cleanup
       - Controller Node status text is now repeated on the UI

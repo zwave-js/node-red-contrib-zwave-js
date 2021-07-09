@@ -1,33 +1,61 @@
 ![Image](./ReadMe.png)  
 
 # node-red-contrib-zwave-js
-An extremely easy to use, zero dependency and feature rich Z-Wave node for Node Red, based on Z-Wave JS.  
-The implementation is 100% javascript. it is therefore:  
-  - Extremely fast
+
+THE ultimate Z-Wave node for node-red based on Z-Wave JS.  
+If you want a fully featured Z-Wave runtime in your node-red instance, look no further.
+
+  - 100% Javascript, so it's blazing fast and runs in the same memory space as your flows.
   - Does not require a build of any static library
   - Stable
-
-Install this node via the Node Red palette menu (See [Home Assistant Install](#home-assistant-install) if this applies to you),  
-and you have Z-Wave support in Node Red. 
+  - A Built in Node-Red User Interface tab:
+    - Device Configuration
+    - CC Value Updating
+    - Association Management
+    - Firmware Updating
+    - Network Map
+    - Network Actions (Include, Exclude, Heal etc etc)
+  - 2 Different API models, catering for both experienced and inexperienced users.
+  - Use one node for your entire network, or a node per Z-Wave device.
+  - Access to all supported CC's provided by Z-Wave JS.
 
 **node-red-contrib-zwave-js** is based on  [&#x1F517;Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/).  
-Z-Wave JS is actively  maintained, fast and supports secure (S0) devices.
+Z-Wave JS is actively  maintained, fast and supports secure (S0) devices - S2 is in the works.
 
 It offers a massive amount of flexibility and is packed full of features.   
 The node is straightforward to use, and removes all the complexities that you would otherwise need to deal with.
 
-## Top level features
-  - 2 Different API models, catering for both experienced and inexperienced users.
-  - Use one node for your entire network, or a node per Z-Wave device.
-  - A built in User Interface to manage your Z-Wave network, within Node-Red.
-  - Access to all supported CC's provided by Z-Wave JS.
+Install this node via the Node Red palette menu (See [Home Assistant Install](#home-assistant-install) if this applies to you),  
+and you have Z-Wave support in Node Red.
+
+## Environment Requirements
+
+  - NodeJS >= 10.24.1
+  - Node Red >= 1.3.0
+  
+Host Specific
+
+  - Unix
+    - Python v3.6, v3.7, v3.8, or v3.9
+    - make
+    - A proper C/C++ compiler toolchain/environment, like GCC
+    - If your host is **openSUSE**, you may also need to do:
+       - ```zypper install nodejs-devel```
+       - ```zypper install -t pattern devel_C_C++```
+  - OSX
+    - Python v3.6, v3.7, v3.8, or v3.9
+    - XCode Command Line Tool
+  - Windows
+    - Latest version of python from the store
+    - Visual C++ Build Environment/tools
+    - Launch cmd, ```npm config set msvs_version 2017```
 
 ## The gist
   - Add the node(s) into your flow
   - Select the serial port that represents your USB Zwave radio.
-  - Set an encryption key if you want to use Secure devices:  
-     - Plain text (16 characters) 
-     - Or hex array (16 bytes) [0x01,0x02]
+  - Set an encryption key if you want to use Secure devices.
+    - Plain text (16 characters)
+    - Or hex array (16 bytes) [0x01,0x02]
   - Listen for, and send commands using the node.
 
   ![Image](./Demo.png)  
@@ -60,7 +88,7 @@ Note: if an internal device config is found to have the same identifiers, the on
 Please also note, the specified directory will be recursively scanned.   
 
 **Disk IO Throttle**  
-If using **Unmanaged** Mode (see further down), the values received from **GetValue**, will be from a cache.  
+If using the **ValueAPI** Mode (see further down), the values received from **getValue**, will be from a cache.  
 This cache is periodically written to disk. This setting allows you to control that behavioir.  
 Unless there is a specific reason to do so - its best to leave it as 'Normal'
 
@@ -88,10 +116,10 @@ Multiple copies of this node, can be used across different flows.
 The first 2 of these modes, is probably what you're intersted in.  
 Each have there own pros and cons.  
 
-[&#x1F517;Managed](./managed.md) (Z-Wave JS Command Classes API)  
+[&#x1F517;CC API](./CCAPI.md) (Z-Wave JS Command Classes API)  
 This mode is quick to get up and running, and is a good starting point.
 
-[&#x1F517;Unmanaged](./unmanaged.md) (Z-Wave JS Value API)  
+[&#x1F517;Value API](./ValueAPI.md) (Z-Wave JS Value API)  
 This mode requires a little more understanding, but is preferred by the pros.
 
 [&#x1F517;GUI](./GUI.md)   
@@ -123,24 +151,29 @@ Whatever your poison, the node will inject the following events, into your flow.
 | INTERVIEW_COMPLETE          | The source Node ID                  |                                 | The node has been interviewed     |
 | INTERVIEW_FAILED            | The source Node ID                  | Detailed Error Info             | Could not interview node          |
 | INTERVIEW_STARTED           | The source Node ID                  |                                 | Node interview started            |
-| NODE_LIST                   | "Controller"                        | ZWaveNode[]                     | Response to GetNodes              | 
-| VALUE_ID_LIST               | The source Node ID                  | ValueID[]                       | Response to GetDefinedValueIDs    | 
-| GET_VALUE_RESPONSE          | The source Node ID                  | Value & Value ID                | Response to GetValue              | 
-| GET_VALUE_METADATA_RESPONSE | The source Node ID                  | Metadata & Value ID             | Response to GetValueMetadata      | 
-| ENUM_LIST                   | "N/A"                               | All valid Enum Values           | Response to GetEnums              | 
-| ASSOCIATION_GROUPS          | The source Node ID                  | Association Group Info[]        | Response to GetAssociations       |  
-| ALL_ASSOCIATION_GROUPS      | The source Node ID                  | Association Group Info[]        | Response to GetAllAssociations    |  
-| ASSOCIATIONS                | The source Node ID                  | Configured Associations         | Response to GetAssociations       |  
-| ALL_ASSOCIATIONS            | The source Node ID                  | Configured Associations         | Response to GetAllAssociations    |  
+| NODE_LIST                   | "Controller"                        | ZWaveNode[]                     | Response to getNodes              | 
+| VALUE_ID_LIST               | The source Node ID                  | ValueID[]                       | Response to getDefinedValueIDs    | 
+| GET_VALUE_RESPONSE          | The source Node ID                  | Value & Value ID                | Response to getValue              | 
+| GET_VALUE_METADATA_RESPONSE | The source Node ID                  | Metadata & Value ID             | Response to getValueMetadata      | 
+| ASSOCIATION_GROUPS          | The source Node ID                  | Association Group Info[]        | Response to getAssociations       |  
+| ALL_ASSOCIATION_GROUPS      | The source Node ID                  | Association Group Info[]        | Response to getAllAssociations    |  
+| ASSOCIATIONS                | The source Node ID                  | Configured Associations         | Response to getAssociations       |  
+| ALL_ASSOCIATIONS            | The source Node ID                  | Configured Associations         | Response to getAllAssociations    |  
 | ASSOCIATIONS_ADDED          | The source Node ID                  |                                 | Associations Were Added           |  
 | ASSOCIATIONS_REMOVED        | The source Node ID                  |                                 | Associations Were Removed         |  
 | ALL_ASSOCIATIONS_REMOVED    | The source Node ID                  |                                 | All Associations Were Removed     |  
-| VALUE_DB                    | "N/A"                               | A Structured Value DB object    | Response to GetValueDB            |  
-| NODE_NEIGHBORS              | The source Node ID                  | Array of Node IDs               | Response to GetNodeNeighbors      |  
-| NODE_KEEP_AWAKE             | The source Node ID                  | Bool : Keep Awake Status        | Response to KeepNodeAwake         |  
-| CURRENT_RF_REGION           | "Controller"                        | The current RF Region           | Response to GetRFRegion           |  
-| RF_REGION_SET               | "Controller"                        | The RF Region that was set      | Response to SetRFRegion           |  
-| RF_STATUS                   | "Controller"                        | The RF Status                   | Response to ToggleRF              |  
+| VALUE_DB                    | "N/A"                               | A Structured Value DB object    | Response to getValueDB            |  
+| NODE_NEIGHBORS              | The source Node ID                  | Array of Node IDs               | Response to getNodeNeighbors      |  
+| NODE_KEEP_AWAKE             | The source Node ID                  | Bool : Keep Awake Status        | Response to keepNodeAwake         |  
+| CURRENT_RF_REGION           | "Controller"                        | The current RF Region           | Response to getRFRegion           |  
+| RF_REGION_SET               | "Controller"                        | The RF Region that was set      | Response to setRFRegion           |  
+| RF_STATUS                   | "Controller"                        | The RF Status                   | Response to toggleRF              |  
+| FIRMWARE_UPDATE_COMPLETE    | The source Node ID                  | Result Status                   | Firmware Update finished          |  
+| FIRMWARE_UPDATE_STARTED     | The source Node ID                  | Target Chip                     | Firmware Update Started           |  
+| FIRMWARE_UPDATE_ABORTED     | The source Node ID                  |                                 | Firmware Update Aborted           |  
+| NODE_STATISTICS             | "N/A"                               | Stats object                    | Response to getNodeStatistics     |  
+| CONTROLER_STATISTICS        | "N/A"                               | Stats object                    | Response to getControllerStatistics |  
+
 
 
 And such event(s) will look like this.
@@ -156,69 +189,72 @@ And such event(s) will look like this.
 }
 ```
 
-## Controller/Driver and Association based operations
+## Controller/Driver and Association based methods
 Accessing the UI, will provide you with most of the network management operations.  
 But, if you prefer, you can action them via a node message.  
   
-The **Controller**, **Driver** and **Associations** classes do not require a **node** ID.  
+The **ControllerAPI**, **DriverAPI** and **AssociationsAPI** modes do not require a **node** ID.  
 However! Some Controller and Association methods themself, actually need a Node ID as part of the required params.  
 
 Some Association methods require an Object, these are detailed at the bottom.
 
-| class                     | operation                           | params                                                |
-| ------------------------- | ----------------------------------- | ----------------------------------------------------- |
-| Controller                | StartHealNetwork                    |                                                       |
-| Controller                | StopHealNetwork                     |                                                       |
-| Controller                | StartInclusion (See Notes)          | [Include Non-Secure: Bool (optional)]                 |
-| Controller                | StopInclusion                       |                                                       |
-| Controller                | StartExclusion                      |                                                       |
-| Controller                | StopExclusion                       |                                                       |
-| Controller                | HardReset (See Notes)               |                                                       |
-| Controller                | ProprietaryFunc (See Notes)         | [Serial Function ID: Number, Data: Buffer]            |
-| Controller                | InterviewNode                       | [Node ID: Number]                                     |
-| Controller                | GetNodes                            |                                                       |
-| Controller                | SetNodeName                         | [Node ID: Number, Node Name: String]                  |
-| Controller                | SetNodeLocation                     | [Node ID: Number, Node Location: String]              |
-| Controller                | GetNodeNeighbors                    | [Node ID: Number]                                     |
-| Controller                | KeepNodeAwake                       | [Node ID: Number, Bool]                               |
-| Controller                | GetRFRegion (See Notes)             |                                                       |
-| Controller                | SetRFRegion (See Notes)             | [**RFRegion**: Enum]                                  |
-| Controller                | ToggleRF                            | [Status: Bool]                                        |
-| Controller                | RemoveFailedNode                    | [Node ID: Number]                                     |
-| Controller                | ReplaceFailedNode (See Notes)       | [Node ID: Number, Include Non-Secure: Bool (optional)]|
-| Associations              | GetAssociationGroups                | [**AssociationAddress**: Object]                      |
-| Associations              | GetAllAssociationGroups             | [Node ID: Number]                                     |
-| Associations              | GetAssociations                     | [**AssociationAddress**: Object]                      |
-| Associations              | GetAllAssociations                  | [Node ID: Number]                                     |
-| Associations              | AddAssociations                     | [**AssociationAddress**: Object, Group  ID: Number, **AssociationAddress**: Object[]] |
-| Associations              | RemoveAssociations                  | [**AssociationAddress**: Object, Group  ID: Number, **AssociationAddress**: Object[]] |
-| Associations              | RemoveNodeFromAllAssociations       | [Node ID: Number]                                     |
-| Driver                    | GetEnums                            |                                                       |
-| Driver                    | GetValueDB                          | [Node ID: Number[] (Optional)]                        |
+| mode                         | method                              | params                                                |
+| ---------------------------- | ----------------------------------- | ----------------------------------------------------- |
+| ControllerAPI                | beginHealingNetwork                 |                                                       |
+| ControllerAPI                | stopHealingNetwork                  |                                                       |
+| ControllerAPI                | beginInclusion (See Notes)          | [Include Non-Secure: Bool (optional)]                 |
+| ControllerAPI                | stopInclusion                       |                                                       |
+| ControllerAPI                | beginExclusion                      |                                                       |
+| ControllerAPI                | stopExclusion                       |                                                       |
+| ControllerAPI                | hardReset (See Notes)               |                                                       |
+| ControllerAPI                | proprietaryFunction (See Notes)     | [Serial Function ID: Number, Data: Buffer]            |
+| ControllerAPI                | refreshInfo                         | [Node ID: Number]                                     |
+| ControllerAPI                | getNodes                            |                                                       |
+| ControllerAPI                | setNodeName                         | [Node ID: Number, Node Name: String]                  |
+| ControllerAPI                | setNodeLocation                     | [Node ID: Number, Node Location: String]              |
+| ControllerAPI                | getNodeNeighbors                    | [Node ID: Number]                                     |
+| ControllerAPI                | keepNodeAwake                       | [Node ID: Number, Bool]                               |
+| ControllerAPI                | getRFRegion (See Notes)             |                                                       |
+| ControllerAPI                | setRFRegion (See Notes)             | [**RFRegion**: Enum]                                  |
+| ControllerAPI                | toggleRF                            | [Status: Bool]                                        |
+| ControllerAPI                | removeFailedNode                    | [Node ID: Number]                                     |
+| ControllerAPI                | replaceFailedNode (See Notes)       | [Node ID: Number, Include Non-Secure: Bool (optional)]|
+| ControllerAPI                | beginFirmwareUpdate                 | [Node ID: Number, Target Chip: Number, Filename: String, Data: Buffer]|
+| ControllerAPI                | abortFirmwareUpdate                 | [Node ID: Number]                                     |
+| AssociationsAPI              | getAssociationGroups                | [**AssociationAddress**: Object]                      |
+| AssociationsAPI              | getAllAssociationGroups             | [Node ID: Number]                                     |
+| AssociationsAPI              | getAssociations                     | [**AssociationAddress**: Object]                      |
+| AssociationsAPI              | getAllAssociations                  | [Node ID: Number]                                     |
+| AssociationsAPI              | addAssociations                     | [**AssociationAddress**: Object, Group  ID: Number, **AssociationAddress**: Object[]] |
+| AssociationsAPI              | removeAssociations                  | [**AssociationAddress**: Object, Group  ID: Number, **AssociationAddress**: Object[]] |
+| AssociationsAPI              | removeNodeFromAllAssociations       | [Node ID: Number]                                     |
+| DriverAPI                    | getValueDB                          | [Node ID: ...Number (Optional)]                       |
+| DriverAPI                    | getNodeStatistics                   | [Node ID: ...Number (Optional)]                       |
+| DriverAPI                    | getControllerStatistics             |                                                       |
 
 To start an in-secure Inclusion, you will do.  
 ```javascript
 let Message = {
     payload: {
-        class: "Controller",
-        operation: "StartInclusion",
+        mode: "ControllerAPI",
+        method: "startInclusion",
         params: [true]
     }
 }
 return Message;
 ```
 
-## Notes on Controller -> Set/Get RF Region  
+## Notes on ControllerAPI -> Set/Get RF Region  
 Support for these Commands, must be proivided by your stick.  
 
-## Notes on Controller -> StartInclusion/ReplaceFailedNode  
+## Notes on ControllerAPI -> beginInclusion/replaceFailedNode  
 By default, the include process will only include secure devices, if you want to include non-secure devices, provide a **true** value 
 
-## Notes on Controller -> HardReset  
+## Notes on ControllerAPI -> hardReset  
 A one-way ticket for wiping out all the configuration on the controller.  
 Once you call this method, there is no going back - you are hearby **WARNED of the consequences**.  
 
-## Notes on Controller -> ProprietaryFunc
+## Notes on ControllerAPI -> proprietaryFunction
 The **Data** argument, must ONLY contain the data portion of the request  
 As an example, this byte array **[0x01, 0x08, 0x00, 0xF2, 0x51, 0x01, 0x00, 0x05, 0x01, 0x51]**  
 disables the LED on the GEN 5 Z-Stick, breaking it down we have:  
@@ -250,8 +286,8 @@ let _Buf_ON = Buffer.from([0x51, 0x01, 0x01, 0x05, 0x01])
 let Message = {
     payload: {
         node: 2,
-        class: "Controller",
-        operation: "ProprietaryFunc",
+        mode: "ControllerAPI",
+        method: "proprietaryFunction",
         params: [0xF2, _Buf_OFF]
     }
 }
