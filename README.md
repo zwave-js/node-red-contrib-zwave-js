@@ -42,6 +42,10 @@ The serial port package, that this node (and what Z-Wave JS) uses, will be built
   - OSX
     - Python v3.6, v3.7, v3.8, or v3.9
     - XCode Command Line Tool
+  - Windows
+    - Latest version of python from the store
+    - Visual C++ build tools
+    - Launch cmd, ```npm config set msvs_version 2017```
 
 ## The gist
   - Add the node(s) into your flow
