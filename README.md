@@ -30,6 +30,7 @@ and you have Z-Wave support in Node Red.
 
 <!--
 zypper install -t pattern devel_C_C++
+zypper install nodejs-devel
 -->
 
 ## Environment Requirements
