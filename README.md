@@ -33,7 +33,7 @@ and you have Z-Wave support in Node Red.
 
   - NodeJS >= 10.24.1
   - Node Red >= 1.3.0
-
+  
   - Unix
     - glibc >= 2.28
     - Python v3.6, v3.7, v3.8, or v3.9
