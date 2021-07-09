@@ -48,7 +48,7 @@ Host Specific
     - XCode Command Line Tool
   - Windows
     - Latest version of python from the store
-    - Visual C++ build tools
+    - Visual C++ Build Environment/tools
     - Launch cmd, ```npm config set msvs_version 2017```
 
 ## The gist
