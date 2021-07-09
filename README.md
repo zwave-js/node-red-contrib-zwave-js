@@ -39,7 +39,7 @@ Host Specific
     - Python v3.6, v3.7, v3.8, or v3.9
     - make
     - A proper C/C++ compiler toolchain/environment, like GCC
-    - If your host is **openSUSE**, you will also need to do:
+    - If your host is **openSUSE**, you may also need to do:
        - ```zypper install nodejs-devel```
        - ```zypper install -t pattern devel_C_C++```
   - OSX
