@@ -5,7 +5,6 @@
 THE ultimate Z-Wave node for node-red based on Z-Wave JS.  
 If you want a fully featured Z-Wave runtime in your node-red instance, look no further.
 
-
   - 100% Javascript, so it's blazing fast and runs in the same memory space as your flows.
   - Does not require a build of any static library
   - Stable
@@ -29,6 +28,10 @@ The node is straightforward to use, and removes all the complexities that you wo
 Install this node via the Node Red palette menu (See [Home Assistant Install](#home-assistant-install) if this applies to you),  
 and you have Z-Wave support in Node Red.
 
+<!--
+zypper install -t pattern devel_C_C++
+-->
+
 ## Environment Requirements
 
   - NodeJS >= 10.24.1
@@ -37,10 +40,9 @@ and you have Z-Wave support in Node Red.
 Host Specific
 
   - Unix
-    - glibc >= 2.28
     - Python v3.6, v3.7, v3.8, or v3.9
     - make
-    - A proper C/C++ compiler toolchain, like GCC
+    - A proper C/C++ compiler toolchain/environment, like GCC
   - OSX
     - Python v3.6, v3.7, v3.8, or v3.9
     - XCode Command Line Tool
