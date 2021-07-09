@@ -40,8 +40,8 @@ Host Specific
     - make
     - A proper C/C++ compiler toolchain/environment, like GCC
     - If your host is **openSUSE**, you will also need to do:
-       - zypper install nodejs-devel
-       - zypper install -t pattern devel_C_C++
+       - ```zypper install nodejs-devel```
+       - ```zypper install -t pattern devel_C_C++```
   - OSX
     - Python v3.6, v3.7, v3.8, or v3.9
     - XCode Command Line Tool
