@@ -45,23 +45,83 @@
             })
         }
 
+        function SortFilterChange(){
+
+           let Mode =  $("#node-input-filteredMode").val();
+           let Filter =  $("#node-input-filteredNodeId")
+
+           switch(Mode)
+           {
+                case "All":
+                case "Message":
+                Filter.append(new Option("N/A" , "*"));
+                Filter.val("*")
+                Filter.prop('disabled', true);
+                break;
+
+                default:
+                Filter.find('[value="*"]').remove();
+                Filter.val("Select Node")
+                Filter.prop('disabled', false);
+                break;
+           }
+        }
+
 </script>
 
 <script type="text/x-red" data-template-name="zwave-device">
     <p>
         <strong>Basic settings.</strong><br />
-        Note: This node works in conjunction with the main Z-Wave JS Controller node, therefore, ensure it is in any one of your flows, and in a deployed state.
+        Note: This node works in conjunction with the main Z-Wave JS Controller node,<br />
+        therefore, ensure it is in any one of your flows, and in a deployed state.
     </p>
     <div class="form-row">
         <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="My ZWave Node">
     </div>
     <div class="form-row">
-        <label for="node-input-filteredNodeId" style="width:130px"><i class="fa fa-pencil"></i> Node ID</label>
+        <label for="node-input-filteredMode" style="width:130px"><i class="fa fa-pencil"></i> Mode</label>
+        <select id="node-input-filteredMode" onchange="SortFilterChange()">
+            <option value="All">All Nodes</option>
+            <option value="Multiple">Multiple Nodes</option>
+            <option value="Single">Specific Node</option>
+            <option value="Message">As Specified</option>
+        </select>
+
+    </div>
+    <div class="form-row">
+        <label for="node-input-filteredNodeId" style="width:130px"><i class="fa fa-pencil"></i> Node ID(s)</label>
         <select id="node-input-filteredNodeId">
         </select>
 
     </div>
+    <hr />
+    <table>
+        <tr>
+            <td style="width:70px;vertical-align:top"><strong>All Nodes</strong></td>
+            <td>Will listen for updates on All Nodes, you will need to specify the <strong>node</strong>, in your outgoing payload.</td>
+        </tr>
+        <tr><td colspan="2">&nbsp;</td></tr>
+        <tr>
+            <td style="width:70px;vertical-align:top"><strong>Multiple Nodes</strong></td>
+            <td>Will listen for updates on the specified Nodes, you will need to specify the <strong>node</strong>, in your outgoing payload.</td>
+        </tr>
+        <tr><td colspan="2">&nbsp;</td></tr>
+        <tr>
+            <td style="width:70px;vertical-align:top"><strong>Specific Node</strong></td>
+            <td>Will listen for updates on the specified Node,  <strong>node</strong>, in your outgoing payload, will be ignored.</td>
+        </tr>
+        <tr><td colspan="2">&nbsp;</td></tr>
+        <tr>
+            <td style="width:70px;vertical-align:top"><strong>As Specified</strong></td>
+            <td>Will listen for updates on the Node, that it last addressed a message to,<br />
+                you will need to specify the <strong>node</strong>, in your outgoing payload.</td>
+        </tr>
+    </table>
+    
+   
+   
+   
     
    
 </script>

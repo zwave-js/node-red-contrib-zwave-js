@@ -48,6 +48,12 @@ module.exports = {
       _SendStatus()
     })
 
+    RED.httpAdmin.get('/zwave-js/driverready',function(req,res){
+      let Loaded = _Context.hasOwnProperty('controller')
+      res.contentType('application/json')
+      res.send({ready:Loaded})
+    })
+
     /* Scripts */
     RED.httpAdmin.get('/zwave-js/client.js', function (req, res) {
       res.sendFile(path.join(__dirname, 'client.js'))
