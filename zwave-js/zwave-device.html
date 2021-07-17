@@ -25,10 +25,14 @@
            
             $.getJSON("zwjsgetnodelist", (data) => {
 
-                $("#node-input-filteredNodeId").empty()
-                $("#node-input-filteredNodeId").append(new Option("Select Node" , "Select Node"));
+                let Mode =  $("#node-input-filteredMode")
+                let Filter =  $("#node-input-filteredNodeId")
 
-                $("#node-input-filteredNodeId").append(
+
+                Filter.empty()
+                Filter.append(new Option("Select Node" , "Select Node"));
+
+                Filter.append(
                     data.map(function (node) {
                         if(!node.isController){
                             return new Option(node.id + " : " + node.name , node.id.toString());
@@ -38,31 +42,62 @@
                 )
 
                 if(this.filteredNodeId !== undefined){
-                    $("#node-input-filteredNodeId").val(this.filteredNodeId)
+
+                    // Single
+                    if(parseInt(this.filteredNodeId) !== NaN){
+                        Filter.val(this.filteredNodeId)
+                        Filter.prop('disabled', false);
+                        Mode.val('Single')
+                    }
+
+                    // All
+                    if(this.filteredNodeId === "*"){
+                        Filter.append(new Option("N/A" , "*"));
+                        Filter.val("*")
+                        Filter.prop('disabled', true);
+                        Mode.val('All')
+                    }
+
+                     // As Specifed
+                     if(this.filteredNodeId === "AS"){
+                        Filter.append(new Option("N/A" , "AS"));
+                        Filter.val("AS")
+                        Filter.prop('disabled', true);
+                        Mode.val('Message')
+                    }
+
                 }else{
                     $("#node-input-filteredNodeId").val("Select Node")
                 }
+
+                
             })
         }
 
         function SortFilterChange(){
 
-           let Mode =  $("#node-input-filteredMode").val();
+           let Mode =  $("#node-input-filteredMode")
            let Filter =  $("#node-input-filteredNodeId")
 
-           switch(Mode)
+           switch(Mode.val())
            {
                 case "All":
+                    Filter.append(new Option("N/A" , "*"));
+                    Filter.val("*")
+                    Filter.prop('disabled', true);
+                    break;
+
                 case "Message":
-                Filter.append(new Option("N/A" , "*"));
-                Filter.val("*")
-                Filter.prop('disabled', true);
+                    Filter.append(new Option("N/A" , "AS"));
+                    Filter.val("AS")
+                    Filter.prop('disabled', true);
                 break;
 
                 default:
-                Filter.find('[value="*"]').remove();
-                Filter.val("Select Node")
-                Filter.prop('disabled', false);
+                    Filter.find('[value="*"]').remove();
+                    Filter.find('[value="AS"]').remove();
+                    Filter.val("Select Node")
+                    Filter.prop('disabled', false);
                 break;
            }
         }
