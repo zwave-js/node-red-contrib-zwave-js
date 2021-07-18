@@ -684,15 +684,6 @@ module.exports = function (RED) {
             await Input(MSG, undefined, undefined, true)
         }
 
-        RED.events.on("zwjs:node:checkready", processReadyRequest);
-        async function processReadyRequest(NID) {
-            if (NodesReady.indexOf(parseInt(NID)) > -1) {
-                RED.events.emit("zwjs:node:ready:" + NID);
-            }
-        }
-
-
-
         let DriverOptions = {};
 
         // Logging
@@ -929,8 +920,7 @@ module.exports = function (RED) {
             Log("info", "NDERED", undefined, "[SHUTDOWN] ["+Type+"]", "Cleaning up...")
             UI.unregister()
             Driver.destroy();
-            RED.events.removeListener("zwjs:node:checkready", processReadyRequest);
-            RED.events.removeListener("zwjs:node:command", processMessageEvent);
+            RED.events.off("zwjs:node:command", processMessageEvent);
             if (done) {
                 done();
             }
@@ -964,7 +954,6 @@ module.exports = function (RED) {
                     NodesReady.push(N.id);
                     node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
                     UI.status("Nodes : " + NodesReady.toString() + " Are Ready.")
-                    RED.events.emit("zwjs:node:ready:" + N.id);
                 }
 
                 Node.on("statistics updated", (S) => {
@@ -1704,7 +1693,9 @@ module.exports = function (RED) {
             ]
 
             if (AllowedSubjectsForDNs.includes(Subject)) {
+                RED.events.emit("zwjs:node:event:all", { "payload": PL })
                 RED.events.emit("zwjs:node:event:" + Node.id, { "payload": PL })
+                
             }
         }
 
