@@ -45,6 +45,7 @@
 
                     // Single
                     if(parseInt(this.filteredNodeId) !== NaN){
+                        Filter.css('height', '');
                         Filter.attr('multiple',null)
                         Filter.val(this.filteredNodeId)
                         Filter.prop('disabled', false);
@@ -54,6 +55,7 @@
 
                     // Multiple, Multicast
                     if(Array.isArray(this.filteredNodeId)){
+                        Filter.css('height', '150px');
                         Filter.attr('multiple','')
                         Filter.val(this.filteredNodeId)
                         Filter.prop('disabled', false);
@@ -67,6 +69,7 @@
 
                     // All
                     if(this.filteredNodeId === "All"){
+                        Filter.css('height', '');
                         Filter.attr('multiple',null)
                         Filter.append(new Option("N/A" , "All"));
                         Filter.val("All")
@@ -76,6 +79,7 @@
 
                      // As Specifed
                      if(this.filteredNodeId === "AS"){
+                        Filter.css('height', '');
                         Filter.attr('multiple',null)
                         Filter.append(new Option("N/A" , "AS"));
                         Filter.val("AS")
@@ -86,6 +90,7 @@
                 }else{
 
                     Filter.attr('multiple',null)
+                    Filter.css('height', '');
                     Filter.append(new Option("N/A" , "All"));
                     Filter.val("All")
                     Filter.prop('disabled', true);
@@ -104,6 +109,7 @@
            switch(Mode.val())
            {
                 case "All":
+                    Filter.css('height', '');
                     Filter.find('[value="Select Node"]').remove();
                     Filter.find('[value="AS"]').remove();
                     Filter.prepend(new Option("N/A" , "All"));
@@ -114,6 +120,7 @@
                     break;
 
                 case "Message":
+                    Filter.css('height', '');
                     Filter.find('[value="Select Node"]').remove();
                     Filter.find('[value="All"]').remove();
                     Filter.prepend(new Option("N/A" , "AS"));
@@ -124,6 +131,7 @@
                     break;
 
                 case "Multiple":
+                    Filter.css('height', '150px');
                     Filter.find('[value="Select Node"]').remove();
                     Filter.find('[value="All"]').remove();
                     Filter.find('[value="AS"]').remove();
@@ -133,6 +141,7 @@
                     break;
 
                 case "Multicast":
+                    Filter.css('height', '150px');
                     Filter.find('[value="Select Node"]').remove();
                     Filter.find('[value="All"]').remove();
                     Filter.find('[value="AS"]').remove();
@@ -142,6 +151,7 @@
                     break;
 
                 default:
+                    Filter.css('height', '');
                     Filter.find('[value="All"]').remove();
                     Filter.find('[value="AS"]').remove();
                     Filter.prepend(new Option("Select Node" , "Select Node"));
