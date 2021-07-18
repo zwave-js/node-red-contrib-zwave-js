@@ -10,6 +10,7 @@
       - As Specified
     - Bug fixes on the main node 
     - UI now handles the driver not being ready, and now waits before listing nodes.
+    - Bump Z-Wave JS to 7.12.1
 
   - 4.0.0 **Possible Breaking Changes**, **Deprecation Warnings**
     - MAJOR API Transition : [PLEASE SEE MIGRATION GUIDE](/APIChange.md)
