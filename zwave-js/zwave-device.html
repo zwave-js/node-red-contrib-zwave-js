@@ -119,6 +119,7 @@
         <select id="node-input-filteredMode" onchange="SortFilterChange()">
             <option value="All">All Nodes</option>
             <option value="Multiple">Multiple Nodes</option>
+            <option value="Multicast">Multicast</option>
             <option value="Single">Specific Node</option>
             <option value="Message">As Specified</option>
         </select>
@@ -134,23 +135,27 @@
     <table>
         <tr>
             <td style="width:70px;vertical-align:top"><strong>All Nodes</strong></td>
-            <td>Will listen for updates on All Nodes, you will need to specify the <strong>node</strong>, in your outgoing payload.</td>
+            <td> - Will listen for updates on All Nodes.<br /> - You will need to specify the <strong>node</strong>, in your outgoing payload.</td>
         </tr>
         <tr><td colspan="2">&nbsp;</td></tr>
         <tr>
             <td style="width:70px;vertical-align:top"><strong>Multiple Nodes</strong></td>
-            <td>Will listen for updates on the specified Nodes, you will need to specify the <strong>node</strong>, in your outgoing payload.</td>
+            <td> - Will listen for updates on the specified Nodes.<br /> - You will need to specify the <strong>node</strong>, in your outgoing payload.</td>
+        </tr>
+        <tr><td colspan="2">&nbsp;</td></tr>
+        <tr>
+            <td style="width:70px;vertical-align:top"><strong>Multicast</strong></td>
+            <td> - Like <strong>Multiple Nodes</strong>, but uses Multicast for outgoing payloads.<br /> - <strong>node</strong> in your outgoing payload, is ignored.</td>
         </tr>
         <tr><td colspan="2">&nbsp;</td></tr>
         <tr>
             <td style="width:70px;vertical-align:top"><strong>Specific Node</strong></td>
-            <td>Will listen for updates on the specified Node,  <strong>node</strong>, in your outgoing payload, will be ignored.</td>
+            <td> - Will listen for updates on the specified Node.<br /> - <strong>node</strong>, in your outgoing payload, is ignored.</td>
         </tr>
         <tr><td colspan="2">&nbsp;</td></tr>
         <tr>
             <td style="width:70px;vertical-align:top"><strong>As Specified</strong></td>
-            <td>Will listen for updates on the Node, that it last addressed a message to,<br />
-                you will need to specify the <strong>node</strong>, in your outgoing payload.</td>
+            <td> - Will listen for updates on the Node, that it last addressed a message to.<br /> - You will need to specify the <strong>node</strong>, in your outgoing payload.</td>
         </tr>
     </table>
     
