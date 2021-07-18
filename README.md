@@ -17,6 +17,7 @@ If you want a fully featured Z-Wave runtime in your node-red instance, look no f
     - Network Actions (Include, Exclude, Heal etc etc)
   - 2 Different API models, catering for both experienced and inexperienced users.
   - Use one node for your entire network, or a node per Z-Wave device.
+  - Supports multicast to send commands to mulltiple nodes at the same time.
   - Access to all supported CC's provided by Z-Wave JS.
 
 **node-red-contrib-zwave-js** is based on  [&#x1F517;Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/).  

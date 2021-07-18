@@ -1,5 +1,17 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 4.1.0
+    - Bug fixes on **zwave-device** node 
+    - **zwave-device** node now has the following modes
+      - All Nodes
+      - Multiple Nodes
+      - Multicast
+      - Specific Node
+      - As Specified
+    - Bug fixes on the main node 
+    - UI now handles the driver not being ready, and now waits before listing nodes.
+    - Bump Z-Wave JS to 7.12.1
+
   - 4.0.0 **Possible Breaking Changes**, **Deprecation Warnings**
     - MAJOR API Transition : [PLEASE SEE MIGRATION GUIDE](/APIChange.md)
     - Added Node Firmware Update UI

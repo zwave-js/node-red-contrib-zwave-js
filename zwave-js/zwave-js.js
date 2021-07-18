@@ -684,15 +684,6 @@ module.exports = function (RED) {
             await Input(MSG, undefined, undefined, true)
         }
 
-        RED.events.on("zwjs:node:checkready", processReadyRequest);
-        async function processReadyRequest(NID) {
-            if (NodesReady.indexOf(parseInt(NID)) > -1) {
-                RED.events.emit("zwjs:node:ready:" + NID);
-            }
-        }
-
-
-
         let DriverOptions = {};
 
         // Logging
@@ -929,8 +920,7 @@ module.exports = function (RED) {
             Log("info", "NDERED", undefined, "[SHUTDOWN] ["+Type+"]", "Cleaning up...")
             UI.unregister()
             Driver.destroy();
-            RED.events.removeListener("zwjs:node:checkready", processReadyRequest);
-            RED.events.removeListener("zwjs:node:command", processMessageEvent);
+            RED.events.off("zwjs:node:command", processMessageEvent);
             if (done) {
                 done();
             }
@@ -964,7 +954,6 @@ module.exports = function (RED) {
                     NodesReady.push(N.id);
                     node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
                     UI.status("Nodes : " + NodesReady.toString() + " Are Ready.")
-                    RED.events.emit("zwjs:node:ready:" + N.id);
                 }
 
                 Node.on("statistics updated", (S) => {
@@ -1311,20 +1300,28 @@ module.exports = function (RED) {
             let Params = msg.payload.params || []
             let Node = msg.payload.node;
 
-            Log("debug", "NDERED", "IN", "[Node: " + Node + "]", printParams("ValueAPI", undefined, Method, Params))
+            var ZWaveNode;
+            if(Array.isArray(Node)){
+                ZWaveNode =  Driver.controller.getMulticastGroup(Node)
+            }
+            else{
+                NodeCheck(Node);
+                ZWaveNode = Driver.controller.nodes.get(Node)
+            }
 
-            NodeCheck(Node);
-            let ReturnNode = { id: Node }
+            Log("debug", "NDERED", "IN", "[Node: " + ZWaveNode.id + "]", printParams("ValueAPI", undefined, Method, Params))
+
+            let ReturnNode = { id: ZWaveNode.id }
 
             switch (Method) {
 
                 case "getDefinedValueIDs":
-                    const VIDs = Driver.controller.nodes.get(Node).getDefinedValueIDs();
+                    const VIDs = ZWaveNode.getDefinedValueIDs();
                     Send(ReturnNode, "VALUE_ID_LIST", VIDs, send);
                     break;
 
                 case "getValueMetadata":
-                    let M = Driver.controller.nodes.get(Node).getValueMetadata(Params[0]);
+                    let M = ZWaveNode.getValueMetadata(Params[0]);
                     let ReturnObjectM = {
                         response: M,
                         valueId: Params[0]
@@ -1333,7 +1330,7 @@ module.exports = function (RED) {
                     break;
 
                 case "getValue":
-                    let V = Driver.controller.nodes.get(Node).getValue(Params[0]);
+                    let V = ZWaveNode.getValue(Params[0]);
                     let ReturnObject = {
                         response: V,
                         valueId: Params[0]
@@ -1343,15 +1340,15 @@ module.exports = function (RED) {
 
                 case "setValue":
                     if (Params.length > 2) {
-                        await Driver.controller.nodes.get(Node).setValue(Params[0], Params[1], Params[2]);
+                        await ZWaveNode.setValue(Params[0], Params[1], Params[2]);
                     }
                     else {
-                        await Driver.controller.nodes.get(Node).setValue(Params[0], Params[1]);
+                        await ZWaveNode.setValue(Params[0], Params[1]);
                     }
                     break;
 
                 case "pollValue":
-                    await Driver.controller.nodes.get(Node).pollValue(Params[0]);
+                    await ZWaveNode.pollValue(Params[0]);
                     break;;
             }
 
@@ -1368,15 +1365,23 @@ module.exports = function (RED) {
             let EnumSelection = msg.payload.enums;
             let ForceUpdate = msg.payload.forceUpdate
 
-            Log("debug", "NDERED", "IN", "[Node: " + Node + "]", printParams("CCAPI", CC, Method, Params))
+           
+            if(Array.isArray(Node)){
+                ZWaveNode =  Driver.controller.getMulticastGroup(Node)
+            }
+            else{
+                NodeCheck(Node);
+                ZWaveNode = Driver.controller.nodes.get(Node)
+            }
+
+            Log("debug", "NDERED", "IN", "[Node: " + ZWaveNode.id + "]", printParams("CCAPI", CC, Method, Params))
 
             let IsEventResponse = true;
             if (msg.payload.responseThroughEvent !== undefined) {
                 IsEventResponse = msg.payload.responseThroughEvent;
             }
 
-            NodeCheck(Node);
-            let ReturnNode = { id: Node }
+            let ReturnNode = { id: ZWaveNode.id }
 
             if (EnumSelection !== undefined) {
                 let ParamIndexs = Object.keys(EnumSelection);
@@ -1387,7 +1392,7 @@ module.exports = function (RED) {
                 })
             }
 
-            let Result = await Driver.controller.nodes.get(Node).getEndpoint(Endpoint).invokeCCAPI(CommandClasses[CC], Method, ...Params)
+            let Result = await ZWaveNode.getEndpoint(Endpoint).invokeCCAPI(CommandClasses[CC], Method, ...Params)
             if (!IsEventResponse && ForceUpdate === undefined) {
                 Send(ReturnNode, "VALUE_UPDATED", Result, send)
             }
@@ -1402,7 +1407,7 @@ module.exports = function (RED) {
                     ValueID[VIDK] = ForceUpdate[VIDK]
                 })
                 Log("debug", "NDERED", undefined, "[POLL]", printForceUpdate(Node,ValueID))
-                await Driver.controller.nodes.get(Node).pollValue(ValueID)
+                await ZWaveNode.pollValue(ValueID)
 
             }
 
@@ -1704,7 +1709,9 @@ module.exports = function (RED) {
             ]
 
             if (AllowedSubjectsForDNs.includes(Subject)) {
+                RED.events.emit("zwjs:node:event:all", { "payload": PL })
                 RED.events.emit("zwjs:node:event:" + Node.id, { "payload": PL })
+                
             }
         }
 

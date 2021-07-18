@@ -558,6 +558,18 @@ let ZwaveJsUI = (function () {
     }
   }
 
+  function CheckDriverReady(){
+
+    let Options = {
+      url: `zwave-js/driverready`,
+      method: 'GET'
+    }
+
+    return $.ajax(Options)
+
+   
+  }
+
   function ControllerCMD(mode, method, node, params, dontwait) {
 
     let Options = {
@@ -766,7 +778,7 @@ let ZwaveJsUI = (function () {
 
     // Info
     $('<div id="zwave-js-controller-info">').addClass('zwave-js-info-box').appendTo(controllerOpts)
-    $('<div id="zwave-js-controller-status">').addClass('zwave-js-info-box').html('Waiting for update...').appendTo(controllerOpts)
+    $('<div id="zwave-js-controller-status">').addClass('zwave-js-info-box').html('Waiting for driver...').appendTo(controllerOpts)
 
     // Include
     let optInclusion = $('<div>').css('text-align', 'center').appendTo(controllerOpts)
@@ -876,10 +888,24 @@ let ZwaveJsUI = (function () {
     RED.comms.subscribe(`/zwave-js/cmd`, handleControllerEvent)
     RED.comms.subscribe(`/zwave-js/status`, handleStatusUpdate)
 
-    GetNodes();
+    setTimeout(WaitLoad,100);
 
   }
   // Init done
+
+  function WaitLoad(){
+
+    CheckDriverReady().
+    then(({ready}) =>{
+      if(ready){
+        GetNodes();
+      }else{
+        setTimeout(WaitLoad,5000);
+      }
+    })
+
+    
+  }
 
   function handleStatusUpdate(topic, data) {
     $('#zwave-js-controller-status').html(data.status)
