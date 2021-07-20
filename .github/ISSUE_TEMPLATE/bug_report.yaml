@@ -63,7 +63,7 @@ body:
     id: hardware
     attributes:
       label: What hardware are you seeing the problem on?
-      multiple: false
+      multiple: true
       options:
         - Raspberry Pi
         - Other Linux

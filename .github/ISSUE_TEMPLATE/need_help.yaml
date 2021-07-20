@@ -62,8 +62,8 @@ body:
   - type: dropdown
     id: hardware
     attributes:
-      label: What hardware are you seeing the problem on?
-      multiple: false
+      label: What hardware are you using?
+      multiple: true
       options:
         - Raspberry Pi
         - Other Linux
