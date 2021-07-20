@@ -1,0 +1,80 @@
+name: Need Help
+description: If you just need some help. don't hesitate to ask.
+title: "[Help]: "
+labels: [help wanted]
+assignees:
+  - marcus-j-davies
+  - crxporter
+body:
+  - type: markdown
+    attributes:
+      value:
+        Our users are the best! We are happy to help any way we can.
+  - type: input
+    id: contact
+    attributes:
+      label: Contact Details (optional)
+      description: How can we get in touch with you if we need more info?
+      placeholder: ex. email@example.com
+    validations:
+      required: false
+  - type: textarea
+    id: help-request
+    attributes:
+      label: How can we help?
+      description: "Describe your question here"
+      placeholder: Tell us what you see!
+      value: "What's happening? Drag screenshots or drawings here if they help your explanation."
+    validations:
+      required: true
+  - type: textarea
+    id: extra_info
+    attributes:
+      label: Any more details?
+      placeholder: details
+      value: "If this is specific to some hardware or specific software version, please explain here."
+    validations:
+      required: false
+  - type: dropdown
+    id: version
+    attributes:
+      label: Version
+      description: What version of our software are you running?
+      options:
+        - v4.1.0
+        - v4.0.0
+        - v.3.x
+        - Other
+    validations:
+      required: false
+  - type: dropdown
+    id: nrversion
+    attributes:
+      label: Node-RED Version
+      description: What version of Node-RED are you running?
+      options:
+        - 2.x
+        - 1.3.x
+        - 1.2.x
+        - Other
+    validations:
+      required: false
+  - type: dropdown
+    id: hardware
+    attributes:
+      label: What hardware are you seeing the problem on?
+      multiple: false
+      options:
+        - Raspberry Pi
+        - Other Linux
+        - Mac OS
+        - Windows
+        - Other
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Any code to add?
+      description: If you have any JS code or logs, paste it here. This will be automatically formatted into code, so no need for backticks.
+      render: shell
