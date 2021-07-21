@@ -6,10 +6,12 @@
             color: 'rgb(46,145,205)',
             defaults:
             {
-               
                 name: { value: "Some Z-Wave Device" },
-                filteredNodeId:{value:"All"},
-                multicast:{value:false}
+                filteredNodeId: { value: "All" },
+                multicast: { value: false },
+                datamode: { value: "Send/Receive" },
+                outputs: { value: 1 },
+                inputs: { value: 1 }
 
             },
             inputs: 1,
@@ -18,150 +20,215 @@
             label: function () {
                 return this.name;
             },
-            oneditprepare:SortUI
+            oneditprepare: SortUI,
+            oneditsave: SetIO
         });
 
-        function SortUI(){
-           
-            
-            $.getJSON("zwjsgetnodelist", (data) => {
+    function SetIO() {
 
-                let Mode =  $("#node-input-filteredMode")
-                let Filter =  $("#node-input-filteredNodeId")
+        // I/O
+        if (this.datamode === undefined) {
+            $("#node-input-datamode").val('Send/Receive');
+            this.outputs = 1;
+            this.inputs = 1;
+        } else {
+            switch ($("#node-input-datamode").val()) {
+                case "Send":
+                    this.outputs = 0;
+                    this.inputs = 1;
+                    break
+
+                case "Receive":
+                    this.outputs = 1;
+                    this.inputs = 0;
+                    break
+
+                default:
+                    this.outputs = 1;
+                    this.inputs = 1;
+                    break
+            }
+        }
+    }
+
+    function SortUI() {
+
+        let node = this
+
+        // Subflow Options
+        const inSubflow = !!RED.nodes.subflow(node.z)
+        if (inSubflow) {
+            $("#node-input-filteredMode").append(new Option("Subflow Variable: ZW_NODE_ID", "Var"))
+        }
+
+        // I/O
+        if (this.datamode === undefined) {
+            $("#node-input-datamode").val('Send/Receive');
+        }
+
+        $.getJSON("zwjsgetnodelist", (data) => {
+
+            let Mode = $("#node-input-filteredMode")
+            let Filter = $("#node-input-filteredNodeId")
 
 
-                Filter.empty()
+            Filter.empty()
 
-                Filter.append(
-                    data.map(function (node) {
-                        if(!node.isController){
-                            return new Option(node.id + " : " + node.name , node.id.toString());
-                        }
-                        
-                    })
-                )
-
-                if(this.filteredNodeId !== undefined){
-
-                    // Single
-                    if(parseInt(this.filteredNodeId) !== NaN){
-                        Filter.css('height', '');
-                        Filter.attr('multiple',null)
-                        Filter.val(this.filteredNodeId)
-                        Filter.prop('disabled', false);
-                        Mode.val('Single')
-                       
+            Filter.append(
+                data.map(function (node) {
+                    if (!node.isController) {
+                        return new Option(node.id + " : " + node.name, node.id.toString());
                     }
 
-                    // Multiple, Multicast
-                    if(Array.isArray(this.filteredNodeId)){
-                        Filter.css('height', '150px');
-                        Filter.attr('multiple','')
-                        Filter.val(this.filteredNodeId)
-                        Filter.prop('disabled', false);
-                        if(this.multicast){
-                            Mode.val('Multicast')
-                        }
-                        else{
-                            Mode.val('Multiple')
-                        }
-                    }
+                })
+            )
 
-                    // All
-                    if(this.filteredNodeId === "All"){
-                        Filter.css('height', '');
-                        Filter.attr('multiple',null)
-                        Filter.append(new Option("N/A" , "All"));
-                        Filter.val("All")
-                        Filter.prop('disabled', true);
-                        Mode.val('All')
-                    }
+            if (this.filteredNodeId !== undefined) {
 
-                     // As Specifed
-                     if(this.filteredNodeId === "AS"){
-                        Filter.css('height', '');
-                        Filter.attr('multiple',null)
-                        Filter.append(new Option("N/A" , "AS"));
-                        Filter.val("AS")
-                        Filter.prop('disabled', true);
-                        Mode.val('Message')
-                    }
-
-                }else{
-
-                    Filter.attr('multiple',null)
+                // Single
+                if (parseInt(this.filteredNodeId) !== NaN) {
                     Filter.css('height', '');
-                    Filter.append(new Option("N/A" , "All"));
+                    Filter.attr('multiple', null)
+                    Filter.val(this.filteredNodeId)
+                    Filter.prop('disabled', false);
+                    Mode.val('Single')
+
+                }
+
+                // Multiple, Multicast
+                if (Array.isArray(this.filteredNodeId)) {
+                    Filter.css('height', '150px');
+                    Filter.attr('multiple', '')
+                    Filter.val(this.filteredNodeId)
+                    Filter.prop('disabled', false);
+                    if (this.multicast) {
+                        Mode.val('Multicast')
+                    }
+                    else {
+                        Mode.val('Multiple')
+                    }
+                }
+
+                // All
+                if (this.filteredNodeId === "All") {
+                    Filter.css('height', '');
+                    Filter.attr('multiple', null)
+                    Filter.append(new Option("N/A", "All"));
                     Filter.val("All")
                     Filter.prop('disabled', true);
                     Mode.val('All')
                 }
 
-                
-            })
-        }
-
-        function SortFilterChange(){
-
-           let Mode =  $("#node-input-filteredMode")
-           let Filter =  $("#node-input-filteredNodeId")
-
-           switch(Mode.val())
-           {
-                case "All":
+                // As Specifed
+                if (this.filteredNodeId === "AS") {
                     Filter.css('height', '');
-                    Filter.find('[value="Select Node"]').remove();
-                    Filter.find('[value="AS"]').remove();
-                    Filter.prepend(new Option("N/A" , "All"));
-                    Filter.val("All")
-                    Filter.prop('disabled', true);
-                    Filter.attr('multiple',null)
-                    $("#node-input-multicast").prop('checked', false);
-                    break;
-
-                case "Message":
-                    Filter.css('height', '');
-                    Filter.find('[value="Select Node"]').remove();
-                    Filter.find('[value="All"]').remove();
-                    Filter.prepend(new Option("N/A" , "AS"));
+                    Filter.attr('multiple', null)
+                    Filter.append(new Option("N/A", "AS"));
                     Filter.val("AS")
                     Filter.prop('disabled', true);
-                    Filter.attr('multiple',null)
-                    $("#node-input-multicast").prop('checked', false);
-                    break;
+                    Mode.val('Message')
+                }
 
-                case "Multiple":
-                    Filter.css('height', '150px');
-                    Filter.find('[value="Select Node"]').remove();
-                    Filter.find('[value="All"]').remove();
-                    Filter.find('[value="AS"]').remove();
-                    Filter.prop('disabled', false);
-                    Filter.attr('multiple','')
-                    $("#node-input-multicast").prop('checked', false);
-                    break;
-
-                case "Multicast":
-                    Filter.css('height', '150px');
-                    Filter.find('[value="Select Node"]').remove();
-                    Filter.find('[value="All"]').remove();
-                    Filter.find('[value="AS"]').remove();
-                    Filter.prop('disabled', false);
-                    Filter.attr('multiple','')
-                    $("#node-input-multicast").prop('checked', true);
-                    break;
-
-                default:
+                // Variable
+                if (this.filteredNodeId === "Var") {
                     Filter.css('height', '');
-                    Filter.find('[value="All"]').remove();
-                    Filter.find('[value="AS"]').remove();
-                    Filter.prepend(new Option("Select Node" , "Select Node"));
-                    Filter.val("Select Node")
-                    Filter.prop('disabled', false);
-                    Filter.attr('multiple',null)
-                    $("#node-input-multicast").prop('checked', false);
+                    Filter.attr('multiple', null)
+                    Filter.append(new Option("N/A", "Var"));
+                    Filter.val("Var")
+                    Filter.prop('disabled', true);
+                    Mode.val('Var')
+                }
+
+            } else {
+
+                Filter.attr('multiple', null)
+                Filter.css('height', '');
+                Filter.append(new Option("N/A", "All"));
+                Filter.val("All")
+                Filter.prop('disabled', true);
+                Mode.val('All')
+            }
+
+
+        })
+    }
+
+    function SortFilterChange() {
+
+        let Mode = $("#node-input-filteredMode")
+        let Filter = $("#node-input-filteredNodeId")
+
+        switch (Mode.val()) {
+            case "All":
+                Filter.css('height', '');
+                Filter.find('[value="Select Node"]').remove();
+                Filter.find('[value="AS"]').remove();
+                Filter.find('[value="Var"]').remove();
+                Filter.prepend(new Option("N/A", "All"));
+                Filter.val("All")
+                Filter.prop('disabled', true);
+                Filter.attr('multiple', null)
+                $("#node-input-multicast").prop('checked', false);
                 break;
-           }
+
+            case "Message":
+                Filter.css('height', '');
+                Filter.find('[value="Select Node"]').remove();
+                Filter.find('[value="All"]').remove();
+                Filter.find('[value="Var"]').remove();
+                Filter.prepend(new Option("N/A", "AS"));
+                Filter.val("AS")
+                Filter.prop('disabled', true);
+                Filter.attr('multiple', null)
+                $("#node-input-multicast").prop('checked', false);
+                break;
+
+            case "Multiple":
+                Filter.css('height', '150px');
+                Filter.find('[value="Select Node"]').remove();
+                Filter.find('[value="All"]').remove();
+                Filter.find('[value="AS"]').remove();
+                Filter.find('[value="Var"]').remove();
+                Filter.prop('disabled', false);
+                Filter.attr('multiple', '')
+                $("#node-input-multicast").prop('checked', false);
+                break;
+
+            case "Multicast":
+                Filter.css('height', '150px');
+                Filter.find('[value="Select Node"]').remove();
+                Filter.find('[value="All"]').remove();
+                Filter.find('[value="AS"]').remove();
+                Filter.find('[value="Var"]').remove();
+                Filter.prop('disabled', false);
+                Filter.attr('multiple', '')
+                $("#node-input-multicast").prop('checked', true);
+                break;
+
+            case "Var":
+                Filter.css('height', '');
+                Filter.find('[value="Select Node"]').remove();
+                Filter.find('[value="AS"]').remove();
+                Filter.prepend(new Option("N/A", "Var"));
+                Filter.val("Var")
+                Filter.prop('disabled', true);
+                Filter.attr('multiple', null)
+                $("#node-input-multicast").prop('checked', false);
+                break;
+
+            default:
+                Filter.css('height', '');
+                Filter.find('[value="All"]').remove();
+                Filter.find('[value="AS"]').remove();
+                Filter.find('[value="Var"]').remove();
+                Filter.prepend(new Option("Select Node", "Select Node"));
+                Filter.val("Select Node")
+                Filter.prop('disabled', false);
+                Filter.attr('multiple', null)
+                $("#node-input-multicast").prop('checked', false);
+                break;
         }
+    }
 
 </script>
 
@@ -187,7 +254,14 @@
             <option value="Single">Specific Node</option>
             <option value="Message">As Specified</option>
         </select>
-
+    </div>
+    <div class="form-row">
+        <label for="node-input-datamode" style="width:130px"><i class="fa fa-pencil"></i> Data Mode</label>
+        <select id="node-input-datamode">
+            <option value="Send/Receive">Send/Receive</option>
+            <option value="Send">Send</option>
+            <option value="Receive">Receive</option>
+        </select>
     </div>
     <div class="form-row">
         <label for="node-input-filteredNodeId" style="width:130px"><i class="fa fa-pencil"></i> Node ID(s)</label>
@@ -220,6 +294,11 @@
         <tr>
             <td style="width:70px;vertical-align:top"><strong>As Specified</strong></td>
             <td> - Will listen for updates on the Node, that it last addressed a message to.<br /> - You will need to specify the <strong>node</strong>, in your outgoing payload.</td>
+        </tr>
+        <tr><td colspan="2">&nbsp;</td></tr>
+        <tr>
+            <td style="width:70px;vertical-align:top"><strong>Subflow Variable</strong></td>
+            <td> - Like <strong>Specific Node</strong>, but Node ID is taken from a <strong>ZW_NODE_ID</strong> subflow variable.<br /> - <strong>node</strong>, in your outgoing payload, is ignored.</td>
         </tr>
     </table>
     
