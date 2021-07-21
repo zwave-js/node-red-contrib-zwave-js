@@ -934,25 +934,19 @@ module.exports = function (RED) {
             for (let Location in NodeList) delete NodeList[Location];
 
             NodeList["No Location"] = []
-
             Driver.controller.nodes.forEach((ZWN) => {
-
                 if(ZWN.isControllerNode()){
                     return;
                 }
-
                 let Node = {
                     id: ZWN.id,
                     name: ZWN.name !== undefined ? ZWN.name : "No Name",
                     location: ZWN.location !== undefined ? ZWN.location : "No Location",
                 }
-
                 if(!NodeList.hasOwnProperty(Node.location)){
                     NodeList[Node.location] = []
                 }
-
                 NodeList[Node.location].push(Node)
-
             });
         }
 
