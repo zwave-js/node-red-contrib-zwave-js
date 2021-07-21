@@ -40,6 +40,9 @@
 
 #zwave-js-node-properties .red-ui-treeList-label {
   cursor: default;
+  display: block !important; /* NR 2 fix */
+  align-items: unset !important; /* NR 2 fix */
+
 }
 .zwave-js-node-property-endpoint {
   margin-left: 5px;

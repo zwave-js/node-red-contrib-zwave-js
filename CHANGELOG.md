@@ -1,5 +1,8 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 4.2.1
+    - Fix Node Red V2 UI compatibility on the zwave Z-Wave tab. 
+
   - 4.2.0
     - Device Nodes can now be setup to only Send or Receive messages (or both), for better organisation.
     - Device Nodes in a subflow, now offers the use of a Variable to specify a single node 
