@@ -286,7 +286,6 @@ let _Buf_ON = Buffer.from([0x51, 0x01, 0x01, 0x05, 0x01])
 
 let Message = {
     payload: {
-        node: 2,
         mode: "ControllerAPI",
         method: "proprietaryFunction",
         params: [0xF2, _Buf_OFF]

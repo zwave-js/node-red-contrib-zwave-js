@@ -6,11 +6,45 @@ module.exports = function (RED) {
         RED.nodes.createNode(this, config);
         const node = this;
 
+        let In = true;
+        let Out = true;
+
         let DynamicIDListener = -1;
+
+        if (config.datamode !== undefined) {
+
+            switch (config.datamode) {
+
+                case "Send":
+                    In = true
+                    Out = false
+                    break;
+
+                case "Receive":
+                    In = false
+                    Out = true;
+                    break;
+
+                default:
+                    In = true;
+                    Out = true;
+                    break;
+            }
+        }
+
+        if (config.filteredNodeId === "Var") {
+
+            let VarValue = RED.util.evaluateNodeProperty("ZW_NODE_ID", "env", node)
+            if (isNaN(VarValue)) {
+                throw new Error("The 'ZW_NODE_ID' variable is not a number.")
+            }
+
+            config.filteredNodeId = VarValue
+        }
 
         if (Array.isArray(config.filteredNodeId)) {
             config.filteredNodeId.forEach((N) => {
-                RED.events.on("zwjs:node:event:" + N, processEventMessage)
+                if (Out) RED.events.on("zwjs:node:event:" + N, processEventMessage)
             })
             if (config.multicast) {
                 node.status({ fill: "green", shape: "dot", text: "Mode: Mulitcast (" + config.filteredNodeId + ")" });
@@ -19,10 +53,10 @@ module.exports = function (RED) {
                 node.status({ fill: "green", shape: "dot", text: "Mode: Multiple (" + config.filteredNodeId + ")" });
             }
         } else if (!isNaN(config.filteredNodeId)) {
-            RED.events.on("zwjs:node:event:" + config.filteredNodeId, processEventMessage)
+            if (Out) RED.events.on("zwjs:node:event:" + config.filteredNodeId, processEventMessage)
             node.status({ fill: "green", shape: "dot", text: "Mode: Specific Node (" + config.filteredNodeId + ")" });
         } else if (config.filteredNodeId === "All") {
-            RED.events.on("zwjs:node:event:all", processEventMessage)
+            if (Out) RED.events.on("zwjs:node:event:all", processEventMessage)
             node.status({ fill: "green", shape: "dot", text: "Mode: All Nodes" });
         } else if (config.filteredNodeId === "AS") {
             node.status({ fill: "green", shape: "dot", text: "Mode: As Specifed (Waiting)" });
@@ -42,7 +76,7 @@ module.exports = function (RED) {
                     let Node = msg.payload.node
                     if (Node !== DynamicIDListener) {
                         RED.events.off("zwjs:node:event:" + DynamicIDListener, processEventMessage)
-                        RED.events.on("zwjs:node:event:" + Node, processEventMessage)
+                        if (Out) RED.events.on("zwjs:node:event:" + Node, processEventMessage)
                         DynamicIDListener = Node
                         node.status({ fill: "green", shape: "dot", text: "Mode: As Specifed (" + Node + ")" });
                     }

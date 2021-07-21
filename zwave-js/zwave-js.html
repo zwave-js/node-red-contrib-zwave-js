@@ -1,4 +1,4 @@
-﻿<script type="text/javascript"  src="zwave-js/client.js"></script>
+﻿<script type="text/javascript" src="zwave-js/client.js"></script>
 <script type="text/javascript" src="zwave-js/vis-network.min.js"></script>
 <script type="text/javascript" src="zwave-js/handlebars.min.js"></script>
 
@@ -107,9 +107,15 @@
                     <td>
                         <select id="NODE_FW">
                          <option>Select Node...</option>
-                            {{#nodes}}
-                                <option value="{{nodeId}}">{{nodeId}} - {{name}}</option>
-                            {{/nodes}}
+                            {{#each nodes}}
+                              {{#if this.length}}
+                                   <optgroup label="{{@key}}">
+                                       {{#each this}}
+                                          <option value="{{id}}">{{id}} - {{name}}</option>
+                                       {{/each}}
+                                   </optgroup>
+                              {{/if}}
+                            {{/each}}
                         </select>
                     </td>
                     </tr>
@@ -141,7 +147,7 @@
                 name: { value: "Z-Wave JS Controller" },
                 encryptionKey: { value: undefined },
                 ackTimeout: { value: undefined },
-                controllerTimeout: { value: undefined},
+                controllerTimeout: { value: undefined },
                 sendResponseTimeout: { value: undefined },
                 logLevel: { value: "none" },
                 logFile: { value: undefined },
@@ -156,63 +162,63 @@
             label: function () {
                 return this.name;
             },
-            onpaletteadd:ZwaveJsUI.init,
-            oneditprepare:SortUI
+            onpaletteadd: ZwaveJsUI.init,
+            oneditprepare: SortUI
         });
 
 
     function SortUI() {
 
-            // 3.3 -> 3.4 
-            if (this.valueCacheDiskThrottle === undefined) {
-                $("#node-input-valueCacheDiskThrottle").val('normal');
-            }
+        // 3.3 -> 3.4 
+        if (this.valueCacheDiskThrottle === undefined) {
+            $("#node-input-valueCacheDiskThrottle").val('normal');
+        }
 
-            $.getJSON("zwjsgetports", (data) => {
+        $.getJSON("zwjsgetports", (data) => {
 
-                $("#node-input-serialPort").empty()
-                $("#node-input-serialPort").append(new Option("Select Port", "Select Port"));
-                $("#node-input-serialPort").append(new Option("Custom Path...", "Custom Path..."));
+            $("#node-input-serialPort").empty()
+            $("#node-input-serialPort").append(new Option("Select Port", "Select Port"));
+            $("#node-input-serialPort").append(new Option("Custom Path...", "Custom Path..."));
 
-                $("#node-input-serialPort").append(
-                    data.map(function (option) {
-                        return new Option(option, option);
-                    })
-                )
+            $("#node-input-serialPort").append(
+                data.map(function (option) {
+                    return new Option(option, option);
+                })
+            )
 
-                if (this.serialPort !== undefined) {
+            if (this.serialPort !== undefined) {
 
-                    if (data.indexOf(this.serialPort) < 0) {
-                        $("#node-input-serialPort").append(new Option(this.serialPort, this.serialPort));
-                    }
-
-                    $("#node-input-serialPort").val(this.serialPort)
-
-                } else {
-                    $("#node-input-serialPort").val("Select Port")
+                if (data.indexOf(this.serialPort) < 0) {
+                    $("#node-input-serialPort").append(new Option(this.serialPort, this.serialPort));
                 }
 
-                $("#node-input-serialPort").change(function (event) {
+                $("#node-input-serialPort").val(this.serialPort)
 
-                    var Value = event.target.value;
+            } else {
+                $("#node-input-serialPort").val("Select Port")
+            }
 
-                    if (Value === "Custom Path...") {
+            $("#node-input-serialPort").change(function (event) {
 
-                        Value = prompt("Enter custom serial path.")
-                        if (Value !== null) {
-                            Value = Value.trim()
-                            $("#node-input-serialPort").append(new Option(Value, Value));
-                            $("#node-input-serialPort").val(Value)
-                        }
+                var Value = event.target.value;
+
+                if (Value === "Custom Path...") {
+
+                    Value = prompt("Enter custom serial path.")
+                    if (Value !== null) {
+                        Value = Value.trim()
+                        $("#node-input-serialPort").append(new Option(Value, Value));
+                        $("#node-input-serialPort").val(Value)
                     }
-                });
+                }
             });
+        });
 
-            $.getJSON("zwjsgetversion", function (data) {
-                $("#MOD_Version").val(data.moduleversion)
-                $("#ZWJS_Version").val(data.zwjsversion)
-            })
-        }
+        $.getJSON("zwjsgetversion", function (data) {
+            $("#MOD_Version").val(data.moduleversion)
+            $("#ZWJS_Version").val(data.zwjsversion)
+        })
+    }
 
 
 

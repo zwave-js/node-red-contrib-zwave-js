@@ -10,7 +10,7 @@ module.exports = function (RED) {
 
     const UI = require('./ui/server.js')
     UI.init(RED)
-    let NodeList = [];
+    let NodeList = {}
 
     function Init(config) {
 
@@ -930,15 +930,29 @@ module.exports = function (RED) {
         node.on('input', Input);
 
         function ShareNodeList() {
-            NodeList.length = 0;
+
+            for (let Location in NodeList) delete NodeList[Location];
+
+            NodeList["No Location"] = []
+
             Driver.controller.nodes.forEach((ZWN) => {
+
+                if(ZWN.isControllerNode()){
+                    return;
+                }
+
                 let Node = {
                     id: ZWN.id,
                     name: ZWN.name !== undefined ? ZWN.name : "No Name",
                     location: ZWN.location !== undefined ? ZWN.location : "No Location",
-                    isController: ZWN.isControllerNode()
                 }
-                NodeList.push(Node)
+
+                if(!NodeList.hasOwnProperty(Node.location)){
+                    NodeList[Node.location] = []
+                }
+
+                NodeList[Node.location].push(Node)
+
             });
         }
 
@@ -1029,6 +1043,10 @@ module.exports = function (RED) {
                 }
             }
 
+        }
+
+        function ThrowVirtualNodeLimit(){
+            throw new Error('Multicast currently only supports ValueAPI:setValue commands.')
         }
 
         async function Input(msg, send, done, internal) {
@@ -1198,6 +1216,7 @@ module.exports = function (RED) {
                     }
                     ReturnNode.id = Params[0]
                     Send(ReturnNode, "NODE_LOCATION_SET", Params[1], send)
+                    ShareNodeList();
                     break
 
                 case "refreshInfo":
@@ -1299,9 +1318,10 @@ module.exports = function (RED) {
             let Method = msg.payload.method;
             let Params = msg.payload.params || []
             let Node = msg.payload.node;
+            let Multicast = Array.isArray(Node)
 
             var ZWaveNode;
-            if(Array.isArray(Node)){
+            if(Multicast){
                 ZWaveNode =  Driver.controller.getMulticastGroup(Node)
             }
             else{
@@ -1316,11 +1336,13 @@ module.exports = function (RED) {
             switch (Method) {
 
                 case "getDefinedValueIDs":
+                    if(Multicast) ThrowVirtualNodeLimit();
                     const VIDs = ZWaveNode.getDefinedValueIDs();
                     Send(ReturnNode, "VALUE_ID_LIST", VIDs, send);
                     break;
 
                 case "getValueMetadata":
+                    if(Multicast) ThrowVirtualNodeLimit();
                     let M = ZWaveNode.getValueMetadata(Params[0]);
                     let ReturnObjectM = {
                         response: M,
@@ -1330,6 +1352,7 @@ module.exports = function (RED) {
                     break;
 
                 case "getValue":
+                    if(Multicast) ThrowVirtualNodeLimit();
                     let V = ZWaveNode.getValue(Params[0]);
                     let ReturnObject = {
                         response: V,
@@ -1348,6 +1371,7 @@ module.exports = function (RED) {
                     break;
 
                 case "pollValue":
+                    if(Multicast) ThrowVirtualNodeLimit();
                     await ZWaveNode.pollValue(Params[0]);
                     break;;
             }
@@ -1364,9 +1388,11 @@ module.exports = function (RED) {
             let Endpoint = msg.payload.endpoint || 0
             let EnumSelection = msg.payload.enums;
             let ForceUpdate = msg.payload.forceUpdate
+            let Multicast = Array.isArray(Node)
 
-           
-            if(Array.isArray(Node)){
+            if(Multicast) ThrowVirtualNodeLimit(); /* Until ZWJS V8 */
+
+            if(Multicast){
                 ZWaveNode =  Driver.controller.getMulticastGroup(Node)
             }
             else{
@@ -1398,6 +1424,8 @@ module.exports = function (RED) {
             }
 
             if (ForceUpdate !== undefined) {
+
+                if(Multicast) ThrowVirtualNodeLimit();
 
                 let ValueID = {
                     commandClass: CommandClasses[CC],
