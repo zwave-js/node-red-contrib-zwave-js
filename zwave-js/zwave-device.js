@@ -8,11 +8,9 @@ module.exports = function (RED) {
 
         let In = true;
         let Out = true;
-
         let DynamicIDListener = -1;
 
         if (config.datamode !== undefined) {
-
             switch (config.datamode) {
 
                 case "Send":
@@ -38,7 +36,6 @@ module.exports = function (RED) {
             if (isNaN(VarValue)) {
                 throw new Error("The 'ZW_NODE_ID' variable is not a number.")
             }
-
             config.filteredNodeId = VarValue
         }
 
@@ -145,7 +142,6 @@ module.exports = function (RED) {
 
         node.on('close', (done) => {
 
-
             if (Array.isArray(config.filteredNodeId)) {
                 config.filteredNodeId.forEach((N) => {
                     RED.events.off("zwjs:node:event:" + N, processEventMessage)
@@ -157,7 +153,7 @@ module.exports = function (RED) {
             } else if (config.filteredNodeId === "AS") {
                 RED.events.off("zwjs:node:event:" + DynamicIDListener, processEventMessage)
             }
-
+            
             DynamicIDListener = -1
 
             if (done) {
