@@ -3,8 +3,9 @@
   - 4.2.0
     - Device Nodes can now be setup to only Send or Recieve messages (or both), for better organisation.
     - Device Nodes in a subflow, now offers the use of a Variable to specify a single node 
-    - Node List in Device Node Config, is now grouped by Location
+    - Node Lists in UI/Config, are now grouped by Location
     - Corrected error in Readme example code
+    - Multicast bug fixes
 
   - 4.1.0
     - Bug fixes on **zwave-device** node 

@@ -71,17 +71,24 @@
             let Mode = $("#node-input-filteredMode")
             let Filter = $("#node-input-filteredNodeId")
 
-
             Filter.empty()
 
-            Filter.append(
-                data.map(function (node) {
-                    if (!node.isController) {
-                        return new Option(node.id + " : " + node.name, node.id.toString());
-                    }
+            let Locations = Object.keys(data);
 
-                })
-            )
+            Locations.forEach((L) => {
+                let Location = data[L];
+                if (Location.length > 0) {
+
+                    let OG = $("<optgroup label=\" --- " + L + " --- \">");
+                    Location.forEach((node) => {
+                        OG.append(new Option(node.id + " : " + node.name, node.id.toString()))
+                    })
+                    Filter.append(OG)
+                }
+
+            })
+
+
 
             if (this.filteredNodeId !== undefined) {
 
