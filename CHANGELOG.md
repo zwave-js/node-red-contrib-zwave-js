@@ -1,7 +1,7 @@
   # node-red-contrib-zwave-js Change Log
 
   - 4.2.0
-    - Device Nodes can now be setup to only Send or Recieve messages (or both), for better organisation.
+    - Device Nodes can now be setup to only Send or Receive messages (or both), for better organisation.
     - Device Nodes in a subflow, now offers the use of a Variable to specify a single node 
     - Node Lists in UI/Config, are now grouped by Location
     - Corrected error in Readme example code
