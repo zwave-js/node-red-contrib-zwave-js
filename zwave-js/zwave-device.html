@@ -27,27 +27,21 @@
     function SetIO() {
 
         // I/O
-        if (this.datamode === undefined) {
-            $("#node-input-datamode").val('Send/Receive');
-            this.outputs = 1;
-            this.inputs = 1;
-        } else {
-            switch ($("#node-input-datamode").val()) {
-                case "Send":
-                    this.outputs = 0;
-                    this.inputs = 1;
-                    break
+        switch ($("#node-input-datamode").val()) {
+            case "Send":
+                this.outputs = 0;
+                this.inputs = 1;
+                break
 
-                case "Receive":
-                    this.outputs = 1;
-                    this.inputs = 0;
-                    break
+            case "Receive":
+                this.outputs = 1;
+                this.inputs = 0;
+                break
 
-                default:
-                    this.outputs = 1;
-                    this.inputs = 1;
-                    break
-            }
+            default:
+                this.outputs = 1;
+                this.inputs = 1;
+                break
         }
     }
 
