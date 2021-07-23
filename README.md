@@ -10,7 +10,6 @@ If you want a fully featured Z-Wave runtime in your node-red instance, look no f
 > [@CRXPorter](https://github.com/crxporter), July 2021
 \
 \
-
   - 100% Javascript, so it's blazing fast and runs in the same memory space as your flows.
   - Does not require a build of any static library
   - Stable
