@@ -4,16 +4,13 @@
 
 THE ultimate Z-Wave node for node-red based on Z-Wave JS.  
 If you want a fully featured Z-Wave runtime in your node-red instance, look no further.  
-  
-  
-  
-
+\
+\
 > #### ...node-red-contrib-zwave-js is _hands down the best zwave to node red option on the planet._  
 > [@CRXPorter](https://github.com/crxporter), July 2021
-  
+\
+\
 
-  
-  
   - 100% Javascript, so it's blazing fast and runs in the same memory space as your flows.
   - Does not require a build of any static library
   - Stable
