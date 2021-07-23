@@ -4,7 +4,7 @@
     - Implemented critical driver error recovery.  
 
       This update implements a maximum retry routine (max 3), for critical driver errors.  
-      Initially, critical errors were not recoverbale, and needed a restart of the module.  
+      Initially, critical errors were not recoverable, and needed a restart of the module.  
       We now try a maximum of 3 times, before giving up.
       
   - 4.2.1
