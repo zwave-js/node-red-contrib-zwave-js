@@ -753,8 +753,6 @@ module.exports = function (RED) {
             canDoSecure = true;
         }
 
-        InitDriver();
-
         function ShareNodeList() {
 
             for (let Location in NodeList) delete NodeList[Location];
@@ -775,8 +773,6 @@ module.exports = function (RED) {
                 NodeList[Node.location].push(Node)
             });
         }
-
-       
 
         function NodeCheck(ID, SkipReady) {
 
@@ -1508,6 +1504,7 @@ module.exports = function (RED) {
             }
         }
 
+        InitDriver();
         StartDriver();
 
         function InitDriver(){
@@ -1533,6 +1530,7 @@ module.exports = function (RED) {
             }
 
             WireDriverEvents();
+            UI.unregister();
             UI.register(Driver, Input)
         }
 
