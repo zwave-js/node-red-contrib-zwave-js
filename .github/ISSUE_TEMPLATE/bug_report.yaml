@@ -35,28 +35,20 @@ body:
       value: "Please list steps to reproduce. If the problem is hardware-specific, please list which devices are affected."
     validations:
       required: true
-  - type: dropdown
+  - type: input
     id: version
     attributes:
       label: Version
       description: What version of our software are you running?
-      options:
-        - v4.1.0
-        - v4.0.0
-        - v.3.x
-        - Other
+      placeholder: ex. 4.2.0
     validations:
       required: true
-  - type: dropdown
+  - type: input
     id: nrversion
     attributes:
       label: Node-RED Version
       description: What version of Node-RED are you running?
-      options:
-        - 2.x
-        - 1.3.x
-        - 1.2.x
-        - Other
+      placeholder: ex. 2.0.1
     validations:
       required: true
   - type: dropdown
