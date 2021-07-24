@@ -1509,6 +1509,7 @@ module.exports = function (RED) {
 
         function InitDriver(){
 
+            DriverAttempts++;
             try {
 
                 Log("info", "NDERED", undefined, undefined, "Initializing Driver...")
@@ -1562,6 +1563,8 @@ module.exports = function (RED) {
     
             Driver.once("driver ready", () => {
     
+                DriverAttempts = 0;
+
                 node.status({ fill: "yellow", shape: "dot", text: "Interviewing Nodes..." });
                 UI.status("Interviewing Nodes...")
     
@@ -1754,7 +1757,6 @@ module.exports = function (RED) {
         function StartDriver() {
 
             Log("info", "NDERED", undefined, undefined, "Starting Driver...")
-            DriverAttempts++;
             Driver.start()
                 .catch((e) => {
 
@@ -1775,7 +1777,7 @@ module.exports = function (RED) {
                     }
                 })
             .then(()=>{
-                DriverAttempts = 0;
+                // now what - just sit and wait.
             })
         }
 
