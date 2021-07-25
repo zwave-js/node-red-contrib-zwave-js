@@ -1,5 +1,12 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 4.3.0
+    - Implemented critical driver error recovery.  
+
+      This update implements a maximum retry routine (max 3), for critical driver errors.  
+      Initially, critical errors were not recoverable, and needed a restart of the module.  
+      We now try a maximum of 3 times, before giving up.
+      
   - 4.2.1
     - Fix Node Red V2 UI compatibility on the zwave Z-Wave tab. 
 

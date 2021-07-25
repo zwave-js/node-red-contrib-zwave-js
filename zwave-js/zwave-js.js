@@ -4,7 +4,7 @@ module.exports = function (RED) {
     const Path = require('path')
     const ModulePackage = require('../package.json')
     const ZWaveJS = require('zwave-js')
-    const { Duration, createDefaultTransportFormat, CommandClasses } = require("@zwave-js/core");
+    const { Duration, createDefaultTransportFormat, CommandClasses, ZWaveErrorCodes } = require("@zwave-js/core");
     const ZWaveJSPackage = require('zwave-js/package.json')
     const Winston = require("winston");
 
@@ -16,6 +16,7 @@ module.exports = function (RED) {
 
         RED.nodes.createNode(this, config);
         const node = this;
+
         let canDoSecure = false;
         const NodesReady = [];
         let AllNodesReady = false;
@@ -23,7 +24,12 @@ module.exports = function (RED) {
         var Logger;
         var FileTransport;
 
-        let NodeStats = {}
+        const MaxDriverAttempts = 3;
+        let DriverAttempts = 0;
+        const RetryTime = 5000;
+        var DriverOptions;
+        
+        const NodeStats = {}
         var ControllerStats;
 
         // Log function
@@ -52,7 +58,6 @@ module.exports = function (RED) {
         }
 
         /* START DEPRECATION */
-
         function ProcessDurationClass(Class, Operation, Params) {
             if (Params.length > 1) {
                 if (typeof Params[1] === "object") {
@@ -65,7 +70,6 @@ module.exports = function (RED) {
             }
             return Params;
         }
-
         function ParseMeterOptions(Class, Operation, Params) {
             if (typeof Params[0] === "object") {
                 Params[0].rateType = Enums.RateType[Params[0].rateType];
@@ -73,7 +77,6 @@ module.exports = function (RED) {
             return Params;
 
         }
-
         async function OLDAssociations(msg, send) {
 
             let Operation = msg.payload.operation
@@ -193,8 +196,6 @@ module.exports = function (RED) {
 
             return;
         }
-
-
         async function OLDController(msg, send) {
 
             let Operation = msg.payload.operation
@@ -405,7 +406,6 @@ module.exports = function (RED) {
 
             return;
         }
-
         async function OLDUnmanaged(msg, send) {
 
             let Operation = msg.payload.operation
@@ -454,8 +454,6 @@ module.exports = function (RED) {
 
             return;
         }
-
-        // Z-Wave JS Enum Lookups
         const Enums = {
             // CC enums
             RateType: ZWaveJS.RateType,
@@ -481,14 +479,11 @@ module.exports = function (RED) {
             NodeStatus: ZWaveJS.NodeStatus,
             ProtocolVersion: ZWaveJS.ProtocolVersion
         }
-
         const CCParamConverters = {
             "BinarySwitch.Set": ProcessDurationClass,
             "MultiLevelSwitch.Set": ProcessDurationClass,
             "Meter.Get": ParseMeterOptions
         }
-
-
         async function OldInput(msg, send) {
 
 
@@ -519,7 +514,6 @@ module.exports = function (RED) {
             return;
 
         }
-
         async function OLDNodeFunction(msg, send) {
 
             let Operation = msg.payload.operation
@@ -596,7 +590,6 @@ module.exports = function (RED) {
 
             return;
         }
-
         async function OLDDriverCMD(msg, send) {
 
             let Operation = msg.payload.operation;
@@ -640,8 +633,6 @@ module.exports = function (RED) {
                     break;
             }
         }
-
-
         /* END DEPRECATION */
 
         var RestoreReadyTimer;
@@ -684,7 +675,7 @@ module.exports = function (RED) {
             await Input(MSG, undefined, undefined, true)
         }
 
-        let DriverOptions = {};
+        DriverOptions = {};
 
         // Logging
         DriverOptions.logConfig = {};
@@ -705,7 +696,6 @@ module.exports = function (RED) {
         else {
             DriverOptions.logConfig.enabled = false;
         }
-
 
         DriverOptions.storage = {};
 
@@ -763,172 +753,6 @@ module.exports = function (RED) {
             canDoSecure = true;
         }
 
-        try {
-
-            Log("info", "NDERED", undefined, undefined, "Initializing Driver...")
-            Driver = new ZWaveJS.Driver(config.serialPort, DriverOptions);
-
-            if (config.sendUsageStatistics !== undefined && config.sendUsageStatistics) {
-                Log("info", "NDERED", undefined, "[TELEMETRY]", "Enabling...")
-                Driver.enableStatistics({ applicationName: ModulePackage.name, applicationVersion: ModulePackage.version })
-            }
-            else {
-                Log("info", "NDERED", undefined, "[TELEMETRY]", "Disabling...")
-                Driver.disableStatistics();
-            }
-        }
-        catch (e) {
-            Log("error", "NDERED", undefined, "[ERROR] [INIT]", e.message)
-            node.error(e);
-            return;
-        }
-
-        UI.register(Driver, Input)
-
-        Driver.on("error", (e) => {
-            Log("error", "NDERED", undefined, "[ERROR] [DRIVER]", e.message)
-            node.error(e);
-        });
-
-        Driver.on("all nodes ready", () => {
-            node.status({ fill: "green", shape: "dot", text: "All Nodes Ready!" });
-            AllNodesReady = true;
-            UI.status("All Nodes Ready!")
-        })
-
-        Driver.once("driver ready", () => {
-
-            node.status({ fill: "yellow", shape: "dot", text: "Interviewing Nodes..." });
-            UI.status("Interviewing Nodes...")
-
-            let ReturnController = { id: "Controller" };
-
-            // Add, Remove
-            Driver.controller.on("node added", (N) => {
-                clearTimeout(RestoreReadyTimer)
-                ShareNodeList();
-                WireNodeEvents(N);
-                Send(N, "NODE_ADDED")
-                Send(N, "INTERVIEW_STARTED");
-                node.status({ fill: "yellow", shape: "dot", text: "Node: " + N.id + " Interview Started." });
-                UI.status("Node: " + N.id + " Interview Started.")
-            })
-
-            Driver.controller.on("node removed", (N) => {
-                ShareNodeList();
-                Send(N, "NODE_REMOVED")
-            })
-
-            // Stats
-            Driver.controller.on("statistics updated", (S) => {
-                ControllerStats = S
-            })
-
-            // Include
-            Driver.controller.on("inclusion started", (Secure) => {
-                Send(ReturnController, "INCLUSION_STARTED", { isSecureInclude: Secure })
-                node.status({ fill: "yellow", shape: "dot", text: "Inclusion Started. Secure: " + Secure });
-                UI.status("Inclusion Started. Secure: " + Secure)
-            })
-
-            Driver.controller.on("inclusion failed", () => {
-                Send(ReturnController, "INCLUSION_FAILED")
-                node.status({ fill: "red", shape: "dot", text: "Inclusion Failed." });
-                UI.status("Inclusion Failed.")
-                RestoreReadyStatus();
-            })
-
-            Driver.controller.on("inclusion stopped", () => {
-                Send(ReturnController, "INCLUSION_STOPPED")
-                node.status({ fill: "green", shape: "dot", text: "Inclusion Stopped." });
-                UI.status("Inclusion Stopped.")
-                RestoreReadyStatus();
-            })
-
-            // Exclusion
-            Driver.controller.on("exclusion started", () => {
-                Send(ReturnController, "EXCLUSION_STARTED")
-                node.status({ fill: "yellow", shape: "dot", text: "Exclusion Started." });
-                UI.status("Exclusion Started.")
-            })
-
-            Driver.controller.on("exclusion failed", () => {
-                Send(ReturnController, "EXCLUSION_FAILED")
-                node.status({ fill: "red", shape: "dot", text: "Exclusion Failed." });
-                UI.status("Exclusion Failed.")
-                RestoreReadyStatus();
-            })
-
-            Driver.controller.on("exclusion stopped", () => {
-                Send(ReturnController, "EXCLUSION_STOPPED")
-                node.status({ fill: "green", shape: "dot", text: "Exclusion Stopped." });
-                UI.status("Exclusion Stopped.")
-                RestoreReadyStatus();
-            })
-
-            // Network Heal
-            Driver.controller.on("heal network done", () => {
-                Send(ReturnController, "NETWORK_HEAL_DONE", { Successful: Heal_Done, Failed: Heal_Failed, Skipped: Heal_Skipped })
-                node.status({ fill: "green", shape: "dot", text: "Network Heal Done." });
-                UI.status("Network Heal Done.")
-                RestoreReadyStatus();
-            })
-
-            let Heal_Pending = []
-            let Heal_Done = []
-            let Heal_Failed = []
-            let Heal_Skipped = []
-
-            Driver.controller.on("heal network progress", (P) => {
-
-                Heal_Pending.length = 0;
-                Heal_Done.length = 0;
-                Heal_Failed.length = 0;
-                Heal_Skipped.length = 0;
-
-                P.forEach((V, K) => {
-                    switch (V) {
-                        case "pending":
-                            Heal_Pending.push(K)
-                            break
-                        case "done":
-                            Heal_Done.push(K)
-                            break
-                        case "failed":
-                            Heal_Failed.push(K)
-                            break
-                        case "skipped":
-                            Heal_Skipped.push(K)
-                            break
-                    }
-                })
-                node.status({ fill: "yellow", shape: "dot", text: "Healing Network Pending:[" + Heal_Pending.toString() + "], Done:[" + Heal_Done.toString() + "], Skipped:[" + Heal_Skipped.toString() + "], Failed:[" + Heal_Failed.toString() + "]" });
-                UI.status("Healing Network Pending:[" + Heal_Pending.toString() + "], Done:[" + Heal_Done.toString() + "], Skipped:[" + Heal_Skipped.toString() + "], Failed:[" + Heal_Failed.toString() + "]")
-            })
-
-            ShareNodeList();
-
-            Driver.controller.nodes.forEach((ZWN) => {
-                WireNodeEvents(ZWN);
-            });
-
-        });
-
-        node.on('close', (removed,done) => {
-
-            let Type = (removed ? "DELETE" : "RESTART")
-            Log("info", "NDERED", undefined, "[SHUTDOWN] ["+Type+"]", "Cleaning up...")
-            UI.unregister()
-            Driver.destroy();
-            RED.events.off("zwjs:node:command", processMessageEvent);
-            if (done) {
-                done();
-            }
-
-        });
-
-        node.on('input', Input);
-
         function ShareNodeList() {
 
             for (let Location in NodeList) delete NodeList[Location];
@@ -948,78 +772,6 @@ module.exports = function (RED) {
                 }
                 NodeList[Node.location].push(Node)
             });
-        }
-
-        function WireNodeEvents(Node) {
-
-            Node.on("ready", (N) => {
-
-                if (N.isControllerNode()) {
-                    return;
-                }
-
-                if (NodesReady.indexOf(N.id) < 0) {
-                    NodesReady.push(N.id);
-                    node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
-                    UI.status("Nodes : " + NodesReady.toString() + " Are Ready.")
-                }
-
-                Node.on("statistics updated", (S) => {
-                    NodeStats[Node.id] = S
-                })
-
-                Node.on("firmware update finished", (N, S, T) => {
-                    Send(N, "FIRMWARE_UPDATE_COMPLETE", S);
-                })
-
-                Node.on("value notification", (N, VL) => {
-                    Send(N, "VALUE_NOTIFICATION", VL);
-                })
-
-                Node.on("notification", (N, CC, ARGS) => {
-                    let OBJ = {
-                        ccId: CC,
-                        args: ARGS
-                    }
-                    Send(N, "NOTIFICATION", OBJ);
-                })
-
-                Node.on("value added", (N, VL) => {
-                    Send(N, "VALUE_UPDATED", VL);
-                })
-
-                Node.on("value updated", (N, VL) => {
-                    Send(N, "VALUE_UPDATED", VL);
-                })
-
-                Node.on("wake up", (N) => {
-                    Send(N, "WAKE_UP");
-                })
-
-                Node.on("sleep", (N) => {
-                    Send(N, "SLEEP");
-                })
-            })
-
-            Node.on("interview started", (N) => {
-                Send(N, "INTERVIEW_STARTED");
-                node.status({ fill: "yellow", shape: "dot", text: "Node: " + N.id + " Interview Started." });
-                UI.status("Node: " + N.id + " Interview Started.")
-            })
-
-            Node.on("interview failed", (N, Er) => {
-                Send(N, "INTERVIEW_FAILED", Er);
-                node.status({ fill: "red", shape: "dot", text: "Node: " + N.id + " Interview Failed." });
-                UI.status("Node: " + N.id + " Interview Failed.")
-                RestoreReadyStatus();
-            })
-
-            Node.on("interview completed", (N) => {
-                Send(N, "INTERVIEW_COMPLETE");
-                node.status({ fill: "green", shape: "dot", text: "Node: " + N.id + " Interview Completed." });
-                UI.status("Node: " + N.id + " Interview Completed.")
-                RestoreReadyStatus();
-            })
         }
 
         function NodeCheck(ID, SkipReady) {
@@ -1042,6 +794,21 @@ module.exports = function (RED) {
         function ThrowVirtualNodeLimit(){
             throw new Error('Multicast currently only supports ValueAPI:setValue commands.')
         }
+
+        node.on('close', (removed,done) => {
+
+            let Type = (removed ? "DELETE" : "RESTART")
+            Log("info", "NDERED", undefined, "[SHUTDOWN] ["+Type+"]", "Cleaning up...")
+            UI.unregister()
+            Driver.destroy();
+            RED.events.off("zwjs:node:command", processMessageEvent);
+            if (done) {
+                done();
+            }
+
+        });
+
+        node.on('input', Input);
 
         async function Input(msg, send, done, internal) {
 
@@ -1737,15 +1504,283 @@ module.exports = function (RED) {
             }
         }
 
+        InitDriver();
+        StartDriver();
 
+        function InitDriver(){
 
-        Log("info", "NDERED", undefined, undefined, "Starting Driver...")
-        Driver.start()
-            .catch((e) => {
-                Log("error", "NDERED", undefined, "[ERROR] [DRIVER]", e.message)
+            DriverAttempts++;
+            try {
+
+                Log("info", "NDERED", undefined, undefined, "Initializing Driver...")
+                Driver = new ZWaveJS.Driver(config.serialPort, DriverOptions);
+    
+                if (config.sendUsageStatistics !== undefined && config.sendUsageStatistics) {
+                    Log("info", "NDERED", undefined, "[TELEMETRY]", "Enabling...")
+                    Driver.enableStatistics({ applicationName: ModulePackage.name, applicationVersion: ModulePackage.version })
+                }
+                else {
+                    Log("info", "NDERED", undefined, "[TELEMETRY]", "Disabling...")
+                    Driver.disableStatistics();
+                }
+            }
+            catch (e) {
+                Log("error", "NDERED", undefined, "[ERROR] [INIT]", e.message)
                 node.error(e);
+                return;
+            }
 
+            WireDriverEvents();
+            UI.unregister();
+            UI.register(Driver, Input)
+        }
+
+        function WireDriverEvents(){
+
+            Driver.on("error", (e) => {
+                if (e.code === ZWaveErrorCodes.Driver_Failed) {
+                    if (DriverAttempts >= MaxDriverAttempts) {
+                        Log("error", "NDERED", undefined, "[ERROR] [DRIVER]", e.message)
+                        node.error(e);
+                    }else{
+                        Log("error", "NDERED", undefined, "[ERROR] [DRIVER]", e.message)
+                        Log("debug", "NDERED", undefined, undefined, "Will retry in "+RetryTime+"ms. Attempted: "+DriverAttempts+", Max: "+MaxDriverAttempts)
+                        node.error(new Error("Driver Failed: Will retry in "+RetryTime+"ms. Attempted: "+DriverAttempts+", Max: "+MaxDriverAttempts));
+                        InitDriver();
+                        setTimeout(StartDriver,RetryTime)
+                    }
+                } else {
+                    Log("error", "NDERED", undefined, "[ERROR] [DRIVER]", e.message)
+                    node.error(e);
+                }
+            });
+
+            Driver.on("all nodes ready", () => {
+                node.status({ fill: "green", shape: "dot", text: "All Nodes Ready!" });
+                AllNodesReady = true;
+                UI.status("All Nodes Ready!")
             })
+    
+            Driver.once("driver ready", () => {
+    
+                DriverAttempts = 0;
+
+                node.status({ fill: "yellow", shape: "dot", text: "Interviewing Nodes..." });
+                UI.status("Interviewing Nodes...")
+    
+                let ReturnController = { id: "Controller" };
+    
+                // Add, Remove
+                Driver.controller.on("node added", (N) => {
+                    clearTimeout(RestoreReadyTimer)
+                    ShareNodeList();
+                    WireNodeEvents(N);
+                    Send(N, "NODE_ADDED")
+                    Send(N, "INTERVIEW_STARTED");
+                    node.status({ fill: "yellow", shape: "dot", text: "Node: " + N.id + " Interview Started." });
+                    UI.status("Node: " + N.id + " Interview Started.")
+                })
+    
+                Driver.controller.on("node removed", (N) => {
+                    ShareNodeList();
+                    Send(N, "NODE_REMOVED")
+                })
+    
+                // Stats
+                Driver.controller.on("statistics updated", (S) => {
+                    ControllerStats = S
+                })
+    
+                // Include
+                Driver.controller.on("inclusion started", (Secure) => {
+                    Send(ReturnController, "INCLUSION_STARTED", { isSecureInclude: Secure })
+                    node.status({ fill: "yellow", shape: "dot", text: "Inclusion Started. Secure: " + Secure });
+                    UI.status("Inclusion Started. Secure: " + Secure)
+                })
+    
+                Driver.controller.on("inclusion failed", () => {
+                    Send(ReturnController, "INCLUSION_FAILED")
+                    node.status({ fill: "red", shape: "dot", text: "Inclusion Failed." });
+                    UI.status("Inclusion Failed.")
+                    RestoreReadyStatus();
+                })
+    
+                Driver.controller.on("inclusion stopped", () => {
+                    Send(ReturnController, "INCLUSION_STOPPED")
+                    node.status({ fill: "green", shape: "dot", text: "Inclusion Stopped." });
+                    UI.status("Inclusion Stopped.")
+                    RestoreReadyStatus();
+                })
+    
+                // Exclusion
+                Driver.controller.on("exclusion started", () => {
+                    Send(ReturnController, "EXCLUSION_STARTED")
+                    node.status({ fill: "yellow", shape: "dot", text: "Exclusion Started." });
+                    UI.status("Exclusion Started.")
+                })
+    
+                Driver.controller.on("exclusion failed", () => {
+                    Send(ReturnController, "EXCLUSION_FAILED")
+                    node.status({ fill: "red", shape: "dot", text: "Exclusion Failed." });
+                    UI.status("Exclusion Failed.")
+                    RestoreReadyStatus();
+                })
+    
+                Driver.controller.on("exclusion stopped", () => {
+                    Send(ReturnController, "EXCLUSION_STOPPED")
+                    node.status({ fill: "green", shape: "dot", text: "Exclusion Stopped." });
+                    UI.status("Exclusion Stopped.")
+                    RestoreReadyStatus();
+                })
+    
+                // Network Heal
+                Driver.controller.on("heal network done", () => {
+                    Send(ReturnController, "NETWORK_HEAL_DONE", { Successful: Heal_Done, Failed: Heal_Failed, Skipped: Heal_Skipped })
+                    node.status({ fill: "green", shape: "dot", text: "Network Heal Done." });
+                    UI.status("Network Heal Done.")
+                    RestoreReadyStatus();
+                })
+    
+                let Heal_Pending = []
+                let Heal_Done = []
+                let Heal_Failed = []
+                let Heal_Skipped = []
+    
+                Driver.controller.on("heal network progress", (P) => {
+    
+                    Heal_Pending.length = 0;
+                    Heal_Done.length = 0;
+                    Heal_Failed.length = 0;
+                    Heal_Skipped.length = 0;
+    
+                    P.forEach((V, K) => {
+                        switch (V) {
+                            case "pending":
+                                Heal_Pending.push(K)
+                                break
+                            case "done":
+                                Heal_Done.push(K)
+                                break
+                            case "failed":
+                                Heal_Failed.push(K)
+                                break
+                            case "skipped":
+                                Heal_Skipped.push(K)
+                                break
+                        }
+                    })
+                    node.status({ fill: "yellow", shape: "dot", text: "Healing Network Pending:[" + Heal_Pending.toString() + "], Done:[" + Heal_Done.toString() + "], Skipped:[" + Heal_Skipped.toString() + "], Failed:[" + Heal_Failed.toString() + "]" });
+                    UI.status("Healing Network Pending:[" + Heal_Pending.toString() + "], Done:[" + Heal_Done.toString() + "], Skipped:[" + Heal_Skipped.toString() + "], Failed:[" + Heal_Failed.toString() + "]")
+                })
+    
+                ShareNodeList();
+    
+                Driver.controller.nodes.forEach((ZWN) => {
+                    WireNodeEvents(ZWN);
+                });
+    
+            });
+        }
+
+        function WireNodeEvents(Node) {
+
+            Node.on("ready", (N) => {
+
+                if (N.isControllerNode()) {
+                    return;
+                }
+
+                if (NodesReady.indexOf(N.id) < 0) {
+                    NodesReady.push(N.id);
+                    node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
+                    UI.status("Nodes : " + NodesReady.toString() + " Are Ready.")
+                }
+
+                Node.on("statistics updated", (S) => {
+                    NodeStats[Node.id] = S
+                })
+
+                Node.on("firmware update finished", (N, S, T) => {
+                    Send(N, "FIRMWARE_UPDATE_COMPLETE", S);
+                })
+
+                Node.on("value notification", (N, VL) => {
+                    Send(N, "VALUE_NOTIFICATION", VL);
+                })
+
+                Node.on("notification", (N, CC, ARGS) => {
+                    let OBJ = {
+                        ccId: CC,
+                        args: ARGS
+                    }
+                    Send(N, "NOTIFICATION", OBJ);
+                })
+
+                Node.on("value added", (N, VL) => {
+                    Send(N, "VALUE_UPDATED", VL);
+                })
+
+                Node.on("value updated", (N, VL) => {
+                    Send(N, "VALUE_UPDATED", VL);
+                })
+
+                Node.on("wake up", (N) => {
+                    Send(N, "WAKE_UP");
+                })
+
+                Node.on("sleep", (N) => {
+                    Send(N, "SLEEP");
+                })
+            })
+
+            Node.on("interview started", (N) => {
+                Send(N, "INTERVIEW_STARTED");
+                node.status({ fill: "yellow", shape: "dot", text: "Node: " + N.id + " Interview Started." });
+                UI.status("Node: " + N.id + " Interview Started.")
+            })
+
+            Node.on("interview failed", (N, Er) => {
+                Send(N, "INTERVIEW_FAILED", Er);
+                node.status({ fill: "red", shape: "dot", text: "Node: " + N.id + " Interview Failed." });
+                UI.status("Node: " + N.id + " Interview Failed.")
+                RestoreReadyStatus();
+            })
+
+            Node.on("interview completed", (N) => {
+                Send(N, "INTERVIEW_COMPLETE");
+                node.status({ fill: "green", shape: "dot", text: "Node: " + N.id + " Interview Completed." });
+                UI.status("Node: " + N.id + " Interview Completed.")
+                RestoreReadyStatus();
+            })
+        }
+
+        function StartDriver() {
+
+            Log("info", "NDERED", undefined, undefined, "Starting Driver...")
+            Driver.start()
+                .catch((e) => {
+
+                    if (e.code === ZWaveErrorCodes.Driver_Failed) {
+                        if (DriverAttempts >= MaxDriverAttempts) {
+                            Log("error", "NDERED", undefined, "[ERROR] [DRIVER]", e.message)
+                            node.error(e);
+                        }else{
+                            Log("error", "NDERED", undefined, "[ERROR] [DRIVER]", e.message)
+                            Log("debug", "NDERED", undefined, undefined, "Will retry in "+RetryTime+"ms. Attempted: "+DriverAttempts+", Max: "+MaxDriverAttempts)
+                            node.error(new Error("Driver Failed: Will retry in "+RetryTime+"ms. Attempted: "+DriverAttempts+", Max: "+MaxDriverAttempts));
+                            InitDriver();
+                            setTimeout(StartDriver,RetryTime)
+                        }
+                    } else {
+                        Log("error", "NDERED", undefined, "[ERROR] [DRIVER]", e.message)
+                        node.error(e);
+                    }
+                })
+            .then(()=>{
+                // now what - just sit and wait.
+            })
+        }
+
     }
 
     RED.nodes.registerType("zwave-js", Init);
