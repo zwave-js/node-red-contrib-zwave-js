@@ -36,9 +36,5 @@ The node is straightforward to use, and removes all the complexities that you wo
  - [Change Log](https://github.com/zwave-js/node-red-contrib-zwave-js/blob/main/CHANGELOG.md)
 
 
-## Credits
- - [@AlCalzone](https://github.com/AlCalzone) for brigning the unbeleivale ZWave Runetime libary into the nodejs 
- - [@hufftheweevil](https://github.com/hufftheweevil) for his work, on developing a UI for this 
- - [@CRXPorter](https://github.com/crxporter) for his tierless testing and support on this project. 
 
 
