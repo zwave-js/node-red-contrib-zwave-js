@@ -30,6 +30,11 @@ Z-Wave JS is actively  maintained, fast and supports secure (S0) devices - S2 is
 It offers a massive amount of flexibility and is packed full of features.   
 The node is straightforward to use, and removes all the complexities that you would otherwise need to deal with.
 
+## Credits
+ - [@AlCalzone](https://github.com/AlCalzone) for brigning the unbeleivale ZWave Runetime libary into the nodejs 
+ - [@hufftheweevil](https://github.com/hufftheweevil) for his work, on brigning a UI ontop of this node.
+ - [@CRXPorter](https://github.com/crxporter) for his tierless testing and support on this project. 
+
 ![Image](./resources/Demo.png)  
 
  - [Wiki](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/getting-started)
