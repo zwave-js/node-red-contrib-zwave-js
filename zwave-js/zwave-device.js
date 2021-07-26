@@ -6,7 +6,6 @@ module.exports = function (RED) {
         RED.nodes.createNode(this, config);
         const node = this;
 
-        let In = true;
         let Out = true;
         let DynamicIDListener = -1;
 
@@ -14,17 +13,14 @@ module.exports = function (RED) {
             switch (config.datamode) {
 
                 case "Send":
-                    In = true
                     Out = false
                     break;
 
                 case "Receive":
-                    In = false
                     Out = true;
                     break;
 
                 default:
-                    In = true;
                     Out = true;
                     break;
             }
@@ -153,7 +149,7 @@ module.exports = function (RED) {
             } else if (config.filteredNodeId === "AS") {
                 RED.events.off("zwjs:node:event:" + DynamicIDListener, processEventMessage)
             }
-            
+
             DynamicIDListener = -1
 
             if (done) {

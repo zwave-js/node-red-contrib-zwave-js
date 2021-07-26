@@ -48,10 +48,10 @@ module.exports = {
       _SendStatus()
     })
 
-    RED.httpAdmin.get('/zwave-js/driverready',function(req,res){
+    RED.httpAdmin.get('/zwave-js/driverready', function (req, res) {
       let Loaded = _Context.hasOwnProperty('controller')
       res.contentType('application/json')
-      res.send({ready:Loaded})
+      res.send({ ready: Loaded })
     })
 
     /* Scripts */
@@ -64,8 +64,8 @@ module.exports = {
     RED.httpAdmin.get('/zwave-js/handlebars.min.js', function (req, res) {
       res.sendFile(path.join(__dirname, 'handlebars.min.js'))
     })
-   /* Scripts */
-   
+    /* Scripts */
+
     RED.httpAdmin.get('/zwave-js/styles.css', function (req, res) {
       res.sendFile(path.join(__dirname, 'styles.css'), { contentType: 'text/css' })
     })
@@ -76,7 +76,7 @@ module.exports = {
         _Buffer = Buffer.concat([_Buffer, Data])
       })
 
-      req.once('end', (D) => {
+      req.once('end', () => {
 
         let Code = req.params.code;
         let CodeBuffer = Buffer.from(Code, 'base64');
@@ -91,7 +91,7 @@ module.exports = {
 
         let Success = () => {
           res.status(200).end()
-          SendNodeStatus({id:Parts[0]},"UPDATING FIRMWARE")
+          SendNodeStatus({ id: Parts[0] }, "UPDATING FIRMWARE")
         }
 
         let Error = (err) => {
@@ -149,7 +149,7 @@ module.exports = {
         })
       })
 
-      
+
 
       let WireNodeEvents = node => {
 
@@ -166,8 +166,8 @@ module.exports = {
         node.on('value removed', (node, value) => { SendNodeEvent('node-value', node, value) })
         node.on('value notification', (node, value) => { SendNodeEvent('node-value', node, value) })
         node.on('notification', (node, value) => { SendNodeEvent('node-value', node, value) })
-        node.on('firmware update progress', (node, S, R) => { SendNodeEvent('node-fwu-progress', node,{sent:S, remain:R} ) })
-        node.on('firmware update finished', (node, Status) => { SendNodeEvent('node-fwu-completed', node,{status:Status} ) })
+        node.on('firmware update progress', (node, S, R) => { SendNodeEvent('node-fwu-progress', node, { sent: S, remain: R }) })
+        node.on('firmware update finished', (node, Status) => { SendNodeEvent('node-fwu-completed', node, { status: Status }) })
 
         // Meta
         node.on('metadata update', (node, value) => { SendNodeEvent('node-meta', node, value) })

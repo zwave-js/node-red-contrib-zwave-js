@@ -1,6 +1,4 @@
 .DS_Store
 .vscode
 node_modules
-.prettierignore
-mock
 package-lock.json
