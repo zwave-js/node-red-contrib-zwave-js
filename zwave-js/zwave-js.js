@@ -215,7 +215,7 @@ module.exports = function (RED) {
         }
 
         function ThrowVirtualNodeLimit() {
-            throw new Error('Multicast currently only supports ValueAPI:setValue commands.')
+            throw new Error('Multicast only supports ValueAPI:setValue and CCAPI set type commands.')
         }
 
         node.on('close', (removed, done) => {
