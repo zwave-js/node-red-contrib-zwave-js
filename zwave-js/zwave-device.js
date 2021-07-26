@@ -1,97 +1,97 @@
 module.exports = function (RED) {
 	function Init(config) {
-		RED.nodes.createNode(this, config)
-		const node = this
+		RED.nodes.createNode(this, config);
+		const node = this;
 
-		let Out = true
-		let DynamicIDListener = -1
+		let Out = true;
+		let DynamicIDListener = -1;
 
 		if (config.datamode !== undefined) {
 			switch (config.datamode) {
-				case 'Send':
-					Out = false
-					break
+				case "Send":
+					Out = false;
+					break;
 
-				case 'Receive':
-					Out = true
-					break
+				case "Receive":
+					Out = true;
+					break;
 
 				default:
-					Out = true
-					break
+					Out = true;
+					break;
 			}
 		}
 
-		if (config.filteredNodeId === 'Var') {
-			let VarValue = RED.util.evaluateNodeProperty('ZW_NODE_ID', 'env', node)
+		if (config.filteredNodeId === "Var") {
+			let VarValue = RED.util.evaluateNodeProperty("ZW_NODE_ID", "env", node);
 			if (isNaN(VarValue)) {
-				throw new Error("The 'ZW_NODE_ID' variable is not a number.")
+				throw new Error("The 'ZW_NODE_ID' variable is not a number.");
 			}
-			config.filteredNodeId = VarValue
+			config.filteredNodeId = VarValue;
 		}
 
 		if (Array.isArray(config.filteredNodeId)) {
 			config.filteredNodeId.forEach((N) => {
-				if (Out) RED.events.on('zwjs:node:event:' + N, processEventMessage)
-			})
+				if (Out) RED.events.on("zwjs:node:event:" + N, processEventMessage);
+			});
 			if (config.multicast) {
 				node.status({
-					fill: 'green',
-					shape: 'dot',
-					text: 'Mode: Mulitcast (' + config.filteredNodeId + ')',
-				})
+					fill: "green",
+					shape: "dot",
+					text: "Mode: Mulitcast (" + config.filteredNodeId + ")"
+				});
 			} else {
 				node.status({
-					fill: 'green',
-					shape: 'dot',
-					text: 'Mode: Multiple (' + config.filteredNodeId + ')',
-				})
+					fill: "green",
+					shape: "dot",
+					text: "Mode: Multiple (" + config.filteredNodeId + ")"
+				});
 			}
 		} else if (!isNaN(config.filteredNodeId)) {
 			if (Out)
 				RED.events.on(
-					'zwjs:node:event:' + config.filteredNodeId,
+					"zwjs:node:event:" + config.filteredNodeId,
 					processEventMessage
-				)
+				);
 			node.status({
-				fill: 'green',
-				shape: 'dot',
-				text: 'Mode: Specific Node (' + config.filteredNodeId + ')',
-			})
-		} else if (config.filteredNodeId === 'All') {
-			if (Out) RED.events.on('zwjs:node:event:all', processEventMessage)
-			node.status({ fill: 'green', shape: 'dot', text: 'Mode: All Nodes' })
-		} else if (config.filteredNodeId === 'AS') {
+				fill: "green",
+				shape: "dot",
+				text: "Mode: Specific Node (" + config.filteredNodeId + ")"
+			});
+		} else if (config.filteredNodeId === "All") {
+			if (Out) RED.events.on("zwjs:node:event:all", processEventMessage);
+			node.status({ fill: "green", shape: "dot", text: "Mode: All Nodes" });
+		} else if (config.filteredNodeId === "AS") {
 			node.status({
-				fill: 'green',
-				shape: 'dot',
-				text: 'Mode: As Specifed (Waiting)',
-			})
+				fill: "green",
+				shape: "dot",
+				text: "Mode: As Specifed (Waiting)"
+			});
 		}
 
 		function processEventMessage(MSG) {
-			node.send(MSG)
+			node.send(MSG);
 		}
 
-		node.on('input', Input)
+		node.on("input", Input);
 		async function Input(msg, send, done) {
 			try {
 				// Switch Listener (for AS)
-				if (config.filteredNodeId === 'AS') {
-					let Node = msg.payload.node
+				if (config.filteredNodeId === "AS") {
+					let Node = msg.payload.node;
 					if (Node !== DynamicIDListener) {
 						RED.events.off(
-							'zwjs:node:event:' + DynamicIDListener,
+							"zwjs:node:event:" + DynamicIDListener,
 							processEventMessage
-						)
+						);
 						if (Out)
-							RED.events.on('zwjs:node:event:' + Node, processEventMessage)
-						DynamicIDListener = Node
+							RED.events.on("zwjs:node:event:" + Node, processEventMessage);
+						DynamicIDListener = Node;
 						node.status({
-							fill: 'green',
-							shape: 'dot',
-							text: 'Mode: As Specifed (' + Node + ')',
-						})
+							fill: "green",
+							shape: "dot",
+							text: "Mode: As Specifed (" + Node + ")"
+						});
 					}
 				}
 
@@ -100,86 +100,86 @@ module.exports = function (RED) {
 					!isNaN(config.filteredNodeId) &&
 					!Array.isArray(config.filteredNodeId)
 				) {
-					msg.payload.node = parseInt(config.filteredNodeId)
+					msg.payload.node = parseInt(config.filteredNodeId);
 				}
 
 				// Multicast
 				if (Array.isArray(config.filteredNodeId) && config.multicast) {
-					msg.payload.node = []
+					msg.payload.node = [];
 					config.filteredNodeId.forEach((N) => {
-						msg.payload.node.push(parseInt(N))
-					})
+						msg.payload.node.push(parseInt(N));
+					});
 					// Multiple
 				} else if (Array.isArray(config.filteredNodeId)) {
 					if (!config.filteredNodeId.includes(msg.payload.node.toString())) {
 						let ErrorMSG =
-							'Target node is not enabled. Please add this node to the list of nodes to listen to.'
-						let Err = new Error(ErrorMSG)
+							"Target node is not enabled. Please add this node to the list of nodes to listen to.";
+						let Err = new Error(ErrorMSG);
 						if (done) {
-							done(Err)
+							done(Err);
 						} else {
-							node.error(Err)
+							node.error(Err);
 						}
-						return
+						return;
 					}
 				}
 
-				let AllowedModes = ['CCAPI', 'ValueAPI']
+				let AllowedModes = ["CCAPI", "ValueAPI"];
 				if (!AllowedModes.includes(msg.payload.mode)) {
 					let ErrorMSG =
-						'Only modes: ' +
+						"Only modes: " +
 						AllowedModes +
-						' are allowed through this node type.'
-					let Err = new Error(ErrorMSG)
+						" are allowed through this node type.";
+					let Err = new Error(ErrorMSG);
 					if (done) {
-						done(Err)
+						done(Err);
 					} else {
-						node.error(Err)
+						node.error(Err);
 					}
-					return
+					return;
 				}
 
-				RED.events.emit('zwjs:node:command', msg)
+				RED.events.emit("zwjs:node:command", msg);
 				if (done) {
-					done()
+					done();
 				}
 			} catch (Err) {
-				let E = new Error(Err.message)
+				let E = new Error(Err.message);
 				if (done) {
-					done(E)
+					done(E);
 				} else {
-					node.error(E)
+					node.error(E);
 				}
-				return
+				return;
 			}
 		}
 
-		node.on('close', (done) => {
+		node.on("close", (done) => {
 			if (Array.isArray(config.filteredNodeId)) {
 				config.filteredNodeId.forEach((N) => {
-					RED.events.off('zwjs:node:event:' + N, processEventMessage)
-				})
+					RED.events.off("zwjs:node:event:" + N, processEventMessage);
+				});
 			} else if (!isNaN(config.filteredNodeId)) {
 				RED.events.off(
-					'zwjs:node:event:' + config.filteredNodeId,
+					"zwjs:node:event:" + config.filteredNodeId,
 					processEventMessage
-				)
-			} else if (config.filteredNodeId === 'All') {
-				RED.events.off('zwjs:node:event:all', processEventMessage)
-			} else if (config.filteredNodeId === 'AS') {
+				);
+			} else if (config.filteredNodeId === "All") {
+				RED.events.off("zwjs:node:event:all", processEventMessage);
+			} else if (config.filteredNodeId === "AS") {
 				RED.events.off(
-					'zwjs:node:event:' + DynamicIDListener,
+					"zwjs:node:event:" + DynamicIDListener,
 					processEventMessage
-				)
+				);
 			}
 
-			DynamicIDListener = -1
+			DynamicIDListener = -1;
 
 			if (done) {
-				done()
+				done();
 			}
-		})
+		});
 	}
 
-	RED.nodes.registerType('zwave-device', Init)
-}
+	RED.nodes.registerType("zwave-device", Init);
+};
