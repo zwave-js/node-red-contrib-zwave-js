@@ -10,7 +10,8 @@
     "zwave-js": "8.0.5"
   },
   "devDependencies": {
-    "eslint": "7.31.0"
+    "eslint": "7.31.0",
+    "prettier": "2.3.2"
   },
   "engines": {
     "node": ">=12.22.2",

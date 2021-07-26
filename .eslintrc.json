@@ -1,8 +1,11 @@
 {
     "parserOptions": {
         "ecmaVersion": 12,
-        "sourceType": "module",
-        "ecmaFeatures": {}
+        "sourceType": "module"
+    },
+    "env": {
+        "node": true,
+        "es2021": true
     },
     "rules": {
         "constructor-super": 2,
@@ -62,9 +65,5 @@
         "use-isnan": 2,
         "valid-typeof": 2,
         "no-case-declarations": 1
-    },
-    "env": {
-        "node": true,
-        "es2021": true
     }
 }
