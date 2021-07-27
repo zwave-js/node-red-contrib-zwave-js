@@ -38,13 +38,13 @@ module.exports = function (RED) {
 				node.status({
 					fill: "green",
 					shape: "dot",
-					text: "Mode: Mulitcast (" + config.filteredNodeId + ")"
+					text: "Mode: Mulitcast"
 				});
 			} else {
 				node.status({
 					fill: "green",
 					shape: "dot",
-					text: "Mode: Multiple (" + config.filteredNodeId + ")"
+					text: "Mode: Multiple"
 				});
 			}
 		} else if (!isNaN(config.filteredNodeId)) {
