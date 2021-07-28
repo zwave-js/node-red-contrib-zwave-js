@@ -1,9 +1,9 @@
-const path = require("path");
+const path = require('path');
 
 const _Context = {};
 let _RED;
 
-const CONTROLLER_EVENTS = ["node added", "node removed"];
+const CONTROLLER_EVENTS = ['node added', 'node removed'];
 
 var LatestStatus;
 const _SendStatus = () => {
@@ -14,7 +14,7 @@ const _SendStatus = () => {
 
 let SendNodeStatus = (node, status) => {
 	_RED.comms.publish(`/zwave-js/cmd`, {
-		type: "node-status",
+		type: 'node-status',
 		node: node.id,
 		status: status
 	});
@@ -36,55 +36,55 @@ module.exports = {
 	init: (RED) => {
 		_RED = RED;
 
-		RED.httpAdmin.get("/zwave-js/fetch-driver-status", function (req, res) {
+		RED.httpAdmin.get('/zwave-js/fetch-driver-status', function (req, res) {
 			res.status(200).end();
 			_SendStatus();
 		});
 
-		RED.httpAdmin.get("/zwave-js/driverready", function (req, res) {
-			let Loaded = _Context.hasOwnProperty("controller");
-			res.contentType("application/json");
+		RED.httpAdmin.get('/zwave-js/driverready', function (req, res) {
+			let Loaded = _Context.hasOwnProperty('controller');
+			res.contentType('application/json');
 			res.send({ ready: Loaded });
 		});
 
 		/* Scripts */
-		RED.httpAdmin.get("/zwave-js/client.js", function (req, res) {
-			res.sendFile(path.join(__dirname, "client.js"));
+		RED.httpAdmin.get('/zwave-js/client.js', function (req, res) {
+			res.sendFile(path.join(__dirname, 'client.js'));
 		});
-		RED.httpAdmin.get("/zwave-js/vis-network.min.js", function (req, res) {
-			res.sendFile(path.join(__dirname, "vis-network.min.js"));
+		RED.httpAdmin.get('/zwave-js/vis-network.min.js', function (req, res) {
+			res.sendFile(path.join(__dirname, 'vis-network.min.js'));
 		});
-		RED.httpAdmin.get("/zwave-js/handlebars.min.js", function (req, res) {
-			res.sendFile(path.join(__dirname, "handlebars.min.js"));
+		RED.httpAdmin.get('/zwave-js/handlebars.min.js', function (req, res) {
+			res.sendFile(path.join(__dirname, 'handlebars.min.js'));
 		});
 		/* Scripts */
 
-		RED.httpAdmin.get("/zwave-js/styles.css", function (req, res) {
-			res.sendFile(path.join(__dirname, "styles.css"), {
-				contentType: "text/css"
+		RED.httpAdmin.get('/zwave-js/styles.css', function (req, res) {
+			res.sendFile(path.join(__dirname, 'styles.css'), {
+				contentType: 'text/css'
 			});
 		});
-		RED.httpAdmin.post("/zwave-js/firmwareupdate/:code", function (req, res) {
+		RED.httpAdmin.post('/zwave-js/firmwareupdate/:code', function (req, res) {
 			let _Buffer = Buffer.alloc(0);
-			req.on("data", (Data) => {
+			req.on('data', (Data) => {
 				_Buffer = Buffer.concat([_Buffer, Data]);
 			});
 
-			req.once("end", () => {
+			req.once('end', () => {
 				let Code = req.params.code;
-				let CodeBuffer = Buffer.from(Code, "base64");
-				let CodeString = CodeBuffer.toString("ascii");
-				let Parts = CodeString.split(":");
+				let CodeBuffer = Buffer.from(Code, 'base64');
+				let CodeString = CodeBuffer.toString('ascii');
+				let Parts = CodeString.split(':');
 
 				let PL = {
-					mode: "ControllerAPI",
-					method: "beginFirmwareUpdate",
+					mode: 'ControllerAPI',
+					method: 'beginFirmwareUpdate',
 					params: [parseInt(Parts[0]), parseInt(Parts[1]), Parts[2], _Buffer]
 				};
 
 				let Success = () => {
 					res.status(200).end();
-					SendNodeStatus({ id: Parts[0] }, "UPDATING FIRMWARE");
+					SendNodeStatus({ id: Parts[0] }, 'UPDATING FIRMWARE');
 				};
 
 				let Error = (err) => {
@@ -96,7 +96,7 @@ module.exports = {
 			});
 		});
 
-		RED.httpAdmin.post("/zwave-js/cmd", (req, res) => {
+		RED.httpAdmin.post('/zwave-js/cmd', (req, res) => {
 			if (req.body.noWait) {
 				res.status(202).end();
 			}
@@ -123,17 +123,17 @@ module.exports = {
 		});
 	},
 	register: (driver, request) => {
-		driver.on("driver ready", () => {
+		driver.on('driver ready', () => {
 			_Context.controller = driver.controller;
 			_Context.input = request;
 
 			CONTROLLER_EVENTS.forEach((event) => {
 				_Context.controller.on(event, (...args) => {
-					if (event === "node added") {
+					if (event === 'node added') {
 						WireNodeEvents(args[0]);
 					}
 					_RED.comms.publish(`/zwave-js/cmd`, {
-						type: "controller-event",
+						type: 'controller-event',
 						event: event
 					});
 				});
@@ -141,48 +141,48 @@ module.exports = {
 
 			let WireNodeEvents = (node) => {
 				// Status
-				node.on("sleep", (node) => {
-					SendNodeStatus(node, "ASLEEP");
+				node.on('sleep', (node) => {
+					SendNodeStatus(node, 'ASLEEP');
 				});
-				node.on("wake up", (node) => {
-					SendNodeStatus(node, "AWAKE");
+				node.on('wake up', (node) => {
+					SendNodeStatus(node, 'AWAKE');
 				});
-				node.on("dead", (node) => {
-					SendNodeStatus(node, "DEAD");
+				node.on('dead', (node) => {
+					SendNodeStatus(node, 'DEAD');
 				});
-				node.on("alive", (node) => {
-					SendNodeStatus(node, "ALIVE");
+				node.on('alive', (node) => {
+					SendNodeStatus(node, 'ALIVE');
 				});
-				node.on("ready", (node) => {
-					SendNodeStatus(node, "READY");
+				node.on('ready', (node) => {
+					SendNodeStatus(node, 'READY');
 				});
 
 				// Values
-				node.on("value added", (node, value) => {
-					SendNodeEvent("node-value", node, value);
+				node.on('value added', (node, value) => {
+					SendNodeEvent('node-value', node, value);
 				});
-				node.on("value updated", (node, value) => {
-					SendNodeEvent("node-value", node, value);
+				node.on('value updated', (node, value) => {
+					SendNodeEvent('node-value', node, value);
 				});
-				node.on("value removed", (node, value) => {
-					SendNodeEvent("node-value", node, value);
+				node.on('value removed', (node, value) => {
+					SendNodeEvent('node-value', node, value);
 				});
-				node.on("value notification", (node, value) => {
-					SendNodeEvent("node-value", node, value);
+				node.on('value notification', (node, value) => {
+					SendNodeEvent('node-value', node, value);
 				});
-				node.on("notification", (node, value) => {
-					SendNodeEvent("node-value", node, value);
+				node.on('notification', (node, value) => {
+					SendNodeEvent('node-value', node, value);
 				});
-				node.on("firmware update progress", (node, S, R) => {
-					SendNodeEvent("node-fwu-progress", node, { sent: S, remain: R });
+				node.on('firmware update progress', (node, S, R) => {
+					SendNodeEvent('node-fwu-progress', node, { sent: S, remain: R });
 				});
-				node.on("firmware update finished", (node, Status) => {
-					SendNodeEvent("node-fwu-completed", node, { status: Status });
+				node.on('firmware update finished', (node, Status) => {
+					SendNodeEvent('node-fwu-completed', node, { status: Status });
 				});
 
 				// Meta
-				node.on("metadata update", (node, value) => {
-					SendNodeEvent("node-meta", node, value);
+				node.on('metadata update', (node, value) => {
+					SendNodeEvent('node-meta', node, value);
 				});
 			};
 
