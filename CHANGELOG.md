@@ -5,6 +5,7 @@
      - Min Node version is now **12.22.2**
      - Migrate to Z-Wave JS Version 8
      - Mulitcast is now suppoorted on CCAPI (set type commands Only)
+     - Device Node status text is now reduced down to a more acceptable length
      - Various bug fixes/improvements
 
   - 4.3.0

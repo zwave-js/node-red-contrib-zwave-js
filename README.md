@@ -33,7 +33,7 @@ The node is straightforward to use, and removes all the complexities that you wo
 ![Image](./resources/Demo.png)  
 
  - [Wiki](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/getting-started)
- - [Change Log](https://github.com/zwave-js/node-red-contrib-zwave-js/blob/main/CHANGELOG.md)
+ - [Change Log](./CHANGELOG.md)
 
 
 
