@@ -1,3 +1,4 @@
+'use strict';
 const path = require('path');
 
 const _Context = {};
@@ -5,14 +6,14 @@ let _RED;
 
 const CONTROLLER_EVENTS = ['node added', 'node removed'];
 
-var LatestStatus;
+let LatestStatus;
 const _SendStatus = () => {
 	_RED.comms.publish(`/zwave-js/status`, {
 		status: LatestStatus
 	});
 };
 
-let SendNodeStatus = (node, status) => {
+const SendNodeStatus = (node, status) => {
 	_RED.comms.publish(`/zwave-js/cmd`, {
 		type: 'node-status',
 		node: node.id,
@@ -20,7 +21,7 @@ let SendNodeStatus = (node, status) => {
 	});
 };
 
-let SendNodeEvent = (type, node, payload) => {
+const SendNodeEvent = (type, node, payload) => {
 	_RED.comms.publish(`/zwave-js/cmd/${node.id}`, {
 		type: type,
 		payload: payload
@@ -42,7 +43,7 @@ module.exports = {
 		});
 
 		RED.httpAdmin.get('/zwave-js/driverready', function (req, res) {
-			let Loaded = _Context.hasOwnProperty('controller');
+			const Loaded = _Context.hasOwnProperty('controller');
 			res.contentType('application/json');
 			res.send({ ready: Loaded });
 		});
@@ -71,23 +72,23 @@ module.exports = {
 			});
 
 			req.once('end', () => {
-				let Code = req.params.code;
-				let CodeBuffer = Buffer.from(Code, 'base64');
-				let CodeString = CodeBuffer.toString('ascii');
-				let Parts = CodeString.split(':');
+				const Code = req.params.code;
+				const CodeBuffer = Buffer.from(Code, 'base64');
+				const CodeString = CodeBuffer.toString('ascii');
+				const Parts = CodeString.split(':');
 
-				let PL = {
+				const PL = {
 					mode: 'ControllerAPI',
 					method: 'beginFirmwareUpdate',
 					params: [parseInt(Parts[0]), parseInt(Parts[1]), Parts[2], _Buffer]
 				};
 
-				let Success = () => {
+				const Success = () => {
 					res.status(200).end();
 					SendNodeStatus({ id: Parts[0] }, 'UPDATING FIRMWARE');
 				};
 
-				let Error = (err) => {
+				const Error = (err) => {
 					if (err) {
 						res.status(500).send(err.message);
 					}
@@ -101,7 +102,7 @@ module.exports = {
 				res.status(202).end();
 			}
 
-			let timeout = setTimeout(() => res.status(504).end(), 5000);
+			const timeout = setTimeout(() => res.status(504).end(), 5000);
 
 			_Context.input(
 				{ payload: req.body },
@@ -139,7 +140,7 @@ module.exports = {
 				});
 			});
 
-			let WireNodeEvents = (node) => {
+			const WireNodeEvents = (node) => {
 				// Status
 				node.on('sleep', (node) => {
 					SendNodeStatus(node, 'ASLEEP');

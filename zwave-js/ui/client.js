@@ -1,18 +1,19 @@
+'use strict';
 /* eslint-env jquery */
 /* eslint-env browser */
 /*eslint no-undef: "warn"*/
 /*eslint no-unused-vars: "warn"*/
 
-let ZwaveJsUI = (function () {
+const ZwaveJsUI = (function () {
 	function modalAlert(message, title) {
-		let Buts = {
+		const Buts = {
 			Ok: function () {}
 		};
 		modalPrompt(message, title, Buts);
 	}
 
 	function modalPrompt(message, title, buttons, addCancel) {
-		let Options = {
+		const Options = {
 			draggable: false,
 			modal: true,
 			resizable: false,
@@ -41,7 +42,7 @@ let ZwaveJsUI = (function () {
 			.dialog(Options);
 	}
 
-	var FirmwareForm;
+	let FirmwareForm;
 	let FWRunning = false;
 	function AbortUpdate() {
 		if (FWRunning) {
@@ -49,7 +50,7 @@ let ZwaveJsUI = (function () {
 				selectedNode
 			]).then(() => {
 				FirmwareForm.dialog('destroy');
-				let nodeRow = $('#zwave-js-node-list').find(
+				const nodeRow = $('#zwave-js-node-list').find(
 					`[data-nodeid='${selectedNode}']`
 				);
 				nodeRow.find('.zwave-js-node-row-status').html('UPDATE ABORTED');
@@ -61,17 +62,17 @@ let ZwaveJsUI = (function () {
 	}
 
 	function PerformUpdate() {
-		let FE = $('#FILE_FW')[0].files[0];
-		let NID = parseInt($('#NODE_FW option:selected').val());
-		let Target = $('#TARGET_FW').val();
-		let Filename = FE.name;
-		let Code = NID + ':' + Target + ':' + Filename;
+		const FE = $('#FILE_FW')[0].files[0];
+		const NID = parseInt($('#NODE_FW option:selected').val());
+		const Target = $('#TARGET_FW').val();
+		const Filename = FE.name;
+		const Code = NID + ':' + Target + ':' + Filename;
 
-		var reader = new FileReader();
+		const reader = new FileReader();
 		reader.onload = function () {
-			let arrayBuffer = this.result;
-			let array = new Uint8Array(arrayBuffer);
-			let Options = {
+			const arrayBuffer = this.result;
+			const array = new Uint8Array(arrayBuffer);
+			const Options = {
 				url: `zwave-js/firmwareupdate/` + btoa(Code),
 				method: 'POST',
 				contentType: 'application/octect-stream',
@@ -98,7 +99,7 @@ let ZwaveJsUI = (function () {
 	}
 
 	function FirmwareUpdate() {
-		let Options = {
+		const Options = {
 			draggable: false,
 			modal: true,
 			resizable: false,
@@ -120,28 +121,28 @@ let ZwaveJsUI = (function () {
 
 		$.getJSON('zwjsgetnodelist', (data) => {
 			FirmwareForm.html('');
-			let Template = $('#TPL_Firmware').html();
-			let templateScript = Handlebars.compile(Template);
-			let HTML = templateScript({ nodes: data });
+			const Template = $('#TPL_Firmware').html();
+			const templateScript = Handlebars.compile(Template);
+			const HTML = templateScript({ nodes: data });
 			FirmwareForm.append(HTML);
 		});
 	}
 
-	let Groups = {};
+	const Groups = {};
 
 	function AddAssociation() {
-		let NI = $('<input>')
+		const NI = $('<input>')
 			.attr('type', 'number')
 			.attr('value', 1)
 			.attr('min', 1);
-		let EI = $('<input>')
+		const EI = $('<input>')
 			.attr('type', 'number')
 			.attr('value', 0)
 			.attr('min', 0);
 
-		let Buttons = {
+		const Buttons = {
 			Add: function () {
-				let PL = [
+				const PL = [
 					{ nodeId: selectedNode, endpoint: parseInt($('#NODE_EP').val()) },
 					parseInt($('#NODE_G').val()),
 					[{ nodeId: parseInt(NI.val()) }]
@@ -161,7 +162,7 @@ let ZwaveJsUI = (function () {
 			}
 		};
 
-		let HTML = $('<div>').append('Node ID: ');
+		const HTML = $('<div>').append('Node ID: ');
 		NI.appendTo(HTML);
 		HTML.append(' Endpoint: ');
 		EI.appendTo(HTML);
@@ -170,15 +171,15 @@ let ZwaveJsUI = (function () {
 	}
 
 	function DeleteAssociation() {
-		let Association = JSON.parse($(this).attr('data-address'));
+		const Association = JSON.parse($(this).attr('data-address'));
 
-		let PL = [
+		const PL = [
 			{ nodeId: selectedNode, endpoint: parseInt($('#NODE_EP').val()) },
 			parseInt($('#NODE_G').val()),
 			[Association]
 		];
 
-		let Buttons = {
+		const Buttons = {
 			Yes: function () {
 				ControllerCMD('AssociationsAPI', 'removeAssociations', undefined, PL)
 					.then(() => {
@@ -199,15 +200,15 @@ let ZwaveJsUI = (function () {
 	}
 
 	function GMEndPointSelected() {
-		let Endpoint = $(event.target).val();
-		let GroupIDs = Object.keys(Groups[Endpoint]);
+		const Endpoint = $(event.target).val();
+		const GroupIDs = Object.keys(Groups[Endpoint]);
 
-		let GroupSelector = $('#NODE_G');
+		const GroupSelector = $('#NODE_G');
 		GroupSelector.empty();
 		$('<option>Select Group...</option>').appendTo(GroupSelector);
 
 		GroupIDs.forEach((GID) => {
-			let Group = Groups[Endpoint][GID];
+			const Group = Groups[Endpoint][GID];
 			$(
 				'<option value="' + GID + '">' + GID + ' - ' + Group.label + '</option>'
 			).appendTo(GroupSelector);
@@ -215,29 +216,29 @@ let ZwaveJsUI = (function () {
 	}
 
 	function GMGroupSelected() {
-		let Endpoint = parseInt($('#NODE_EP').val());
-		let Group = parseInt($('#NODE_G').val());
+		const Endpoint = parseInt($('#NODE_EP').val());
+		const Group = parseInt($('#NODE_G').val());
 
-		let AA = {
+		const AA = {
 			nodeId: parseInt(selectedNode),
 			endpoint: Endpoint
 		};
 
 		ControllerCMD('AssociationsAPI', 'getAssociations', undefined, [AA]).then(
 			({ object }) => {
-				let Targets = object.Associations.filter((A) => A.GroupID === Group);
+				const Targets = object.Associations.filter((A) => A.GroupID === Group);
 
 				$('#zwave-js-associations-table').find('tr:gt(0)').remove();
 
 				// shoukd only be 1
 				Targets.forEach((AG) => {
 					AG.AssociationAddress.forEach((AD) => {
-						let TR = $('<tr>');
+						const TR = $('<tr>');
 						$('<td>').html(AD.nodeId).appendTo(TR);
 						$('<td>')
 							.html(AD.endpoint ?? '0 (Root Device)')
 							.appendTo(TR);
-						let TD3 = $('<td>').css({ textAlign: 'right' }).appendTo(TR);
+						const TD3 = $('<td>').css({ textAlign: 'right' }).appendTo(TR);
 						$('<input>')
 							.attr('type', 'button')
 							.addClass('ui-button ui-corner-all ui-widget')
@@ -254,7 +255,7 @@ let ZwaveJsUI = (function () {
 	}
 
 	function AssociationMGMT() {
-		let Options = {
+		const Options = {
 			draggable: false,
 			modal: true,
 			resizable: false,
@@ -269,7 +270,7 @@ let ZwaveJsUI = (function () {
 			}
 		};
 
-		let Form = $('<div>')
+		const Form = $('<div>')
 			.css({ padding: 60, paddingTop: 30 })
 			.html('Please wait...');
 		Form.dialog(Options);
@@ -277,9 +278,9 @@ let ZwaveJsUI = (function () {
 		ControllerCMD('AssociationsAPI', 'getAllAssociationGroups', undefined, [
 			selectedNode
 		]).then(({ object }) => {
-			let Template = $('#TPL_Associations').html();
-			let templateScript = Handlebars.compile(Template);
-			let HTML = templateScript({ endpoints: object });
+			const Template = $('#TPL_Associations').html();
+			const templateScript = Handlebars.compile(Template);
+			const HTML = templateScript({ endpoints: object });
 
 			Form.html('');
 			Form.append(HTML);
@@ -302,23 +303,23 @@ let ZwaveJsUI = (function () {
 	}
 
 	async function GenerateMapJSON(Nodes, Neigbhors) {
-		let _Promises = [];
-		let _Nodes = [];
-		let _Edges = [];
+		const _Promises = [];
+		const _Nodes = [];
+		const _Edges = [];
 
 		Nodes.forEach((N) => {
-			let Label = N.isControllerNode
+			const Label = N.isControllerNode
 				? 'Controller'
 				: N.nodeId + ' - ' + (N.name ?? 'No Name');
-			let name = N.isControllerNode ? 'Controller' : N.name ?? 'No Name';
-			let location = N.location ?? '';
-			let Shape = N.isControllerNode ? 'box' : 'square';
-			var Color = N.isListening && N.isRouting ? 'limegreen' : 'orangered';
+			const name = N.isControllerNode ? 'Controller' : N.name ?? 'No Name';
+			const location = N.location ?? '';
+			const Shape = N.isControllerNode ? 'box' : 'square';
+			let Color = N.isListening && N.isRouting ? 'limegreen' : 'orangered';
 
 			if (N.isControllerNode) {
 				Color = 'lightgray';
 			}
-			let ND = {
+			const ND = {
 				canRoute: N.isControllerNode || (N.isListening && N.isRouting),
 				isControllerNode: N.isControllerNode,
 				id: N.nodeId,
@@ -348,20 +349,20 @@ let ZwaveJsUI = (function () {
 					return;
 				}
 
-				let P = new Promise((res) => {
+				const P = new Promise((res) => {
 					ControllerCMD('ControllerAPI', 'getNodeNeighbors', undefined, [
 						N.nodeId
 					]).then(({ node, object }) => {
 						object.forEach((NodeNeighbor) => {
-							let Neighbor = _Nodes.filter(
+							const Neighbor = _Nodes.filter(
 								(Node) => Node.id === NodeNeighbor
 							)[0];
 							if (Neighbor.canRoute) {
-								let AlreadyAttached = _Edges.filter(
+								const AlreadyAttached = _Edges.filter(
 									(E) => E.from === NodeNeighbor && E.to === node
 								);
 								if (AlreadyAttached.length < 1) {
-									let Color = {
+									const Color = {
 										highlight: Neighbor.isControllerNode ? 'green' : '#000000',
 										color: '#d3d3d3'
 									};
@@ -390,13 +391,13 @@ let ZwaveJsUI = (function () {
 					return;
 				}
 				object.forEach((NodeNeighbor) => {
-					let Neighbor = _Nodes.filter((Node) => Node.id === NodeNeighbor)[0];
+					const Neighbor = _Nodes.filter((Node) => Node.id === NodeNeighbor)[0];
 					if (Neighbor.canRoute) {
-						let AlreadyAttached = _Edges.filter(
+						const AlreadyAttached = _Edges.filter(
 							(E) => E.from === NodeNeighbor && E.to === node
 						);
 						if (AlreadyAttached.length < 1) {
-							let Color = {
+							const Color = {
 								highlight: Neighbor.isControllerNode ? 'green' : '#000000',
 								color: '#d3d3d3'
 							};
@@ -420,9 +421,9 @@ let ZwaveJsUI = (function () {
 	}
 
 	function NetworkMap() {
-		var Network;
+		let Network;
 
-		let Options = {
+		const Options = {
 			draggable: true,
 			modal: true,
 			resizable: true,
@@ -439,7 +440,7 @@ let ZwaveJsUI = (function () {
 			}
 		};
 
-		let Window = $('<div>')
+		const Window = $('<div>')
 			.css({ padding: 10 })
 			.html('Generating Network Topology Map...');
 		Window.dialog(Options);
@@ -447,21 +448,21 @@ let ZwaveJsUI = (function () {
 			Network.destroy();
 		});
 
-		let GetSpread = (Number) => {
+		const GetSpread = (Number) => {
 			if (Number < 10) {
 				return 100;
 			}
-			let Spread = Number * 10 + 100;
+			const Spread = Number * 10 + 100;
 			return Spread;
 		};
 
 		ControllerCMD('ControllerAPI', 'getNodes').then(({ object }) => {
 			GenerateMapJSON(object).then(({ _Nodes, _Edges }) => {
-				let data = {
+				const data = {
 					nodes: new vis.DataSet(_Nodes),
 					edges: new vis.DataSet(_Edges)
 				};
-				let options = {
+				const options = {
 					nodes: {
 						size: 8,
 						font: {
@@ -488,9 +489,9 @@ let ZwaveJsUI = (function () {
 					}
 				};
 
-				let Template = $('#TPL_Map').html();
-				let templateScript = Handlebars.compile(Template);
-				let HTML = templateScript({});
+				const Template = $('#TPL_Map').html();
+				const templateScript = Handlebars.compile(Template);
+				const HTML = templateScript({});
 
 				Window.html('');
 				Window.append(HTML);
@@ -498,18 +499,18 @@ let ZwaveJsUI = (function () {
 				Network = new vis.Network($('#Network')[0], data, options);
 				Network.on('click', (E) => {
 					if (E.nodes.length > 0) {
-						let SelectedNode = data.nodes.get(E.nodes[0]);
+						const SelectedNode = data.nodes.get(E.nodes[0]);
 
-						let RouteTargets = _Edges.filter(
+						const RouteTargets = _Edges.filter(
 							(RT) => RT.from === SelectedNode.id
 						);
-						let RouteChildren = _Edges.filter(
+						const RouteChildren = _Edges.filter(
 							(RT) => RT.to === SelectedNode.id
 						);
 
-						let Targets = [];
+						const Targets = [];
 						RouteTargets.forEach((T) => Targets.push(T.to));
-						let Children = [];
+						const Children = [];
 						RouteChildren.forEach((T) => Children.push(T.from));
 
 						$('#NM_ID').html(SelectedNode.id);
@@ -570,7 +571,7 @@ let ZwaveJsUI = (function () {
 		ControllerCMD('DriverAPI', 'getNodeStatistics', undefined, [NodeID]).then(
 			({ object }) => {
 				if (object.hasOwnProperty(NodeID.toString())) {
-					let Stats = object[NodeID.toString()];
+					const Stats = object[NodeID.toString()];
 					$('#zwave-js-selected-node-map-info-stats').html(
 						'RX:' +
 							Stats.commandsRX +
@@ -593,8 +594,8 @@ let ZwaveJsUI = (function () {
 		);
 	}
 
-	var controllerOpts;
-	var nodeOpts;
+	let controllerOpts;
+	let nodeOpts;
 
 	function ShowHideNodeOptions() {
 		if (nodeOpts.is(':visible')) {
@@ -619,7 +620,7 @@ let ZwaveJsUI = (function () {
 	}
 
 	function CheckDriverReady() {
-		let Options = {
+		const Options = {
 			url: `zwave-js/driverready`,
 			method: 'GET'
 		};
@@ -628,13 +629,13 @@ let ZwaveJsUI = (function () {
 	}
 
 	function ControllerCMD(mode, method, node, params, dontwait) {
-		let Options = {
+		const Options = {
 			url: `zwave-js/cmd`,
 			method: 'POST',
 			contentType: 'application/json'
 		};
 
-		let Payload = {
+		const Payload = {
 			mode: mode,
 			method: method
 		};
@@ -655,7 +656,7 @@ let ZwaveJsUI = (function () {
 	function GetNodes() {
 		ControllerCMD('ControllerAPI', 'getNodes')
 			.then(({ object }) => {
-				let controllerNode = object.filter((N) => N.isControllerNode);
+				const controllerNode = object.filter((N) => N.isControllerNode);
 				if (controllerNode.length > 0) {
 					makeInfo(
 						'#zwave-js-controller-info',
@@ -677,7 +678,7 @@ let ZwaveJsUI = (function () {
 	}
 
 	function StartInclude() {
-		let Buttons = {
+		const Buttons = {
 			'Yes (Secure)': function () {
 				ControllerCMD(
 					'ControllerAPI',
@@ -739,7 +740,7 @@ let ZwaveJsUI = (function () {
 	}
 
 	function Reset() {
-		let Buttons = {
+		const Buttons = {
 			'Yes - Reset': function () {
 				ControllerCMD('ControllerAPI', 'hardReset').then(() => {
 					modalAlert('Your Controller has been reset.', 'Reset Complete');
@@ -756,7 +757,7 @@ let ZwaveJsUI = (function () {
 	}
 
 	function RenameNode() {
-		let input = $(this).prev();
+		const input = $(this).prev();
 		if (input.is(':visible')) {
 			ControllerCMD('ControllerAPI', 'setNodeName', undefined, [
 				selectedNode,
@@ -780,7 +781,7 @@ let ZwaveJsUI = (function () {
 	}
 
 	function SetNodeLocation() {
-		let input = $(this).prev();
+		const input = $(this).prev();
 		if (input.is(':visible')) {
 			ControllerCMD('ControllerAPI', 'setNodeLocation', undefined, [
 				selectedNode,
@@ -814,9 +815,9 @@ let ZwaveJsUI = (function () {
 	}
 
 	function OpenDB() {
-		let info =
+		const info =
 			$(`.zwave-js-node-row.selected`).data('info')?.deviceConfig || {};
-		let id = [
+		const id = [
 			'0x' + info.manufacturerId.toString(16).padStart(4, '0'),
 			'0x' + info.devices[0].productType.toString(16).padStart(4, '0'),
 			'0x' + info.devices[0].productId.toString(16).padStart(4, '0'),
@@ -826,7 +827,7 @@ let ZwaveJsUI = (function () {
 	}
 
 	function RemoveFailedNode() {
-		let Buttons = {
+		const Buttons = {
 			'Yes - Remove': function () {
 				ControllerCMD('ControllerAPI', 'removeFailedNode', undefined, [
 					selectedNode
@@ -846,7 +847,7 @@ let ZwaveJsUI = (function () {
 	}
 
 	function ReplaceFailedNode() {
-		let Buttons = {
+		const Buttons = {
 			'Yes (Secure)': function () {
 				ControllerCMD('ControllerAPI', 'replaceFailedNode', undefined, [
 					selectedNode,
@@ -878,26 +879,26 @@ let ZwaveJsUI = (function () {
 
 	function init() {
 		// Container(s)
-		let content = $('<div>').addClass('red-ui-sidebar-info').css({
+		const content = $('<div>').addClass('red-ui-sidebar-info').css({
 			position: 'relative',
 			height: '100%',
 			overflowY: 'hidden',
 			display: 'flex',
 			flexDirection: 'column'
 		});
-		let stackContainer = $('<div>')
+		const stackContainer = $('<div>')
 			.addClass('red-ui-sidebar-info-stack')
 			.appendTo(content);
 
 		// Main Panel
-		let mainPanel = $('<div>')
+		const mainPanel = $('<div>')
 			.css({ overflow: 'hidden', display: 'flex', flexDirection: 'column' })
 			.appendTo(stackContainer);
 
 		/* ---------- Controller Section ---------- */
 
 		// Controller Header
-		let controllerHeader = $('<div>')
+		const controllerHeader = $('<div>')
 			.addClass('red-ui-sidebar-header')
 			.css({ flex: '0 0 auto', textAlign: 'left', padding: 5 })
 			.appendTo(mainPanel);
@@ -925,7 +926,7 @@ let ZwaveJsUI = (function () {
 			.appendTo(controllerOpts);
 
 		// Include
-		let optInclusion = $('<div>')
+		const optInclusion = $('<div>')
 			.css('text-align', 'center')
 			.appendTo(controllerOpts);
 		$('<button>')
@@ -942,7 +943,7 @@ let ZwaveJsUI = (function () {
 			.appendTo(optInclusion);
 
 		// Exclude
-		let optExclusion = $('<div>')
+		const optExclusion = $('<div>')
 			.css('text-align', 'center')
 			.appendTo(controllerOpts);
 		$('<button>')
@@ -959,7 +960,7 @@ let ZwaveJsUI = (function () {
 			.appendTo(optExclusion);
 
 		// Heal
-		let optHeal = $('<div>')
+		const optHeal = $('<div>')
 			.css('text-align', 'center')
 			.appendTo(controllerOpts);
 		$('<button>')
@@ -976,7 +977,7 @@ let ZwaveJsUI = (function () {
 			.appendTo(optHeal);
 
 		// Refresh, Reset
-		let optRefreshReset = $('<div>')
+		const optRefreshReset = $('<div>')
 			.css('text-align', 'center')
 			.appendTo(controllerOpts);
 		$('<button>')
@@ -993,7 +994,9 @@ let ZwaveJsUI = (function () {
 			.appendTo(optRefreshReset);
 
 		// Tools
-		let tools = $('<div>').css('text-align', 'center').appendTo(controllerOpts);
+		const tools = $('<div>')
+			.css('text-align', 'center')
+			.appendTo(controllerOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
@@ -1020,12 +1023,12 @@ let ZwaveJsUI = (function () {
 		/* ---------- Node Section ---------- */
 
 		// Node Panel
-		let nodePanel = $('<div>')
+		const nodePanel = $('<div>')
 			.css({ overflow: 'hidden', display: 'flex', flexDirection: 'column' })
 			.appendTo(stackContainer);
 
 		// Node Header
-		let nodeHeader = $('<div>', {
+		const nodeHeader = $('<div>', {
 			class: 'red-ui-palette-header red-ui-info-header'
 		})
 			.css({ flex: '0 0 auto' })
@@ -1049,7 +1052,7 @@ let ZwaveJsUI = (function () {
 			.appendTo(nodeOpts);
 
 		// Rename
-		let rename = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
+		const rename = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
 		$('<input>').addClass('red-ui-searchBox-input').hide().appendTo(rename);
 		$('<button id="zwave-js-set-node-name">')
 			.addClass('red-ui-button red-ui-button-small')
@@ -1059,7 +1062,7 @@ let ZwaveJsUI = (function () {
 			.appendTo(rename);
 
 		// Location
-		let location = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
+		const location = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
 		$('<input>').addClass('red-ui-searchBox-input').hide().appendTo(location);
 		$('<button id="zwave-js-set-node-location">')
 			.addClass('red-ui-button red-ui-button-small')
@@ -1069,7 +1072,7 @@ let ZwaveJsUI = (function () {
 			.appendTo(location);
 
 		// Interview
-		let optInterview = $('<div>')
+		const optInterview = $('<div>')
 			.css('text-align', 'center')
 			.appendTo(nodeOpts);
 		$('<button>')
@@ -1080,7 +1083,7 @@ let ZwaveJsUI = (function () {
 			.appendTo(optInterview);
 
 		// Remove
-		let RemoveFailed = $('<div>')
+		const RemoveFailed = $('<div>')
 			.css('text-align', 'center')
 			.appendTo(nodeOpts);
 		$('<button>')
@@ -1091,7 +1094,7 @@ let ZwaveJsUI = (function () {
 			.appendTo(RemoveFailed);
 
 		// Remove
-		let ReplaceFailed = $('<div>')
+		const ReplaceFailed = $('<div>')
 			.css('text-align', 'center')
 			.appendTo(nodeOpts);
 		$('<button>')
@@ -1102,7 +1105,9 @@ let ZwaveJsUI = (function () {
 			.appendTo(ReplaceFailed);
 
 		// Association
-		let Association = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
+		const Association = $('<div>')
+			.css('text-align', 'center')
+			.appendTo(nodeOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
@@ -1111,7 +1116,9 @@ let ZwaveJsUI = (function () {
 			.appendTo(Association);
 
 		// Refres Properties
-		let RefresProps = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
+		const RefresProps = $('<div>')
+			.css('text-align', 'center')
+			.appendTo(nodeOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
@@ -1120,7 +1127,7 @@ let ZwaveJsUI = (function () {
 			.appendTo(RefresProps);
 
 		// DB
-		let DB = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
+		const DB = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
@@ -1141,7 +1148,7 @@ let ZwaveJsUI = (function () {
 		panels = RED.panels.create({ container: stackContainer });
 		panels.ratio(0.5);
 
-		let resizeStack = () => panels.resize(content.height());
+		const resizeStack = () => panels.resize(content.height());
 		RED.events.on('sidebar:resize', resizeStack);
 		$(window).on('resize', resizeStack);
 		$(window).on('focus', resizeStack);
@@ -1180,7 +1187,7 @@ let ZwaveJsUI = (function () {
 	function handleControllerEvent(topic, data) {
 		switch (data.type) {
 			case 'controller-event':
-				let eventType = data.event.split(' ')[0];
+				const eventType = data.event.split(' ')[0];
 				switch (eventType) {
 					case 'node':
 						GetNodes();
@@ -1188,7 +1195,7 @@ let ZwaveJsUI = (function () {
 				break;
 
 			case 'node-status':
-				let nodeRow = $('#zwave-js-node-list').find(
+				const nodeRow = $('#zwave-js-node-list').find(
 					`[data-nodeid='${data.node}']`
 				);
 				if (data.status == 'READY') {
@@ -1221,7 +1228,7 @@ let ZwaveJsUI = (function () {
 	}
 
 	function renderReadyIcon(isReady) {
-		let i = $('<i>');
+		const i = $('<i>');
 
 		if (isReady) {
 			i.addClass('fa fa-thumbs-up');
@@ -1232,7 +1239,7 @@ let ZwaveJsUI = (function () {
 	}
 
 	function makeInfo(elId, deviceConfig = {}, firmwareVersion) {
-		let el = $(elId);
+		const el = $(elId);
 
 		el.empty().append(
 			$('<span>').text(
@@ -1242,7 +1249,7 @@ let ZwaveJsUI = (function () {
 	}
 
 	function cancelSetName() {
-		let setNameButton = $('#zwave-js-set-node-name');
+		const setNameButton = $('#zwave-js-set-node-name');
 		if (setNameButton.html() == 'Go')
 			setNameButton.html('Set Name').prev().hide();
 	}
@@ -1270,10 +1277,10 @@ let ZwaveJsUI = (function () {
 		deselectCurrentNode();
 
 		selectedNode = id;
-		let selectedEl = $(`#zwave-js-node-list [data-nodeid='${id}']`);
+		const selectedEl = $(`#zwave-js-node-list [data-nodeid='${id}']`);
 		selectedEl.addClass('selected');
 		$('#zwave-js-selected-node-id').text(selectedNode);
-		let info = selectedEl.data('info');
+		const info = selectedEl.data('info');
 
 		if (info.name !== undefined && info.name.length > 0) {
 			$('#zwave-js-selected-node-name').text(info.name);
@@ -1297,7 +1304,7 @@ let ZwaveJsUI = (function () {
 	}
 
 	function handleNodeEvent(topic, data) {
-		let nodeId = topic.split('/')[3];
+		const nodeId = topic.split('/')[3];
 		if (nodeId != selectedNode) return;
 		switch (data.type) {
 			case 'node-value':
@@ -1309,9 +1316,9 @@ let ZwaveJsUI = (function () {
 				break;
 
 			case 'node-fwu-progress':
-				let Sent = data.payload.sent;
-				let Remain = data.payload.remain;
-				let Percent = (Sent / Remain) * 100;
+				const Sent = data.payload.sent;
+				const Remain = data.payload.remain;
+				const Percent = (Sent / Remain) * 100;
 				$('#progressbar > div').css({ width: Percent + '%' });
 				break;
 
@@ -1320,7 +1327,7 @@ let ZwaveJsUI = (function () {
 				FWRunning = false;
 				FirmwareForm.dialog('destroy');
 
-				let nodeRow = $('#zwave-js-node-list').find(
+				const nodeRow = $('#zwave-js-node-list').find(
 					`[data-nodeid='${nodeId}']`
 				);
 
@@ -1381,10 +1388,10 @@ let ZwaveJsUI = (function () {
 		);
 	}
 
-	let uniqBy = (collection, ...props) => {
-		let uniqMap = {};
+	const uniqBy = (collection, ...props) => {
+		const uniqMap = {};
 		collection.forEach((obj) => {
-			let key = props.map((p) => obj[p]).join('-');
+			const key = props.map((p) => obj[p]).join('-');
 			if (!uniqMap.hasOwnProperty(key)) uniqMap[key] = obj;
 		});
 		return Object.values(uniqMap);
@@ -1398,11 +1405,11 @@ let ZwaveJsUI = (function () {
 		updateNodeFetchStatus('');
 
 		// Step 1: Make list of all supported command classes
-		let data = uniqBy(valueIdList, 'commandClass')
+		const data = uniqBy(valueIdList, 'commandClass')
 			.sort((a, b) => a.commandClassName.localeCompare(b.commandClassName))
 			.map(({ commandClass, commandClassName }) => {
 				// Step 2: For each CC, get all associated properties
-				let propsInCC = valueIdList.filter(
+				const propsInCC = valueIdList.filter(
 					(valueId) => valueId.commandClass == commandClass
 				);
 
@@ -1416,7 +1423,7 @@ let ZwaveJsUI = (function () {
 			});
 
 		// Step 3: Render tree
-		let propertyList = $('#zwave-js-node-properties');
+		const propertyList = $('#zwave-js-node-properties');
 		propertyList.treeList('data', data);
 
 		// Step 4: Add endpoint numbers where applicable
@@ -1437,10 +1444,10 @@ let ZwaveJsUI = (function () {
 			});
 
 		// Step 5: Build endpoint filter buttons
-		let endpoints = uniqBy(valueIdList, 'endpoint').map(
+		const endpoints = uniqBy(valueIdList, 'endpoint').map(
 			(valueId) => valueId.endpoint
 		);
-		let filter = $('#zwave-js-node-endpoint-filter');
+		const filter = $('#zwave-js-node-endpoint-filter');
 		filter.empty();
 		if (endpoints.length > 1) {
 			filter.append(
@@ -1469,18 +1476,18 @@ let ZwaveJsUI = (function () {
 	}
 
 	function renderCommandClassElement(commandClass, commandClassName) {
-		let el = $('<span>').text(commandClassName);
+		const el = $('<span>').text(commandClassName);
 		RED.popover.tooltip(el, hexDisplay(commandClass));
 		return el;
 	}
 
 	function renderPropertyElement(valueId) {
-		let el = $('<div>')
+		const el = $('<div>')
 			.addClass('zwave-js-node-property')
 			.attr('data-endpoint', valueId.endpoint)
 			.attr('data-propertyId', makePropertyId(valueId))
 			.data('valueId', valueId);
-		let label =
+		const label =
 			valueId.propertyKeyName ??
 			valueId.propertyName ??
 			valueId.property +
@@ -1497,8 +1504,8 @@ let ZwaveJsUI = (function () {
 		$('<span>').addClass('zwave-js-node-property-value').appendTo(el);
 		getValue(valueId);
 		el.dblclick(function () {
-			let data = $(this).data();
-			let valueData = $(this).find('.zwave-js-node-property-value').data();
+			const data = $(this).data();
+			const valueData = $(this).find('.zwave-js-node-property-value').data();
 			$('<div>')
 				.css({ maxHeight: '80%' })
 				.html(`<pre>${JSON.stringify({ ...data, valueData }, null, 2)}</pre>`)
@@ -1541,7 +1548,7 @@ let ZwaveJsUI = (function () {
 	function updateValue(valueId) {
 		// Assumes you already checked if this applies to selectedNode
 
-		let propertyRow = getPropertyRow(valueId);
+		const propertyRow = getPropertyRow(valueId);
 
 		if (!propertyRow) {
 			// AHHH!!! What do we do now?!
@@ -1552,8 +1559,8 @@ let ZwaveJsUI = (function () {
 			return;
 		}
 
-		let propertyValue = propertyRow.find('.zwave-js-node-property-value');
-		let meta = propertyRow.data('meta');
+		const propertyValue = propertyRow.find('.zwave-js-node-property-value');
+		const meta = propertyRow.data('meta');
 
 		// Check if this is a 'value removed' event
 		if (
@@ -1565,7 +1572,7 @@ let ZwaveJsUI = (function () {
 		}
 
 		// If value is not provided in arguments or in the valueId, then use the stored raw value.
-		let value =
+		const value =
 			valueId?.newValue ?? valueId?.value ?? propertyValue.data('value') ?? '';
 
 		if (meta?.states?.[value]) {
@@ -1601,19 +1608,19 @@ let ZwaveJsUI = (function () {
 	function updateMeta(valueId, meta = {}) {
 		// Assumes you already checked if this applies to selectedNode
 
-		let propertyRow = getPropertyRow(valueId);
-		let propertyValue = propertyRow.find('.zwave-js-node-property-value');
+		const propertyRow = getPropertyRow(valueId);
+		const propertyValue = propertyRow.find('.zwave-js-node-property-value');
 
 		propertyRow.data('meta', meta);
 
 		// Update label and/or description
-		let propertyName = propertyRow.find('.zwave-js-node-property-name');
+		const propertyName = propertyRow.find('.zwave-js-node-property-name');
 		if (meta.hasOwnProperty('label')) propertyName.text(meta.label);
 		if (meta.hasOwnProperty('description'))
 			RED.popover.tooltip(propertyName, meta.description);
 
 		// If states are provided, translate and add tooltip with raw value
-		let value = propertyValue.data('value');
+		const value = propertyValue.data('value');
 		if (meta?.states?.[value]) {
 			propertyValue.text(meta?.states?.[value]);
 			RED.popover.tooltip(propertyValue, `Raw Value: ${value}`);
@@ -1626,7 +1633,7 @@ let ZwaveJsUI = (function () {
 		}
 
 		// Add "edit" icon, if applicable
-		let icon = propertyRow.prev();
+		const icon = propertyRow.prev();
 		icon.empty();
 		if (meta.writeable)
 			$('<i>')
@@ -1636,21 +1643,21 @@ let ZwaveJsUI = (function () {
 	}
 
 	function showEditor(valueId) {
-		let propertyRow = getPropertyRow(valueId);
+		const propertyRow = getPropertyRow(valueId);
 
 		// If editor is already displayed, close it instead
-		let next = propertyRow.next();
+		const next = propertyRow.next();
 		if (next.is('.zwave-js-node-property-editor')) {
 			next.remove();
 			return;
 		}
 
-		let meta = propertyRow.data('meta');
+		const meta = propertyRow.data('meta');
 
 		if (meta.writeable) {
 			// Step 1: Create editor block and add below value block
 
-			let editor = $('<div>')
+			const editor = $('<div>')
 				.addClass('zwave-js-node-property-editor')
 				.css({ paddingLeft: 40 });
 
@@ -1687,7 +1694,7 @@ let ZwaveJsUI = (function () {
 					.join(' | ');
 			}
 
-			let input = $('<input>');
+			const input = $('<input>');
 
 			// Step 2: Generate input(s) with Set button(s)
 
@@ -1695,7 +1702,7 @@ let ZwaveJsUI = (function () {
 				// STATES
 				editor.append(
 					Object.entries(meta.states).map(([val, label]) => {
-						let labelSpan = $('<span>').text(label);
+						const labelSpan = $('<span>').text(label);
 						RED.popover.tooltip(labelSpan, `Raw Value: ${val}`);
 						return $('<div>').append(makeSetButton(val), labelSpan);
 					})

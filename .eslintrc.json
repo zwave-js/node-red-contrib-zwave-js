@@ -8,6 +8,7 @@
         "es2021": true
     },
     "rules": {
+        "prefer-const":"error",
         "constructor-super": 2,
         "for-direction": 2,
         "getter-return": 2,

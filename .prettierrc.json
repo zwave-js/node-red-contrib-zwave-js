@@ -6,5 +6,6 @@
   "tabWidth": 2,
   "trailingComma":"none",
   "useTabs": true,
-  "endOfLine": "lf"
+  "endOfLine": "lf",
+  "bracketSpacing": true
 }

@@ -1,3 +1,4 @@
+'use strict';
 module.exports = function (RED) {
 	function Init(config) {
 		RED.nodes.createNode(this, config);
@@ -23,7 +24,7 @@ module.exports = function (RED) {
 		}
 
 		if (config.filteredNodeId === 'Var') {
-			let VarValue = RED.util.evaluateNodeProperty('ZW_NODE_ID', 'env', node);
+			const VarValue = RED.util.evaluateNodeProperty('ZW_NODE_ID', 'env', node);
 			if (isNaN(VarValue)) {
 				throw new Error("The 'ZW_NODE_ID' variable is not a number.");
 			}
@@ -78,7 +79,7 @@ module.exports = function (RED) {
 			try {
 				// Switch Listener (for AS)
 				if (config.filteredNodeId === 'AS') {
-					let Node = msg.payload.node;
+					const Node = msg.payload.node;
 					if (Node !== DynamicIDListener) {
 						RED.events.off(
 							`zwjs:node:event:${DynamicIDListener}`,
@@ -112,9 +113,9 @@ module.exports = function (RED) {
 					// Multiple
 				} else if (Array.isArray(config.filteredNodeId)) {
 					if (!config.filteredNodeId.includes(msg.payload.node.toString())) {
-						let ErrorMSG =
+						const ErrorMSG =
 							'Target node is not enabled. Please add this node to the list of nodes to listen to.';
-						let Err = new Error(ErrorMSG);
+						const Err = new Error(ErrorMSG);
 						if (done) {
 							done(Err);
 						} else {
@@ -124,10 +125,10 @@ module.exports = function (RED) {
 					}
 				}
 
-				let AllowedModes = ['CCAPI', 'ValueAPI'];
+				const AllowedModes = ['CCAPI', 'ValueAPI'];
 				if (!AllowedModes.includes(msg.payload.mode)) {
-					let ErrorMSG = `Only modes: ${AllowedModes} are allowed through this node type.`;
-					let Err = new Error(ErrorMSG);
+					const ErrorMSG = `Only modes: ${AllowedModes} are allowed through this node type.`;
+					const Err = new Error(ErrorMSG);
 					if (done) {
 						done(Err);
 					} else {
@@ -141,7 +142,7 @@ module.exports = function (RED) {
 					done();
 				}
 			} catch (Err) {
-				let E = new Error(Err.message);
+				const E = new Error(Err.message);
 				if (done) {
 					done(E);
 				} else {
