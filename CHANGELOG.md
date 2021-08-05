@@ -7,6 +7,8 @@
      - Mulitcast is now suppoorted on CCAPI (set type commands Only)
      - Device Node status text is now reduced down to a more acceptable length
      - Code refactoring
+     - The ```node``` property is now omitted for none node events.
+     - Migrated Read Me to github Wiki
      - Various bug fixes/improvements
 
   - 4.3.0
