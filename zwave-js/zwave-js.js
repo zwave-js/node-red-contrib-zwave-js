@@ -19,17 +19,17 @@ module.exports = function (RED) {
         let canDoSecure = false;
         const NodesReady = [];
         let AllNodesReady = false;
-        var Driver;
-        var Logger;
-        var FileTransport;
+        let Driver;
+        let Logger;
+        let FileTransport;
 
         const MaxDriverAttempts = 3;
         let DriverAttempts = 0;
         const RetryTime = 5000;
-        var DriverOptions;
+        let DriverOptions = {};
 
         const NodeStats = {}
-        var ControllerStats;
+        let ControllerStats;
 
         // Log function
         const Log = function (level, label, direction, tag1, msg, tag2) {
@@ -58,7 +58,7 @@ module.exports = function (RED) {
 
 
 
-        var RestoreReadyTimer;
+        let RestoreReadyTimer;
         function RestoreReadyStatus() {
             RestoreReadyTimer = setTimeout(() => {
                 if (AllNodesReady) {
@@ -235,7 +235,7 @@ module.exports = function (RED) {
 
         async function Input(msg, send, done, internal) {
 
-            var Type = "CONTROLLER";
+            let Type = "CONTROLLER";
             if (internal !== undefined && internal) {
                 Type = "EVENT"
             }
@@ -497,7 +497,7 @@ module.exports = function (RED) {
             const Node = msg.payload.node;
             const Multicast = Array.isArray(Node)
 
-            var ZWaveNode;
+            let ZWaveNode;
             if (Multicast) {
                 ZWaveNode = Driver.controller.getMulticastGroup(Node)
             }
@@ -567,7 +567,7 @@ module.exports = function (RED) {
             const ForceUpdate = msg.payload.forceUpdate
             const Multicast = Array.isArray(Node)
 
-            var ZWaveNode;
+            let ZWaveNode;
             if (Multicast) {
                 ZWaveNode = Driver.controller.getMulticastGroup(Node)
             }
@@ -693,8 +693,8 @@ module.exports = function (RED) {
             Log("debug", "NDERED", "IN", undefined, printParams("AssociationsAPI", undefined, Method, Params))
 
             const ReturnNode = { id: "" };
-            var ResultData
-            var PL
+            let ResultData
+            let PL
             switch (Method) {
                 case "getAssociationGroups":
                     NodeCheck(Params[0].nodeId);
