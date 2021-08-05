@@ -73,7 +73,7 @@ const ZwaveJsUI = (function () {
 			const arrayBuffer = this.result;
 			const array = new Uint8Array(arrayBuffer);
 			const Options = {
-				url: `zwave-js/firmwareupdate/` + btoa(Code),
+				url: `zwave-js/firmwareupdate/${btoa(Code)}`,
 				method: 'POST',
 				contentType: 'application/octect-stream',
 				data: array,
