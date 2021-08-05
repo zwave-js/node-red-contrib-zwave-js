@@ -883,7 +883,7 @@ module.exports = function (RED) {
                 }
             }
             PL.event = Subject,
-                PL.timestamp = new Date().toJSON()
+            PL.timestamp = new Date().toJSON()
             if (Value !== undefined) {
                 PL.object = Value;
             }
