@@ -987,8 +987,6 @@ module.exports = function (RED) {
                 node.status({ fill: "yellow", shape: "dot", text: "Interviewing Nodes..." });
                 UI.status("Interviewing Nodes...")
 
-                const ReturnController = { id: "Controller" };
-
                 // Add, Remove
                 Driver.controller.on("node added", (N) => {
                     clearTimeout(RestoreReadyTimer)
@@ -1012,20 +1010,20 @@ module.exports = function (RED) {
 
                 // Include
                 Driver.controller.on("inclusion started", (Secure) => {
-                    Send(ReturnController, "INCLUSION_STARTED", { isSecureInclude: Secure })
+                    Send(undefined, "INCLUSION_STARTED", { isSecureInclude: Secure })
                     node.status({ fill: "yellow", shape: "dot", text: "Inclusion Started. Secure: " + Secure });
                     UI.status("Inclusion Started. Secure: " + Secure)
                 })
 
                 Driver.controller.on("inclusion failed", () => {
-                    Send(ReturnController, "INCLUSION_FAILED")
+                    Send(undefined, "INCLUSION_FAILED")
                     node.status({ fill: "red", shape: "dot", text: "Inclusion Failed." });
                     UI.status("Inclusion Failed.")
                     RestoreReadyStatus();
                 })
 
                 Driver.controller.on("inclusion stopped", () => {
-                    Send(ReturnController, "INCLUSION_STOPPED")
+                    Send(undefined, "INCLUSION_STOPPED")
                     node.status({ fill: "green", shape: "dot", text: "Inclusion Stopped." });
                     UI.status("Inclusion Stopped.")
                     RestoreReadyStatus();
@@ -1033,20 +1031,20 @@ module.exports = function (RED) {
 
                 // Exclusion
                 Driver.controller.on("exclusion started", () => {
-                    Send(ReturnController, "EXCLUSION_STARTED")
+                    Send(undefined, "EXCLUSION_STARTED")
                     node.status({ fill: "yellow", shape: "dot", text: "Exclusion Started." });
                     UI.status("Exclusion Started.")
                 })
 
                 Driver.controller.on("exclusion failed", () => {
-                    Send(ReturnController, "EXCLUSION_FAILED")
+                    Send(undefined, "EXCLUSION_FAILED")
                     node.status({ fill: "red", shape: "dot", text: "Exclusion Failed." });
                     UI.status("Exclusion Failed.")
                     RestoreReadyStatus();
                 })
 
                 Driver.controller.on("exclusion stopped", () => {
-                    Send(ReturnController, "EXCLUSION_STOPPED")
+                    Send(undefined, "EXCLUSION_STOPPED")
                     node.status({ fill: "green", shape: "dot", text: "Exclusion Stopped." });
                     UI.status("Exclusion Stopped.")
                     RestoreReadyStatus();
@@ -1054,7 +1052,7 @@ module.exports = function (RED) {
 
                 // Network Heal
                 Driver.controller.on("heal network done", () => {
-                    Send(ReturnController, "NETWORK_HEAL_DONE", { Successful: Heal_Done, Failed: Heal_Failed, Skipped: Heal_Skipped })
+                    Send(undefined, "NETWORK_HEAL_DONE", { Successful: Heal_Done, Failed: Heal_Failed, Skipped: Heal_Skipped })
                     node.status({ fill: "green", shape: "dot", text: "Network Heal Done." });
                     UI.status("Network Heal Done.")
                     RestoreReadyStatus();
