@@ -9,7 +9,7 @@ module.exports = function (RED) {
 
     const UI = require('./ui/server.js')
     UI.init(RED)
-    let NodeList = {}
+    const NodeList = {}
 
     function Init(config) {
 
@@ -35,7 +35,7 @@ module.exports = function (RED) {
         const Log = function (level, label, direction, tag1, msg, tag2) {
 
             if (Logger !== undefined) {
-                let logEntry = {
+                const logEntry = {
                     direction: "  ",
                     message: msg,
                     level: level,
@@ -77,7 +77,7 @@ module.exports = function (RED) {
 
             Logger = Winston.createLogger();
 
-            let FileTransportOptions = {
+            const FileTransportOptions = {
                 filename: Path.join(RED.settings.userDir, "zwave-js-log.txt"),
                 format: createDefaultTransportFormat(false, false),
                 level: config.logLevel
@@ -107,8 +107,8 @@ module.exports = function (RED) {
             DriverOptions.logConfig.enabled = true;
 
             if (config.logNodeFilter !== undefined && config.logNodeFilter.length > 0) {
-                let Nodes = config.logNodeFilter.split(",")
-                let NodesArray = [];
+                const Nodes = config.logNodeFilter.split(",")
+                const NodesArray = [];
                 Nodes.forEach((N) => {
                     NodesArray.push(parseInt(N))
                 })
@@ -156,12 +156,12 @@ module.exports = function (RED) {
 
         if (config.encryptionKey !== undefined && config.encryptionKey.length > 0 && config.encryptionKey.startsWith('[') && config.encryptionKey.endsWith(']')) {
 
-            let RemoveBrackets = config.encryptionKey.replace("[", "").replace("]", "");
-            let _Array = RemoveBrackets.split(",");
+            const RemoveBrackets = config.encryptionKey.replace("[", "").replace("]", "");
+            const _Array = RemoveBrackets.split(",");
 
             Log("debug", "NDERED", undefined, "[options] [networkKey]", "Provided as array", "[" + _Array + " bytes]")
 
-            let _Buffer = [];
+            const _Buffer = [];
             for (let i = 0; i < _Array.length; i++) {
                 _Buffer.push(parseInt(_Array[i].trim()));
             }
@@ -178,14 +178,14 @@ module.exports = function (RED) {
 
         function ShareNodeList() {
 
-            for (let Location in NodeList) delete NodeList[Location];
+            for (const Location in NodeList) delete NodeList[Location];
 
             NodeList["No Location"] = []
             Driver.controller.nodes.forEach((ZWN) => {
                 if (ZWN.isControllerNode()) {
                     return;
                 }
-                let Node = {
+                const Node = {
                     id: ZWN.id,
                     name: ZWN.name !== undefined ? ZWN.name : "No Name",
                     location: ZWN.location !== undefined ? ZWN.location : "No Location",
@@ -200,14 +200,14 @@ module.exports = function (RED) {
         function NodeCheck(ID, SkipReady) {
 
             if (Driver.controller.nodes.get(ID) === undefined) {
-                let ErrorMSG = "Node " + ID + " does not exist.";
+                const ErrorMSG = "Node " + ID + " does not exist.";
                 throw new Error(ErrorMSG);
             }
 
             if (!SkipReady) {
 
                 if (!Driver.controller.nodes.get(ID).ready) {
-                    let ErrorMSG = "Node " + ID + " is not yet ready to receive commands.";
+                    const ErrorMSG = "Node " + ID + " is not yet ready to receive commands.";
                     throw new Error(ErrorMSG);
                 }
             }
@@ -220,7 +220,7 @@ module.exports = function (RED) {
 
         node.on('close', (removed, done) => {
 
-            let Type = (removed ? "DELETE" : "RESTART")
+            const Type = (removed ? "DELETE" : "RESTART")
             Log("info", "NDERED", undefined, "[SHUTDOWN] [" + Type + "]", "Cleaning up...")
             UI.unregister()
             Driver.destroy();
@@ -244,7 +244,7 @@ module.exports = function (RED) {
 
             try {
 
-                let Mode = msg.payload.mode;
+                const Mode = msg.payload.mode;
                 switch (Mode) {
                     case "CCAPI":
                         await CCAPI(msg, send);
@@ -283,10 +283,9 @@ module.exports = function (RED) {
 
         async function ControllerAPI(msg, send) {
 
-            let Method = msg.payload.method
-            let Params = msg.payload.params || [];
-            let ReturnController = { id: "Controller" };
-            let ReturnNode = { id: "" };
+            const Method = msg.payload.method
+            const Params = msg.payload.params || [];
+            const ReturnNode = { id: "" };
 
             Log("debug", "NDERED", "IN", undefined, printParams("ControllerAPI", undefined, Method, Params))
 
@@ -304,29 +303,29 @@ module.exports = function (RED) {
                 case "beginFirmwareUpdate":
                     NodeCheck(Params[0])
                     ReturnNode.id = Params[0]
-                    let Format = ZWaveJS.guessFirmwareFileFormat(Params[2], Params[3])
-                    let Firmware = ZWaveJS.extractFirmware(Params[3], Format)
+                    const Format = ZWaveJS.guessFirmwareFileFormat(Params[2], Params[3])
+                    const Firmware = ZWaveJS.extractFirmware(Params[3], Format)
                     await Driver.controller.nodes.get(Params[0]).beginFirmwareUpdate(Firmware.data, Params[1])
                     Send(ReturnNode, "FIRMWARE_UPDATE_STARTED", Params[1], send);
                     break;
 
                 case "getRFRegion":
-                    let RFR = await Driver.controller.getRFRegion();
-                    Send(ReturnController, "CURRENT_RF_REGION", ZWaveJS.RFRegion[RFR], send);
+                    const RFR = await Driver.controller.getRFRegion();
+                    Send(undefined, "CURRENT_RF_REGION", ZWaveJS.RFRegion[RFR], send);
                     break;
 
                 case "setRFRegion":
                     await Driver.controller.setRFRegion(ZWaveJS.RFRegion[Params[0]]);
-                    Send(ReturnController, "RF_REGION_SET", Params[0], send);
+                    Send(undefined, "RF_REGION_SET", Params[0], send);
                     break;
 
                 case "toggleRF":
                     await Driver.controller.toggleRF(Params[0]);
-                    Send(ReturnController, "RF_STATUS", Params[0], send);
+                    Send(undefined, "RF_STATUS", Params[0], send);
                     break;
 
                 case "getNodes":
-                    let Nodes = [];
+                    const Nodes = [];
                     Driver.controller.nodes.forEach((N) => {
                         Nodes.push({
                             nodeId: N.id,
@@ -357,7 +356,7 @@ module.exports = function (RED) {
                             keepAwake: N.keepAwake
                         })
                     });
-                    Send(ReturnController, "NODE_LIST", Nodes, send);
+                    Send(undefined, "NODE_LIST", Nodes, send);
                     break;
 
                 case "keepNodeAwake":
@@ -369,7 +368,7 @@ module.exports = function (RED) {
 
                 case "getNodeNeighbors":
                     NodeCheck(Params[0])
-                    let NIDs = await Driver.controller.getNodeNeighbors(Params[0]);
+                    const NIDs = await Driver.controller.getNodeNeighbors(Params[0]);
                     ReturnNode.id = Params[0]
                     Send(ReturnNode, "NODE_NEIGHBORS", NIDs, send);
                     break;
@@ -400,9 +399,9 @@ module.exports = function (RED) {
 
                 case "refreshInfo":
                     NodeCheck(Params[0], true);
-                    let Stage = ZWaveJS.InterviewStage[Driver.controller.nodes.get(Params[0]).interviewStage];
+                    const Stage = ZWaveJS.InterviewStage[Driver.controller.nodes.get(Params[0]).interviewStage];
                     if (Stage !== "Complete") {
-                        let ErrorMSG = "Node " + Params[0] + " is already being interviewed. Current Interview Stage : " + Stage + "";
+                        const ErrorMSG = "Node " + Params[0] + " is already being interviewed. Current Interview Stage : " + Stage + "";
                         throw new Error(ErrorMSG);
                     }
                     else {
@@ -412,19 +411,19 @@ module.exports = function (RED) {
 
                 case "hardReset":
                     await Driver.hardReset();
-                    Send(ReturnController, "CONTROLLER_RESET_COMPLETE", undefined, send)
+                    Send(undefined, "CONTROLLER_RESET_COMPLETE", undefined, send)
                     break;
 
                 case "beginHealingNetwork":
                     await Driver.controller.beginHealingNetwork();
-                    Send(ReturnController, "NETWORK_HEAL_STARTED", undefined, send)
+                    Send(undefined, "NETWORK_HEAL_STARTED", undefined, send)
                     node.status({ fill: "yellow", shape: "dot", text: "Network Heal Started." });
                     UI.status("Network Heal Started.")
                     break;
 
                 case "stopHealingNetwork":
                     await Driver.controller.stopHealingNetwork();
-                    Send(ReturnController, "NETWORK_HEAL_STOPPED", undefined, send)
+                    Send(undefined, "NETWORK_HEAL_STOPPED", undefined, send)
                     node.status({ fill: "blue", shape: "dot", text: "Network Heal Stopped." });
                     UI.status("Network Heal Stopped.")
                     RestoreReadyStatus();
@@ -472,13 +471,13 @@ module.exports = function (RED) {
 
                 case "proprietaryFunction":
 
-                    let ZWaveMessage = new ZWaveJS.Message(Driver, {
+                    const ZWaveMessage = new ZWaveJS.Message(Driver, {
                         type: ZWaveJS.MessageType.Request,
                         functionType: Params[0],
                         payload: Params[1]
                     })
 
-                    let MessageSettings = {
+                    const MessageSettings = {
                         priority: ZWaveJS.MessagePriority.Controller,
                         supportCheck: false
                     }
@@ -493,10 +492,10 @@ module.exports = function (RED) {
 
         async function ValueAPI(msg, send) {
 
-            let Method = msg.payload.method;
-            let Params = msg.payload.params || []
-            let Node = msg.payload.node;
-            let Multicast = Array.isArray(Node)
+            const Method = msg.payload.method;
+            const Params = msg.payload.params || []
+            const Node = msg.payload.node;
+            const Multicast = Array.isArray(Node)
 
             var ZWaveNode;
             if (Multicast) {
@@ -509,7 +508,7 @@ module.exports = function (RED) {
 
             Log("debug", "NDERED", "IN", "[Node: " + ZWaveNode.id + "]", printParams("ValueAPI", undefined, Method, Params))
 
-            let ReturnNode = { id: ZWaveNode.id }
+            const ReturnNode = { id: ZWaveNode.id }
 
             switch (Method) {
 
@@ -521,8 +520,8 @@ module.exports = function (RED) {
 
                 case "getValueMetadata":
                     if (Multicast) ThrowVirtualNodeLimit();
-                    let M = ZWaveNode.getValueMetadata(Params[0]);
-                    let ReturnObjectM = {
+                    const M = ZWaveNode.getValueMetadata(Params[0]);
+                    const ReturnObjectM = {
                         response: M,
                         valueId: Params[0]
                     }
@@ -531,8 +530,8 @@ module.exports = function (RED) {
 
                 case "getValue":
                     if (Multicast) ThrowVirtualNodeLimit();
-                    let V = ZWaveNode.getValue(Params[0]);
-                    let ReturnObject = {
+                    const V = ZWaveNode.getValue(Params[0]);
+                    const ReturnObject = {
                         response: V,
                         valueId: Params[0]
                     }
@@ -559,14 +558,14 @@ module.exports = function (RED) {
 
         async function CCAPI(msg, send) {
 
-            let CC = msg.payload.cc;
-            let Method = msg.payload.method;
-            let Params = msg.payload.params || []
-            let Node = msg.payload.node;
-            let Endpoint = msg.payload.endpoint || 0
-            let EnumSelection = msg.payload.enums;
-            let ForceUpdate = msg.payload.forceUpdate
-            let Multicast = Array.isArray(Node)
+            const CC = msg.payload.cc;
+            const Method = msg.payload.method;
+            const Params = msg.payload.params || []
+            const Node = msg.payload.node;
+            const Endpoint = msg.payload.endpoint || 0
+            const EnumSelection = msg.payload.enums;
+            const ForceUpdate = msg.payload.forceUpdate
+            const Multicast = Array.isArray(Node)
 
             var ZWaveNode;
             if (Multicast) {
@@ -584,18 +583,18 @@ module.exports = function (RED) {
                 IsEventResponse = msg.payload.responseThroughEvent;
             }
 
-            let ReturnNode = { id: ZWaveNode.id }
+            const ReturnNode = { id: ZWaveNode.id }
 
             if (EnumSelection !== undefined) {
-                let ParamIndexs = Object.keys(EnumSelection);
+                const ParamIndexs = Object.keys(EnumSelection);
                 ParamIndexs.forEach((PI) => {
-                    let EnumName = EnumSelection[PI]
-                    let Enum = ZWaveJS[EnumName]
+                    const EnumName = EnumSelection[PI]
+                    const Enum = ZWaveJS[EnumName]
                     Params[PI] = Enum[Params[PI]];
                 })
             }
 
-            let Result = await ZWaveNode.getEndpoint(Endpoint).invokeCCAPI(CommandClasses[CC], Method, ...Params)
+            const Result = await ZWaveNode.getEndpoint(Endpoint).invokeCCAPI(CommandClasses[CC], Method, ...Params)
             if (!IsEventResponse && ForceUpdate === undefined) {
                 Send(ReturnNode, "VALUE_UPDATED", Result, send)
             }
@@ -604,7 +603,7 @@ module.exports = function (RED) {
 
                 if (Multicast) ThrowVirtualNodeLimit();
 
-                let ValueID = {
+                const ValueID = {
                     commandClass: CommandClasses[CC],
                     endpoint: Endpoint
                 }
@@ -622,9 +621,8 @@ module.exports = function (RED) {
 
         async function DriverAPI(msg, send) {
 
-            let Method = msg.payload.method;
-            let Params = msg.payload.params || []
-            let ReturnNode = { id: "N/A" };
+            const Method = msg.payload.method;
+            const Params = msg.payload.params || []
 
             Log("debug", "NDERED", "IN", undefined, printParams("DriverAPI", undefined, Method, Params))
 
@@ -632,38 +630,38 @@ module.exports = function (RED) {
 
                 case "getNodeStatistics":
                     if (Params.length < 1) {
-                        Send(ReturnNode, "NODE_STATISTICS", NodeStats, send);
+                        Send(undefined, "NODE_STATISTICS", NodeStats, send);
                     }
                     else {
-                        let Stats = {};
+                        const Stats = {};
                         Params.forEach((NID) => {
                             if (NodeStats.hasOwnProperty(NID)) {
                                 Stats[NID] = NodeStats[NID];
                             }
                         })
-                        Send(ReturnNode, "NODE_STATISTICS", Stats, send);
+                        Send(undefined, "NODE_STATISTICS", Stats, send);
                     }
                     break;
 
                 case "getControllerStatistics":
                     if (ControllerStats === undefined) {
-                        Send(ReturnNode, "CONTROLER_STATISTICS", "Statistics Are Pending", send);
+                        Send(undefined, "CONTROLER_STATISTICS", "Statistics Are Pending", send);
                     }
                     else {
-                        Send(ReturnNode, "CONTROLER_STATISTICS", ControllerStats, send);
+                        Send(undefined, "CONTROLER_STATISTICS", ControllerStats, send);
                     }
                     break;
 
 
                 case "getValueDB":
-                    let Result = [];
+                    const Result = [];
                     if (Params.length < 1) {
                         Driver.controller.nodes.forEach((N) => {
                             Params.push(N.id)
                         });
                     }
                     Params.forEach((NID) => {
-                        let G = {
+                        const G = {
                             nodeId: NID,
                             nodeName: getNodeInfoForPayload(NID, 'name'),
                             nodeLocation: getNodeInfoForPayload(NID, 'location'),
@@ -671,8 +669,8 @@ module.exports = function (RED) {
                         }
                         const VIDs = Driver.controller.nodes.get(NID).getDefinedValueIDs();
                         VIDs.forEach((VID) => {
-                            let V = Driver.controller.nodes.get(NID).getValue(VID);
-                            let VI = {
+                            const V = Driver.controller.nodes.get(NID).getValue(VID);
+                            const VI = {
                                 currentValue: V,
                                 valueId: VID
                             }
@@ -680,7 +678,7 @@ module.exports = function (RED) {
                         })
                         Result.push(G);
                     })
-                    Send(ReturnNode, "VALUE_DB", Result, send);
+                    Send(undefined, "VALUE_DB", Result, send);
                     break;
             }
 
@@ -689,12 +687,12 @@ module.exports = function (RED) {
 
         async function AssociationsAPI(msg, send) {
 
-            let Method = msg.payload.method
-            let Params = msg.payload.params || [];
+            const Method = msg.payload.method
+            const Params = msg.payload.params || [];
 
             Log("debug", "NDERED", "IN", undefined, printParams("AssociationsAPI", undefined, Method, Params))
 
-            let ReturnNode = { id: "" };
+            const ReturnNode = { id: "" };
             var ResultData
             var PL
             switch (Method) {
@@ -703,7 +701,7 @@ module.exports = function (RED) {
                     ResultData = Driver.controller.getAssociationGroups(Params[0])
                     PL = []
                     ResultData.forEach((FV, FK) => {
-                        let A = {
+                        const A = {
                             GroupID: FK,
                             AssociationGroupInfo: FV
                         }
@@ -719,12 +717,12 @@ module.exports = function (RED) {
                     ResultData = Driver.controller.getAllAssociationGroups(Params[0])
                     PL = [];
                     ResultData.forEach((FV, FK) => {
-                        let A = {
+                        const A = {
                             Endpoint: FK,
                             Groups: []
                         }
                         FV.forEach((SV, SK) => {
-                            let B = {
+                            const B = {
                                 GroupID: SK,
                                 AssociationGroupInfo: SV
                             }
@@ -742,7 +740,7 @@ module.exports = function (RED) {
                     ResultData = Driver.controller.getAssociations(Params[0])
                     PL = []
                     ResultData.forEach((FV, FK) => {
-                        let A = {
+                        const A = {
                             GroupID: FK,
                             AssociationAddress: []
                         }
@@ -762,12 +760,12 @@ module.exports = function (RED) {
                     ResultData = Driver.controller.getAllAssociations(Params[0]);
                     PL = []
                     ResultData.forEach((FV, FK) => {
-                        let A = {
+                        const A = {
                             AssociationAddress: FK,
                             Associations: []
                         }
                         FV.forEach((SV, SK) => {
-                            let B = {
+                            const B = {
                                 GroupID: SK,
                                 AssociationAddress: SV
                             }
@@ -784,7 +782,7 @@ module.exports = function (RED) {
                     NodeCheck(Params[0].nodeId);
                     Params[2].forEach((A) => {
                         if (!Driver.controller.isAssociationAllowed(Params[0], Params[1], A)) {
-                            let ErrorMSG = "Association: Source " + JSON.stringify(Params[0]); +", Group " + Params[1] + ", Destination " + JSON.stringify(A) + " is not allowed."
+                            const ErrorMSG = "Association: Source " + JSON.stringify(Params[0]); +", Group " + Params[1] + ", Destination " + JSON.stringify(A) + " is not allowed."
                             throw new Error(ErrorMSG);
                         }
                     })
@@ -815,7 +813,7 @@ module.exports = function (RED) {
 
         function printParams(Mode, CC, Method, Params) {
 
-            let Lines = [];
+            const Lines = [];
             if (CC !== undefined) {
                 Lines.push("[API: " + Mode + "] [CC: " + CC + "] [Method: " + Method + "]")
             }
@@ -845,14 +843,14 @@ module.exports = function (RED) {
 
         function printForceUpdate(NID, Value) {
 
-            let Lines = [];
+            const Lines = [];
             Lines.push("[Node: " + NID + "]")
 
             if (Value !== undefined) {
 
                 Lines.push("└─[ValueID]")
 
-                let OBKeys = Object.keys(Value);
+                const OBKeys = Object.keys(Value);
                 OBKeys.forEach((K) => {
                     Lines.push("    " + (K + ": ") + Value[K]);
                 })
@@ -862,21 +860,24 @@ module.exports = function (RED) {
 
 
         function getNodeInfoForPayload(NodeID, Property) {
-            let Prop = Driver.controller.nodes.get(parseInt(NodeID))[Property];
+            const Prop = Driver.controller.nodes.get(parseInt(NodeID))[Property];
             return Prop
         }
 
         function Send(Node, Subject, Value, send) {
 
-            let PL = { "node": Node.id }
-            if (Node.id !== 'N/A' && Node.id !== 'Controller') {
+            const PL = {}
 
-                let N = getNodeInfoForPayload(Node.id, 'name');
+            if(Node !== undefined){
+                PL.node = Node.id
+            }
+
+            if (Node !== undefined) {
+                const N = getNodeInfoForPayload(Node.id, 'name');
                 if (N !== undefined) {
                     PL.nodeName = N;
                 }
-
-                let L = getNodeInfoForPayload(Node.id, 'location')
+                const L = getNodeInfoForPayload(Node.id, 'location')
                 if (L !== undefined) {
                     PL.nodeLocation = L
                 }
@@ -888,7 +889,7 @@ module.exports = function (RED) {
             }
 
             let _Subject = ""
-            if (Node.id !== 'N/A' && Node.id !== 'Controller') {
+            if (Node !== undefined) {
                 _Subject = "[Node: " + Node.id + "] [" + Subject + "]"
             }
             else {
@@ -904,7 +905,7 @@ module.exports = function (RED) {
                 node.send({ "payload": PL });
             }
 
-            let AllowedSubjectsForDNs = [
+            const AllowedSubjectsForDNs = [
                 "VALUE_NOTIFICATION",
                 "NOTIFICATION",
                 "VALUE_UPDATED",
@@ -986,7 +987,7 @@ module.exports = function (RED) {
                 node.status({ fill: "yellow", shape: "dot", text: "Interviewing Nodes..." });
                 UI.status("Interviewing Nodes...")
 
-                let ReturnController = { id: "Controller" };
+                const ReturnController = { id: "Controller" };
 
                 // Add, Remove
                 Driver.controller.on("node added", (N) => {
@@ -1059,10 +1060,10 @@ module.exports = function (RED) {
                     RestoreReadyStatus();
                 })
 
-                let Heal_Pending = []
-                let Heal_Done = []
-                let Heal_Failed = []
-                let Heal_Skipped = []
+                const Heal_Pending = []
+                const Heal_Done = []
+                const Heal_Failed = []
+                const Heal_Skipped = []
 
                 Driver.controller.on("heal network progress", (P) => {
 
@@ -1127,7 +1128,7 @@ module.exports = function (RED) {
                 })
 
                 Node.on("notification", (N, CC, ARGS) => {
-                    let OBJ = {
+                    const OBJ = {
                         ccId: CC,
                         args: ARGS
                     }
