@@ -7,7 +7,7 @@
 const ZwaveJsUI = (function () {
 	function modalAlert(message, title) {
 		const Buts = {
-			Ok: function () {}
+			Ok: function () { }
 		};
 		modalPrompt(message, title, Buts);
 	}
@@ -552,16 +552,16 @@ const ZwaveJsUI = (function () {
 			({ object }) => {
 				$('#zwave-js-selected-node-map-info-stats').html(
 					'RX:' +
-						object.messagesRX +
-						', <span style="color: red;">RXD:' +
-						object.messagesDroppedRX +
-						'</span>, TX:' +
-						object.messagesTX +
-						', <span style="color: red;">TXD:' +
-						object.messagesDroppedTX +
-						'</span>, <span style="color: red;">TO:' +
-						object.timeoutResponse +
-						'</span>'
+					object.messagesRX +
+					', <span style="color: red;">RXD:' +
+					object.messagesDroppedRX +
+					'</span>, TX:' +
+					object.messagesTX +
+					', <span style="color: red;">TXD:' +
+					object.messagesDroppedTX +
+					'</span>, <span style="color: red;">TO:' +
+					object.timeoutResponse +
+					'</span>'
 				);
 			}
 		);
@@ -574,16 +574,16 @@ const ZwaveJsUI = (function () {
 					const Stats = object[NodeID.toString()];
 					$('#zwave-js-selected-node-map-info-stats').html(
 						'RX:' +
-							Stats.commandsRX +
-							', <span style="color: red;">RXD:' +
-							Stats.commandsDroppedRX +
-							'</span>, TX:' +
-							Stats.commandsTX +
-							', <span style="color: red;">TXD:' +
-							Stats.commandsDroppedTX +
-							'</span>, <span style="color: red;">TO:' +
-							Stats.timeoutResponse +
-							'</span>'
+						Stats.commandsRX +
+						', <span style="color: red;">RXD:' +
+						Stats.commandsDroppedRX +
+						'</span>, TX:' +
+						Stats.commandsTX +
+						', <span style="color: red;">TXD:' +
+						Stats.commandsDroppedTX +
+						'</span>, <span style="color: red;">TO:' +
+						Stats.timeoutResponse +
+						'</span>'
 					);
 				} else {
 					$('#zwave-js-selected-node-map-info-stats').html(
@@ -1335,8 +1335,8 @@ const ZwaveJsUI = (function () {
 					case 253:
 						modalAlert(
 							'The firmware for node ' +
-								nodeId +
-								' has been updated. Activation is pending.',
+							nodeId +
+							' has been updated. Activation is pending.',
 							'ZWave Device Firmware Update'
 						);
 						nodeRow.find('.zwave-js-node-row-status').html('FIRMWARE UPDATED');
@@ -1351,8 +1351,8 @@ const ZwaveJsUI = (function () {
 					case 255:
 						modalAlert(
 							'The firmware for node ' +
-								nodeId +
-								' has been updated. A restart is required (which may happen automatically)',
+							nodeId +
+							' has been updated. A restart is required (which may happen automatically)',
 							'ZWave Device Firmware Update'
 						);
 						nodeRow.find('.zwave-js-node-row-status').html('FIRMWARE UPDATED');
@@ -1360,9 +1360,9 @@ const ZwaveJsUI = (function () {
 					default:
 						modalAlert(
 							'The firmware for node ' +
-								nodeId +
-								' failed to get updated. Error Code: ' +
-								data.payload.status,
+							nodeId +
+							' failed to get updated. Error Code: ' +
+							data.payload.status,
 							'ZWave Device Firmware Update'
 						);
 						nodeRow.find('.zwave-js-node-row-status').html('UPDATE FAILED');
@@ -1491,12 +1491,12 @@ const ZwaveJsUI = (function () {
 			valueId.propertyKeyName ??
 			valueId.propertyName ??
 			valueId.property +
-				(valueId.propertyKey !== undefined
-					? `[0x${valueId.propertyKey
-							.toString(16)
-							.toUpperCase()
-							.padStart(2, '0')}]`
-					: '');
+			(valueId.propertyKey !== undefined
+				? `[0x${valueId.propertyKey
+					.toString(16)
+					.toUpperCase()
+					.padStart(2, '0')}]`
+				: '');
 		$('<span>')
 			.addClass('zwave-js-node-property-name')
 			.text(label)
