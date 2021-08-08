@@ -736,8 +736,26 @@ const ZwaveJsUI = (function () {
 		);
 	}
 
-	function RenameNode() {
-		const input = $(this).prev();
+	function RenameNodeKU() {
+		if (event.which === 13) {
+			RenameNode($(this));
+		}
+	}
+
+	function SetNodeLocationKU() {
+		if (event.which === 13) {
+			SetNodeLocation($(this));
+		}
+	}
+
+	function RenameNode(El) {
+		let input;
+		if (El !== undefined) {
+			input = El;
+		} else {
+			input = $(this).prev();
+		}
+
 		if (input.is(':visible')) {
 			ControllerCMD('ControllerAPI', 'setNodeName', undefined, [
 				selectedNode,
@@ -760,8 +778,14 @@ const ZwaveJsUI = (function () {
 		}
 	}
 
-	function SetNodeLocation() {
-		const input = $(this).prev();
+	function SetNodeLocation(El) {
+		let input;
+		if (El !== undefined) {
+			input = El;
+		} else {
+			input = $(this).prev();
+		}
+
 		if (input.is(':visible')) {
 			ControllerCMD('ControllerAPI', 'setNodeLocation', undefined, [
 				selectedNode,
@@ -1033,7 +1057,11 @@ const ZwaveJsUI = (function () {
 
 		// Rename
 		const rename = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
-		$('<input>').addClass('red-ui-searchBox-input').hide().appendTo(rename);
+		$('<input>')
+			.addClass('red-ui-searchBox-input')
+			.hide()
+			.keyup(RenameNodeKU)
+			.appendTo(rename);
 		$('<button id="zwave-js-set-node-name">')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
@@ -1043,7 +1071,11 @@ const ZwaveJsUI = (function () {
 
 		// Location
 		const location = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
-		$('<input>').addClass('red-ui-searchBox-input').hide().appendTo(location);
+		$('<input>')
+			.addClass('red-ui-searchBox-input')
+			.hide()
+			.keyup(SetNodeLocationKU)
+			.appendTo(location);
 		$('<button id="zwave-js-set-node-location">')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
