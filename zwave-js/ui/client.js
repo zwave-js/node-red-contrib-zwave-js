@@ -738,19 +738,19 @@ const ZwaveJsUI = (function () {
 
 	function RenameNodeKU() {
 		if (event.which === 13) {
-			RenameNode($(this));
+			RenameNode(true, $(this));
 		}
 	}
 
 	function SetNodeLocationKU() {
 		if (event.which === 13) {
-			SetNodeLocation($(this));
+			SetNodeLocation(true, $(this));
 		}
 	}
 
-	function RenameNode(El) {
+	function RenameNode(KB,El) {
 		let input;
-		if (El !== undefined) {
+		if (KB === true) {
 			input = El;
 		} else {
 			input = $(this).prev();
@@ -778,9 +778,9 @@ const ZwaveJsUI = (function () {
 		}
 	}
 
-	function SetNodeLocation(El) {
+	function SetNodeLocation(KB,El) {
 		let input;
-		if (El !== undefined) {
+		if (KB === true) {
 			input = El;
 		} else {
 			input = $(this).prev();
@@ -1157,7 +1157,7 @@ const ZwaveJsUI = (function () {
 			.treeList({ data: [] });
 
 		// Build stack
-		panels = RED.panels.create({ container: stackContainer });
+		const panels = RED.panels.create({ container: stackContainer });
 		panels.ratio(0.5);
 
 		const resizeStack = () => panels.resize(content.height());
