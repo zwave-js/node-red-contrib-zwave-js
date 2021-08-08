@@ -8,7 +8,7 @@
      - Device Node status text is now reduced down to a more acceptable length
      - Code refactoring
      - The ```node``` property is now omitted for none node events.
-     - The texbox input on the UI for CC Value updating is now comitted on the enter key
+     - The texbox inputs on the UI are now comitted on the enter/return key.
      - Migrated Read Me to github Wiki
      - Various bug fixes/improvements
 
