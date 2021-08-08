@@ -1626,11 +1626,28 @@ const ZwaveJsUI = (function () {
 		}
 
 		const meta = propertyRow.data('meta');
+		const input = $('<input>');
+		input.keyup(() => {
+			if (event.which === 13) {
+				CommitNewVal();
+			}
+		});
+		let editor;
+		function CommitNewVal(val) {
+			if (val == undefined) {
+				val = input.val();
+			}
+			if (meta.type == 'number') {
+				val = +val;
+			}
+			ControllerCMD('ValueAPI', 'setValue', selectedNode, [valueId, val], true);
+			editor.remove();
+		}
 
 		if (meta.writeable) {
 			// Step 1: Create editor block and add below value block
 
-			const editor = $('<div>')
+			editor = $('<div>')
 				.addClass('zwave-js-node-property-editor')
 				.css({ paddingLeft: 40 });
 
@@ -1643,17 +1660,7 @@ const ZwaveJsUI = (function () {
 					.css({ marginRight: 5 })
 					.html('Set')
 					.click(() => {
-						if (val == undefined) val = input.val();
-						if (meta.type == 'number') val = +val;
-
-						ControllerCMD(
-							'ValueAPI',
-							'setValue',
-							selectedNode,
-							[valueId, val],
-							true
-						);
-						editor.remove();
+						CommitNewVal(val);
 					});
 			}
 			// eslint-disable-next-line no-inner-declarations
@@ -1666,8 +1673,6 @@ const ZwaveJsUI = (function () {
 					.filter((s) => s)
 					.join(' | ');
 			}
-
-			const input = $('<input>');
 
 			// Step 2: Generate input(s) with Set button(s)
 
