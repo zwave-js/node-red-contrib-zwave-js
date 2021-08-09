@@ -754,10 +754,13 @@ const ZwaveJsUI = (function () {
 
 	function RenameNode(KB, El) {
 		let input;
+		let Button;
 		if (KB === true) {
 			input = El;
+			Button = $(this).next();
 		} else {
 			input = $(this).prev();
+			Button = $(this);
 		}
 
 		if (input.is(':visible')) {
@@ -773,21 +776,24 @@ const ZwaveJsUI = (function () {
 				}
 				GetNodes();
 				input.hide();
-				$(this).html('Set Name');
+				Button.html('Set Name');
 			});
 		} else {
 			input.show();
 			input.val($('#zwave-js-selected-node-name').text());
-			$(this).html('Go');
+			Button.html('Go');
 		}
 	}
 
 	function SetNodeLocation(KB, El) {
 		let input;
+		let Button;
 		if (KB === true) {
 			input = El;
+			Button = $(this).next();
 		} else {
 			input = $(this).prev();
+			Button = $(this);
 		}
 
 		if (input.is(':visible')) {
@@ -803,12 +809,12 @@ const ZwaveJsUI = (function () {
 				}
 				GetNodes();
 				input.hide();
-				$(this).html('Set Location');
+				Button.html('Set Location');
 			});
 		} else {
 			input.show();
 			input.val($('#zwave-js-selected-node-location').text());
-			$(this).html('Go');
+			Button.html('Go');
 		}
 	}
 
