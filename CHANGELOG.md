@@ -9,8 +9,9 @@
      - Code refactoring
      - The ```node``` property is now omitted for none node events.
      - The texbox inputs on the UI are now comitted on the enter/return key.
-     - Migrated Read Me to github Wiki
+     - Added Individual Node Heal. 
      - Various bug fixes/improvements
+     - Migrated Read Me to github Wiki
 
   - 4.3.0
     - Implemented critical driver error recovery.  

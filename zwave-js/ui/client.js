@@ -699,6 +699,10 @@ const ZwaveJsUI = (function () {
 		ControllerCMD('ControllerAPI', 'stopExclusion', undefined, undefined, true);
 	}
 
+	function StartNodeHeal() {
+		ControllerCMD('ControllerAPI', 'healNode', undefined, [selectedNode], true);
+	}
+
 	function StartHeal() {
 		ControllerCMD(
 			'ControllerAPI',
@@ -748,7 +752,7 @@ const ZwaveJsUI = (function () {
 		}
 	}
 
-	function RenameNode(KB,El) {
+	function RenameNode(KB, El) {
 		let input;
 		if (KB === true) {
 			input = El;
@@ -778,7 +782,7 @@ const ZwaveJsUI = (function () {
 		}
 	}
 
-	function SetNodeLocation(KB,El) {
+	function SetNodeLocation(KB, El) {
 		let input;
 		if (KB === true) {
 			input = El;
@@ -1093,6 +1097,17 @@ const ZwaveJsUI = (function () {
 			.click(InterviewNode)
 			.html('Interview Node')
 			.appendTo(optInterview);
+
+		// Node Heal
+		const optHealNode = $('<div>')
+			.css('text-align', 'center')
+			.appendTo(nodeOpts);
+		$('<button>')
+			.addClass('red-ui-button red-ui-button-small')
+			.css('min-width', '125px')
+			.click(StartNodeHeal)
+			.html('Heal Node')
+			.appendTo(optHealNode);
 
 		// Remove
 		const RemoveFailed = $('<div>')

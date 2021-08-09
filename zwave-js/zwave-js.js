@@ -516,6 +516,41 @@ module.exports = function (RED) {
                     Send(undefined, 'CONTROLLER_RESET_COMPLETE', undefined, send);
                     break;
 
+                case 'healNode':
+                    NodeCheck(Params[0]);
+                    ReturnNode.id = Params[0];
+                    Send(ReturnNode, 'NODE_HEAL_STARTED', undefined, send);
+                    node.status({
+                        fill: 'yellow',
+                        shape: 'dot',
+                        text: 'Node Heal Started: ' + Params[0]
+                    });
+                    UI.status('Node Heal Started: ' + Params[0]);
+                    const HealResponse = await Driver.controller.healNode(Params[0]);
+                    if (HealResponse) {
+                        node.status({
+                            fill: 'green',
+                            shape: 'dot',
+                            text: 'Node Heal Successful: ' + Params[0]
+                        });
+                        UI.status('Node Heal Successful: ' + Params[0]);
+                    } else {
+                        node.status({
+                            fill: 'red',
+                            shape: 'dot',
+                            text: 'Node Heal Unsuccessful: ' + Params[0]
+                        });
+                        UI.status('Node Heal Unsuccessful: ' + Params[0]);
+                    }
+                    Send(
+                        ReturnNode,
+                        'NODE_HEAL_FINISHED',
+                        { success: HealResponse },
+                        send
+                    );
+                    RestoreReadyStatus();
+                    break;
+
                 case 'beginHealingNetwork':
                     await Driver.controller.beginHealingNetwork();
                     Send(undefined, 'NETWORK_HEAL_STARTED', undefined, send);
@@ -689,7 +724,6 @@ module.exports = function (RED) {
                 printParams('CCAPI', CC, Method, Params)
             );
 
-            
             if (msg.payload.responseThroughEvent !== undefined) {
                 IsEventResponse = msg.payload.responseThroughEvent;
             }
