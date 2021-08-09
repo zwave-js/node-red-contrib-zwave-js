@@ -757,7 +757,7 @@ const ZwaveJsUI = (function () {
 		let Button;
 		if (KB === true) {
 			input = El;
-			Button = $(this).next();
+			Button = El.next();
 		} else {
 			input = $(this).prev();
 			Button = $(this);
@@ -790,7 +790,7 @@ const ZwaveJsUI = (function () {
 		let Button;
 		if (KB === true) {
 			input = El;
-			Button = $(this).next();
+			Button = El.next();
 		} else {
 			input = $(this).prev();
 			Button = $(this);
