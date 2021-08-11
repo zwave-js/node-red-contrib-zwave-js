@@ -139,3 +139,8 @@ table#zwave-js-associations-table tr:first-of-type {
 	border-radius: 4px;
 	color: black;
 }
+
+.SecrutiyButton:hover{
+	border-color: #ff7f0e;
+	border-width: 2px;
+}
