@@ -110,13 +110,31 @@ module.exports = {
 		});
 
 		async function IE(req, res) {
-			switch (req.body.params.strategy) {
-				// Remove
-				case -1:
-					await _Context.controller.beginExclusion();
-					break;
 
+			const Strategy = req.body.params.strategy;
+			const ForceSecurity = req.body.params.forceSecurity || false
+
+			// Remove
+			if(Strategy === -1){
+				await _Context.controller.beginExclusion();
 			}
+
+			// Default
+			if(Strategy === 0){
+				const Callbacks = {
+					grantSecurityClasses:"",
+					validateDSKAndEnterPIN:"",
+					abort:""
+				}
+				const Request = {
+					forceSecurity:ForceSecurity,
+					strategy:Strategy,
+					userCallbacks:Callbacks
+				}
+				await _Context.controller.beginInclusion(Request);
+			}
+
+			
 		}
 	},
 	register: (driver, request) => {

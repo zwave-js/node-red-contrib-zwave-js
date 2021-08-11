@@ -693,32 +693,37 @@ const ZwaveJsUI = (function () {
 
 		const PreferS0 = $("#PS0").is(":checked")
 
+		const StepList = {
+			"NIF": 1,
+			"Remove": 2
+		}
+
 		switch(Mode){
 
 			case "Default":
 				Request.strategy = 0
 				Request.forceSecurity = PreferS0;
-				StepsAPI.setStepIndex(1)
+				StepsAPI.setStepIndex(StepList.NIF)
 				break;
 
 			case "SmartStart":
-				Request.strategy = 1
-				StepsAPI.setStepIndex(1)
+				Request.strategy = 0 /* 1 */
+				StepsAPI.setStepIndex(StepList.NIF)
 				break;
 
 			case "S0":
 				Request.strategy = 3
-				StepsAPI.setStepIndex(1)
+				StepsAPI.setStepIndex(StepList.NIF)
 				break;
 
 			case "None":
 				Request.strategy = 2
-				StepsAPI.setStepIndex(1)
+				StepsAPI.setStepIndex(StepList.NIF)
 				break;
 
 			case "Remove":
 				Request.strategy = -1
-				StepsAPI.setStepIndex(2)
+				StepsAPI.setStepIndex(StepList.Remove)
 				break;
 		}
 
@@ -1290,7 +1295,7 @@ const ZwaveJsUI = (function () {
 
 	function handleControllerEvent(topic, data) {
 		switch (data.type) {
-			
+
 			case 'node-collection-change':
 				GetNodes();
 				break;
