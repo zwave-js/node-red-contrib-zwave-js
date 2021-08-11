@@ -1,4 +1,7 @@
 'use strict';
+
+const { SwitchType } = require("zwave-js");
+
 /* eslint-env jquery */
 /* eslint-env browser */
 /*eslint no-undef: "warn"*/
@@ -687,7 +690,32 @@ const ZwaveJsUI = (function () {
 	let StepsAPI;
 
 	StartInclusion = (Mode) => {
+
 		StepsAPI.setStepIndex(1)
+
+		const InclusionRequest = {};
+
+		const PreferS0 = $("#PS0").is(":checked")
+
+		switch(Mode){
+
+			case "Default":
+				InclusionRequest.strategy = 0
+				InclusionRequest.forceSecurity = PreferS0;
+				break;
+
+			case "SmartStart":
+				InclusionRequest.strategy = 1
+				break;
+
+			case "S0":
+				InclusionRequest.strategy = 3
+				break;
+
+			case "None":
+				InclusionRequest.strategy = 2
+				break;
+		}
 	}
 
 	function ShowIncludePrompt() {
