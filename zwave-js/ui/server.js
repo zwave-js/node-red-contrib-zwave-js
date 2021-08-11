@@ -1,5 +1,5 @@
 'use strict';
-const path = require('path');
+const express = require("express");
 
 const _Context = {};
 let _RED;
@@ -48,23 +48,9 @@ module.exports = {
 			res.send({ ready: Loaded });
 		});
 
-		/* Scripts */
-		RED.httpAdmin.get('/zwave-js/client.js', function (req, res) {
-			res.sendFile(path.join(__dirname, 'client.js'));
-		});
-		RED.httpAdmin.get('/zwave-js/vis-network.min.js', function (req, res) {
-			res.sendFile(path.join(__dirname, 'vis-network.min.js'));
-		});
-		RED.httpAdmin.get('/zwave-js/handlebars.min.js', function (req, res) {
-			res.sendFile(path.join(__dirname, 'handlebars.min.js'));
-		});
-		/* Scripts */
+		/* Res */
+		RED.httpAdmin.use('/zwave-js/res', express.static(__dirname))
 
-		RED.httpAdmin.get('/zwave-js/styles.css', function (req, res) {
-			res.sendFile(path.join(__dirname, 'styles.css'), {
-				contentType: 'text/css'
-			});
-		});
 		RED.httpAdmin.post('/zwave-js/firmwareupdate/:code', function (req, res) {
 			let _Buffer = Buffer.alloc(0);
 			req.on('data', (Data) => {
