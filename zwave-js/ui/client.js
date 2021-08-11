@@ -689,8 +689,6 @@ const ZwaveJsUI = (function () {
 
 	StartInclusion = (Mode) => {
 
-		
-
 		const Request = {};
 
 		const PreferS0 = $("#PS0").is(":checked")
@@ -723,6 +721,8 @@ const ZwaveJsUI = (function () {
 				StepsAPI.setStepIndex(2)
 				break;
 		}
+
+		ControllerCMD('IEAPI','IncludeExclude',undefined,Request,true)
 	}
 
 	function ShowIncludePrompt() {

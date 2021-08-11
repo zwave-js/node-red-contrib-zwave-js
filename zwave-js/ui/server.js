@@ -83,39 +83,67 @@ module.exports = {
 			});
 		});
 
-		RED.httpAdmin.post('/zwave-js/cmd', (req, res) => {
-
+		RED.httpAdmin.post('/zwave-js/cmd', async (req, res) => {
 			if (req.body.noWait) {
 				res.status(202).end();
 			}
-
-			const timeout = setTimeout(() => res.status(504).end(), 5000);
-
-			_Context.input(
-				{ payload: req.body },
-				(zwaveRes) => {
-					clearTimeout(timeout);
-					if (!req.body.noWait) {
-						res.send(zwaveRes.payload);
-					}
-				},
-				(err) => {
-					if (err) {
+			if (req.body.mode === 'IEAPI') {
+				IE(req, res);
+			} else {
+				const timeout = setTimeout(() => res.status(504).end(), 5000);
+				_Context.input(
+					{ payload: req.body },
+					(zwaveRes) => {
 						clearTimeout(timeout);
 						if (!req.body.noWait) {
-							res.status(500).send(err.message);
+							res.send(zwaveRes.payload);
+						}
+					},
+					(err) => {
+						if (err) {
+							clearTimeout(timeout);
+							if (!req.body.noWait) {
+								res.status(500).send(err.message);
+							}
 						}
 					}
-				}
-			);
+				);
+			}
 		});
+
+		async function IE(req, res) {
+			switch (req.body.params.strategy) {
+				// Remove
+				case -1:
+					await _Context.controller.beginExclusion();
+					break;
+
+			}
+		}
 	},
 	register: (driver, request) => {
 		driver.on('driver ready', () => {
+
 			_Context.controller = driver.controller;
 			_Context.input = request;
 
+			_Context.controller.on('node added',(...args) =>{
+				WireNodeEvents(args[0]);
+				_RED.comms.publish(`/zwave-js/cmd`, {
+					type: 'node-collection-change',
+					event: 'node added'
+				});
+			})
+
+			_Context.controller.on('node removed',(...args) =>{
+				_RED.comms.publish(`/zwave-js/cmd`, {
+					type: 'node-collection-change',
+					event: 'node removed'
+				});
+			})
+
 			CONTROLLER_EVENTS.forEach((event) => {
+
 				_Context.controller.on(event, (...args) => {
 					if (event === 'node added') {
 						WireNodeEvents(args[0]);
