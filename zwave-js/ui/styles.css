@@ -131,7 +131,7 @@ table#zwave-js-associations-table tr:first-of-type {
 }
 
 .SecrutiyButton{
-	border-width: 1px;
+	border-width: 2px;
 	border-color: darkgrey;
 	border-style: solid;
 	-webkit-border-radius: 4px;
