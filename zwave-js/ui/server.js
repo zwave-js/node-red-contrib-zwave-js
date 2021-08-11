@@ -84,6 +84,7 @@ module.exports = {
 		});
 
 		RED.httpAdmin.post('/zwave-js/cmd', (req, res) => {
+
 			if (req.body.noWait) {
 				res.status(202).end();
 			}

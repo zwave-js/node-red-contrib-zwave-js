@@ -129,3 +129,13 @@ table#zwave-js-associations-table tr:first-of-type {
 .ui-button.ui-corner-all.ui-widget.ui-button-icon-only.ui-dialog-titlebar-close {
 	display: none;
 }
+
+.SecrutiyButton{
+	border-width: 1px;
+	border-color: darkgrey;
+	border-style: solid;
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
+	color: black;
+}

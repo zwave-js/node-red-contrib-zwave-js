@@ -1,7 +1,5 @@
 'use strict';
 
-const { SwitchType } = require("zwave-js");
-
 /* eslint-env jquery */
 /* eslint-env browser */
 /*eslint no-undef: "warn"*/
@@ -691,29 +689,38 @@ const ZwaveJsUI = (function () {
 
 	StartInclusion = (Mode) => {
 
-		StepsAPI.setStepIndex(1)
+		
 
-		const InclusionRequest = {};
+		const Request = {};
 
 		const PreferS0 = $("#PS0").is(":checked")
 
 		switch(Mode){
 
 			case "Default":
-				InclusionRequest.strategy = 0
-				InclusionRequest.forceSecurity = PreferS0;
+				Request.strategy = 0
+				Request.forceSecurity = PreferS0;
+				StepsAPI.setStepIndex(1)
 				break;
 
 			case "SmartStart":
-				InclusionRequest.strategy = 1
+				Request.strategy = 1
+				StepsAPI.setStepIndex(1)
 				break;
 
 			case "S0":
-				InclusionRequest.strategy = 3
+				Request.strategy = 3
+				StepsAPI.setStepIndex(1)
 				break;
 
 			case "None":
-				InclusionRequest.strategy = 2
+				Request.strategy = 2
+				StepsAPI.setStepIndex(1)
+				break;
+
+			case "Remove":
+				Request.strategy = -1
+				StepsAPI.setStepIndex(2)
 				break;
 		}
 	}
@@ -1121,6 +1128,8 @@ const ZwaveJsUI = (function () {
 
 		// node Options
 		nodeOpts = $('<div>').appendTo(nodeHeader).hide();
+
+		
 
 		// Info
 		$('<div id="zwave-js-selected-node-info">')
