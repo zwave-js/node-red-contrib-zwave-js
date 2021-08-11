@@ -4,10 +4,13 @@
 /*eslint no-undef: "warn"*/
 /*eslint no-unused-vars: "warn"*/
 
+/* UI Functions */
+let StartInclusion;
+
 const ZwaveJsUI = (function () {
 	function modalAlert(message, title) {
 		const Buts = {
-			Ok: function () { }
+			Ok: function () {}
 		};
 		modalPrompt(message, title, Buts);
 	}
@@ -681,6 +684,37 @@ const ZwaveJsUI = (function () {
 		modalPrompt('Begin the include process?', 'Include Mode', Buttons, true);
 	}
 
+	let StepsAPI;
+
+	StartInclusion = (Mode) => {
+		StepsAPI.setStepIndex(1)
+	}
+
+	function ShowIncludePrompt() {
+		const Options = {
+			draggable: false,
+			modal: true,
+			resizable: false,
+			width: '600',
+			height: '500',
+			title: 'Node Inclusion',
+			minHeight: 75,
+			buttons: {
+				Close: function () {
+					$(this).dialog('destroy');
+				}
+			}
+		};
+
+		const IncludeForm = $('<div>').css({ padding: 10 }).html('Please wait...');
+		IncludeForm.dialog(Options);
+		IncludeForm.html('');
+
+		IncludeForm.append($('#TPL_Include').html());
+		const Steps = $('#IncludeWizard').steps({showFooterButtons: false});
+		StepsAPI = Steps.data('plugin_Steps');
+	}
+
 	function StopInclude() {
 		ControllerCMD('ControllerAPI', 'stopInclusion', undefined, undefined, true);
 	}
@@ -946,7 +980,7 @@ const ZwaveJsUI = (function () {
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(StartInclude)
+			.click(ShowIncludePrompt)
 			.html('Start Inclusion')
 			.appendTo(optInclusion);
 		$('<button>')
@@ -1517,12 +1551,12 @@ const ZwaveJsUI = (function () {
 			valueId.propertyKeyName ??
 			valueId.propertyName ??
 			valueId.property +
-			(valueId.propertyKey !== undefined
-				? `[0x${valueId.propertyKey
-					.toString(16)
-					.toUpperCase()
-					.padStart(2, '0')}]`
-				: '');
+				(valueId.propertyKey !== undefined
+					? `[0x${valueId.propertyKey
+							.toString(16)
+							.toUpperCase()
+							.padStart(2, '0')}]`
+					: '');
 		$('<span>')
 			.addClass('zwave-js-node-property-name')
 			.text(label)

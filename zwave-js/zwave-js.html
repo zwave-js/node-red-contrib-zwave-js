@@ -1,11 +1,80 @@
 ﻿<script type="text/javascript" src="zwave-js/res/client.js"></script>
 <script type="text/javascript" src="zwave-js/res/vis-network.min.js"></script>
 <script type="text/javascript" src="zwave-js/res/handlebars.min.js"></script>
-<link rel="stylesheet" href="zwave-js/res/jquery-steps.css">
-<script src="zwave-js/res/jquery-steps.min.js"></script>
+<script type="text/javascript" src="zwave-js/res/jquery-steps.min.js"></script>
 <link rel="stylesheet" href="zwave-js/res/styles.css">
+<link rel="stylesheet" href="zwave-js/res/jquery-steps.css">
+
+
 
 <!-- templates used for modal dialogs *-->
+
+<!--Inclusion-->
+<script id="TPL_Include" type="text/x-handlebars-template">
+    <div class="step-app" id="IncludeWizard">
+        <ul class="step-steps" style="display: none;">
+            <li data-step-target="SecurityMode"></li>
+            <li data-step-target="NIF"></li>
+        </ul>
+        <div class="step-content" style="border: none;">
+            <!-- Secuity Mode-->
+            <div class="step-tab-panel" data-step="SecurityMode">
+                <br />
+                <table style="width: 100%; height: 290px;">
+                    <tr>
+                        <td style="text-align: left;width: 200px;vertical-align: top; ">
+                            <button class="ui-button ui-corner-all ui-widget" style="width: 130px; color: green;" onclick="StartInclusion('Default')">Default</button><br />
+                        </td>
+                        <td style="text-align: left; vertical-align: top; ">
+                            S2 when supported, else S0 only when necessary, no encryption otherwise (recommended).<br /><br />
+                            <input type="checkbox" id="S0">
+                            <label for="S0">Prefer S0 over no encryption</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;vertical-align: top; ">
+                            <button class="ui-button ui-corner-all ui-widget" style="width: 130px; color: blue;" onclick="StartInclusion('SmartStart')">Smart Start</button>
+                        </td>
+                        <td style="text-align: left;vertical-align: top; ">
+                            S2 only, Allows a device to auto enroll into your network, when it becomes online.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; vertical-align: top; ">
+                            <button class="ui-button ui-corner-all ui-widget" style="width: 130px; color: red;" onclick="StartInclusion('S0')">S0</button>
+                        </td>
+                        <td style="text-align: left; vertical-align: top; ">
+                            Use S0 only, evan if S2 is supported (not recommended)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; vertical-align: top; ">
+                            <button class="ui-button ui-corner-all ui-widget" style="width: 130px; color: red;" onclick="StartInclusion('None')">No Encryption</button>
+                        </td>
+                        <td style="text-align: left; vertical-align: top; ">
+                            Add a node which will not use security (not recommended)
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <!--Wait for NIF-->
+            <div class="step-tab-panel" data-step="NIF">
+                <br />
+                <table style="width: 100%; height: 290px;">
+                    <tr>
+                        <td style="text-align: center;">
+                            <img src="zwave-js/res/NIF.png">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;">Place your ZWave device into 'Inclusion Mode'</td>
+                    </tr>
+                </table>
+    
+            </div>
+        </div>
+    </div>
+</script>
 
 <!--Associations-->
 <script id="TPL_Associations" type="text/x-handlebars-template">

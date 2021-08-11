@@ -1,5 +1,5 @@
 'use strict';
-const express = require("express");
+const express = require('express');
 
 const _Context = {};
 let _RED;
@@ -49,7 +49,7 @@ module.exports = {
 		});
 
 		/* Res */
-		RED.httpAdmin.use('/zwave-js/res', express.static(__dirname))
+		RED.httpAdmin.use('/zwave-js/res', express.static(__dirname));
 
 		RED.httpAdmin.post('/zwave-js/firmwareupdate/:code', function (req, res) {
 			let _Buffer = Buffer.alloc(0);
