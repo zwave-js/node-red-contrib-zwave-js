@@ -82,6 +82,7 @@ module.exports = {
 		});
 
 		RED.httpAdmin.post('/zwave-js/cmd', async (req, res) => {
+
 			if (req.body.noWait) {
 				res.status(202).end();
 			}
@@ -145,7 +146,7 @@ module.exports = {
 		}
 
 
-		async function GrantSecurityClasses(RequestClasses){
+		async function GrantSecurityClasses(RequestedClasses){
 
 		}
 	},
