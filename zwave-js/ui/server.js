@@ -4,8 +4,6 @@ const express = require('express');
 const _Context = {};
 let _RED;
 
-const CONTROLLER_EVENTS = ['node added', 'node removed'];
-
 let LatestStatus;
 const _SendStatus = () => {
 	_RED.comms.publish(`/zwave-js/status`, {
@@ -141,19 +139,6 @@ module.exports = {
 					event: 'node removed'
 				});
 			})
-
-			CONTROLLER_EVENTS.forEach((event) => {
-
-				_Context.controller.on(event, (...args) => {
-					if (event === 'node added') {
-						WireNodeEvents(args[0]);
-					}
-					_RED.comms.publish(`/zwave-js/cmd`, {
-						type: 'controller-event',
-						event: event
-					});
-				});
-			});
 
 			const WireNodeEvents = (node) => {
 				// Status

@@ -1290,12 +1290,9 @@ const ZwaveJsUI = (function () {
 
 	function handleControllerEvent(topic, data) {
 		switch (data.type) {
-			case 'controller-event':
-				const eventType = data.event.split(' ')[0];
-				switch (eventType) {
-					case 'node':
-						GetNodes();
-				}
+			
+			case 'node-collection-change':
+				GetNodes();
 				break;
 
 			case 'node-status':
