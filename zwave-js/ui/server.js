@@ -122,9 +122,9 @@ module.exports = {
 			// Default
 			if(Strategy === 0){
 				const Callbacks = {
-					grantSecurityClasses:"",
-					validateDSKAndEnterPIN:"",
-					abort:""
+					grantSecurityClasses:GrantSecurityClasses,
+					validateDSKAndEnterPIN:ValidateDSK,
+					abort:Abort
 				}
 				const Request = {
 					forceSecurity:ForceSecurity,
@@ -134,7 +134,19 @@ module.exports = {
 				await _Context.controller.beginInclusion(Request);
 			}
 
-			
+		}
+
+		function Abort(){
+
+		}
+
+		async function ValidateDSK(DSK){
+
+		}
+
+
+		async function GrantSecurityClasses(RequestClasses){
+
 		}
 	},
 	register: (driver, request) => {
