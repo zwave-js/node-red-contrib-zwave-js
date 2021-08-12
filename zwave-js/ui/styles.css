@@ -132,13 +132,4 @@ table#zwave-js-associations-table tr:first-of-type {
 
 .SecrutiyButton{
 	width: 130px;
-	/*
-	border-width: 2px;
-	border-color: darkgrey;
-	border-style: solid;
-	-webkit-border-radius: 4px;
-	-moz-border-radius: 4px;
-	border-radius: 4px;
-	color: black;
-	*/
 }

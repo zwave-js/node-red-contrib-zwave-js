@@ -104,8 +104,9 @@
             <!--Requested Security Classes-->
             <div class="step-tab-panel" data-step="Classes">
                 <br />
-                Select the S2 Security classes You Wish to grant!
-                <table id="S2Classes" style="width: 100%; height: 290px;">
+                Select the S2 Security Classes you wish to grant!
+                <table id="S2Classes" style="width: 100%; padding: 10px;" cellpadding="5">
+
                 </table>
             </div>
         </div>
@@ -253,6 +254,9 @@
                 serialPort: { value: undefined },
                 name: { value: "Z-Wave JS Controller" },
                 encryptionKey: { value: undefined },
+                encryptionKeyS2U: { value: undefined },
+                encryptionKeyS2A: { value: undefined },
+                encryptionKeyS2AC: { value: undefined },
                 ackTimeout: { value: undefined },
                 controllerTimeout: { value: undefined },
                 sendResponseTimeout: { value: undefined },
@@ -358,9 +362,24 @@
         </select>
 
     </div>
+    <p>
+        <strong>Encryption Keys</strong>
+    </p>
     <div class="form-row">
-        <label for="node-input-encryptionKey" style="width:130px"><i class="fa fa-pencil"></i> Encryption Key</label>
+        <label for="node-input-encryptionKey" style="width:130px"><i class="fa fa-pencil"></i> S0</label>
         <input type="text" id="node-input-encryptionKey" placeholder="[0x01,0x02,..] or plain text">
+    </div>
+    <div class="form-row">
+        <label for="node-input-encryptionKeyS2U" style="width:130px"><i class="fa fa-pencil"></i> S2 Unauth</label>
+        <input type="text" id="node-input-encryptionKeyS2U" placeholder="[0x01,0x02,..] or plain text">
+    </div>
+    <div class="form-row">
+        <label for="node-input-encryptionKeyS2A" style="width:130px"><i class="fa fa-pencil"></i> S2 Auth</label>
+        <input type="text" id="node-input-encryptionKeyS2A" placeholder="[0x01,0x02,..] or plain text">
+    </div>
+    <div class="form-row">
+        <label for="node-input-encryptionKeyS2AC" style="width:130px"><i class="fa fa-pencil"></i> S2 Access Ctrl</label>
+        <input type="text" id="node-input-encryptionKeyS2AC" placeholder="[0x01,0x02,..] or plain text">
     </div>
     <br />
     <p>

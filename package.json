@@ -5,10 +5,10 @@
   "description": "An extremely easy to use, zero dependency and feature rich Z-Wave node for Node Red, based on Z-Wave JS.",
   "dependencies": {
     "@serialport/bindings": "9.2.0",
+    "express": "4.17.1",
     "serialport": "9.2.0",
     "winston": "3.3.3",
-    "zwave-js": "8.0.9-0-pr-1136-0f55906",
-    "express": "4.17.1"
+    "zwave-js": "8.0.9-0-pr-1136-0f55906"
   },
   "devDependencies": {
     "eslint": "7.31.0",

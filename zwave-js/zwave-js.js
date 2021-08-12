@@ -215,48 +215,56 @@ module.exports = function (RED) {
             DriverOptions.timeouts.report = parseInt(config.sendResponseTimeout);
         }
 
-        if (
-            config.encryptionKey !== undefined &&
-            config.encryptionKey.length > 0 &&
-            config.encryptionKey.startsWith('[') &&
-            config.encryptionKey.endsWith(']')
-        ) {
-            const RemoveBrackets = config.encryptionKey
-                .replace('[', '')
-                .replace(']', '');
-            const _Array = RemoveBrackets.split(',');
+        DriverOptions.securityKeys = {};
 
-            Log(
-                'debug',
-                'NDERED',
-                undefined,
-                '[options] [networkKey]',
-                'Provided as array',
-                '[' + _Array + ' bytes]'
-            );
+        const GetKey = (Property, ZWAVEJSName) => {
+            if (config[Property] !== undefined && config[Property].length > 0) {
+                canDoSecure = true;
 
-            const _Buffer = [];
-            for (let i = 0; i < _Array.length; i++) {
-                _Buffer.push(parseInt(_Array[i].trim()));
+                if (
+                    config[Property].startsWith('[') &&
+                    config[Property].endsWith(']')
+                ) {
+                    const RemoveBrackets = config[Property].replace('[', '').replace(
+                        ']',
+                        ''
+                    );
+                    const _Array = RemoveBrackets.split(',');
+                    Log(
+                        'debug',
+                        'NDERED',
+                        undefined,
+                        '[options] [securityKeys.' + ZWAVEJSName + ']',
+                        'Provided as array',
+                        '[' + _Array.length + ' bytes]'
+                    );
+
+                    const _Buffer = [];
+                    for (let i = 0; i < _Array.length; i++) {
+                        _Buffer.push(parseInt(_Array[i].trim()));
+                    }
+                    DriverOptions.securityKeys[ZWAVEJSName] = Buffer.from(_Buffer);
+                } else {
+                    canDoSecure = true;
+                    Log(
+                        'debug',
+                        'NDERED',
+                        undefined,
+                        '[options] [securityKeys.' + ZWAVEJSName + ']',
+                        'Provided as string',
+                        '[' + config[Property].length + ' characters]'
+                    );
+                    DriverOptions.securityKeys[ZWAVEJSName] = Buffer.from(
+                        config[Property]
+                    );
+                }
             }
+        };
 
-            DriverOptions.networkKey = Buffer.from(_Buffer);
-            canDoSecure = true;
-        } else if (
-            config.encryptionKey !== undefined &&
-            config.encryptionKey.length > 0
-        ) {
-            Log(
-                'debug',
-                'NDERED',
-                undefined,
-                '[options] [networkKey]',
-                'Provided as string',
-                '[' + config.encryptionKey.length + ' characters]'
-            );
-            DriverOptions.networkKey = Buffer.from(config.encryptionKey);
-            canDoSecure = true;
-        }
+        GetKey('encryptionKey', 'S0_Legacy');
+        GetKey('encryptionKeyS2U', 'S2_Unauthenticated');
+        GetKey('encryptionKeyS2A', 'S2_Authenticated');
+        GetKey('encryptionKeyS2AC', 'S2_AccessControl');
 
         function ShareNodeList() {
             for (const Location in NodeList) delete NodeList[Location];

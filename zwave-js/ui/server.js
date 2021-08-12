@@ -82,7 +82,6 @@ module.exports = {
 		});
 
 		RED.httpAdmin.post('/zwave-js/cmd', async (req, res) => {
-
 			if (req.body.noWait) {
 				res.status(202).end();
 			}
@@ -111,71 +110,66 @@ module.exports = {
 		});
 
 		async function IE(req, res) {
-
 			const Strategy = req.body.params.strategy;
-			const ForceSecurity = req.body.params.forceSecurity || false
+			const ForceSecurity = req.body.params.forceSecurity || false;
 
 			// Remove
-			if(Strategy === -1){
+			if (Strategy === -1) {
 				await _Context.controller.beginExclusion();
 			}
 
 			// Default
-			if(Strategy === 0){
+			if (Strategy === 0) {
 				const Callbacks = {
-					grantSecurityClasses:GrantSecurityClasses,
-					validateDSKAndEnterPIN:ValidateDSK,
-					abort:Abort
-				}
+					grantSecurityClasses: GrantSecurityClasses,
+					validateDSKAndEnterPIN: ValidateDSK,
+					abort: Abort
+				};
 				const Request = {
-					forceSecurity:ForceSecurity,
-					strategy:Strategy,
-					userCallbacks:Callbacks
-				}
+					forceSecurity: ForceSecurity,
+					strategy: Strategy,
+					userCallbacks: Callbacks
+				};
+
 				await _Context.controller.beginInclusion(Request);
 			}
-
 		}
 
-		function Abort(){
+		function Abort() { }
 
-		}
+		async function ValidateDSK(DSK) { }
 
-		async function ValidateDSK(DSK){
-
-		}
-
-
-		async function GrantSecurityClasses(RequestedClasses){
+		async function GrantSecurityClasses(RequestedClasses) {
+			console.log(RequestedClasses);
 
 			_RED.comms.publish(`/zwave-js/cmd`, {
 				type: 'node-inclusion-step',
 				event: 'grant security',
-				classes:RequestedClasses
+				classes: RequestedClasses
 			});
-		
+
+			return true;
 		}
 	},
 	register: (driver, request) => {
 		driver.on('driver ready', () => {
-
 			_Context.controller = driver.controller;
 			_Context.input = request;
 
-			_Context.controller.on('node added',(...args) =>{
+			_Context.controller.on('node added', (...args) => {
 				WireNodeEvents(args[0]);
 				_RED.comms.publish(`/zwave-js/cmd`, {
 					type: 'node-collection-change',
 					event: 'node added'
 				});
-			})
+			});
 
-			_Context.controller.on('node removed',(...args) =>{
+			_Context.controller.on('node removed', () => {
 				_RED.comms.publish(`/zwave-js/cmd`, {
 					type: 'node-collection-change',
 					event: 'node removed'
 				});
-			})
+			});
 
 			const WireNodeEvents = (node) => {
 				// Status

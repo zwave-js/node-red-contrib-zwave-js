@@ -11,7 +11,7 @@ let StartInclusion;
 const ZwaveJsUI = (function () {
 	function modalAlert(message, title) {
 		const Buts = {
-			Ok: function () {}
+			Ok: function () { }
 		};
 		modalPrompt(message, title, Buts);
 	}
@@ -687,55 +687,87 @@ const ZwaveJsUI = (function () {
 
 	let StepsAPI;
 	const StepList = {
-		"SecurityMode": 0,
-		"NIF": 1,
-		"Remove": 2,
-		"Classes": 3
-	}
+		SecurityMode: 0,
+		NIF: 1,
+		Remove: 2,
+		Classes: 3
+	};
+	const Security2Class = {
+		0: {
+			name: 'S2 Unauthenticated',
+			description:
+				'Like S2 Authenticated, but without verification, that the device being added, is the correct one.'
+		},
+		1: {
+			name: 'S2 Authenticated',
+			description:
+				'Allows the device that is being added, to be verifed that it is the corect one.'
+		},
+		2: {
+			name: 'S2 Access Control',
+			description:
+				'S2 for door locks, garage doors, access control systems etc.'
+		},
+		7: {
+			name: 'S0 Legacy',
+			description: "S0 for devices that don't support S2."
+		}
+	};
 
-	function ListRequestedClass(Classes){
-		
-		StepsAPI.setStepIndex(StepList.NIF)
+	function ListRequestedClass(Classes) {
+		Classes.securityClasses.forEach((SC) => {
+			const Class = Security2Class[SC.toString()];
+			$('#S2Classes').append(`
+			<tr>
+				<td style="width:130px">
+				 	<input type="checkbox" id="SC_${SC}" class="SecurityClass"> 
+				</td>
+				<td>
+					<lable class="SCLable" style="font-weight: bold;font-size: 18px;" for="SC_${SC}">${Class.name}</lable><br />
+					${Class.description}
+				</td>
+			</tr>
+			`);
+		});
+
+		StepsAPI.setStepIndex(StepList.Classes);
 	}
 
 	StartInclusion = (Mode) => {
-
 		const Request = {};
 
-		const PreferS0 = $("#PS0").is(":checked")
+		const PreferS0 = $('#PS0').is(':checked');
 
-		
-		switch(Mode){
-
-			case "Default":
-				Request.strategy = 0
+		switch (Mode) {
+			case 'Default':
+				Request.strategy = 0;
 				Request.forceSecurity = PreferS0;
-				StepsAPI.setStepIndex(StepList.NIF)
+				StepsAPI.setStepIndex(StepList.NIF);
 				break;
 
-			case "SmartStart":
-				Request.strategy = 0 /* 1 */
-				StepsAPI.setStepIndex(StepList.NIF)
+			case 'SmartStart':
+				Request.strategy = 0; /* 1 */
+				StepsAPI.setStepIndex(StepList.NIF);
 				break;
 
-			case "S0":
-				Request.strategy = 3
-				StepsAPI.setStepIndex(StepList.NIF)
+			case 'S0':
+				Request.strategy = 3;
+				StepsAPI.setStepIndex(StepList.NIF);
 				break;
 
-			case "None":
-				Request.strategy = 2
-				StepsAPI.setStepIndex(StepList.NIF)
+			case 'None':
+				Request.strategy = 2;
+				StepsAPI.setStepIndex(StepList.NIF);
 				break;
 
-			case "Remove":
-				Request.strategy = -1
-				StepsAPI.setStepIndex(StepList.Remove)
+			case 'Remove':
+				Request.strategy = -1;
+				StepsAPI.setStepIndex(StepList.Remove);
 				break;
 		}
 
-		ControllerCMD('IEAPI','IncludeExclude',undefined,Request,true)
-	}
+		ControllerCMD('IEAPI', 'IncludeExclude', undefined, Request, true);
+	};
 
 	function ShowIncludePrompt() {
 		const Options = {
@@ -758,7 +790,7 @@ const ZwaveJsUI = (function () {
 		IncludeForm.html('');
 
 		IncludeForm.append($('#TPL_Include').html());
-		const Steps = $('#IncludeWizard').steps({showFooterButtons: false});
+		const Steps = $('#IncludeWizard').steps({ showFooterButtons: false });
 		StepsAPI = Steps.data('plugin_Steps');
 	}
 
@@ -1141,8 +1173,6 @@ const ZwaveJsUI = (function () {
 		// node Options
 		nodeOpts = $('<div>').appendTo(nodeHeader).hide();
 
-		
-
 		// Info
 		$('<div id="zwave-js-selected-node-info">')
 			.addClass('zwave-js-info-box')
@@ -1302,16 +1332,15 @@ const ZwaveJsUI = (function () {
 
 	function handleControllerEvent(topic, data) {
 		switch (data.type) {
-
 			case 'node-collection-change':
 				GetNodes();
 				break;
 
 			case 'node-inclusion-step':
-				if(data.event === 'grant security'){
-					ListRequestedClass(data.classes)
+				if (data.event === 'grant security') {
+					ListRequestedClass(data.classes);
 				}
-				break
+				break;
 
 			case 'node-status':
 				const nodeRow = $('#zwave-js-node-list').find(
@@ -1603,12 +1632,12 @@ const ZwaveJsUI = (function () {
 			valueId.propertyKeyName ??
 			valueId.propertyName ??
 			valueId.property +
-				(valueId.propertyKey !== undefined
-					? `[0x${valueId.propertyKey
-							.toString(16)
-							.toUpperCase()
-							.padStart(2, '0')}]`
-					: '');
+			(valueId.propertyKey !== undefined
+				? `[0x${valueId.propertyKey
+					.toString(16)
+					.toUpperCase()
+					.padStart(2, '0')}]`
+				: '');
 		$('<span>')
 			.addClass('zwave-js-node-property-name')
 			.text(label)
