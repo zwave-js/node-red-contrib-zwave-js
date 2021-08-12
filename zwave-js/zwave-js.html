@@ -16,6 +16,7 @@
             <li data-step-target="SecurityMode"></li>
             <li data-step-target="NIF"></li>
             <li data-step-target="Remove"></li>
+            <li data-step-target="Classes"></li>
         </ul>
         <div class="step-content" style="border: none;">
             <!-- Secuity Mode-->
@@ -85,7 +86,6 @@
                         <td style="text-align: center;">Place your ZWave device into 'Inclusion Mode'</td>
                     </tr>
                 </table>
-    
             </div>
              <!--Wait for Removal-->
              <div class="step-tab-panel" data-step="Remove">
@@ -100,7 +100,13 @@
                         <td style="text-align: center;">Place your ZWave device into 'Exclusion Mode'</td>
                     </tr>
                 </table>
-    
+            </div>
+            <!--Requested Security Classes-->
+            <div class="step-tab-panel" data-step="Classes">
+                <br />
+                Select the S2 Security classes You Wish to grant!
+                <table id="S2Classes" style="width: 100%; height: 290px;">
+                </table>
             </div>
         </div>
     </div>

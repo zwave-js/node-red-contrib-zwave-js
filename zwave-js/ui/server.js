@@ -148,6 +148,12 @@ module.exports = {
 
 		async function GrantSecurityClasses(RequestedClasses){
 
+			_RED.comms.publish(`/zwave-js/cmd`, {
+				type: 'node-inclusion-step',
+				event: 'grant security',
+				classes:RequestedClasses
+			});
+		
 		}
 	},
 	register: (driver, request) => {

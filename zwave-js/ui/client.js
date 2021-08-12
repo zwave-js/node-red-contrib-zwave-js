@@ -686,6 +686,17 @@ const ZwaveJsUI = (function () {
 	}
 
 	let StepsAPI;
+	const StepList = {
+		"SecurityMode": 0,
+		"NIF": 1,
+		"Remove": 2,
+		"Classes": 3
+	}
+
+	function ListRequestedClass(Classes){
+		
+		StepsAPI.setStepIndex(StepList.NIF)
+	}
 
 	StartInclusion = (Mode) => {
 
@@ -693,11 +704,7 @@ const ZwaveJsUI = (function () {
 
 		const PreferS0 = $("#PS0").is(":checked")
 
-		const StepList = {
-			"NIF": 1,
-			"Remove": 2
-		}
-
+		
 		switch(Mode){
 
 			case "Default":
@@ -1299,6 +1306,12 @@ const ZwaveJsUI = (function () {
 			case 'node-collection-change':
 				GetNodes();
 				break;
+
+			case 'node-inclusion-step':
+				if(data.event === 'grant security'){
+					ListRequestedClass(data.classes)
+				}
+				break
 
 			case 'node-status':
 				const nodeRow = $('#zwave-js-node-list').find(
