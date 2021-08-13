@@ -6,14 +6,14 @@
 /*eslint no-unused-vars: "warn"*/
 
 /* UI Inclusion Functions */
-let StartInclusion;
+let StartInclusionExclusion;
 let GrantSelected;
 let ValidateDSK;
 
 const ZwaveJsUI = (function () {
 	function modalAlert(message, title) {
 		const Buts = {
-			Ok: function () {}
+			Ok: function () { }
 		};
 		modalPrompt(message, title, Buts);
 	}
@@ -663,37 +663,15 @@ const ZwaveJsUI = (function () {
 			});
 	}
 
-	function StartInclude() {
-		const Buttons = {
-			'Yes (Secure)': function () {
-				ControllerCMD(
-					'ControllerAPI',
-					'beginInclusion',
-					undefined,
-					[false],
-					true
-				);
-			},
-			'Yes (Insecure)': function () {
-				ControllerCMD(
-					'ControllerAPI',
-					'beginInclusion',
-					undefined,
-					[true],
-					true
-				);
-			}
-		};
-		modalPrompt('Begin the include process?', 'Include Mode', Buttons, true);
-	}
-
 	let StepsAPI;
 	const StepList = {
 		SecurityMode: 0,
 		NIF: 1,
 		Remove: 2,
 		Classes: 3,
-		DSK: 4
+		DSK: 4,
+		AddDone: 5,
+		RemoveDone: 6
 	};
 	const Security2Class = {
 		0: {
@@ -736,15 +714,20 @@ const ZwaveJsUI = (function () {
 		StepsAPI.setStepIndex(StepList.Classes);
 	}
 
-	function DisplayDSK(DSK){
-
-		$("#DSK_Previw").append('<td>'+DSK+'</td>')
+	function DisplayDSK(DSK) {
+		$('#DSK_Previw').append('<td>' + DSK + '</td>');
 		StepsAPI.setStepIndex(StepList.DSK);
 	}
 
-	ValidateDSK = () =>{
-		ControllerCMD('IEAPI', 'VerifyDSK', undefined, {pin:$("#SC_DSK").val()}, true);
-	}
+	ValidateDSK = () => {
+		ControllerCMD(
+			'IEAPI',
+			'VerifyDSK',
+			undefined,
+			{ pin: $('#SC_DSK').val() },
+			true
+		);
+	};
 
 	GrantSelected = () => {
 		const Granted = [];
@@ -756,7 +739,7 @@ const ZwaveJsUI = (function () {
 		ControllerCMD('IEAPI', 'GrantClasses', undefined, Granted, true);
 	};
 
-	StartInclusion = (Mode) => {
+	StartInclusionExclusion = (Mode) => {
 		const Request = {};
 
 		const PreferS0 = $('#PS0').is(':checked');
@@ -769,12 +752,8 @@ const ZwaveJsUI = (function () {
 				break;
 
 			case 'SmartStart':
-				Request.strategy = 0; /* 1 */
-				StepsAPI.setStepIndex(StepList.NIF);
-				break;
-
-			case 'S0':
-				Request.strategy = 3;
+				Request.strategy = 1;
+				Request.provisioningList = '';
 				StepsAPI.setStepIndex(StepList.NIF);
 				break;
 
@@ -783,16 +762,22 @@ const ZwaveJsUI = (function () {
 				StepsAPI.setStepIndex(StepList.NIF);
 				break;
 
+			case 'S0':
+				Request.strategy = 3;
+				StepsAPI.setStepIndex(StepList.NIF);
+				break;
+
+			
 			case 'Remove':
 				Request.strategy = -1;
 				StepsAPI.setStepIndex(StepList.Remove);
 				break;
 		}
 
-		ControllerCMD('IEAPI', 'Include', undefined, Request, true);
+		ControllerCMD('IEAPI', 'IncludeExclude', undefined, Request, true);
 	};
 
-	function ShowIncludePrompt() {
+	function ShowIncludeExcludePrompt() {
 		const Options = {
 			draggable: false,
 			modal: true,
@@ -802,7 +787,7 @@ const ZwaveJsUI = (function () {
 			title: 'Node Inclusion',
 			minHeight: 75,
 			buttons: {
-				Close: function () {
+				Abort: function () {
 					$(this).dialog('destroy');
 				}
 			}
@@ -817,10 +802,7 @@ const ZwaveJsUI = (function () {
 		StepsAPI = Steps.data('plugin_Steps');
 	}
 
-	function StopInclude() {
-		ControllerCMD('ControllerAPI', 'stopInclusion', undefined, undefined, true);
-	}
-
+	// Will be NVR
 	function StartExclude() {
 		ControllerCMD(
 			'ControllerAPI',
@@ -1075,39 +1057,33 @@ const ZwaveJsUI = (function () {
 			.html('Waiting for driver...')
 			.appendTo(controllerOpts);
 
-		// Include
+		// Include Exclide
 		const optInclusion = $('<div>')
 			.css('text-align', 'center')
 			.appendTo(controllerOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
-			.click(ShowIncludePrompt)
-			.html('Start Inclusion')
-			.appendTo(optInclusion);
-		$('<button>')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
-			.click(StopInclude)
-			.html('Stop Inclusion')
+			.css('min-width', '250px')
+			.click(ShowIncludeExcludePrompt)
+			.html('Include / Exclude')
 			.appendTo(optInclusion);
 
-		// Exclude
-		const optExclusion = $('<div>')
+		// Backup Restore
+		const optNVM = $('<div>')
 			.css('text-align', 'center')
 			.appendTo(controllerOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
 			.click(StartExclude)
-			.html('Start Exclusion')
-			.appendTo(optExclusion);
+			.html('Backup NVM')
+			.appendTo(optNVM);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
 			.click(StopExclude)
-			.html('Stop Exclusion')
-			.appendTo(optExclusion);
+			.html('Restore NVM')
+			.appendTo(optNVM);
 
 		// Heal
 		const optHeal = $('<div>')
@@ -1356,15 +1332,22 @@ const ZwaveJsUI = (function () {
 	function handleControllerEvent(topic, data) {
 		switch (data.type) {
 			case 'node-collection-change':
-				GetNodes();
+				if(data.type.event === 'node added'){
+					GetNodes();
+					StepsAPI.setStepIndex(StepList.AddDone);
+				}
+				if(data.type.event === 'node removed'){
+					GetNodes();
+					StepsAPI.setStepIndex(StepList.RemoveDone);
+				}
 				break;
 
 			case 'node-inclusion-step':
 				if (data.event === 'grant security') {
 					ListRequestedClass(data.classes);
 				}
-				if(data.event === 'verify dsk'){
-					DisplayDSK(data.dsk)
+				if (data.event === 'verify dsk') {
+					DisplayDSK(data.dsk);
 				}
 				break;
 
@@ -1658,12 +1641,12 @@ const ZwaveJsUI = (function () {
 			valueId.propertyKeyName ??
 			valueId.propertyName ??
 			valueId.property +
-				(valueId.propertyKey !== undefined
-					? `[0x${valueId.propertyKey
-							.toString(16)
-							.toUpperCase()
-							.padStart(2, '0')}]`
-					: '');
+			(valueId.propertyKey !== undefined
+				? `[0x${valueId.propertyKey
+					.toString(16)
+					.toUpperCase()
+					.padStart(2, '0')}]`
+				: '');
 		$('<span>')
 			.addClass('zwave-js-node-property-name')
 			.text(label)

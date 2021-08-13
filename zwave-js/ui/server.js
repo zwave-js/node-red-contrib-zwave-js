@@ -87,8 +87,8 @@ module.exports = {
 			}
 			if (req.body.mode === 'IEAPI') {
 
-				if(req.body.method === 'Include'){
-					Include(req, res);
+				if(req.body.method === 'IncludeExclude'){
+					IncludeExclude(req, res);
 				}
 				if(req.body.method === 'GrantClasses'){
 					Grant(req, res);
@@ -134,9 +134,17 @@ module.exports = {
 			ResolveGrant({securityClasses:req.body.params,clientSideAuth:false});
 		}
 
-		function Include(req, res) {
+		function IncludeExclude(req, res) {
+
 			const Strategy = req.body.params.strategy;
 			const ForceSecurity = req.body.params.forceSecurity || false;
+			const ProvisioningList = req.body.params.provisioningList
+
+			const Callbacks = {
+				grantSecurityClasses: GrantSecurityClasses,
+				validateDSKAndEnterPIN: ValidateDSK,
+				abort: Abort
+			};
 
 			// Remove
 			if (Strategy === -1) {
@@ -145,26 +153,26 @@ module.exports = {
 
 			// Default
 			if (Strategy === 0) {
-				const Callbacks = {
-					grantSecurityClasses: GrantSecurityClasses,
-					validateDSKAndEnterPIN: ValidateDSK,
-					abort: Abort
-				};
 				const Request = {
 					forceSecurity: ForceSecurity,
 					strategy: Strategy,
 					userCallbacks: Callbacks
+				};
+				_Context.controller.beginInclusion(Request);
+			}
+			// Smart Start
+			if(Strategy === 1){
+				const Request = {
+					forceSecurity: ForceSecurity,
+					strategy: Strategy,
+					userCallbacks: Callbacks,
+					provisioningList: ProvisioningList
 				};
 
 				_Context.controller.beginInclusion(Request);
 			}
 			// S0
 			if (Strategy === 3) {
-				const Callbacks = {
-					grantSecurityClasses: GrantSecurityClasses,
-					validateDSKAndEnterPIN: ValidateDSK,
-					abort: Abort
-				};
 				const Request = {
 					strategy: Strategy,
 					userCallbacks: Callbacks
