@@ -17,6 +17,7 @@
             <li data-step-target="NIF"></li>
             <li data-step-target="Remove"></li>
             <li data-step-target="Classes"></li>
+            <li data-step-target="DSK"></li>
         </ul>
         <div class="step-content" style="border: none;">
             <!-- Secuity Mode-->
@@ -108,6 +109,22 @@
                 <table id="S2Classes" style="width: 100%; padding: 10px;" cellpadding="5">
 
                 </table>
+                <button class="ui-button ui-corner-all ui-widget SecrutiyButton" style="margin-top: 20px; margin-left: 39%;" onclick="GrantSelected()">Grant Selected</button>
+            </div>
+             <!--DSK-->
+             <div class="step-tab-panel" data-step="DSK">
+                <br />
+                Verify the the device you're adding, matches the below DSK (ignoring the first 5 digits), if so provide the missing 5 digits.
+                <br />
+                <table id="S2DSK" style="width: 100%; padding: 10px;" cellpadding="5">
+
+                    <tr>
+                        <td style="text-align: right;"><input type="text" id="SC_DSK" style="width: 70px;text-align: center;"></td>
+                        <td style="text-align: center;" id="DSK_Previw"></td>
+                    </tr>
+                  
+                </table>
+                <button class="ui-button ui-corner-all ui-widget SecrutiyButton" style="margin-top: 20px; margin-left: 39%;" onclick="ValidateDSK()">Veryfy</button>
             </div>
         </div>
     </div>

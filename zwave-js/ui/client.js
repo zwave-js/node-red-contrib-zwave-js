@@ -5,13 +5,15 @@
 /*eslint no-undef: "warn"*/
 /*eslint no-unused-vars: "warn"*/
 
-/* UI Functions */
+/* UI Inclusion Functions */
 let StartInclusion;
+let GrantSelected;
+let ValidateDSK;
 
 const ZwaveJsUI = (function () {
 	function modalAlert(message, title) {
 		const Buts = {
-			Ok: function () { }
+			Ok: function () {}
 		};
 		modalPrompt(message, title, Buts);
 	}
@@ -690,7 +692,8 @@ const ZwaveJsUI = (function () {
 		SecurityMode: 0,
 		NIF: 1,
 		Remove: 2,
-		Classes: 3
+		Classes: 3,
+		DSK: 4
 	};
 	const Security2Class = {
 		0: {
@@ -720,7 +723,7 @@ const ZwaveJsUI = (function () {
 			$('#S2Classes').append(`
 			<tr>
 				<td style="width:130px">
-				 	<input type="checkbox" id="SC_${SC}" class="SecurityClass"> 
+				 	<input type="checkbox" id="SC_${SC}" class="SecurityClassCB"> 
 				</td>
 				<td>
 					<lable class="SCLable" style="font-weight: bold;font-size: 18px;" for="SC_${SC}">${Class.name}</lable><br />
@@ -732,6 +735,26 @@ const ZwaveJsUI = (function () {
 
 		StepsAPI.setStepIndex(StepList.Classes);
 	}
+
+	function DisplayDSK(DSK){
+
+		$("#DSK_Previw").append('<td>'+DSK+'</td>')
+		StepsAPI.setStepIndex(StepList.DSK);
+	}
+
+	ValidateDSK = () =>{
+		ControllerCMD('IEAPI', 'VerifyDSK', undefined, {pin:$("#SC_DSK").val()}, true);
+	}
+
+	GrantSelected = () => {
+		const Granted = [];
+		$('.SecurityClassCB').each(function () {
+			if ($(this).is(':checked')) {
+				Granted.push(parseInt($(this).attr('id').replace('SC_', '')));
+			}
+		});
+		ControllerCMD('IEAPI', 'GrantClasses', undefined, Granted, true);
+	};
 
 	StartInclusion = (Mode) => {
 		const Request = {};
@@ -766,7 +789,7 @@ const ZwaveJsUI = (function () {
 				break;
 		}
 
-		ControllerCMD('IEAPI', 'IncludeExclude', undefined, Request, true);
+		ControllerCMD('IEAPI', 'Include', undefined, Request, true);
 	};
 
 	function ShowIncludePrompt() {
@@ -1340,6 +1363,9 @@ const ZwaveJsUI = (function () {
 				if (data.event === 'grant security') {
 					ListRequestedClass(data.classes);
 				}
+				if(data.event === 'verify dsk'){
+					DisplayDSK(data.dsk)
+				}
 				break;
 
 			case 'node-status':
@@ -1632,12 +1658,12 @@ const ZwaveJsUI = (function () {
 			valueId.propertyKeyName ??
 			valueId.propertyName ??
 			valueId.property +
-			(valueId.propertyKey !== undefined
-				? `[0x${valueId.propertyKey
-					.toString(16)
-					.toUpperCase()
-					.padStart(2, '0')}]`
-				: '');
+				(valueId.propertyKey !== undefined
+					? `[0x${valueId.propertyKey
+							.toString(16)
+							.toUpperCase()
+							.padStart(2, '0')}]`
+					: '');
 		$('<span>')
 			.addClass('zwave-js-node-property-name')
 			.text(label)

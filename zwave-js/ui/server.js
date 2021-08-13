@@ -86,7 +86,19 @@ module.exports = {
 				res.status(202).end();
 			}
 			if (req.body.mode === 'IEAPI') {
-				IE(req, res);
+
+				if(req.body.method === 'Include'){
+					Include(req, res);
+				}
+				if(req.body.method === 'GrantClasses'){
+					Grant(req, res);
+				}
+
+				if(req.body.method === 'VerifyDSK'){
+					VerifyDSK(req, res);
+				}
+
+				
 			} else {
 				const timeout = setTimeout(() => res.status(504).end(), 5000);
 				_Context.input(
@@ -109,13 +121,26 @@ module.exports = {
 			}
 		});
 
-		async function IE(req, res) {
+		let ResolveGrant;
+		let ResolveDSK;
+
+		function VerifyDSK(req,res){
+
+			console.log(req.body.params.pin)
+			ResolveDSK(req.body.params.pin);
+		}
+
+		function Grant(req,res){
+			ResolveGrant({securityClasses:req.body.params,clientSideAuth:false});
+		}
+
+		function Include(req, res) {
 			const Strategy = req.body.params.strategy;
 			const ForceSecurity = req.body.params.forceSecurity || false;
 
 			// Remove
 			if (Strategy === -1) {
-				await _Context.controller.beginExclusion();
+				_Context.controller.beginExclusion();
 			}
 
 			// Default
@@ -131,15 +156,40 @@ module.exports = {
 					userCallbacks: Callbacks
 				};
 
-				await _Context.controller.beginInclusion(Request);
+				_Context.controller.beginInclusion(Request);
+			}
+			// S0
+			if (Strategy === 3) {
+				const Callbacks = {
+					grantSecurityClasses: GrantSecurityClasses,
+					validateDSKAndEnterPIN: ValidateDSK,
+					abort: Abort
+				};
+				const Request = {
+					strategy: Strategy,
+					userCallbacks: Callbacks
+				};
+
+				_Context.controller.beginInclusion(Request);
 			}
 		}
 
 		function Abort() { }
 
-		async function ValidateDSK(DSK) { }
+		function ValidateDSK(DSK) {
 
-		async function GrantSecurityClasses(RequestedClasses) {
+			_RED.comms.publish(`/zwave-js/cmd`, {
+				type: 'node-inclusion-step',
+				event: 'verify dsk',
+				dsk: DSK
+			});
+
+			return new Promise((res,rej) =>{
+				ResolveDSK = res;
+			})
+		}
+
+		function GrantSecurityClasses(RequestedClasses) {
 			console.log(RequestedClasses);
 
 			_RED.comms.publish(`/zwave-js/cmd`, {
@@ -148,7 +198,11 @@ module.exports = {
 				classes: RequestedClasses
 			});
 
-			return true;
+			return new Promise((res,rej) =>{
+				ResolveGrant = res;
+			})
+
+			
 		}
 	},
 	register: (driver, request) => {
