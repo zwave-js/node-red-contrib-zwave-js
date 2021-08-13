@@ -1062,15 +1062,9 @@ const ZwaveJsUI = (function () {
 			.appendTo(controllerOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
+			.css('min-width', '250px')
 			.click(() => {document.location = 'zwave-js/backupnvm'})
-			.html('Backup NVM')
-			.appendTo(optNVM);
-		$('<button>')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
-			/*.click(StopExclude) */
-			.html('Restore NVM')
+			.html('Backup / Resore NVM')
 			.appendTo(optNVM);
 
 		// Heal
