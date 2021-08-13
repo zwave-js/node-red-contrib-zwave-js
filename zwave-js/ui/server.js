@@ -35,11 +35,27 @@ module.exports = {
 	init: (RED) => {
 		_RED = RED;
 
+		// Driver State
 		RED.httpAdmin.get('/zwave-js/fetch-driver-status', function (req, res) {
 			res.status(200).end();
 			_SendStatus();
 		});
 
+		// Backuo
+		RED.httpAdmin.get('/zwave-js/backupnvm', function (req, res) {
+			_Context.controller.backupNVMRaw()
+			.then((Buffer) =>{
+				res.writeHead(200, {
+					'Content-Type': 'application/octet-stream',
+					'Content-disposition': 'attachment;filename=ZWaveStickNVRam.bin',
+					'Content-Length': Buffer.length
+				});
+				res.end(Buffer);
+			})
+
+		});
+
+		// ready Check
 		RED.httpAdmin.get('/zwave-js/driverready', function (req, res) {
 			const Loaded = _Context.hasOwnProperty('controller');
 			res.contentType('application/json');
@@ -49,6 +65,8 @@ module.exports = {
 		/* Res */
 		RED.httpAdmin.use('/zwave-js/res', express.static(__dirname));
 
+
+		// Frimware
 		RED.httpAdmin.post('/zwave-js/firmwareupdate/:code', function (req, res) {
 			let _Buffer = Buffer.alloc(0);
 			req.on('data', (Data) => {
@@ -81,6 +99,7 @@ module.exports = {
 			});
 		});
 
+		// Commands
 		RED.httpAdmin.post('/zwave-js/cmd', async (req, res) => {
 			if (req.body.noWait) {
 				res.status(202).end();
@@ -163,9 +182,6 @@ module.exports = {
 			// Smart Start
 			if(Strategy === 1){
 				const Request = {
-					forceSecurity: ForceSecurity,
-					strategy: Strategy,
-					userCallbacks: Callbacks,
 					provisioningList: ProvisioningList
 				};
 

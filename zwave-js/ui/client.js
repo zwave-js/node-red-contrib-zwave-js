@@ -802,20 +802,8 @@ const ZwaveJsUI = (function () {
 		StepsAPI = Steps.data('plugin_Steps');
 	}
 
-	// Will be NVR
-	function StartExclude() {
-		ControllerCMD(
-			'ControllerAPI',
-			'beginExclusion',
-			undefined,
-			undefined,
-			true
-		);
-	}
-
-	function StopExclude() {
-		ControllerCMD('ControllerAPI', 'stopExclusion', undefined, undefined, true);
-	}
+	// NVR Here
+	
 
 	function StartNodeHeal() {
 		ControllerCMD('ControllerAPI', 'healNode', undefined, [selectedNode], true);
@@ -1075,13 +1063,13 @@ const ZwaveJsUI = (function () {
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(StartExclude)
+			.click(() => {document.location = 'zwave-js/backupnvm'})
 			.html('Backup NVM')
 			.appendTo(optNVM);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(StopExclude)
+			/*.click(StopExclude) */
 			.html('Restore NVM')
 			.appendTo(optNVM);
 
