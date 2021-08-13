@@ -8,7 +8,7 @@
     "express": "4.17.1",
     "serialport": "9.2.0",
     "winston": "3.3.3",
-    "zwave-js": "8.0.9-0-pr-1136-0f55906"
+    "zwave-js": "8.0.9-0-pr-1136-c58c492"
   },
   "devDependencies": {
     "eslint": "7.31.0",
