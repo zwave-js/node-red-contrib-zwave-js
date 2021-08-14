@@ -1056,16 +1056,6 @@ const ZwaveJsUI = (function () {
 			.html('Include / Exclude')
 			.appendTo(optInclusion);
 
-		// Backup Restore
-		const optNVM = $('<div>')
-			.css('text-align', 'center')
-			.appendTo(controllerOpts);
-		$('<button>')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '250px')
-			.click(() => {document.location = 'zwave-js/backupnvm'})
-			.html('Backup / Resore NVM')
-			.appendTo(optNVM);
 
 		// Heal
 		const optHeal = $('<div>')

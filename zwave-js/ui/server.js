@@ -3,6 +3,8 @@ const express = require('express');
 
 const _Context = {};
 let _RED;
+let _GrantResolve;
+let _ValidateDSKResolve;
 
 let LatestStatus;
 const _SendStatus = () => {
@@ -41,20 +43,6 @@ module.exports = {
 			_SendStatus();
 		});
 
-		// Backuo
-		RED.httpAdmin.get('/zwave-js/backupnvm', function (req, res) {
-			_Context.controller.backupNVMRaw()
-			.then((Buffer) =>{
-				res.writeHead(200, {
-					'Content-Type': 'application/octet-stream',
-					'Content-disposition': 'attachment;filename=ZWaveStickNVRam.bin',
-					'Content-Length': Buffer.length
-				});
-				res.end(Buffer);
-			})
-
-		});
-
 		// ready Check
 		RED.httpAdmin.get('/zwave-js/driverready', function (req, res) {
 			const Loaded = _Context.hasOwnProperty('controller');
@@ -64,7 +52,6 @@ module.exports = {
 
 		/* Res */
 		RED.httpAdmin.use('/zwave-js/res', express.static(__dirname));
-
 
 		// Frimware
 		RED.httpAdmin.post('/zwave-js/firmwareupdate/:code', function (req, res) {
@@ -105,19 +92,16 @@ module.exports = {
 				res.status(202).end();
 			}
 			if (req.body.mode === 'IEAPI') {
-
-				if(req.body.method === 'IncludeExclude'){
+				if (req.body.method === 'IncludeExclude') {
 					IncludeExclude(req, res);
 				}
-				if(req.body.method === 'GrantClasses'){
+				if (req.body.method === 'GrantClasses') {
 					Grant(req, res);
 				}
 
-				if(req.body.method === 'VerifyDSK'){
+				if (req.body.method === 'VerifyDSK') {
 					VerifyDSK(req, res);
 				}
-
-				
 			} else {
 				const timeout = setTimeout(() => res.status(504).end(), 5000);
 				_Context.input(
@@ -140,24 +124,20 @@ module.exports = {
 			}
 		});
 
-		let ResolveGrant;
-		let ResolveDSK;
+		
 
-		function VerifyDSK(req,res){
-
-			console.log(req.body.params.pin)
-			ResolveDSK(req.body.params.pin);
+		function VerifyDSK(req) {
+			_ValidateDSKResolve(req.body.params.pin);
 		}
 
-		function Grant(req,res){
-			ResolveGrant({securityClasses:req.body.params,clientSideAuth:false});
+		function Grant(req) {
+			_GrantResolve({ securityClasses: req.body.params, clientSideAuth: false });
 		}
 
-		function IncludeExclude(req, res) {
-
+		function IncludeExclude(req) {
 			const Strategy = req.body.params.strategy;
 			const ForceSecurity = req.body.params.forceSecurity || false;
-			const ProvisioningList = req.body.params.provisioningList
+			const ProvisioningList = req.body.params.provisioningList;
 
 			const Callbacks = {
 				grantSecurityClasses: GrantSecurityClasses,
@@ -180,7 +160,7 @@ module.exports = {
 				_Context.controller.beginInclusion(Request);
 			}
 			// Smart Start
-			if(Strategy === 1){
+			if (Strategy === 1) {
 				const Request = {
 					provisioningList: ProvisioningList
 				};
@@ -191,42 +171,41 @@ module.exports = {
 			if (Strategy === 3) {
 				const Request = {
 					strategy: Strategy,
-					userCallbacks: Callbacks
 				};
 
 				_Context.controller.beginInclusion(Request);
 			}
 		}
 
-		function Abort() { }
+		function Abort() {
+			_RED.comms.publish(`/zwave-js/cmd`, {
+				type: 'node-inclusion-step',
+				event: 'aborted'
+			});
+		}
 
 		function ValidateDSK(DSK) {
-
 			_RED.comms.publish(`/zwave-js/cmd`, {
 				type: 'node-inclusion-step',
 				event: 'verify dsk',
 				dsk: DSK
 			});
 
-			return new Promise((res,rej) =>{
-				ResolveDSK = res;
-			})
+			return new Promise((res) => {
+				_ValidateDSKResolve = res;
+			});
 		}
 
 		function GrantSecurityClasses(RequestedClasses) {
-			console.log(RequestedClasses);
-
 			_RED.comms.publish(`/zwave-js/cmd`, {
 				type: 'node-inclusion-step',
 				event: 'grant security',
 				classes: RequestedClasses
 			});
 
-			return new Promise((res,rej) =>{
-				ResolveGrant = res;
-			})
-
-			
+			return new Promise((res) => {
+				_GrantResolve = res;
+			});
 		}
 	},
 	register: (driver, request) => {
