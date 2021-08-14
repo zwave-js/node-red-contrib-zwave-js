@@ -1304,11 +1304,12 @@ const ZwaveJsUI = (function () {
 	function handleControllerEvent(topic, data) {
 		switch (data.type) {
 			case 'node-collection-change':
-				if(data.type.event === 'node added'){
+
+				if(data.event === 'node added'){
 					GetNodes();
 					StepsAPI.setStepIndex(StepList.AddDone);
 				}
-				if(data.type.event === 'node removed'){
+				if(data.event === 'node removed'){
 					GetNodes();
 					StepsAPI.setStepIndex(StepList.RemoveDone);
 				}
