@@ -18,6 +18,7 @@
             <li data-step-target="Remove"></li>
             <li data-step-target="Classes"></li>
             <li data-step-target="DSK"></li>
+            <li data-step-target="AddDone"></li>
         </ul>
         <div class="step-content" style="border: none;">
             <!-- Secuity Mode-->
@@ -112,7 +113,7 @@
                 <button class="ui-button ui-corner-all ui-widget SecrutiyButton" style="margin-top: 20px; margin-left: 39%;" onclick="GrantSelected()">Grant Selected</button>
             </div>
              <!--DSK-->
-             <div class="step-tab-panel" data-step="DSK">
+            <div class="step-tab-panel" data-step="DSK">
                 <br />
                 Verify the the device you're adding, matches the below DSK (ignoring the first 5 digits), if so provide the missing 5 digits.
                 <br />
@@ -125,6 +126,20 @@
                   
                 </table>
                 <button class="ui-button ui-corner-all ui-widget SecrutiyButton" style="margin-top: 20px; margin-left: 39%;" onclick="ValidateDSK()">Veryfy</button>
+            </div>
+             <!--Add Done-->
+             <div class="step-tab-panel" data-step="AddDone">
+                <br />
+                <table style="width: 100%; height: 290px;">
+                    <tr>
+                        <td style="text-align: center;">
+                            <img src="zwave-js/res/AddDone.png">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;">Your device has been added to your network, and is now being interviewed.</td>
+                    </tr>
+                </table>
             </div>
         </div>
     </div>
