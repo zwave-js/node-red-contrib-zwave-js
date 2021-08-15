@@ -86,6 +86,8 @@ module.exports = {
 			});
 		});
 
+
+
 		// Commands
 		RED.httpAdmin.post('/zwave-js/cmd', async (req, res) => {
 			if (req.body.noWait) {
@@ -102,6 +104,12 @@ module.exports = {
 				if (req.body.method === 'VerifyDSK') {
 					VerifyDSK(req, res);
 				}
+
+				if (req.body.method === 'Stop') {
+					_Context.controller.stopInclusion();
+					_Context.controller.stopExclusion();
+				}
+
 			} else {
 				const timeout = setTimeout(() => res.status(504).end(), 5000);
 				_Context.input(

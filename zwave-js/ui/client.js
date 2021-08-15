@@ -786,11 +786,16 @@ const ZwaveJsUI = (function () {
 			height: '500',
 			title: 'Node Inclusion',
 			minHeight: 75,
-			buttons: {
-				Abort: function () {
-					$(this).dialog('destroy');
+			buttons:[
+				{
+					id: 'IEButton',
+					text: 'Abort',
+					click: function () {
+						ControllerCMD('IEAPI', 'Stop', undefined, undefined, true);
+						$(this).dialog('destroy');
+					}
 				}
-			}
+			] 
 		};
 
 		const IncludeForm = $('<div>').css({ padding: 10 }).html('Please wait...');
@@ -1308,10 +1313,12 @@ const ZwaveJsUI = (function () {
 				if(data.event === 'node added'){
 					GetNodes();
 					StepsAPI.setStepIndex(StepList.AddDone);
+					$('#IEButton').text('Close')
 				}
 				if(data.event === 'node removed'){
 					GetNodes();
 					StepsAPI.setStepIndex(StepList.RemoveDone);
+					$('#IEButton').text('Close')
 				}
 				break;
 

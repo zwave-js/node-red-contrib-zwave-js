@@ -19,6 +19,7 @@
             <li data-step-target="Classes"></li>
             <li data-step-target="DSK"></li>
             <li data-step-target="AddDone"></li>
+            <li data-step-target="RemoveDone"></li>
         </ul>
         <div class="step-content" style="border: none;">
             <!-- Secuity Mode-->
@@ -127,8 +128,8 @@
                 </table>
                 <button class="ui-button ui-corner-all ui-widget SecrutiyButton" style="margin-top: 20px; margin-left: 39%;" onclick="ValidateDSK()">Verify</button>
             </div>
-             <!--Add Done-->
-             <div class="step-tab-panel" data-step="AddDone">
+            <!--Add Done-->
+            <div class="step-tab-panel" data-step="AddDone">
                 <br />
                 <table style="width: 100%; height: 290px;">
                     <tr>
@@ -137,7 +138,21 @@
                         </td>
                     </tr>
                     <tr>
-                        <td style="text-align: center;">Your device has been added to your network, and is now being interviewed.</td>
+                        <td style="text-align: center;">Your device has been added to the network, it is now being interviewed. It is safe to close this dialog.</td>
+                    </tr>
+                </table>
+            </div>
+             <!--Remove Done-->
+             <div class="step-tab-panel" data-step="RemoveDone">
+                <br />
+                <table style="width: 100%; height: 290px;">
+                    <tr>
+                        <td style="text-align: center;">
+                            <img src="zwave-js/res/NodeRemoved.png">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;">Your device has been removed from the network.</td>
                     </tr>
                 </table>
             </div>
