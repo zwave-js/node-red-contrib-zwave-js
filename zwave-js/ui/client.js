@@ -1192,99 +1192,84 @@ const ZwaveJsUI = (function () {
 			.addClass('zwave-js-info-box')
 			.appendTo(nodeOpts);
 
-		// Rename
-		const rename = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
+		// Set 1
+		const set1 = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
+		// Name
 		$('<input>')
 			.addClass('red-ui-searchBox-input')
 			.hide()
 			.keyup(RenameNodeKU)
-			.appendTo(rename);
+			.appendTo(set1);
 		$('<button id="zwave-js-set-node-name">')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
 			.click(RenameNode)
 			.html('Set Name')
-			.appendTo(rename);
-
+			.appendTo(set1);
 		// Location
-		const location = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
 		$('<input>')
 			.addClass('red-ui-searchBox-input')
 			.hide()
 			.keyup(SetNodeLocationKU)
-			.appendTo(location);
+			.appendTo(set1);
 		$('<button id="zwave-js-set-node-location">')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
 			.click(SetNodeLocation)
 			.html('Set Location')
-			.appendTo(location);
+			.appendTo(set1);
 
+		// Set 2
+		const set2 = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
 		// Interview
-		const optInterview = $('<div>')
-			.css('text-align', 'center')
-			.appendTo(nodeOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
 			.click(InterviewNode)
 			.html('Interview Node')
-			.appendTo(optInterview);
+			.appendTo(set2);
 
 		// Node Heal
-		const optHealNode = $('<div>')
-			.css('text-align', 'center')
-			.appendTo(nodeOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
 			.click(StartNodeHeal)
 			.html('Heal Node')
-			.appendTo(optHealNode);
+			.appendTo(set2);
 
+		// Set 3
+		const set3 = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
 		// Remove
-		const RemoveFailed = $('<div>')
-			.css('text-align', 'center')
-			.appendTo(nodeOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
 			.click(RemoveFailedNode)
 			.html('Remove Failed Node')
-			.appendTo(RemoveFailed);
-
+			.appendTo(set3);
 		// Replace
-		const ReplaceFailed = $('<div>')
-			.css('text-align', 'center')
-			.appendTo(nodeOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
 			.click(ShowReplacePrompt)
 			.html('Replace Failed Node')
-			.appendTo(ReplaceFailed);
+			.appendTo(set3);
 
+		// Set 4
+		const set4 = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
 		// Association
-		const Association = $('<div>')
-			.css('text-align', 'center')
-			.appendTo(nodeOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
 			.click(AssociationMGMT)
 			.html('Association Management')
-			.appendTo(Association);
-
+			.appendTo(set4);
 		// Refres Properties
-		const RefresProps = $('<div>')
-			.css('text-align', 'center')
-			.appendTo(nodeOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
 			.click(getProperties)
 			.html('Refresh Property List')
-			.appendTo(RefresProps);
+			.appendTo(set4);
 
 		// DB
 		const DB = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
