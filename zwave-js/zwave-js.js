@@ -19,7 +19,7 @@ module.exports = function (RED) {
         RED.nodes.createNode(this, config);
         const node = this;
 
-        let canDoSecure = false;
+        //let canDoSecure = false;
         const NodesReady = [];
         let AllNodesReady = false;
         let Driver;
@@ -219,7 +219,7 @@ module.exports = function (RED) {
 
         const GetKey = (Property, ZWAVEJSName) => {
             if (config[Property] !== undefined && config[Property].length > 0) {
-                canDoSecure = true;
+                //canDoSecure = true;
 
                 if (
                     config[Property].startsWith('[') &&
@@ -245,7 +245,7 @@ module.exports = function (RED) {
                     }
                     DriverOptions.securityKeys[ZWAVEJSName] = Buffer.from(_Buffer);
                 } else {
-                    canDoSecure = true;
+                    //canDoSecure = true;
                     Log(
                         'debug',
                         'NDERED',
@@ -586,6 +586,7 @@ module.exports = function (RED) {
                     await Driver.controller.removeFailedNode(Params[0]);
                     break;
 
+                /*
                 case 'replaceFailedNode':
                     if (!canDoSecure) {
                         await Driver.controller.replaceFailedNode(Params[0], true);
@@ -617,6 +618,7 @@ module.exports = function (RED) {
                 case 'stopExclusion':
                     await Driver.controller.stopExclusion();
                     break;
+                */
 
                 case 'proprietaryFunction':
                     const ZWaveMessage = new ZWaveJS.Message(Driver, {

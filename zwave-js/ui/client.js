@@ -716,11 +716,17 @@ const ZwaveJsUI = (function () {
 	}
 
 	function DisplayDSK(DSK) {
-		$('#DSK_Previw').append('<td>' + DSK + '</td>');
+		$('#DSK_Previw').html(DSK);
 		StepsAPI.setStepIndex(StepList.DSK);
 	}
 
 	ValidateDSK = () => {
+
+		const B = event.target;
+
+		$(B).html('Please wait...')
+		$(B).prop('disabled', true);
+
 		ControllerCMD(
 			'IEAPI',
 			'VerifyDSK',
@@ -731,6 +737,12 @@ const ZwaveJsUI = (function () {
 	};
 
 	GrantSelected = () => {
+
+		const B = event.target;
+
+		$(B).html('Please wait...')
+		$(B).prop('disabled', true);
+
 		const Granted = [];
 		$('.SecurityClassCB').each(function () {
 			if ($(this).is(':checked')) {
@@ -765,6 +777,11 @@ const ZwaveJsUI = (function () {
 
 			case 'S0':
 				Request.strategy = 3;
+				StepsAPI.setStepIndex(StepList.NIF);
+				break;
+
+			case 'S2':
+				Request.strategy = 4;
 				StepsAPI.setStepIndex(StepList.NIF);
 				break;
 

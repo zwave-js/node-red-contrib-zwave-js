@@ -168,7 +168,16 @@ module.exports = {
 			// Smart Start
 			if (Strategy === 1) {
 				const Request = {
+					strategy: Strategy,
 					provisioningList: ProvisioningList
+				};
+
+				_Context.controller.beginInclusion(Request);
+			}
+			// None
+			if (Strategy === 2) {
+				const Request = {
+					strategy: Strategy
 				};
 
 				_Context.controller.beginInclusion(Request);
@@ -177,6 +186,15 @@ module.exports = {
 			if (Strategy === 3) {
 				const Request = {
 					strategy: Strategy
+				};
+
+				_Context.controller.beginInclusion(Request);
+			}
+			// S2
+			if (Strategy === 4) {
+				const Request = {
+					strategy: Strategy,
+					userCallbacks: Callbacks
 				};
 
 				_Context.controller.beginInclusion(Request);

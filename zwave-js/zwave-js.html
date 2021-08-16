@@ -117,14 +117,18 @@
              <!--DSK-->
             <div class="step-tab-panel" data-step="DSK">
                 <br />
-                Verify the the device you're adding, matches the below DSK (ignoring the first 5 digits), if so provide the missing 5 digits.
+                Please enter the pin code as found on the device packaging/user manual, Please also verify the DSK matches that of the device you're adding.
                 <br />
-                <table id="S2DSK" style="width: 100%; padding: 10px;" cellpadding="5">
-
+                <table id="S2DSK" style="width: 100%; padding: 10px; margin-top: 100px;" cellpadding="5">
                     <tr>
-                        <td style="text-align: right;"><input type="text" id="SC_DSK" style="width: 70px;text-align: center;"></td>
+                        <td style="text-align: center;">PIN</td>
+                        <td style="text-align: center;">DSK</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><input type="text" id="SC_DSK" style="width: 70px;text-align: center;"></td>
                         <td style="text-align: center;" id="DSK_Previw"></td>
                     </tr>
+                    
                   
                 </table>
                 <button class="ui-button ui-corner-all ui-widget SecrutiyButton" style="margin-top: 20px; margin-left: 39%;" onclick="ValidateDSK()">Verify</button>
@@ -139,10 +143,11 @@
                         </td>
                     </tr>
                     <tr>
-                        <td style="text-align: center;">Your device has been added to the network, it is now being interviewed. It is safe to close this dialog.</td>
+                        <td style="text-align: center;">Your device has been added to the network,<br />
+                            it is now being interviewed. It is safe to close this dialog.</td>
                     </tr>
                 </table>
-            </div>,
+            </div>
              <!--Add Done Insecure-->
              <div class="step-tab-panel" data-step="AddDoneInsecure">
                 <br />
@@ -153,7 +158,8 @@
                         </td>
                     </tr>
                     <tr>
-                        <td style="text-align: center;">Your device has been added to the network, but it may not be secured.</td>
+                        <td style="text-align: center;">Your device has been added to the network,<br />
+                            But the requested secruity class could not be achieved!</td>
                     </tr>
                 </table>
             </div>
