@@ -723,26 +723,18 @@ const ZwaveJsUI = (function () {
 	}
 
 	ValidateDSK = () => {
-
 		const B = event.target;
 
-		$(B).html('Please wait...')
+		$(B).html('Please wait...');
 		$(B).prop('disabled', true);
 
-		ControllerCMD(
-			'IEAPI',
-			'verifyDSK',
-			undefined,
-			[$('#SC_DSK').val()],
-			true
-		);
+		ControllerCMD('IEAPI', 'verifyDSK', undefined, [$('#SC_DSK').val()], true);
 	};
 
 	GrantSelected = () => {
-
 		const B = event.target;
 
-		$(B).html('Please wait...')
+		$(B).html('Please wait...');
 		$(B).prop('disabled', true);
 
 		const Granted = [];
@@ -755,14 +747,12 @@ const ZwaveJsUI = (function () {
 	};
 
 	StartReplace = (Mode) => {
-
 		const B = event.target;
-		$(B).html('Please wait...')
+		$(B).html('Please wait...');
 		$(B).prop('disabled', true);
 
 		const Request = {};
 		switch (Mode) {
-
 			case 'S2':
 				Request.strategy = 4;
 				break;
@@ -776,15 +766,18 @@ const ZwaveJsUI = (function () {
 				break;
 		}
 
-		ControllerCMD('IEAPI', 'ReplaceNode', undefined, [parseInt(selectedNode),Request], true);
-
-	
-	}
+		ControllerCMD(
+			'IEAPI',
+			'replaceNode',
+			undefined,
+			[parseInt(selectedNode), Request],
+			true
+		);
+	};
 
 	StartInclusionExclusion = (Mode) => {
-
-        const B = event.target;
-		$(B).html('Please wait...')
+		const B = event.target;
+		$(B).html('Please wait...');
 		$(B).prop('disabled', true);
 
 		const Request = {};
@@ -819,11 +812,9 @@ const ZwaveJsUI = (function () {
 				break;
 
 			case 'Remove':
-				ControllerCMD('IEAPI', 'beginExclusion', undefined, [Request], true);
+				ControllerCMD('IEAPI', 'beginExclusion', undefined, undefined, true);
 				break;
 		}
-
-		
 	};
 
 	function ShowIncludeExcludePrompt() {
@@ -856,7 +847,7 @@ const ZwaveJsUI = (function () {
 		StepsAPI = Steps.data('plugin_Steps');
 	}
 
-	function ShowReplacePrompt(){
+	function ShowReplacePrompt() {
 		const Options = {
 			draggable: false,
 			modal: true,
@@ -1049,7 +1040,6 @@ const ZwaveJsUI = (function () {
 			true
 		);
 	}
-
 
 	function init() {
 		// Container(s)
@@ -1359,7 +1349,10 @@ const ZwaveJsUI = (function () {
 			case 'node-collection-change':
 				if (data.event === 'node added') {
 					GetNodes();
-					if (data.inclusionResult.lowSecurity !== undefined && data.inclusionResult.lowSecurity) {
+					if (
+						data.inclusionResult.lowSecurity !== undefined &&
+						data.inclusionResult.lowSecurity
+					) {
 						StepsAPI.setStepIndex(StepList.AddDoneInsecure);
 					} else {
 						StepsAPI.setStepIndex(StepList.AddDone);

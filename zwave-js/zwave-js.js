@@ -218,8 +218,6 @@ module.exports = function (RED) {
 
         const GetKey = (Property, ZWAVEJSName) => {
             if (config[Property] !== undefined && config[Property].length > 0) {
-             
-
                 if (
                     config[Property].startsWith('[') &&
                     config[Property].endsWith(']')
@@ -244,7 +242,6 @@ module.exports = function (RED) {
                     }
                     DriverOptions.securityKeys[ZWAVEJSName] = Buffer.from(_Buffer);
                 } else {
-   
                     Log(
                         'debug',
                         'NDERED',
@@ -337,7 +334,7 @@ module.exports = function (RED) {
                 const Mode = msg.payload.mode;
                 switch (Mode) {
                     case 'IEAPI':
-                        await IEAPI(msg, send);
+                        await IEAPI(msg);
                         break;
                     case 'CCAPI':
                         await CCAPI(msg, send);
@@ -372,80 +369,76 @@ module.exports = function (RED) {
 
         let _GrantResolve;
         let _DSKResolve;
-        async function IEAPI(msg,send){
+        async function IEAPI(msg) {
+            const Method = msg.payload.method;
+            const Params = msg.payload.params || [];
 
-            
-                const Method = msg.payload.method;
-                const Params = msg.payload.params || [];
-                
-    
-                const Callbacks = {
-                    grantSecurityClasses: GrantSecurityClasses,
-                    validateDSKAndEnterPIN: ValidateDSK,
-                    abort: Abort
-                }
-    
-                switch(Method){
-                    case 'beginInclusion':
-                        Params[0].userCallbacks = Callbacks
-                        await Driver.controller.beginInclusion(Params[0]);
-                        break;
-    
-                    case 'beginExclusion':
-                        await Driver.controller.beginExclusion();
-                        break;
-    
-                    case 'grantClasses':
-                        Grant(req);
-                        break;
-    
-                    case 'verifyDSK':
-                        VerifyDSK(req);
-                        break;
+            const Callbacks = {
+                grantSecurityClasses: GrantSecurityClasses,
+                validateDSKAndEnterPIN: ValidateDSK,
+                abort: Abort
+            };
 
-                    case 'replaceNode':
-                        Params[1].userCallbacks = Callbacks
-                        await Driver.controller.replaceFailedNode(Params[0],Params[1]);
-                        break;
+            switch (Method) {
+                case 'beginInclusion':
+                    Params[0].userCallbacks = Callbacks;
+                    await Driver.controller.beginInclusion(Params[0]);
+                    break;
 
-                    case 'stop':
-                        Driver.controller.stopInclusion();
-                        Driver.controller.stopExclusion();
-                        break;
-                }
-           return;
-           
+                case 'beginExclusion':
+                    await Driver.controller.beginExclusion();
+                    break;
+
+                case 'grantClasses':
+                    Grant(Params[0]);
+                    break;
+
+                case 'verifyDSK':
+                    VerifyDSK(Params[0]);
+                    break;
+
+                case 'replaceNode':
+                    Params[1].userCallbacks = Callbacks;
+                    await Driver.controller.replaceFailedNode(Params[0], Params[1]);
+                    break;
+
+                case 'stop':
+                    Driver.controller.stopInclusion();
+                    Driver.controller.stopExclusion();
+                    break;
+            }
+            return;
         }
 
-        function GrantSecurityClasses(RequestedClasses){
-
-            UI.sendEvent('node-inclusion-step','grant security',{classes:RequestedClasses})
+        function GrantSecurityClasses(RequestedClasses) {
+            UI.sendEvent('node-inclusion-step', 'grant security', {
+                classes: RequestedClasses
+            });
             return new Promise((res) => {
-				_GrantResolve = res;
-			});
+                _GrantResolve = res;
+            });
         }
-        
-        function Grant(req) {
-			_GrantResolve({
-				securityClasses: req.body.params[0],
-				clientSideAuth: false
-			});
-		}
 
-        function ValidateDSK(DSK){
+        function Grant(Classes) {
+            _GrantResolve({
+                securityClasses: Classes,
+                clientSideAuth: false
+            });
+        }
 
-            UI.sendEvent('node-inclusion-step','verify dsk',{dsk:DKS})
+        function ValidateDSK(DSK) {
+            UI.sendEvent('node-inclusion-step', 'verify dsk', { dsk: DSK });
             return new Promise((res) => {
-				_DSKResolve = res;
-			});
+                _DSKResolve = res;
+            });
         }
 
-        function VerifyDSK(req) {
-			_DSKResolve(req.body.params[0]);
-		}
+        function VerifyDSK(Pin) {
+            _DSKResolve(Pin);
+        }
 
-        function Abort(){
-            UI.sendEvent('node-inclusion-step','aborted');
+        function Abort() {
+            UI.sendEvent('node-inclusion-step', 'aborted');
         }
 
         async function ControllerAPI(msg, send) {

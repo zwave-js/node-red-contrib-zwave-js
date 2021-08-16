@@ -3,8 +3,6 @@ const express = require('express');
 
 const _Context = {};
 let _RED;
-let _GrantResolve;
-let _ValidateDSKResolve;
 
 let LatestStatus;
 const _SendStatus = () => {
@@ -91,28 +89,28 @@ module.exports = {
 			if (req.body.noWait) {
 				res.status(202).end();
 			}
-			
-				const timeout = setTimeout(() => res.status(504).end(), 5000);
-				_Context.input(
-					{ payload: req.body },
-					(zwaveRes) => {
+
+			const timeout = setTimeout(() => res.status(504).end(), 5000);
+			_Context.input(
+				{ payload: req.body },
+				(zwaveRes) => {
+					clearTimeout(timeout);
+					if (!req.body.noWait) {
+						res.send(zwaveRes.payload);
+					}
+				},
+				(err) => {
+					if (err) {
 						clearTimeout(timeout);
 						if (!req.body.noWait) {
-							res.send(zwaveRes.payload);
-						}
-					},
-					(err) => {
-						if (err) {
-							clearTimeout(timeout);
-							if (!req.body.noWait) {
-								res.status(500).send(err.message);
-							}
+							res.status(500).send(err.message);
 						}
 					}
-				);
+				}
+			);
 		});
 	},
-	sendEvent: (Type,Event, args) =>{
+	sendEvent: (Type, Event, args) => {
 		_RED.comms.publish(`/zwave-js/cmd`, {
 			type: Type,
 			event: Event,
@@ -124,19 +122,19 @@ module.exports = {
 			_Context.controller = driver.controller;
 			_Context.input = request;
 
-			_Context.controller.on('inclusion started',() =>{
+			_Context.controller.on('inclusion started', () => {
 				_RED.comms.publish(`/zwave-js/cmd`, {
 					type: 'node-inclusion-step',
 					event: 'inclusion started'
 				});
-			})
+			});
 
-			_Context.controller.on('exclusion started',() =>{
+			_Context.controller.on('exclusion started', () => {
 				_RED.comms.publish(`/zwave-js/cmd`, {
 					type: 'node-inclusion-step',
 					event: 'exclusion started'
 				});
-			})
+			});
 
 			_Context.controller.on('node added', (N, IR) => {
 				WireNodeEvents(N);
