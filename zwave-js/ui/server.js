@@ -91,27 +91,7 @@ module.exports = {
 			if (req.body.noWait) {
 				res.status(202).end();
 			}
-			if (req.body.mode === 'IEAPI') {
-				if (req.body.method === 'IncludeExclude') {
-					IncludeExclude(req, res);
-				}
-				if (req.body.method === 'GrantClasses') {
-					Grant(req, res);
-				}
-
-				if (req.body.method === 'VerifyDSK') {
-					VerifyDSK(req, res);
-				}
-
-				if (req.body.method === 'ReplaceNode') {
-					ReplaceNode(req, res);
-				}
-
-				if (req.body.method === 'Stop') {
-					_Context.controller.stopInclusion();
-					_Context.controller.stopExclusion();
-				}
-			} else {
+			
 				const timeout = setTimeout(() => res.status(504).end(), 5000);
 				_Context.input(
 					{ payload: req.body },
@@ -130,135 +110,33 @@ module.exports = {
 						}
 					}
 				);
-			}
 		});
-
-		function VerifyDSK(req) {
-			_ValidateDSKResolve(req.body.params.pin);
-		}
-
-		function Grant(req) {
-			_GrantResolve({
-				securityClasses: req.body.params,
-				clientSideAuth: false
-			});
-		}
-
-		function ReplaceNode(req){
-
-			const Strategy = req.body.params.strategy;
-			const NodeID = req.body.params.node;
-
-			const Callbacks = {
-				grantSecurityClasses: GrantSecurityClasses,
-				validateDSKAndEnterPIN: ValidateDSK,
-				abort: Abort
-			};
-
-			const Request = {
-				strategy: Strategy,
-				userCallbacks: Callbacks
-			};
-
-			_Context.controller.replaceFailedNode(NodeID, Request);
-		}
-
-		function IncludeExclude(req) {
-			const Strategy = req.body.params.strategy;
-			const ForceSecurity = req.body.params.forceSecurity || false;
-			const ProvisioningList = req.body.params.provisioningList;
-
-			const Callbacks = {
-				grantSecurityClasses: GrantSecurityClasses,
-				validateDSKAndEnterPIN: ValidateDSK,
-				abort: Abort
-			};
-
-			// Remove
-			if (Strategy === -1) {
-				_Context.controller.beginExclusion();
-			}
-
-			// Default
-			if (Strategy === 0) {
-				const Request = {
-					forceSecurity: ForceSecurity,
-					strategy: Strategy,
-					userCallbacks: Callbacks
-				};
-				_Context.controller.beginInclusion(Request);
-			}
-			// Smart Start
-			if (Strategy === 1) {
-				const Request = {
-					strategy: Strategy,
-					provisioningList: ProvisioningList
-				};
-
-				_Context.controller.beginInclusion(Request);
-			}
-			// None
-			if (Strategy === 2) {
-				const Request = {
-					strategy: Strategy
-				};
-
-				_Context.controller.beginInclusion(Request);
-			}
-			// S0
-			if (Strategy === 3) {
-				const Request = {
-					strategy: Strategy
-				};
-
-				_Context.controller.beginInclusion(Request);
-			}
-			// S2
-			if (Strategy === 4) {
-				const Request = {
-					strategy: Strategy,
-					userCallbacks: Callbacks
-				};
-
-				_Context.controller.beginInclusion(Request);
-			}
-		}
-
-		function Abort() {
-			_RED.comms.publish(`/zwave-js/cmd`, {
-				type: 'node-inclusion-step',
-				event: 'aborted'
-			});
-		}
-
-		function ValidateDSK(DSK) {
-			_RED.comms.publish(`/zwave-js/cmd`, {
-				type: 'node-inclusion-step',
-				event: 'verify dsk',
-				dsk: DSK
-			});
-
-			return new Promise((res) => {
-				_ValidateDSKResolve = res;
-			});
-		}
-
-		function GrantSecurityClasses(RequestedClasses) {
-			_RED.comms.publish(`/zwave-js/cmd`, {
-				type: 'node-inclusion-step',
-				event: 'grant security',
-				classes: RequestedClasses
-			});
-
-			return new Promise((res) => {
-				_GrantResolve = res;
-			});
-		}
+	},
+	sendEvent: (Type,Event, args) =>{
+		_RED.comms.publish(`/zwave-js/cmd`, {
+			type: Type,
+			event: Event,
+			...args
+		});
 	},
 	register: (driver, request) => {
 		driver.on('driver ready', () => {
 			_Context.controller = driver.controller;
 			_Context.input = request;
+
+			_Context.controller.on('inclusion started',() =>{
+				_RED.comms.publish(`/zwave-js/cmd`, {
+					type: 'node-inclusion-step',
+					event: 'inclusion started'
+				});
+			})
+
+			_Context.controller.on('exclusion started',() =>{
+				_RED.comms.publish(`/zwave-js/cmd`, {
+					type: 'node-inclusion-step',
+					event: 'exclusion started'
+				});
+			})
 
 			_Context.controller.on('node added', (N, IR) => {
 				WireNodeEvents(N);

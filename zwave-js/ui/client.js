@@ -731,9 +731,9 @@ const ZwaveJsUI = (function () {
 
 		ControllerCMD(
 			'IEAPI',
-			'VerifyDSK',
+			'verifyDSK',
 			undefined,
-			{ pin: $('#SC_DSK').val() },
+			[$('#SC_DSK').val()],
 			true
 		);
 	};
@@ -751,76 +751,79 @@ const ZwaveJsUI = (function () {
 				Granted.push(parseInt($(this).attr('id').replace('SC_', '')));
 			}
 		});
-		ControllerCMD('IEAPI', 'GrantClasses', undefined, Granted, true);
+		ControllerCMD('IEAPI', 'grantClasses', undefined, [Granted], true);
 	};
 
 	StartReplace = (Mode) => {
 
+		const B = event.target;
+		$(B).html('Please wait...')
+		$(B).prop('disabled', true);
+
 		const Request = {};
-		Request.node = parseInt(selectedNode);
 		switch (Mode) {
 
 			case 'S2':
 				Request.strategy = 4;
-				StepsAPI.setStepIndex(StepList.NIF);
 				break;
 
 			case 'S0':
 				Request.strategy = 3;
-				StepsAPI.setStepIndex(StepList.NIF);
 				break;
 
 			case 'None':
 				Request.strategy = 2;
-				StepsAPI.setStepIndex(StepList.NIF);
 				break;
 		}
 
-		ControllerCMD('IEAPI', 'ReplaceNode', undefined, Request, true);
+		ControllerCMD('IEAPI', 'ReplaceNode', undefined, [parseInt(selectedNode),Request], true);
 
 	
 	}
 
 	StartInclusionExclusion = (Mode) => {
-		const Request = {};
 
+        const B = event.target;
+		$(B).html('Please wait...')
+		$(B).prop('disabled', true);
+
+		const Request = {};
 		const PreferS0 = $('#PS0').is(':checked');
 
 		switch (Mode) {
 			case 'Default':
 				Request.strategy = 0;
 				Request.forceSecurity = PreferS0;
-				StepsAPI.setStepIndex(StepList.NIF);
+				ControllerCMD('IEAPI', 'beginInclusion', undefined, [Request], true);
 				break;
 
 			case 'SmartStart':
 				Request.strategy = 1;
 				Request.provisioningList = '';
-				StepsAPI.setStepIndex(StepList.NIF);
+				ControllerCMD('IEAPI', 'beginInclusion', undefined, [Request], true);
 				break;
 
 			case 'None':
 				Request.strategy = 2;
-				StepsAPI.setStepIndex(StepList.NIF);
+				ControllerCMD('IEAPI', 'beginInclusion', undefined, [Request], true);
 				break;
 
 			case 'S0':
 				Request.strategy = 3;
-				StepsAPI.setStepIndex(StepList.NIF);
+				ControllerCMD('IEAPI', 'beginInclusion', undefined, [Request], true);
 				break;
 
 			case 'S2':
 				Request.strategy = 4;
-				StepsAPI.setStepIndex(StepList.NIF);
+				ControllerCMD('IEAPI', 'beginInclusion', undefined, [Request], true);
 				break;
 
 			case 'Remove':
-				Request.strategy = -1;
-				StepsAPI.setStepIndex(StepList.Remove);
+				ControllerCMD('IEAPI', 'beginExclusion', undefined, [Request], true);
 				break;
 		}
 
-		ControllerCMD('IEAPI', 'IncludeExclude', undefined, Request, true);
+		
 	};
 
 	function ShowIncludeExcludePrompt() {
@@ -837,7 +840,7 @@ const ZwaveJsUI = (function () {
 					id: 'IEButton',
 					text: 'Abort',
 					click: function () {
-						ControllerCMD('IEAPI', 'Stop', undefined, undefined, true);
+						ControllerCMD('IEAPI', 'stop', undefined, undefined, true);
 						$(this).dialog('destroy');
 					}
 				}
@@ -867,7 +870,7 @@ const ZwaveJsUI = (function () {
 					id: 'IEButton',
 					text: 'Abort',
 					click: function () {
-						ControllerCMD('IEAPI', 'Stop', undefined, undefined, true);
+						ControllerCMD('IEAPI', 'stop', undefined, undefined, true);
 						$(this).dialog('destroy');
 					}
 				}
@@ -1376,6 +1379,12 @@ const ZwaveJsUI = (function () {
 				}
 				if (data.event === 'verify dsk') {
 					DisplayDSK(data.dsk);
+				}
+				if (data.event === 'inclusion started') {
+					StepsAPI.setStepIndex(StepList.NIF);
+				}
+				if (data.event === 'exclusion started') {
+					StepsAPI.setStepIndex(StepList.Remove);
 				}
 				break;
 

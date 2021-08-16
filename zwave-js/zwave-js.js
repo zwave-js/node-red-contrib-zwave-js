@@ -19,7 +19,6 @@ module.exports = function (RED) {
         RED.nodes.createNode(this, config);
         const node = this;
 
-        //let canDoSecure = false;
         const NodesReady = [];
         let AllNodesReady = false;
         let Driver;
@@ -219,7 +218,7 @@ module.exports = function (RED) {
 
         const GetKey = (Property, ZWAVEJSName) => {
             if (config[Property] !== undefined && config[Property].length > 0) {
-                //canDoSecure = true;
+             
 
                 if (
                     config[Property].startsWith('[') &&
@@ -245,7 +244,7 @@ module.exports = function (RED) {
                     }
                     DriverOptions.securityKeys[ZWAVEJSName] = Buffer.from(_Buffer);
                 } else {
-                    //canDoSecure = true;
+   
                     Log(
                         'debug',
                         'NDERED',
@@ -337,6 +336,9 @@ module.exports = function (RED) {
             try {
                 const Mode = msg.payload.mode;
                 switch (Mode) {
+                    case 'IEAPI':
+                        await IEAPI(msg, send);
+                        break;
                     case 'CCAPI':
                         await CCAPI(msg, send);
                         break;
@@ -366,6 +368,84 @@ module.exports = function (RED) {
                     node.error(er);
                 }
             }
+        }
+
+        let _GrantResolve;
+        let _DSKResolve;
+        async function IEAPI(msg,send){
+
+            
+                const Method = msg.payload.method;
+                const Params = msg.payload.params || [];
+                
+    
+                const Callbacks = {
+                    grantSecurityClasses: GrantSecurityClasses,
+                    validateDSKAndEnterPIN: ValidateDSK,
+                    abort: Abort
+                }
+    
+                switch(Method){
+                    case 'beginInclusion':
+                        Params[0].userCallbacks = Callbacks
+                        await Driver.controller.beginInclusion(Params[0]);
+                        break;
+    
+                    case 'beginExclusion':
+                        await Driver.controller.beginExclusion();
+                        break;
+    
+                    case 'grantClasses':
+                        Grant(req);
+                        break;
+    
+                    case 'verifyDSK':
+                        VerifyDSK(req);
+                        break;
+
+                    case 'replaceNode':
+                        Params[1].userCallbacks = Callbacks
+                        await Driver.controller.replaceFailedNode(Params[0],Params[1]);
+                        break;
+
+                    case 'stop':
+                        Driver.controller.stopInclusion();
+                        Driver.controller.stopExclusion();
+                        break;
+                }
+           return;
+           
+        }
+
+        function GrantSecurityClasses(RequestedClasses){
+
+            UI.sendEvent('node-inclusion-step','grant security',{classes:RequestedClasses})
+            return new Promise((res) => {
+				_GrantResolve = res;
+			});
+        }
+        
+        function Grant(req) {
+			_GrantResolve({
+				securityClasses: req.body.params[0],
+				clientSideAuth: false
+			});
+		}
+
+        function ValidateDSK(DSK){
+
+            UI.sendEvent('node-inclusion-step','verify dsk',{dsk:DKS})
+            return new Promise((res) => {
+				_DSKResolve = res;
+			});
+        }
+
+        function VerifyDSK(req) {
+			_DSKResolve(req.body.params[0]);
+		}
+
+        function Abort(){
+            UI.sendEvent('node-inclusion-step','aborted');
         }
 
         async function ControllerAPI(msg, send) {
@@ -585,40 +665,6 @@ module.exports = function (RED) {
                 case 'removeFailedNode':
                     await Driver.controller.removeFailedNode(Params[0]);
                     break;
-
-                /*
-                case 'replaceFailedNode':
-                    if (!canDoSecure) {
-                        await Driver.controller.replaceFailedNode(Params[0], true);
-                    } else if (Params.length > 1) {
-                        await Driver.controller.replaceFailedNode(Params[0], Params[1]);
-                    } else {
-                        await Driver.controller.replaceFailedNode(Params[0], false);
-                    }
-                    break;
-
-                case 'beginInclusion':
-                    if (!canDoSecure) {
-                        await Driver.controller.beginInclusion(true);
-                    } else if (Params !== undefined && Params.length > 0) {
-                        await Driver.controller.beginInclusion(Params[0]);
-                    } else {
-                        await Driver.controller.beginInclusion(false);
-                    }
-                    break;
-
-                case 'stopInclusion':
-                    await Driver.controller.stopInclusion();
-                    break;
-
-                case 'beginExclusion':
-                    await Driver.controller.beginExclusion();
-                    break;
-
-                case 'stopExclusion':
-                    await Driver.controller.stopExclusion();
-                    break;
-                */
 
                 case 'proprietaryFunction':
                     const ZWaveMessage = new ZWaveJS.Message(Driver, {
