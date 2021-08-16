@@ -219,12 +219,12 @@ module.exports = {
 			_Context.controller = driver.controller;
 			_Context.input = request;
 
-			_Context.controller.on('node added', (n, ir) => {
-				WireNodeEvents(n);
+			_Context.controller.on('node added', (N, IR) => {
+				WireNodeEvents(N);
 				_RED.comms.publish(`/zwave-js/cmd`, {
 					type: 'node-collection-change',
 					event: 'node added',
-					lowsecurity: ir
+					inclusionResult: IR
 				});
 			});
 

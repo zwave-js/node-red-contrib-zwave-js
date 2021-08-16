@@ -1309,12 +1309,11 @@ const ZwaveJsUI = (function () {
 			case 'node-collection-change':
 				if (data.event === 'node added') {
 					GetNodes();
-					if (data.lowsecurity !== undefined && data.lowsecurity) {
+					if (data.inclusionResult.lowSecurity !== undefined && data.inclusionResult.lowSecurity) {
 						StepsAPI.setStepIndex(StepList.AddDoneInsecure);
 					} else {
 						StepsAPI.setStepIndex(StepList.AddDone);
 					}
-
 					$('#IEButton').text('Close');
 				}
 				if (data.event === 'node removed') {
