@@ -86,8 +86,6 @@ module.exports = {
 			});
 		});
 
-
-
 		// Commands
 		RED.httpAdmin.post('/zwave-js/cmd', async (req, res) => {
 			if (req.body.noWait) {
@@ -109,7 +107,6 @@ module.exports = {
 					_Context.controller.stopInclusion();
 					_Context.controller.stopExclusion();
 				}
-
 			} else {
 				const timeout = setTimeout(() => res.status(504).end(), 5000);
 				_Context.input(
@@ -132,14 +129,15 @@ module.exports = {
 			}
 		});
 
-		
-
 		function VerifyDSK(req) {
 			_ValidateDSKResolve(req.body.params.pin);
 		}
 
 		function Grant(req) {
-			_GrantResolve({ securityClasses: req.body.params, clientSideAuth: false });
+			_GrantResolve({
+				securityClasses: req.body.params,
+				clientSideAuth: false
+			});
 		}
 
 		function IncludeExclude(req) {
@@ -178,7 +176,7 @@ module.exports = {
 			// S0
 			if (Strategy === 3) {
 				const Request = {
-					strategy: Strategy,
+					strategy: Strategy
 				};
 
 				_Context.controller.beginInclusion(Request);
@@ -221,11 +219,12 @@ module.exports = {
 			_Context.controller = driver.controller;
 			_Context.input = request;
 
-			_Context.controller.on('node added', (...args) => {
-				WireNodeEvents(args[0]);
+			_Context.controller.on('node added', (n, ir) => {
+				WireNodeEvents(n);
 				_RED.comms.publish(`/zwave-js/cmd`, {
 					type: 'node-collection-change',
-					event: 'node added'
+					event: 'node added',
+					lowsecurity: ir
 				});
 			});
 

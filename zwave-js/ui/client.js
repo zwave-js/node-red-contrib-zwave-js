@@ -671,7 +671,8 @@ const ZwaveJsUI = (function () {
 		Classes: 3,
 		DSK: 4,
 		AddDone: 5,
-		RemoveDone: 6
+		AddDoneInsecure: 6,
+		RemoveDone: 7
 	};
 	const Security2Class = {
 		0: {
@@ -767,7 +768,6 @@ const ZwaveJsUI = (function () {
 				StepsAPI.setStepIndex(StepList.NIF);
 				break;
 
-			
 			case 'Remove':
 				Request.strategy = -1;
 				StepsAPI.setStepIndex(StepList.Remove);
@@ -786,7 +786,7 @@ const ZwaveJsUI = (function () {
 			height: '500',
 			title: 'Node Inclusion',
 			minHeight: 75,
-			buttons:[
+			buttons: [
 				{
 					id: 'IEButton',
 					text: 'Abort',
@@ -795,7 +795,7 @@ const ZwaveJsUI = (function () {
 						$(this).dialog('destroy');
 					}
 				}
-			] 
+			]
 		};
 
 		const IncludeForm = $('<div>').css({ padding: 10 }).html('Please wait...');
@@ -808,7 +808,6 @@ const ZwaveJsUI = (function () {
 	}
 
 	// NVR Here
-	
 
 	function StartNodeHeal() {
 		ControllerCMD('ControllerAPI', 'healNode', undefined, [selectedNode], true);
@@ -1061,7 +1060,6 @@ const ZwaveJsUI = (function () {
 			.html('Include / Exclude')
 			.appendTo(optInclusion);
 
-
 		// Heal
 		const optHeal = $('<div>')
 			.css('text-align', 'center')
@@ -1309,16 +1307,20 @@ const ZwaveJsUI = (function () {
 	function handleControllerEvent(topic, data) {
 		switch (data.type) {
 			case 'node-collection-change':
-
-				if(data.event === 'node added'){
+				if (data.event === 'node added') {
 					GetNodes();
-					StepsAPI.setStepIndex(StepList.AddDone);
-					$('#IEButton').text('Close')
+					if (data.lowsecurity !== undefined && data.lowsecurity) {
+						StepsAPI.setStepIndex(StepList.AddDoneInsecure);
+					} else {
+						StepsAPI.setStepIndex(StepList.AddDone);
+					}
+
+					$('#IEButton').text('Close');
 				}
-				if(data.event === 'node removed'){
+				if (data.event === 'node removed') {
 					GetNodes();
 					StepsAPI.setStepIndex(StepList.RemoveDone);
-					$('#IEButton').text('Close')
+					$('#IEButton').text('Close');
 				}
 				break;
 
