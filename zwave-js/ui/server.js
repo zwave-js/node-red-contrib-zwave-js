@@ -103,6 +103,10 @@ module.exports = {
 					VerifyDSK(req, res);
 				}
 
+				if (req.body.method === 'ReplaceNode') {
+					ReplaceNode(req, res);
+				}
+
 				if (req.body.method === 'Stop') {
 					_Context.controller.stopInclusion();
 					_Context.controller.stopExclusion();
@@ -138,6 +142,25 @@ module.exports = {
 				securityClasses: req.body.params,
 				clientSideAuth: false
 			});
+		}
+
+		function ReplaceNode(req){
+
+			const Strategy = req.body.params.strategy;
+			const NodeID = req.body.params.node;
+
+			const Callbacks = {
+				grantSecurityClasses: GrantSecurityClasses,
+				validateDSKAndEnterPIN: ValidateDSK,
+				abort: Abort
+			};
+
+			const Request = {
+				strategy: Strategy,
+				userCallbacks: Callbacks
+			};
+
+			_Context.controller.replaceFailedNode(NodeID, Request);
 		}
 
 		function IncludeExclude(req) {

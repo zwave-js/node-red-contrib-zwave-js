@@ -7,6 +7,7 @@
 
 /* UI Inclusion Functions */
 let StartInclusionExclusion;
+let StartReplace;
 let GrantSelected;
 let ValidateDSK;
 
@@ -672,7 +673,8 @@ const ZwaveJsUI = (function () {
 		DSK: 4,
 		AddDone: 5,
 		AddDoneInsecure: 6,
-		RemoveDone: 7
+		RemoveDone: 7,
+		ReplaceSecurityMode: 8
 	};
 	const Security2Class = {
 		0: {
@@ -752,6 +754,33 @@ const ZwaveJsUI = (function () {
 		ControllerCMD('IEAPI', 'GrantClasses', undefined, Granted, true);
 	};
 
+	StartReplace = (Mode) => {
+
+		const Request = {};
+		Request.node = parseInt(selectedNode);
+		switch (Mode) {
+
+			case 'S2':
+				Request.strategy = 4;
+				StepsAPI.setStepIndex(StepList.NIF);
+				break;
+
+			case 'S0':
+				Request.strategy = 3;
+				StepsAPI.setStepIndex(StepList.NIF);
+				break;
+
+			case 'None':
+				Request.strategy = 2;
+				StepsAPI.setStepIndex(StepList.NIF);
+				break;
+		}
+
+		ControllerCMD('IEAPI', 'ReplaceNode', undefined, Request, true);
+
+	
+	}
+
 	StartInclusionExclusion = (Mode) => {
 		const Request = {};
 
@@ -801,7 +830,7 @@ const ZwaveJsUI = (function () {
 			resizable: false,
 			width: '600',
 			height: '500',
-			title: 'Node Inclusion',
+			title: 'Node Inclusion/Exclusion',
 			minHeight: 75,
 			buttons: [
 				{
@@ -822,6 +851,37 @@ const ZwaveJsUI = (function () {
 		IncludeForm.append($('#TPL_Include').html());
 		const Steps = $('#IncludeWizard').steps({ showFooterButtons: false });
 		StepsAPI = Steps.data('plugin_Steps');
+	}
+
+	function ShowReplacePrompt(){
+		const Options = {
+			draggable: false,
+			modal: true,
+			resizable: false,
+			width: '600',
+			height: '500',
+			title: 'Replace Node',
+			minHeight: 75,
+			buttons: [
+				{
+					id: 'IEButton',
+					text: 'Abort',
+					click: function () {
+						ControllerCMD('IEAPI', 'Stop', undefined, undefined, true);
+						$(this).dialog('destroy');
+					}
+				}
+			]
+		};
+
+		const IncludeForm = $('<div>').css({ padding: 10 }).html('Please wait...');
+		IncludeForm.dialog(Options);
+		IncludeForm.html('');
+
+		IncludeForm.append($('#TPL_Include').html());
+		const Steps = $('#IncludeWizard').steps({ showFooterButtons: false });
+		StepsAPI = Steps.data('plugin_Steps');
+		StepsAPI.setStepIndex(StepList.ReplaceSecurityMode);
 	}
 
 	// NVR Here
@@ -987,36 +1047,6 @@ const ZwaveJsUI = (function () {
 		);
 	}
 
-	function ReplaceFailedNode() {
-		const Buttons = {
-			'Yes (Secure)': function () {
-				ControllerCMD('ControllerAPI', 'replaceFailedNode', undefined, [
-					selectedNode,
-					false
-				]).catch((err) => {
-					if (err.status !== 504) {
-						modalAlert(err.responseText, 'Could Not Replace Node');
-					}
-				});
-			},
-			'Yes (Insecure)': function () {
-				ControllerCMD('ControllerAPI', 'replaceFailedNode', undefined, [
-					selectedNode,
-					true
-				]).catch((err) => {
-					if (err.status !== 504) {
-						modalAlert(err.responseText, 'Could Not Replace Node');
-					}
-				});
-			}
-		};
-		modalPrompt(
-			'Are you sure you wish to replace this node?',
-			'Replace Failed Node',
-			Buttons,
-			true
-		);
-	}
 
 	function init() {
 		// Container(s)
@@ -1230,14 +1260,14 @@ const ZwaveJsUI = (function () {
 			.html('Remove Failed Node')
 			.appendTo(RemoveFailed);
 
-		// Remove
+		// Replace
 		const ReplaceFailed = $('<div>')
 			.css('text-align', 'center')
 			.appendTo(nodeOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(ReplaceFailedNode)
+			.click(ShowReplacePrompt)
 			.html('Replace Failed Node')
 			.appendTo(ReplaceFailed);
 

@@ -21,6 +21,7 @@
             <li data-step-target="AddDone"></li>
             <li data-step-target="AddDoneInsecure"></li>
             <li data-step-target="RemoveDone"></li>
+            <li data-step-target="ReplaceSecurityMode"></li>
         </ul>
         <div class="step-content" style="border: none;">
             <!-- Secuity Mode-->
@@ -174,6 +175,36 @@
                     </tr>
                     <tr>
                         <td style="text-align: center;">Your device has been removed from the network.</td>
+                    </tr>
+                </table>
+            </div>
+            <!--Replace Mode-->
+            <div class="step-tab-panel" data-step="ReplaceSecurityMode">
+                <br />
+                <table style="width: 100%; height: 160px;">
+                    <tr>
+                        <td style="text-align: left;width: 200px;vertical-align: top; ">
+                            <button class="ui-button ui-corner-all ui-widget SecrutiyButton" onclick="StartReplace('S2')">S2</button>
+                        </td>
+                        <td style="text-align: left; vertical-align: top; ">
+                            The replacement node will use S2 Security. (Reccomended)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;width: 200px;vertical-align: top; ">
+                            <button class="ui-button ui-corner-all ui-widget SecrutiyButton" onclick="StartReplace('S0')">S0</button>
+                        </td>
+                        <td style="text-align: left; vertical-align: top; ">
+                            The replacement node will use S0 Security. (Not Reccomended)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;width: 200px;vertical-align: top; ">
+                            <button class="ui-button ui-corner-all ui-widget SecrutiyButton" onclick="StartReplace('None')">No Encryption</button>
+                        </td>
+                        <td style="text-align: left; vertical-align: top; ">
+                            The replacement node will not use Security. (Not Reccomended)
+                        </td>
                     </tr>
                 </table>
             </div>
