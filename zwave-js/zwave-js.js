@@ -1237,6 +1237,7 @@ module.exports = function (RED) {
 
                 // Add, Remove
                 Driver.controller.on('node added', (N) => {
+
                     clearTimeout(RestoreReadyTimer);
                     ShareNodeList();
                     WireNodeEvents(N);
