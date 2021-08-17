@@ -617,11 +617,12 @@ const ZwaveJsUI = (function () {
 	}
 
 	function ControllerCMD(mode, method, node, params, dontwait) {
-
-	
-		if(!DriverReady){
-			modalAlert('The Controller has not yet been initialised.','Controller Not Ready');
-			return
+		if (!DriverReady) {
+			modalAlert(
+				'The Controller has not yet been initialised.',
+				'Controller Not Ready'
+			);
+			return;
 		}
 
 		const Options = {
@@ -1391,6 +1392,19 @@ const ZwaveJsUI = (function () {
 	}
 
 	function renderNode(node) {
+		let SM = '';
+		if (node.highestSecurityClass !== undefined) {
+			switch (node.highestSecurityClass) {
+				case 0:
+				case 1:
+				case 2:
+					SM = 'S2';
+					break;
+				case 7:
+					SM = 'S0';
+					break;
+			}
+		}
 		return $('<div>')
 			.addClass('red-ui-treeList-label zwave-js-node-row')
 			.attr('data-nodeid', node.nodeId)
@@ -1404,7 +1418,8 @@ const ZwaveJsUI = (function () {
 					.addClass('zwave-js-node-row-status'),
 				$('<div>')
 					.html(renderReadyIcon(node.ready))
-					.addClass('zwave-js-node-row-ready')
+					.addClass('zwave-js-node-row-ready'),
+				$('<div>').html(SM).addClass('zwave-js-node-row-security')
 			);
 	}
 

@@ -22,9 +22,14 @@
 	text-align: center;
 }
 .zwave-js-node-row-ready {
-	width: 20%;
+	width: 10%;
 	text-align: center;
 }
+.zwave-js-node-row-security {
+	width: 10%;
+	text-align: center;
+}
+
 
 .zwave-js-status-box {
 	margin-left: 5px;

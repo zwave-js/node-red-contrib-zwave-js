@@ -511,6 +511,7 @@ module.exports = function (RED) {
                             maxDataRate: N.maxDataRate,
                             supportsSecurity: N.supportsSecurity,
                             isSecure: N.isSecure,
+                            highestSecurityClass: N.getHighestSecurityClass(),
                             protocolVersion: ZWaveJS.ProtocolVersion[N.protocolVersion],
                             manufacturerId: N.manufacturerId,
                             productId: N.productId,
@@ -1237,7 +1238,6 @@ module.exports = function (RED) {
 
                 // Add, Remove
                 Driver.controller.on('node added', (N) => {
-
                     clearTimeout(RestoreReadyTimer);
                     ShareNodeList();
                     WireNodeEvents(N);
