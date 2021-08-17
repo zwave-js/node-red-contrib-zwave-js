@@ -10,6 +10,7 @@ let StartInclusionExclusion;
 let StartReplace;
 let GrantSelected;
 let ValidateDSK;
+let DriverReady = false;
 
 const ZwaveJsUI = (function () {
 	function modalAlert(message, title) {
@@ -616,6 +617,13 @@ const ZwaveJsUI = (function () {
 	}
 
 	function ControllerCMD(mode, method, node, params, dontwait) {
+
+	
+		if(!DriverReady){
+			modalAlert('The Controller has not yet been initialised.','Controller Not Ready');
+			return
+		}
+
 		const Options = {
 			url: `zwave-js/cmd`,
 			method: 'POST',
@@ -1318,6 +1326,7 @@ const ZwaveJsUI = (function () {
 	function WaitLoad() {
 		CheckDriverReady().then(({ ready }) => {
 			if (ready) {
+				DriverReady = true;
 				GetNodes();
 			} else {
 				setTimeout(WaitLoad, 5000);
