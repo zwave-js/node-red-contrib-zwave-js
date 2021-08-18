@@ -1394,11 +1394,7 @@ module.exports = function (RED) {
                             ']'
                     });
                     UI.status(
-                        'Healing network dending:[' +
-                        Heal_Pending.toString() +
-                        '], Done:[' +
-                        Heal_Done.toString() +
-                        '], Skipped:[' +
+                        'Healing network ... Skipped:[' +
                         Heal_Skipped.toString() +
                         '], Failed:[' +
                         Heal_Failed.toString() +
@@ -1427,7 +1423,7 @@ module.exports = function (RED) {
                         shape: 'dot',
                         text: 'Nodes : ' + NodesReady.toString() + ' are ready.'
                     });
-                    UI.status('Nodes : ' + NodesReady.toString() + ' are ready.');
+                    UI.status('Preparing network...');
                 }
 
                 Node.on('statistics updated', (N, S) => {
