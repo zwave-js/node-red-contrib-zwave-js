@@ -78,16 +78,16 @@ module.exports = function (RED) {
                     node.status({
                         fill: 'green',
                         shape: 'dot',
-                        text: 'All Nodes Ready!'
+                        text: 'All nodes ready!'
                     });
-                    UI.status('All Nodes Ready!');
+                    UI.status('All nodes ready!');
                 } else {
                     node.status({
                         fill: 'yellow',
                         shape: 'dot',
-                        text: 'Nodes : ' + Ready.toString() + ' Are Ready.'
+                        text: 'Nodes : ' + Ready.toString() + ' are ready.'
                     });
-                    UI.status('Nodes : ' + Ready.toString() + ' Are Ready.');
+                    UI.status('Nodes : ' + Ready.toString() + ' are ready.');
                 }
             }, 5000);
         }
@@ -112,9 +112,9 @@ module.exports = function (RED) {
         node.status({
             fill: 'red',
             shape: 'dot',
-            text: 'Starting Z-Wave Driver...'
+            text: 'Starting Z-Wave driver...'
         });
-        UI.status('Starting Z-Wave Driver...');
+        UI.status('Starting Z-Wave driver...');
 
         RED.events.on('zwjs:node:command', processMessageEvent);
         async function processMessageEvent(MSG) {
@@ -286,8 +286,8 @@ module.exports = function (RED) {
                 }
                 const Node = {
                     id: ZWN.id,
-                    name: ZWN.name !== undefined ? ZWN.name : 'No Name',
-                    location: ZWN.location !== undefined ? ZWN.location : 'No Location'
+                    name: ZWN.name !== undefined ? ZWN.name : 'No name',
+                    location: ZWN.location !== undefined ? ZWN.location : 'No location'
                 };
                 if (!NodeList.hasOwnProperty(Node.location)) {
                     NodeList[Node.location] = [];
@@ -599,7 +599,7 @@ module.exports = function (RED) {
                         const ErrorMSG =
                             'Node ' +
                             Params[0] +
-                            ' is already being interviewed. Current Interview Stage : ' +
+                            ' is already being interviewed. Current interview stage : ' +
                             Stage +
                             '';
                         throw new Error(ErrorMSG);
@@ -1173,7 +1173,7 @@ module.exports = function (RED) {
         function InitDriver() {
             DriverAttempts++;
             try {
-                Log('info', 'NDERED', undefined, undefined, 'Initializing Driver...');
+                Log('info', 'NDERED', undefined, undefined, 'Initializing driver...');
                 Driver = new ZWaveJS.Driver(config.serialPort, DriverOptions);
 
                 if (
@@ -1240,8 +1240,8 @@ module.exports = function (RED) {
             });
 
             Driver.on('all nodes ready', () => {
-                node.status({ fill: 'green', shape: 'dot', text: 'All Nodes Ready!' });
-                UI.status('All Nodes Ready!');
+                node.status({ fill: 'green', shape: 'dot', text: 'All nodes ready!' });
+                UI.status('All nodes ready!');
             });
 
             Driver.once('driver ready', () => {
@@ -1250,9 +1250,9 @@ module.exports = function (RED) {
                 node.status({
                     fill: 'yellow',
                     shape: 'dot',
-                    text: 'Interviewing Nodes...'
+                    text: 'Interviewing nodes...'
                 });
-                UI.status('Interviewing Nodes...');
+                UI.status('Interviewing nodes...');
 
                 // Add, Remove
                 Driver.controller.on('node added', (N) => {
@@ -1264,9 +1264,9 @@ module.exports = function (RED) {
                     node.status({
                         fill: 'yellow',
                         shape: 'dot',
-                        text: 'Node: ' + N.id + ' Interview Started.'
+                        text: 'Node: ' + N.id + ' interview started.'
                     });
-                    UI.status('Node: ' + N.id + ' Interview Started.');
+                    UI.status('Node: ' + N.id + ' interview started.');
                 });
 
                 Driver.controller.on('node removed', (N) => {
@@ -1292,8 +1292,8 @@ module.exports = function (RED) {
 
                 Driver.controller.on('inclusion failed', () => {
                     Send(undefined, 'INCLUSION_FAILED');
-                    node.status({ fill: 'red', shape: 'dot', text: 'Inclusion Failed.' });
-                    UI.status('Inclusion Failed.');
+                    node.status({ fill: 'red', shape: 'dot', text: 'Inclusion failed.' });
+                    UI.status('Inclusion failed.');
                     RestoreReadyStatus();
                 });
 
@@ -1320,8 +1320,8 @@ module.exports = function (RED) {
 
                 Driver.controller.on('exclusion failed', () => {
                     Send(undefined, 'EXCLUSION_FAILED');
-                    node.status({ fill: 'red', shape: 'dot', text: 'Exclusion Failed.' });
-                    UI.status('Exclusion Failed.');
+                    node.status({ fill: 'red', shape: 'dot', text: 'Exclusion failed.' });
+                    UI.status('Exclusion failed.');
                     RestoreReadyStatus();
                 });
 
@@ -1330,9 +1330,9 @@ module.exports = function (RED) {
                     node.status({
                         fill: 'green',
                         shape: 'dot',
-                        text: 'Exclusion Stopped.'
+                        text: 'Exclusion stopped.'
                     });
-                    UI.status('Exclusion Stopped.');
+                    UI.status('Exclusion stopped.');
                     RestoreReadyStatus();
                 });
 
@@ -1346,9 +1346,9 @@ module.exports = function (RED) {
                     node.status({
                         fill: 'green',
                         shape: 'dot',
-                        text: 'Network Heal Done.'
+                        text: 'Network heal done.'
                     });
-                    UI.status('Network Heal Done.');
+                    UI.status('Network heal done.');
                     RestoreReadyStatus();
                 });
 
@@ -1383,7 +1383,7 @@ module.exports = function (RED) {
                         fill: 'yellow',
                         shape: 'dot',
                         text:
-                            'Healing Network Pending:[' +
+                            'Healing network pending:[' +
                             Heal_Pending.toString() +
                             '], Done:[' +
                             Heal_Done.toString() +
@@ -1394,7 +1394,7 @@ module.exports = function (RED) {
                             ']'
                     });
                     UI.status(
-                        'Healing Network Pending:[' +
+                        'Healing network dending:[' +
                         Heal_Pending.toString() +
                         '], Done:[' +
                         Heal_Done.toString() +
@@ -1425,9 +1425,9 @@ module.exports = function (RED) {
                     node.status({
                         fill: 'yellow',
                         shape: 'dot',
-                        text: 'Nodes : ' + NodesReady.toString() + ' Are Ready.'
+                        text: 'Nodes : ' + NodesReady.toString() + ' are ready.'
                     });
-                    UI.status('Nodes : ' + NodesReady.toString() + ' Are Ready.');
+                    UI.status('Nodes : ' + NodesReady.toString() + ' are ready.');
                 }
 
                 Node.on('statistics updated', (N, S) => {
@@ -1472,9 +1472,9 @@ module.exports = function (RED) {
                 node.status({
                     fill: 'yellow',
                     shape: 'dot',
-                    text: 'Node: ' + N.id + ' Interview Started.'
+                    text: 'Node: ' + N.id + ' interview started.'
                 });
-                UI.status('Node: ' + N.id + ' Interview Started.');
+                UI.status('Node: ' + N.id + ' snterview started.');
             });
 
             Node.on('interview failed', (N, Er) => {
@@ -1482,9 +1482,9 @@ module.exports = function (RED) {
                 node.status({
                     fill: 'red',
                     shape: 'dot',
-                    text: 'Node: ' + N.id + ' Interview Failed.'
+                    text: 'Node: ' + N.id + ' interview failed.'
                 });
-                UI.status('Node: ' + N.id + ' Interview Failed.');
+                UI.status('Node: ' + N.id + ' interview failed.');
                 RestoreReadyStatus();
             });
 
@@ -1493,15 +1493,15 @@ module.exports = function (RED) {
                 node.status({
                     fill: 'green',
                     shape: 'dot',
-                    text: 'Node: ' + N.id + ' Interview Completed.'
+                    text: 'Node: ' + N.id + ' interview completed.'
                 });
-                UI.status('Node: ' + N.id + ' Interview Completed.');
+                UI.status('Node: ' + N.id + ' interview completed.');
                 RestoreReadyStatus();
             });
         }
 
         function StartDriver() {
-            Log('info', 'NDERED', undefined, undefined, 'Starting Driver...');
+            Log('info', 'NDERED', undefined, undefined, 'Starting driver...');
             Driver.start()
                 .catch((e) => {
                     if (e.code === ZWaveErrorCodes.Driver_Failed) {
@@ -1524,7 +1524,7 @@ module.exports = function (RED) {
                             );
                             node.error(
                                 new Error(
-                                    'Driver Failed: Will retry in ' +
+                                    'Driver failed: Will retry in ' +
                                     RetryTime +
                                     'ms. Attempted: ' +
                                     DriverAttempts +
