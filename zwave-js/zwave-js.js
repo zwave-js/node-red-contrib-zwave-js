@@ -60,18 +60,19 @@ module.exports = function (RED) {
         let RestoreReadyTimer;
         function RestoreReadyStatus() {
             RestoreReadyTimer = setTimeout(() => {
-
-                const Ready = []
-                let AllReady = true
+                const Ready = [];
+                let AllReady = true;
 
                 Driver.controller.nodes.forEach((N) => {
-                    if(N.ready && ZWaveJS.InterviewStage[N.interviewStage] === 'Complete'){
-                        Ready.push(N.id)
+                    if (
+                        N.ready &&
+                        ZWaveJS.InterviewStage[N.interviewStage] === 'Complete'
+                    ) {
+                        Ready.push(N.id);
+                    } else {
+                        AllReady = false;
                     }
-                    else{
-                        AllReady = false
-                    }
-                })
+                });
 
                 if (AllReady) {
                     node.status({
@@ -1104,14 +1105,12 @@ module.exports = function (RED) {
         }
 
         function getNodeInfoForPayload(NodeID, Property) {
-            try{
+            try {
                 const Prop = Driver.controller.nodes.get(parseInt(NodeID))[Property];
                 return Prop;
-            }
-            catch(err){
+            } catch (err) {
                 return undefined;
             }
-            
         }
 
         function Send(Node, Subject, Value, send) {
