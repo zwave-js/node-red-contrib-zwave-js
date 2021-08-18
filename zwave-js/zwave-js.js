@@ -1406,7 +1406,7 @@ module.exports = function (RED) {
                 if (NodesReady.indexOf(N.id) < 0) {
                     NodesReady.push(N.id);
                     node.status({
-                        fill: 'green',
+                        fill: 'yellow',
                         shape: 'dot',
                         text: 'Nodes : ' + NodesReady.toString() + ' Are Ready.'
                     });

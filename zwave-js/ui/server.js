@@ -86,28 +86,38 @@ module.exports = {
 
 		// Commands
 		RED.httpAdmin.post('/zwave-js/cmd', async (req, res) => {
-			if (req.body.noWait) {
-				res.status(202).end();
-			}
-
 			const timeout = setTimeout(() => res.status(504).end(), 5000);
-			_Context.input(
-				{ payload: req.body },
-				(zwaveRes) => {
-					clearTimeout(timeout);
-					if (!req.body.noWait) {
-						res.send(zwaveRes.payload);
-					}
-				},
-				(err) => {
-					if (err) {
+
+			try {
+				if (req.body.noWait) {
+					res.status(202).end();
+				}
+
+				_Context.input(
+					{ payload: req.body },
+					(zwaveRes) => {
 						clearTimeout(timeout);
 						if (!req.body.noWait) {
-							res.status(500).send(err.message);
+							res.send(zwaveRes.payload);
+						}
+					},
+					(err) => {
+						if (err) {
+							clearTimeout(timeout);
+							if (!req.body.noWait) {
+								res.status(500).send(err.message);
+							}
 						}
 					}
+				);
+			} catch (err) {
+				clearTimeout(timeout);
+				if (!req.body.noWait) {
+					res
+						.status(500)
+						.send('_Context.input, is re-initializing. Please try again.');
 				}
-			);
+			}
 		});
 	},
 	sendEvent: (Type, Event, args) => {
