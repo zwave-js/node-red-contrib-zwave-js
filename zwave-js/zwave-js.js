@@ -19,7 +19,6 @@ module.exports = function (RED) {
         RED.nodes.createNode(this, config);
         const node = this;
 
-        const NodesReady = [];
         let Driver;
         let Logger;
         let FileTransport;
@@ -59,17 +58,21 @@ module.exports = function (RED) {
         // eslint-disable-next-line no-unused-vars
         let RestoreReadyTimer;
         function RestoreReadyStatus() {
+
+            if(RestoreReadyTimer !== undefined){
+                clearTimeout(RestoreReadyTimer);
+            }
+
             RestoreReadyTimer = setTimeout(() => {
-                const Ready = [];
+                const NotReady = [];
                 let AllReady = true;
 
                 Driver.controller.nodes.forEach((N) => {
                     if (
-                        N.ready &&
-                        ZWaveJS.InterviewStage[N.interviewStage] === 'Complete'
+                        !N.ready ||
+                        ZWaveJS.InterviewStage[N.interviewStage] !== 'Complete'
                     ) {
-                        Ready.push(N.id);
-                    } else {
+                        NotReady.push(N.id);
                         AllReady = false;
                     }
                 });
@@ -85,9 +88,9 @@ module.exports = function (RED) {
                     node.status({
                         fill: 'yellow',
                         shape: 'dot',
-                        text: 'Nodes : ' + Ready.toString() + ' are ready.'
+                        text: 'Nodes : ' + NotReady.toString() + ' not ready.'
                     });
-                    UI.status('Preparing network...');
+                    UI.status('Nodes : ' + NotReady.toString() + ' not ready.');
                 }
             }, 5000);
         }
@@ -1250,9 +1253,9 @@ module.exports = function (RED) {
                 node.status({
                     fill: 'yellow',
                     shape: 'dot',
-                    text: 'Interviewing nodes...'
+                    text: 'Initializing network...'
                 });
-                UI.status('Interviewing nodes...');
+                UI.status('Initializing network...');
 
                 // Add, Remove
                 Driver.controller.on('node added', (N) => {
@@ -1416,6 +1419,7 @@ module.exports = function (RED) {
                     return;
                 }
 
+                /*
                 if (NodesReady.indexOf(N.id) < 0) {
                     NodesReady.push(N.id);
                     node.status({
@@ -1425,6 +1429,7 @@ module.exports = function (RED) {
                     });
                     UI.status('Preparing network...');
                 }
+                */
 
                 Node.on('statistics updated', (N, S) => {
                     NodeStats[Node.id] = S;
