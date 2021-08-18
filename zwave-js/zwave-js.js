@@ -69,7 +69,7 @@ module.exports = function (RED) {
                     UI.status('All Nodes Ready!');
                 } else {
                     node.status({
-                        fill: 'green',
+                        fill: 'yellow',
                         shape: 'dot',
                         text: 'Nodes : ' + NodesReady.toString() + ' Are Ready.'
                     });
