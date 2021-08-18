@@ -23,7 +23,6 @@ module.exports = function (RED) {
         let Logger;
         let FileTransport;
 
-
         const MaxDriverAttempts = 3;
         let DriverAttempts = 0;
         const RetryTime = 5000;
@@ -61,7 +60,7 @@ module.exports = function (RED) {
         function RestoreReadyStatus() {
             if (RestoreReadyTimer !== undefined) {
                 clearTimeout(RestoreReadyTimer);
-                RestoreReadyTimer = undefined
+                RestoreReadyTimer = undefined;
             }
 
             RestoreReadyTimer = setTimeout(() => {
@@ -1367,8 +1366,6 @@ module.exports = function (RED) {
                     Heal_Failed.length = 0;
                     Heal_Skipped.length = 0;
 
-              
-
                     P.forEach((V, K) => {
                         switch (V) {
                             case 'pending':
@@ -1386,18 +1383,34 @@ module.exports = function (RED) {
                         }
                     });
 
-                    const Processed = (Heal_Done.length + Heal_Failed.length + Heal_Skipped.length);
+                    const Processed =
+                        Heal_Done.length + Heal_Failed.length + Heal_Skipped.length;
                     const Remain = Heal_Pending.length;
 
-                    const Completed = Processed / Remain * 100
+                    const Completed = (Processed / Remain) * 100;
 
                     node.status({
                         fill: 'yellow',
                         shape: 'dot',
-                        text:'Healing network '+Math.round(Completed)+'%, Skipped:['+Heal_Skipped.length+'], Failed:['+Heal_Failed.length+']'
+                        text:
+                            'Healing network ' +
+                            Math.round(Completed) +
+                            '%, Skipped:[' +
+                            Heal_Skipped.length +
+                            '], Failed:[' +
+                            Heal_Failed.length +
+                            ']'
                     });
 
-                    UI.status('Healing network '+Math.round(Completed)+'%, Skipped:['+Heal_Skipped.length+'], Failed:['+Heal_Failed.length+']');
+                    UI.status(
+                        'Healing network ' +
+                        Math.round(Completed) +
+                        '%, Skipped:[' +
+                        Heal_Skipped.length +
+                        '], Failed:[' +
+                        Heal_Failed.length +
+                        ']'
+                    );
                 });
 
                 ShareNodeList();
