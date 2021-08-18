@@ -1458,6 +1458,7 @@ module.exports = function (RED) {
                     text: 'Node: ' + N.id + ' Interview Started.'
                 });
                 UI.status('Node: ' + N.id + ' Interview Started.');
+                AllNodesReady = false;
             });
 
             Node.on('interview failed', (N, Er) => {
@@ -1479,6 +1480,7 @@ module.exports = function (RED) {
                     text: 'Node: ' + N.id + ' Interview Completed.'
                 });
                 UI.status('Node: ' + N.id + ' Interview Completed.');
+                AllNodesReady = true;
                 RestoreReadyStatus();
             });
         }
