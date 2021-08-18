@@ -282,7 +282,7 @@ module.exports = function (RED) {
         function ShareNodeList() {
             for (const Location in NodeList) delete NodeList[Location];
 
-            NodeList['No Location'] = [];
+            NodeList['No location'] = [];
             Driver.controller.nodes.forEach((ZWN) => {
                 if (ZWN.isControllerNode()) {
                     return;
