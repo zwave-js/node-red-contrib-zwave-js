@@ -23,6 +23,7 @@ module.exports = function (RED) {
         let Logger;
         let FileTransport;
 
+
         const MaxDriverAttempts = 3;
         let DriverAttempts = 0;
         const RetryTime = 5000;
