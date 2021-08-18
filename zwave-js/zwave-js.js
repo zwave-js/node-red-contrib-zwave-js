@@ -20,7 +20,6 @@ module.exports = function (RED) {
         const node = this;
 
         const NodesReady = [];
-        let AllNodesReady = false;
         let Driver;
         let Logger;
         let FileTransport;
@@ -57,10 +56,24 @@ module.exports = function (RED) {
             }
         };
 
+        // eslint-disable-next-line no-unused-vars
         let RestoreReadyTimer;
         function RestoreReadyStatus() {
             RestoreReadyTimer = setTimeout(() => {
-                if (AllNodesReady) {
+
+                const Ready = []
+                let AllReady = true
+
+                Driver.controller.nodes.forEach((N) => {
+                    if(N.ready && ZWaveJS.InterviewStage[N.interviewStage] === 'Complete'){
+                        Ready.push(N.id)
+                    }
+                    else{
+                        AllReady = false
+                    }
+                })
+
+                if (AllReady) {
                     node.status({
                         fill: 'green',
                         shape: 'dot',
@@ -71,9 +84,9 @@ module.exports = function (RED) {
                     node.status({
                         fill: 'yellow',
                         shape: 'dot',
-                        text: 'Nodes : ' + NodesReady.toString() + ' Are Ready.'
+                        text: 'Nodes : ' + Ready.toString() + ' Are Ready.'
                     });
-                    UI.status('Nodes : ' + NodesReady.toString() + ' Are Ready.');
+                    UI.status('Nodes : ' + Ready.toString() + ' Are Ready.');
                 }
             }, 5000);
         }
@@ -1227,9 +1240,8 @@ module.exports = function (RED) {
                 }
             });
 
-            Driver.once('all nodes ready', () => {
+            Driver.on('all nodes ready', () => {
                 node.status({ fill: 'green', shape: 'dot', text: 'All Nodes Ready!' });
-                AllNodesReady = true;
                 UI.status('All Nodes Ready!');
             });
 
@@ -1294,7 +1306,6 @@ module.exports = function (RED) {
                         text: 'Inclusion Stopped.'
                     });
                     UI.status('Inclusion Stopped.');
-                    //RestoreReadyStatus(); <--- We should only do this, if we, our self, has requested to stop.
                 });
 
                 // Exclusion
@@ -1465,7 +1476,6 @@ module.exports = function (RED) {
                     text: 'Node: ' + N.id + ' Interview Started.'
                 });
                 UI.status('Node: ' + N.id + ' Interview Started.');
-                AllNodesReady = false;
             });
 
             Node.on('interview failed', (N, Er) => {
@@ -1487,7 +1497,6 @@ module.exports = function (RED) {
                     text: 'Node: ' + N.id + ' Interview Completed.'
                 });
                 UI.status('Node: ' + N.id + ' Interview Completed.');
-                AllNodesReady = true;
                 RestoreReadyStatus();
             });
         }
