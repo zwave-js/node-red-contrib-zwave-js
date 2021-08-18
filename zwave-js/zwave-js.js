@@ -1091,8 +1091,14 @@ module.exports = function (RED) {
         }
 
         function getNodeInfoForPayload(NodeID, Property) {
-            const Prop = Driver.controller.nodes.get(parseInt(NodeID))[Property];
-            return Prop;
+            try{
+                const Prop = Driver.controller.nodes.get(parseInt(NodeID))[Property];
+                return Prop;
+            }
+            catch(err){
+                return undefined;
+            }
+            
         }
 
         function Send(Node, Subject, Value, send) {
@@ -1221,7 +1227,7 @@ module.exports = function (RED) {
                 }
             });
 
-            Driver.on('all nodes ready', () => {
+            Driver.once('all nodes ready', () => {
                 node.status({ fill: 'green', shape: 'dot', text: 'All Nodes Ready!' });
                 AllNodesReady = true;
                 UI.status('All Nodes Ready!');
