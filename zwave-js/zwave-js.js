@@ -87,7 +87,7 @@ module.exports = function (RED) {
                         shape: 'dot',
                         text: 'Nodes : ' + Ready.toString() + ' are ready.'
                     });
-                    UI.status('Nodes : ' + Ready.toString() + ' are ready.');
+                    UI.status('Preparing network...');
                 }
             }, 5000);
         }
