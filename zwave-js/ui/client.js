@@ -775,13 +775,13 @@ const ZwaveJsUI = (function () {
 				break;
 		}
 
-		ControllerCMD(
-			'IEAPI',
-			'replaceNode',
-			undefined,
-			[parseInt(selectedNode), Request],
-			true
-		);
+		ControllerCMD('IEAPI','replaceNode',undefined,[parseInt(selectedNode), Request])
+		.catch((err) =>{
+			if (err.status !== 504) {
+				modalAlert(err.responseText, 'Could Not Replace Node')
+			  }
+		})
+
 	};
 
 	StartInclusionExclusion = (Mode) => {
