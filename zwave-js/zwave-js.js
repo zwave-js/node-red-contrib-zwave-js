@@ -405,6 +405,7 @@ module.exports = function (RED) {
                 case 'stop':
                     Driver.controller.stopInclusion();
                     Driver.controller.stopExclusion();
+                    RestoreReadyStatus();
                     break;
             }
             return;
@@ -1238,7 +1239,7 @@ module.exports = function (RED) {
 
                 // Add, Remove
                 Driver.controller.on('node added', (N) => {
-                    clearTimeout(RestoreReadyTimer);
+                    //clearTimeout(RestoreReadyTimer); <--- May no longer need to do this.
                     ShareNodeList();
                     WireNodeEvents(N);
                     Send(N, 'NODE_ADDED');
@@ -1287,7 +1288,7 @@ module.exports = function (RED) {
                         text: 'Inclusion Stopped.'
                     });
                     UI.status('Inclusion Stopped.');
-                    RestoreReadyStatus();
+                    //RestoreReadyStatus(); <--- We should only do this, if we, our self, has requested to stop.
                 });
 
                 // Exclusion
