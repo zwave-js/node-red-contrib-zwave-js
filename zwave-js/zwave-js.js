@@ -58,9 +58,9 @@ module.exports = function (RED) {
         // eslint-disable-next-line no-unused-vars
         let RestoreReadyTimer;
         function RestoreReadyStatus() {
-
-            if(RestoreReadyTimer !== undefined){
+            if (RestoreReadyTimer !== undefined) {
                 clearTimeout(RestoreReadyTimer);
+                RestoreReadyTimer = undefined
             }
 
             RestoreReadyTimer = setTimeout(() => {
@@ -92,7 +92,7 @@ module.exports = function (RED) {
                     });
                     UI.status('Nodes : ' + NotReady.toString() + ' not ready.');
                 }
-            }, 5000);
+            }, 2000);
         }
 
         // Create Logger (if enabled)
@@ -1366,6 +1366,8 @@ module.exports = function (RED) {
                     Heal_Failed.length = 0;
                     Heal_Skipped.length = 0;
 
+              
+
                     P.forEach((V, K) => {
                         switch (V) {
                             case 'pending':
@@ -1382,27 +1384,19 @@ module.exports = function (RED) {
                                 break;
                         }
                     });
+
+                    const Processed = (Heal_Done.length + Heal_Failed.length + Heal_Skipped.length);
+                    const Remain = Heal_Pending.length;
+
+                    const Completed = Processed / Remain * 100
+
                     node.status({
                         fill: 'yellow',
                         shape: 'dot',
-                        text:
-                            'Healing network pending:[' +
-                            Heal_Pending.toString() +
-                            '], Done:[' +
-                            Heal_Done.toString() +
-                            '], Skipped:[' +
-                            Heal_Skipped.toString() +
-                            '], Failed:[' +
-                            Heal_Failed.toString() +
-                            ']'
+                        text:'Healing network '+Math.round(Completed)+'%, Skipped:['+Heal_Skipped.length+'], Failed:['+Heal_Failed.length+']'
                     });
-                    UI.status(
-                        'Healing network ... Skipped:[' +
-                        Heal_Skipped.toString() +
-                        '], Failed:[' +
-                        Heal_Failed.toString() +
-                        ']'
-                    );
+
+                    UI.status('Healing network '+Math.round(Completed)+'%, Skipped:['+Heal_Skipped.length+'], Failed:['+Heal_Failed.length+']');
                 });
 
                 ShareNodeList();
