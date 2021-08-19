@@ -1427,7 +1427,7 @@ module.exports = function (RED) {
                         Heal_Done.length + Heal_Failed.length + Heal_Skipped.length;
                     const Remain = Heal_Pending.length;
 
-                    const Completed = (Processed / Remain + Processed) * 100;
+                    const Completed = (100*Processed)/(Processed+Remain)
 
                     node.status({
                         fill: 'yellow',
