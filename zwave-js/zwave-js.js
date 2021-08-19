@@ -386,6 +386,42 @@ module.exports = function (RED) {
 
         let _GrantResolve;
         let _DSKResolve;
+
+        function CheckKey(strategy) {
+            if (strategy === 2) {
+                return;
+            }
+
+            const KeyRequirementsCFG = {
+                0: [
+                    'S0_Legacy',
+                    'S2_Unauthenticated',
+                    'S2_Authenticated',
+                    'S2_AccessControl'
+                ],
+                3: ['S0_Legacy'],
+                4: ['S2_Unauthenticated', 'S2_Authenticated', 'S2_AccessControl']
+            };
+
+            const KeyRequirementsLable = {
+                0: ['S0 ', 'S2 Unauth ', 'S2 Auth ', 'S2 Access Ctrl'],
+                3: ['S0'],
+                4: ['S2 Unauth ', 'S2 Auth ', 'S2 Access Ctrl']
+            };
+
+            const Set = KeyRequirementsCFG[strategy];
+
+            Set.forEach((KR) => {
+                if (DriverOptions.securityKeys[KR] === undefined) {
+                    const Label = KeyRequirementsLable[strategy];
+                    throw new Error(
+                        'The chosen inclusion strategy require the following keys to be present: ' +
+                        Label
+                    );
+                }
+            });
+        }
+
         async function IEAPI(msg) {
             const Method = msg.payload.method;
             const Params = msg.payload.params || [];
@@ -398,6 +434,7 @@ module.exports = function (RED) {
 
             switch (Method) {
                 case 'beginInclusion':
+                    CheckKey(Params[0].strategy);
                     Params[0].userCallbacks = Callbacks;
                     await Driver.controller.beginInclusion(Params[0]);
                     break;
@@ -415,6 +452,7 @@ module.exports = function (RED) {
                     break;
 
                 case 'replaceNode':
+                    CheckKey(Params[1].strategy);
                     Params[1].userCallbacks = Callbacks;
                     await Driver.controller.replaceFailedNode(Params[0], Params[1]);
                     break;

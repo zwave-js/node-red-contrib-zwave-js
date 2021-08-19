@@ -797,34 +797,37 @@ const ZwaveJsUI = (function () {
 			case 'Default':
 				Request.strategy = 0;
 				Request.forceSecurity = PreferS0;
-				ControllerCMD('IEAPI', 'beginInclusion', undefined, [Request], true);
 				break;
 
 			case 'SmartStart':
 				Request.strategy = 1;
 				Request.provisioningList = '';
-				ControllerCMD('IEAPI', 'beginInclusion', undefined, [Request], true);
 				break;
 
 			case 'None':
 				Request.strategy = 2;
-				ControllerCMD('IEAPI', 'beginInclusion', undefined, [Request], true);
 				break;
 
 			case 'S0':
 				Request.strategy = 3;
-				ControllerCMD('IEAPI', 'beginInclusion', undefined, [Request], true);
 				break;
 
 			case 'S2':
 				Request.strategy = 4;
-				ControllerCMD('IEAPI', 'beginInclusion', undefined, [Request], true);
 				break;
 
 			case 'Remove':
 				ControllerCMD('IEAPI', 'beginExclusion', undefined, undefined, true);
-				break;
+				return;
 		}
+
+		ControllerCMD('IEAPI', 'beginInclusion', undefined, [Request]).catch(
+			(err) => {
+				if (err.status !== 504) {
+					modalAlert(err.responseText, 'Could Not Start Inclusion');
+				}
+			}
+		);
 	};
 
 	function ShowIncludeExcludePrompt() {
