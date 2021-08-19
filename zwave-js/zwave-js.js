@@ -1427,7 +1427,7 @@ module.exports = function (RED) {
                         Heal_Done.length + Heal_Failed.length + Heal_Skipped.length;
                     const Remain = Heal_Pending.length;
 
-                    const Completed = (Processed / Remain) * 100;
+                    const Completed = (Processed / Remain + Processed) * 100;
 
                     node.status({
                         fill: 'yellow',
@@ -1436,9 +1436,9 @@ module.exports = function (RED) {
                             'Healing network ' +
                             Math.round(Completed) +
                             '%, Skipped:[' +
-                            Heal_Skipped.length +
+                            Heal_Skipped +
                             '], Failed:[' +
-                            Heal_Failed.length +
+                            Heal_Failed +
                             ']'
                     });
 
@@ -1446,9 +1446,9 @@ module.exports = function (RED) {
                         'Healing network ' +
                         Math.round(Completed) +
                         '%, Skipped:[' +
-                        Heal_Skipped.length +
+                        Heal_Skipped +
                         '], Failed:[' +
-                        Heal_Failed.length +
+                        Heal_Failed +
                         ']'
                     );
                 });
