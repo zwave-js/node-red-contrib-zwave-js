@@ -92,7 +92,7 @@ module.exports = function (RED) {
                     });
                     UI.status('Nodes : ' + NotReady.toString() + ' not ready.');
                 }
-            }, 2000);
+            }, 5000);
         }
 
         // Create Logger (if enabled)

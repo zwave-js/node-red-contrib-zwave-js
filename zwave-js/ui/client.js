@@ -757,6 +757,7 @@ const ZwaveJsUI = (function () {
 
 	StartReplace = (Mode) => {
 		const B = event.target;
+		const OT = $(B).html();
 		$(B).html('Please wait...');
 		$(B).prop('disabled', true);
 
@@ -781,12 +782,15 @@ const ZwaveJsUI = (function () {
 		]).catch((err) => {
 			if (err.status !== 504) {
 				modalAlert(err.responseText, 'Could Not Replace Node');
+				$(B).html(OT);
+				$(B).prop('disabled', false);
 			}
 		});
 	};
 
 	StartInclusionExclusion = (Mode) => {
 		const B = event.target;
+		const OT = $(B).html();
 		$(B).html('Please wait...');
 		$(B).prop('disabled', true);
 
@@ -825,6 +829,8 @@ const ZwaveJsUI = (function () {
 			(err) => {
 				if (err.status !== 504) {
 					modalAlert(err.responseText, 'Could Not Start Inclusion');
+					$(B).html(OT);
+					$(B).prop('disabled', false);
 				}
 			}
 		);
