@@ -458,9 +458,11 @@ module.exports = function (RED) {
                     break;
 
                 case 'stop':
-                    Driver.controller.stopInclusion();
-                    Driver.controller.stopExclusion();
-                    RestoreReadyStatus();
+                    const IS = await Driver.controller.stopInclusion();
+                    const ES = await Driver.controller.stopExclusion();
+                    if (IS || ES) {
+                        RestoreReadyStatus();
+                    }
                     break;
             }
             return;
