@@ -246,7 +246,7 @@ module.exports = function (RED) {
                     const _Array = RemoveBrackets.split(',');
                     const _Buffer = [];
                     for (let i = 0; i < _Array.length; i++) {
-                        if(!isNaN(_Array[i].trim())){
+                        if (!isNaN(_Array[i].trim())) {
                             _Buffer.push(parseInt(_Array[i].trim()));
                         }
                     }
@@ -258,7 +258,7 @@ module.exports = function (RED) {
                         'Provided as array',
                         '[' + _Buffer.length + ' bytes]'
                     );
-                    if(_Buffer.length === 16){
+                    if (_Buffer.length === 16) {
                         DriverOptions.securityKeys[ZWAVEJSName] = Buffer.from(_Buffer);
                     }
                 } else {
@@ -270,7 +270,7 @@ module.exports = function (RED) {
                         'Provided as string',
                         '[' + config[Property].length + ' characters]'
                     );
-                    if(config[Property].length === 16){
+                    if (config[Property].length === 16) {
                         DriverOptions.securityKeys[ZWAVEJSName] = Buffer.from(
                             config[Property]
                         );
@@ -1432,7 +1432,7 @@ module.exports = function (RED) {
                         Heal_Done.length + Heal_Failed.length + Heal_Skipped.length;
                     const Remain = Heal_Pending.length;
 
-                    const Completed = (100*Processed)/(Processed+Remain)
+                    const Completed = (100 * Processed) / (Processed + Remain);
 
                     node.status({
                         fill: 'yellow',
