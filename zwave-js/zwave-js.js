@@ -1523,7 +1523,7 @@ module.exports = function (RED) {
                     shape: 'dot',
                     text: 'Node: ' + N.id + ' interview started.'
                 });
-                UI.status('Node: ' + N.id + ' snterview started.');
+                UI.status('Node: ' + N.id + ' interview started.');
             });
 
             Node.on('interview failed', (N, Er) => {
