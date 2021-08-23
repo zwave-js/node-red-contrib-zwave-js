@@ -5,7 +5,8 @@
      **Breaking Changes**
      - Legacy API has now been removed (deprecated  in V4 [PLEASE SEE MIGRATION GUIDE](/APIChange.md))
      - Min Node version is now **12.22.2**
-     - Node Inclusion, Exclusion and Replace methods are no longer possible using messages, these must now be performed using the UI
+     - Node Inclusion, Exclusion and Replace methods are no longer possible using messages,  
+       these must now be performed using the UI
      - The ```node``` property is now omitted for none node events.
 
      **Changes**
