@@ -26,7 +26,7 @@ If you want a fully featured Z-Wave runtime in your node-red instance, look no f
   - Access to all supported CC's provided by Z-Wave JS.
 
 **node-red-contrib-zwave-js** is based on  [&#x1F517;Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/).  
-Z-Wave JS is actively  maintained, fast and supports secure (S0) devices - S2 is in the works.
+Z-Wave JS is actively  maintained, fast and supports S0 and S2 secure devices.
 
 It offers a massive amount of flexibility and is packed full of features.   
 The node is straightforward to use, and removes all the complexities that you would otherwise need to deal with.
