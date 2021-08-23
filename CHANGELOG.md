@@ -20,8 +20,8 @@
 
      **New Features**
      - Added ZWave Security S2 support
-     - Mulitcast is now suppoorted on CCAPI (set type commands Only)
-     - The texbox inputs on the UI are now comitted on the enter/return key.
+     - Multicast is now suppoorted on CCAPI (set type commands Only)
+     - The text box inputs on the UI are now committed on the enter/return key.
      - Added Individual Node Heal. 
 
   - 4.3.0
