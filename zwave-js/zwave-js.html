@@ -1,8 +1,216 @@
-﻿<script type="text/javascript" src="zwave-js/client.js"></script>
-<script type="text/javascript" src="zwave-js/vis-network.min.js"></script>
-<script type="text/javascript" src="zwave-js/handlebars.min.js"></script>
+﻿<script type="text/javascript" src="zwave-js/res/client.js"></script>
+<script type="text/javascript" src="zwave-js/res/vis-network.min.js"></script>
+<script type="text/javascript" src="zwave-js/res/handlebars.min.js"></script>
+<script type="text/javascript" src="zwave-js/res/jquery-steps.min.js"></script>
+<link rel="stylesheet" href="zwave-js/res/styles.css">
+<link rel="stylesheet" href="zwave-js/res/jquery-steps.css">
+
+
 
 <!-- templates used for modal dialogs *-->
+
+<!--Inclusion-->
+<script id="TPL_Include" type="text/x-handlebars-template">
+    <div class="step-app" id="IncludeWizard">
+        <ul class="step-steps" style="display: none;">
+            <li data-step-target="SecurityMode"></li>
+            <li data-step-target="NIF"></li>
+            <li data-step-target="Remove"></li>
+            <li data-step-target="Classes"></li>
+            <li data-step-target="DSK"></li>
+            <li data-step-target="AddDone"></li>
+            <li data-step-target="AddDoneInsecure"></li>
+            <li data-step-target="RemoveDone"></li>
+            <li data-step-target="ReplaceSecurityMode"></li>
+        </ul>
+        <div class="step-content" style="border: none;">
+            <!-- Secuity Mode-->
+            <div class="step-tab-panel" data-step="SecurityMode">
+                <br />
+                <table style="width: 100%; height: 290px;">
+                    <tr>
+                        <td style="text-align: left;width: 200px;vertical-align: top; ">
+                            <button class="ui-button ui-corner-all ui-widget SecrutiyButton" onclick="StartInclusionExclusion('Default')">Default</button><br />
+                        </td>
+                        <td style="text-align: left; vertical-align: top; ">
+                            S2 when supported, else S0 only when necessary, no encryption otherwise (recommended).<br /><br />
+                            <input type="checkbox" id="PS0">
+                            <label for="S0">Prefer S0 over no encryption</label>
+                        </td>
+                    </tr>
+                    <tr style="opacity: 0.5;">
+                        <td style="text-align: left;vertical-align: top; ">
+                            <button class="ui-button ui-corner-all ui-widget SecrutiyButton" onclick="StartInclusionExclusion('SmartStart')" disabled>Smart Start</button>
+                        </td>
+                        <td style="text-align: left;vertical-align: top; ">
+                            S2 Smart Start is not yet supported.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; vertical-align: top; ">
+                            <button class="ui-button ui-corner-all ui-widget SecrutiyButton" onclick="StartInclusionExclusion('S0')">S0</button>
+                        </td>
+                        <td style="text-align: left; vertical-align: top; ">
+                            Use S0 only, evan if S2 is supported (not recommended)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; vertical-align: top; ">
+                            <button class="ui-button ui-corner-all ui-widget SecrutiyButton" onclick="StartInclusionExclusion('None')">No Encryption</button>
+                        </td>
+                        <td style="text-align: left; vertical-align: top; ">
+                            Add a node which will not use security (not recommended)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <hr />
+                        </td>
+                        
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; vertical-align: top; ">
+                            <button class="ui-button ui-corner-all ui-widget SecrutiyButton" onclick="StartInclusionExclusion('Remove')">Remove Node</button>
+                        </td>
+                        <td style="text-align: left; vertical-align: top; ">
+                            Remove a node from your network
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <!--Wait for NIF-->
+            <div class="step-tab-panel" data-step="NIF">
+                <br />
+                <table style="width: 100%; height: 290px;">
+                    <tr>
+                        <td style="text-align: center;">
+                            <img src="zwave-js/res/Include.png" width="200px">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;">Place your ZWave device into 'Inclusion Mode'</td>
+                    </tr>
+                </table>
+            </div>
+             <!--Wait for Removal-->
+             <div class="step-tab-panel" data-step="Remove">
+                <br />
+                <table style="width: 100%; height: 290px;">
+                    <tr>
+                        <td style="text-align: center;">
+                            <img src="zwave-js/res/Exclude.png" width="200px">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;">Place your ZWave device into 'Exclusion Mode'</td>
+                    </tr>
+                </table>
+            </div>
+            <!--Requested Security Classes-->
+            <div class="step-tab-panel" data-step="Classes">
+                <br />
+                Select the S2 Security Classes you wish to grant!
+                <table id="S2Classes" style="width: 100%; padding: 10px;" cellpadding="5">
+
+                </table>
+                <button class="ui-button ui-corner-all ui-widget SecrutiyButton" style="margin-top: 20px; margin-left: 39%;" onclick="GrantSelected()">Grant Selected</button>
+            </div>
+             <!--DSK-->
+            <div class="step-tab-panel" data-step="DSK">
+                <br />
+                Please enter the pin code as found on the device packaging/user manual, Please also verify the DSK matches that of the device you're adding.
+                <br />
+                <table id="S2DSK" style="width: 100%; padding: 10px; margin-top: 100px;" cellpadding="5">
+                    <tr>
+                        <td style="text-align: center;">PIN</td>
+                        <td style="text-align: center;">DSK</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;"><input type="text" id="SC_DSK" style="width: 70px;text-align: center;"></td>
+                        <td style="text-align: center;" id="DSK_Previw"></td>
+                    </tr>
+                    
+                  
+                </table>
+                <button class="ui-button ui-corner-all ui-widget SecrutiyButton" style="margin-top: 20px; margin-left: 39%;" onclick="ValidateDSK()">Verify</button>
+            </div>
+            <!--Add Done-->
+            <div class="step-tab-panel" data-step="AddDone">
+                <br />
+                <table style="width: 100%; height: 290px;">
+                    <tr>
+                        <td style="text-align: center;">
+                            <img src="zwave-js/res/NodeAdded.png" width="200px">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;">Your device has been added to the network,<br />
+                            it's interview will begin in a moment. It is safe to close this dialog.</td>
+                    </tr>
+                </table>
+            </div>
+             <!--Add Done Insecure-->
+             <div class="step-tab-panel" data-step="AddDoneInsecure">
+                <br />
+                <table style="width: 100%; height: 290px;">
+                    <tr>
+                        <td style="text-align: center;">
+                            <img src="zwave-js/res/NodeAddedInsecure.png" width="200px">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;">Your device has been added to the network,<br />
+                            But the requested secruity class could not be achieved!</td>
+                    </tr>
+                </table>
+            </div>
+             <!--Remove Done-->
+             <div class="step-tab-panel" data-step="RemoveDone">
+                <br />
+                <table style="width: 100%; height: 290px;">
+                    <tr>
+                        <td style="text-align: center;">
+                            <img src="zwave-js/res/NodeRemoved.png" width="200px">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;">Your device has been removed from the network.</td>
+                    </tr>
+                </table>
+            </div>
+            <!--Replace Mode-->
+            <div class="step-tab-panel" data-step="ReplaceSecurityMode">
+                <br />
+                <table style="width: 100%; height: 160px;">
+                    <tr>
+                        <td style="text-align: left;width: 200px;vertical-align: top; ">
+                            <button class="ui-button ui-corner-all ui-widget SecrutiyButton" onclick="StartReplace('S2')">S2</button>
+                        </td>
+                        <td style="text-align: left; vertical-align: top; ">
+                            The replacement node will use S2 Security. (Reccomended)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;width: 200px;vertical-align: top; ">
+                            <button class="ui-button ui-corner-all ui-widget SecrutiyButton" onclick="StartReplace('S0')">S0</button>
+                        </td>
+                        <td style="text-align: left; vertical-align: top; ">
+                            The replacement node will use S0 Security. (Not Reccomended)
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left;width: 200px;vertical-align: top; ">
+                            <button class="ui-button ui-corner-all ui-widget SecrutiyButton" onclick="StartReplace('None')">No Encryption</button>
+                        </td>
+                        <td style="text-align: left; vertical-align: top; ">
+                            The replacement node will not use Security. (Not Reccomended)
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</script>
 
 <!--Associations-->
 <script id="TPL_Associations" type="text/x-handlebars-template">
@@ -134,7 +342,6 @@
         </div> 
 </script>
 
-<link rel="stylesheet" href="zwave-js/styles.css">
 <script type="text/javascript">
 
     RED.nodes.registerType('zwave-js',
@@ -146,6 +353,9 @@
                 serialPort: { value: undefined },
                 name: { value: "Z-Wave JS Controller" },
                 encryptionKey: { value: undefined },
+                encryptionKeyS2U: { value: undefined },
+                encryptionKeyS2A: { value: undefined },
+                encryptionKeyS2AC: { value: undefined },
                 ackTimeout: { value: undefined },
                 controllerTimeout: { value: undefined },
                 sendResponseTimeout: { value: undefined },
@@ -251,9 +461,24 @@
         </select>
 
     </div>
+    <p>
+        <strong>Encryption Keys</strong>
+    </p>
     <div class="form-row">
-        <label for="node-input-encryptionKey" style="width:130px"><i class="fa fa-pencil"></i> Encryption Key</label>
+        <label for="node-input-encryptionKey" style="width:130px"><i class="fa fa-pencil"></i> S0</label>
         <input type="text" id="node-input-encryptionKey" placeholder="[0x01,0x02,..] or plain text">
+    </div>
+    <div class="form-row">
+        <label for="node-input-encryptionKeyS2U" style="width:130px"><i class="fa fa-pencil"></i> S2 Unauth</label>
+        <input type="text" id="node-input-encryptionKeyS2U" placeholder="[0x01,0x02,..] or plain text">
+    </div>
+    <div class="form-row">
+        <label for="node-input-encryptionKeyS2A" style="width:130px"><i class="fa fa-pencil"></i> S2 Auth</label>
+        <input type="text" id="node-input-encryptionKeyS2A" placeholder="[0x01,0x02,..] or plain text">
+    </div>
+    <div class="form-row">
+        <label for="node-input-encryptionKeyS2AC" style="width:130px"><i class="fa fa-pencil"></i> S2 Access Ctrl</label>
+        <input type="text" id="node-input-encryptionKeyS2AC" placeholder="[0x01,0x02,..] or plain text">
     </div>
     <br />
     <p>

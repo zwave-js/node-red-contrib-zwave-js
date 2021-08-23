@@ -1,5 +1,28 @@
   # node-red-contrib-zwave-js Change Log
 
+   - 5.0.0
+
+     **Breaking Changes**
+     - Legacy API has now been removed (deprecated  in V4 [PLEASE SEE MIGRATION GUIDE](/APIChange.md))
+     - Min Node version is now **12.22.2**
+     - Node Inclusion, Exclusion and Replace is no longer possible using messages, it must now be performed using the UI
+     - The ```node``` property is now omitted for none node events.
+
+     **Changes**
+     - Migrate to Z-Wave JS Version 8
+     - Device Node status text is now reduced down to a more acceptable length
+     - Code refactoring
+     - Various bug fixes/improvements
+     - Migrated Read Me to github Wiki
+     - Imporovemenst to ready status checks
+     - Sanity checks to ensure  S0 and S2 encryption keys are present
+
+     **New Features**
+     - Added ZWave Security S2 support
+     - Mulitcast is now suppoorted on CCAPI (set type commands Only)
+     - The texbox inputs on the UI are now comitted on the enter/return key.
+     - Added Individual Node Heal. 
+
   - 4.3.0
     - Implemented critical driver error recovery.  
 

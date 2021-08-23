@@ -1,12 +1,22 @@
 {
   "name": "node-red-contrib-zwave-js",
-  "version": "4.3.0",
+  "version": "5.0.0",
   "license": "MIT",
   "description": "An extremely easy to use, zero dependency and feature rich Z-Wave node for Node Red, based on Z-Wave JS.",
   "dependencies": {
+    "@serialport/bindings": "9.2.0",
+    "express": "4.17.1",
     "serialport": "9.2.0",
-    "zwave-js": "7.12.1",
-    "winston": "3.3.3"
+    "winston": "3.3.3",
+    "zwave-js": "8.1.1"
+  },
+  "devDependencies": {
+    "eslint": "7.31.0",
+    "prettier": "2.3.2"
+  },
+  "engines": {
+    "node": ">=12.22.2",
+    "npm": ">=6.14.13"
   },
   "scripts": {
     "preinstall": "npm install @serialport/bindings@9.2.0 --build-from-source  && npm install serialport@9.2.0 --build-from-source"

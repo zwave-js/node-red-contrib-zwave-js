@@ -1,7 +1,8 @@
 .DS_Store
 .vscode
 node_modules
-.prettierignore
-mock
 .github
 package-lock.json
+.eslintrc.json
+.prettierrc.json
+gfxsources

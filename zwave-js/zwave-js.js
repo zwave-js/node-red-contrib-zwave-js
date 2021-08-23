@@ -1,678 +1,127 @@
 module.exports = function (RED) {
-    const SP = require("serialport");
-    const FMaps = require('./FunctionMaps.json')
-    const Path = require('path')
-    const ModulePackage = require('../package.json')
-    const ZWaveJS = require('zwave-js')
-    const { Duration, createDefaultTransportFormat, CommandClasses, ZWaveErrorCodes } = require("@zwave-js/core");
-    const ZWaveJSPackage = require('zwave-js/package.json')
-    const Winston = require("winston");
+    const SP = require('serialport');
+    const Path = require('path');
+    const ModulePackage = require('../package.json');
+    const ZWaveJS = require('zwave-js');
+    const {
+        createDefaultTransportFormat,
+        CommandClasses,
+        ZWaveErrorCodes
+    } = require('@zwave-js/core');
+    const ZWaveJSPackage = require('zwave-js/package.json');
+    const Winston = require('winston');
 
-    const UI = require('./ui/server.js')
-    UI.init(RED)
-    let NodeList = {}
+    const UI = require('./ui/server.js');
+    UI.init(RED);
+    const NodeList = {};
 
     function Init(config) {
-
         RED.nodes.createNode(this, config);
         const node = this;
 
-        let canDoSecure = false;
-        const NodesReady = [];
-        let AllNodesReady = false;
-        var Driver;
-        var Logger;
-        var FileTransport;
+        let Driver;
+        let Logger;
+        let FileTransport;
 
         const MaxDriverAttempts = 3;
         let DriverAttempts = 0;
         const RetryTime = 5000;
-        var DriverOptions;
-        
-        const NodeStats = {}
-        var ControllerStats;
+        let DriverOptions = {};
+
+        const NodeStats = {};
+        let ControllerStats;
 
         // Log function
         const Log = function (level, label, direction, tag1, msg, tag2) {
-
             if (Logger !== undefined) {
-                let logEntry = {
-                    direction: "  ",
+                const logEntry = {
+                    direction: '  ',
                     message: msg,
                     level: level,
                     label: label,
                     timestamp: new Date().toJSON(),
                     multiline: Array.isArray(msg)
-                }
+                };
                 if (direction !== undefined) {
-                    logEntry.direction = (direction === "IN" ? "« " : "» ")
+                    logEntry.direction = direction === 'IN' ? '« ' : '» ';
                 }
                 if (tag1 !== undefined) {
-                    logEntry.primaryTags = tag1
+                    logEntry.primaryTags = tag1;
                 }
                 if (tag2 !== undefined) {
-                    logEntry.secondaryTags = tag2
+                    logEntry.secondaryTags = tag2;
                 }
-                Logger.log(logEntry)
+                Logger.log(logEntry);
             }
-        }
+        };
 
-        /* START DEPRECATION */
-        function ProcessDurationClass(Class, Operation, Params) {
-            if (Params.length > 1) {
-                if (typeof Params[1] === "object") {
-                    let Keys = Object.keys(Params[1]);
-                    if (Keys.length === 1 && Keys[0] === "Duration") {
-                        let D = new Duration(Params[1].Duration.value, Params[1].Duration.unit)
-                        Params[1] = D;
-                    }
-                }
-            }
-            return Params;
-        }
-        function ParseMeterOptions(Class, Operation, Params) {
-            if (typeof Params[0] === "object") {
-                Params[0].rateType = Enums.RateType[Params[0].rateType];
-            }
-            return Params;
-
-        }
-        async function OLDAssociations(msg, send) {
-
-            let Operation = msg.payload.operation
-            let Params = msg.payload.params || [];
-
-            let ReturnNode = { id: "" };
-            switch (Operation) {
-                case "GetAssociationGroups":
-                    NodeCheck(Params[0].nodeId);
-                    var ResultData = Driver.controller.getAssociationGroups(Params[0])
-                    var PL = []
-                    ResultData.forEach((FV, FK) => {
-                        let A = {
-                            GroupID: FK,
-                            AssociationGroupInfo: FV
-                        }
-                        PL.push(A);
-                    })
-
-                    ReturnNode.id = Params[0].nodeId
-                    Send(ReturnNode, "ASSOCIATION_GROUPS", { SourceAddress: Params[0], Groups: PL }, send)
-                    break;
-
-                case "GetAllAssociationGroups":
-                    NodeCheck(Params[0]);
-                    var ResultData = Driver.controller.getAllAssociationGroups(Params[0])
-                    var PL = [];
-                    ResultData.forEach((FV, FK) => {
-                        let A = {
-                            Endpoint: FK,
-                            Groups: []
-                        }
-                        FV.forEach((SV, SK) => {
-                            let B = {
-                                GroupID: SK,
-                                AssociationGroupInfo: SV
-                            }
-                            A.Groups.push(B)
-                        })
-                        PL.push(A);
-                    })
-
-                    ReturnNode.id = Params[0]
-                    Send(ReturnNode, "ALL_ASSOCIATION_GROUPS", PL, send)
-                    break;
-
-                case "GetAssociations":
-                    NodeCheck(Params[0].nodeId);
-                    var ResultData = Driver.controller.getAssociations(Params[0])
-                    var PL = []
-                    ResultData.forEach((FV, FK) => {
-                        let A = {
-                            GroupID: FK,
-                            AssociationAddress: []
-                        }
-                        FV.forEach((AA) => {
-                            A.AssociationAddress.push(AA);
-                        });
-
-                        PL.push(A)
-                    })
-
-                    ReturnNode.id = Params[0].nodeId
-                    Send(ReturnNode, "ASSOCIATIONS", { SourceAddress: Params[0], Associations: PL }, send)
-                    break;
-
-                case "GetAllAssociations":
-                    NodeCheck(Params[0]);
-                    var ResultData = Driver.controller.getAllAssociations(Params[0]);
-                    var PL = []
-                    ResultData.forEach((FV, FK) => {
-                        let A = {
-                            AssociationAddress: FK,
-                            Associations: []
-                        }
-                        FV.forEach((SV, SK) => {
-                            let B = {
-                                GroupID: SK,
-                                AssociationAddress: SV
-                            }
-                            A.Associations.push(B)
-                        });
-                        PL.push(A)
-                    })
-
-                    ReturnNode.id = Params[0]
-                    Send(ReturnNode, "ALL_ASSOCIATIONS", PL, send)
-                    break;
-
-                case "AddAssociations":
-                    NodeCheck(Params[0].nodeId);
-                    Params[2].forEach((A) => {
-                        if (!Driver.controller.isAssociationAllowed(Params[0], Params[1], A)) {
-                            let ErrorMSG = "Association: Source " + JSON.stringify(Params[0]); +", Group " + Params[1] + ", Destination " + SON.stringify(A) + " is not allowed."
-                            throw new Error(ErrorMSG);
-                        }
-                    })
-                    await Driver.controller.addAssociations(Params[0], Params[1], Params[2])
-                    ReturnNode.id = Params[0].nodeId
-                    Send(ReturnNode, "ASSOCIATIONS_ADDED", undefined, send)
-                    break;
-
-                case "RemoveAssociations":
-                    NodeCheck(Params[0].nodeId);
-                    await Driver.controller.removeAssociations(Params[0], Params[1], Params[2])
-                    ReturnNode.id = Params[0].nodeId
-                    Send(ReturnNode, "ASSOCIATIONS_REMOVED", undefined, send)
-                    break;
-
-                case "RemoveNodeFromAllAssociations":
-                    NodeCheck(Params[0]);
-                    await Driver.controller.removeNodeFromAllAssociations(Params[0])
-                    ReturnNode.id = Params[0]
-                    Send(ReturnNode, "ALL_ASSOCIATIONS_REMOVED", undefined, send)
-                    break;
-            }
-
-            return;
-        }
-        async function OLDController(msg, send) {
-
-            let Operation = msg.payload.operation
-            let Params = msg.payload.params || [];
-
-            let ReturnController = { id: "Controller" };
-            let ReturnNode = { id: "" };
-
-            let SupportsNN = false;
-
-            switch (Operation) {
-
-                case "AbortFirmwareUpdate":
-                    NodeCheck(Params[0])
-                    ReturnNode.id = Params[0]
-                    await Driver.controller.nodes.get(Params[0]).abortFirmwareUpdate()
-                    Send(ReturnNode, "FIRMWARE_UPDATE_ABORTED", undefined, send);
-                    break;
-
-                case "BeginUpdateFirmware":
-                    NodeCheck(Params[0])
-                    ReturnNode.id = Params[0]
-                    let Format = ZWaveJS.guessFirmwareFileFormat(Params[2], Params[3])
-                    let Firmware = ZWaveJS.extractFirmware(Params[3], Format)
-                    await Driver.controller.nodes.get(Params[0]).beginFirmwareUpdate(Firmware.data, Params[1])
-                    Send(ReturnNode, "FIRMWARE_UPDATE_STARTED", Params[1], send);
-                    break;
-
-                case "GetRFRegion":
-                    let RFR = await Driver.controller.getRFRegion();
-                    Send(ReturnController, "CURRENT_RF_REGION", Enums.RFRegion[RFR], send);
-                    break;
-
-                case "SetRFRegion":
-                    await Driver.controller.setRFRegion(Enums.RFRegion[Params[0]]);
-                    Send(ReturnController, "RF_REGION_SET", Params[0], send);
-                    break;
-
-                case "ToggleRF":
-                    await Driver.controller.toggleRF(Params[0]);
-                    Send(ReturnController, "RF_STATUS", Params[0], send);
-                    break;
-
-                case "GetNodes":
-                    let Nodes = [];
-                    Driver.controller.nodes.forEach((N, NI) => {
-                        Nodes.push({
-                            nodeId: N.id,
-                            name: N.name,
-                            location: N.location,
-                            status: Enums.NodeStatus[N.status],
-                            ready: N.ready,
-                            interviewStage: Enums.InterviewStage[N.interviewStage],
-                            zwavePlusVersion: N.zwavePlusVersion,
-                            zwavePlusNodeType: N.zwavePlusNodeType,
-                            zwavePlusRoleType: N.zwavePlusRoleType,
-                            isListening: N.isListening,
-                            isFrequentListening: N.isFrequentListening,
-                            canSleep: N.canSleep,
-                            isRouting: N.isRouting,
-                            supportedDataRates: N.supportedDataRates,
-                            maxDataRate: N.maxDataRate,
-                            supportsSecurity: N.supportsSecurity,
-                            isSecure: N.isSecure,
-                            protocolVersion: Enums.ProtocolVersion[N.protocolVersion],
-                            manufacturerId: N.manufacturerId,
-                            productId: N.productId,
-                            productType: N.productType,
-                            firmwareVersion: N.firmwareVersion,
-                            deviceConfig: N.deviceConfig,
-                            isControllerNode: N.isControllerNode(),
-                            supportsBeaming: N.supportsBeaming,
-                            keepAwake: N.keepAwake
-                        })
-                    });
-                    Send(ReturnController, "NODE_LIST", Nodes, send);
-                    break;
-
-                case "KeepNodeAwake":
-                    NodeCheck(Params[0])
-                    ReturnNode.id = Params[0]
-                    Driver.controller.nodes.get(Params[0]).keepAwake = Params[1]
-                    Send(ReturnNode, "NODE_KEEP_AWAKE", Params[1], send)
-                    break;
-
-                case "GetNodeNeighbors":
-                    NodeCheck(Params[0])
-                    let NIDs = await Driver.controller.getNodeNeighbors(Params[0]);
-                    ReturnNode.id = Params[0]
-                    Send(ReturnNode, "NODE_NEIGHBORS", NIDs, send);
-                    break;
-
-                case "SetNodeName":
-                    NodeCheck(Params[0])
-                    Driver.controller.nodes.get(Params[0]).name = Params[1]
-                    SupportsNN = Driver.controller.nodes.get(Params[0]).supportsCC(CommandClasses["Node Naming and Location"])
-                    if (SupportsNN) {
-                        await Driver.controller.nodes.get(Params[0]).commandClasses["Node Naming and Location"].setName(Params[1]);
-                    }
-                    ReturnNode.id = Params[0]
-                    Send(ReturnNode, "NODE_NAME_SET", Params[1], send)
-                    ShareNodeList();
-                    break
-
-                case "SetNodeLocation":
-                    NodeCheck(Params[0])
-                    Driver.controller.nodes.get(Params[0]).location = Params[1]
-                    SupportsNN = Driver.controller.nodes.get(Params[0]).supportsCC(CommandClasses["Node Naming and Location"])
-                    if (SupportsNN) {
-                        await Driver.controller.nodes.get(Params[0]).commandClasses["Node Naming and Location"].setLocation(Params[1]);
-                    }
-                    ReturnNode.id = Params[0]
-                    Send(ReturnNode, "NODE_LOCATION_SET", Params[1], send)
-                    break
-
-                case "InterviewNode":
-                    Params[0] = +Params[0]
-                    NodeCheck(Params[0], true);
-                    let Stage = Enums.InterviewStage[Driver.controller.nodes.get(Params[0]).interviewStage];
-                    if (Stage !== "Complete") {
-                        let ErrorMSG = "Node " + Params[0] + " is already being interviewed. Current Interview Stage : " + Stage + "";
-                        throw new Error(ErrorMSG);
-                    }
-                    else {
-                        await Driver.controller.nodes.get(Params[0]).refreshInfo();
-                    }
-                    break;
-
-                case "HardReset":
-                    await Driver.hardReset();
-                    Send(ReturnController, "CONTROLLER_RESET_COMPLETE", undefined, send)
-                    break;
-
-                case "StartHealNetwork":
-                    await Driver.controller.beginHealingNetwork();
-                    Send(ReturnController, "NETWORK_HEAL_STARTED", undefined, send)
-                    node.status({ fill: "yellow", shape: "dot", text: "Network Heal Started." });
-                    UI.status("Network Heal Started.")
-                    break;
-
-                case "StopHealNetwork":
-                    await Driver.controller.stopHealingNetwork();
-                    Send(ReturnController, "NETWORK_HEAL_STOPPED", undefined, send)
-                    node.status({ fill: "blue", shape: "dot", text: "Network Heal Stopped." });
-                    UI.status("Network Heal Stopped.")
-                    RestoreReadyStatus();
-                    break;
-
-                case "RemoveFailedNode":
-                    await Driver.controller.removeFailedNode(Params[0]);
-                    break;
-
-                case "ReplaceFailedNode":
-                    if (!canDoSecure) {
-                        await Driver.controller.replaceFailedNode(Params[0], true);
-                    }
-                    else if (Params.length > 1) {
-                        await Driver.controller.replaceFailedNode(Params[0], Params[1]);
-                    }
-                    else {
-                        await Driver.controller.replaceFailedNode(Params[0], false);
-                    }
-                    break;
-
-                case "StartInclusion":
-                    if (!canDoSecure) {
-                        await Driver.controller.beginInclusion(true);
-                    }
-                    else if (Params !== undefined && Params.length > 0) {
-                        await Driver.controller.beginInclusion(Params[0]);
-                    }
-                    else {
-                        await Driver.controller.beginInclusion(false);
-                    }
-                    break;
-
-                case "StopInclusion":
-                    await Driver.controller.stopInclusion();
-                    break;
-
-                case "StartExclusion":
-                    await Driver.controller.beginExclusion();
-                    break;
-
-                case "StopExclusion":
-                    await Driver.controller.stopExclusion();
-                    break;
-
-                case "ProprietaryFunc":
-
-                    let ZWaveMessage = new ZWaveJS.Message(Driver, {
-                        type: ZWaveJS.MessageType.Request,
-                        functionType: Params[0],
-                        payload: Params[1]
-                    })
-
-
-                    let MessageSettings = {
-                        priority: ZWaveJS.MessagePriority.Controller,
-                        supportCheck: false
-                    }
-
-                    await Driver.sendMessage(ZWaveMessage, MessageSettings)
-                    break;
-
-
-            }
-
-            return;
-        }
-        async function OLDUnmanaged(msg, send) {
-
-            let Operation = msg.payload.operation
-            let Node = msg.payload.node;
-            let Params = msg.payload.params || [];
-
-            let ReturnNode = { id: Node };
-
-            NodeCheck(Node);
-
-            switch (Operation) {
-                case "GetDefinedValueIDs":
-                    const VIDs = Driver.controller.nodes.get(Node).getDefinedValueIDs();
-                    Send(ReturnNode, "VALUE_ID_LIST", VIDs, send);
-                    break;
-
-                case "SetValue":
-                    await Driver.controller.nodes.get(Node).setValue(Params[0], Params[1]);
-                    break;
-
-                case "GetValue":
-                    let V = Driver.controller.nodes.get(Node).getValue(Params[0]);
-
-                    let ReturnObject = {
-                        response: V,
-                        valueId: Params[0]
-                    }
-                    Send(ReturnNode, "GET_VALUE_RESPONSE", ReturnObject, send);
-                    break;
-
-                case "GetValueMetadata":
-                    let M = Driver.controller.nodes.get(Node).getValueMetadata(Params[0]);
-
-                    let ReturnObjectM = {
-                        response: M,
-                        valueId: Params[0]
-                    }
-                    Send(ReturnNode, "GET_VALUE_METADATA_RESPONSE", ReturnObjectM, send);
-                    break;
-
-                case "PollValue":
-                    await Driver.controller.nodes.get(Node).pollValue(Params[0]);
-                    break;
-
-            }
-
-            return;
-        }
-        const Enums = {
-            // CC enums
-            RateType: ZWaveJS.RateType,
-            ColorComponent: ZWaveJS.ColorComponent,
-            SetbackType: ZWaveJS.SetbackType,
-            BinarySensorType: ZWaveJS.BinarySensorType,
-            ThermostatMode: ZWaveJS.ThermostatMode,
-            SetPointType: ZWaveJS.ThermostatSetpointType,
-            DoorLockMode: ZWaveJS.DoorLockMode,
-            AlarmSensorType: ZWaveJS.AlarmSensorType,
-            BarrierState: ZWaveJS.BarrierState,
-            SubsystemType: ZWaveJS.SubsystemType,
-            SubsystemState: ZWaveJS.SubsystemState,
-            UserIDStatus: ZWaveJS.UserIDStatus,
-            KeypadMode: ZWaveJS.KeypadMode,
-            Weekday: ZWaveJS.Weekday,
-
-            // Controller Enums
-            RFRegion: ZWaveJS.RFRegion,
-
-            // node enums
-            InterviewStage: ZWaveJS.InterviewStage,
-            NodeStatus: ZWaveJS.NodeStatus,
-            ProtocolVersion: ZWaveJS.ProtocolVersion
-        }
-        const CCParamConverters = {
-            "BinarySwitch.Set": ProcessDurationClass,
-            "MultiLevelSwitch.Set": ProcessDurationClass,
-            "Meter.Get": ParseMeterOptions
-        }
-        async function OldInput(msg, send) {
-
-
-            let Class = msg.payload.class;
-
-            switch (Class) {
-                case "Controller":
-                    await OLDController(msg, send)
-                    break;
-
-                case "Unmanaged":
-                    await OLDUnmanaged(msg, send);
-                    break;
-
-                case "Driver":
-                    await OLDDriverCMD(msg, send);
-                    break;
-
-                case "Associations":
-                    await OLDAssociations(msg, send);
-                    break;
-
-                default:
-                    await OLDNodeFunction(msg, send);
-                    break;
-            }
-
-            return;
-
-        }
-        async function OLDNodeFunction(msg, send) {
-
-            let Operation = msg.payload.operation
-            let Class = msg.payload.class;
-            let Node = msg.payload.node
-            var Params = msg.payload.params || [];
-            let forceUpdate = msg.payload.forceUpdate;
-
-            let ReturnNode = { id: Node };
-
-            NodeCheck(Node);
-
-            if (!FMaps.hasOwnProperty(Class)) {
-                let ErrorMSG = "Class, " + Class + " not supported.";
-                throw new Error(ErrorMSG);
-            }
-
-            let Map = FMaps[Class];
-
-            if (!Map.Operations.hasOwnProperty(Operation)) {
-                let ErrorMSG = "Unsupported operation : " + Operation + " for class " + Class;
-                throw new Error(ErrorMSG);
-            }
-
-            let Func = Map.Operations[Operation];
-
-            if (Params.length !== Func.ParamsRequired && Params.length !== (Func.ParamsOptional + Func.ParamsRequired)) {
-                let ErrorMSG = "Incorrect number of parameters specified for " + Operation;
-                throw new Error(ErrorMSG);
-            }
-
-            let EP = 0;
-
-            if (msg.payload.hasOwnProperty("endpoint")) {
-                EP = parseInt(msg.payload.endpoint)
-            }
-
-            if (Func.hasOwnProperty("ParamEnumDependency")) {
-                for (let i = 0; i < Params.length; i++) {
-                    if (Func.ParamEnumDependency.hasOwnProperty(i.toString())) {
-                        let Enum = Func.ParamEnumDependency[i.toString()];
-                        Params[i] = Enums[Enum][Params[i]]
-                    }
-                }
-            }
-
-            if (CCParamConverters.hasOwnProperty(Class + "." + Operation)) {
-                let Handler = CCParamConverters[Class + "." + Operation];
-                Params = Handler(Class, Operation, Params);
-            }
-
-            let ZWJSC = Driver.controller.nodes.get(Node).getEndpoint(EP).commandClasses[Map.MapsToClass];
-
-            let WaitForResponse = (Func.hasOwnProperty("NoEvent") && Func.NoEvent);
-
-            if (WaitForResponse) {
-                let Result = await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
-                Send(ReturnNode, "VALUE_UPDATED", Result, send)
-            }
-            else {
-                await ZWJSC[Func.MapsToFunc].apply(ZWJSC, Params);
-            }
-
-            if (forceUpdate !== undefined) {
-                let VID = {
-                    commandClass: CommandClasses[Map.MapsToClass],
-                    endpoint: EP
-                }
-                Object.keys(forceUpdate).forEach((VIDK) => {
-                    VID[VIDK] = forceUpdate[VIDK]
-                })
-                await Driver.controller.nodes.get(Node).pollValue(VID)
-            }
-
-            return;
-        }
-        async function OLDDriverCMD(msg, send) {
-
-            let Operation = msg.payload.operation;
-            let Params = msg.payload.params || []
-            let ReturnNode = { id: "N/A" };
-
-            switch (Operation) {
-
-                case "GetEnums":
-                    Send(ReturnNode, "ENUM_LIST", Enums, send);
-                    break;
-
-                case "GetValueDB":
-
-                    let Result = [];
-
-                    if (Params.length < 1) {
-                        Driver.controller.nodes.forEach((N, NI) => {
-                            Params.push(N.id)
-                        });
-                    }
-                    Params.forEach((NID) => {
-                        let G = {
-                            nodeId: NID,
-                            nodeName: getNodeInfoForPayload(NID, 'name'),
-                            nodeLocation: getNodeInfoForPayload(NID, 'location'),
-                            values: []
-                        }
-                        const VIDs = Driver.controller.nodes.get(NID).getDefinedValueIDs();
-                        VIDs.forEach((VID) => {
-                            let V = Driver.controller.nodes.get(NID).getValue(VID);
-                            let VI = {
-                                currentValue: V,
-                                valueId: VID
-                            }
-                            G.values.push(VI)
-                        })
-                        Result.push(G);
-                    })
-                    Send(ReturnNode, "VALUE_DB", Result, send);
-                    break;
-            }
-        }
-        /* END DEPRECATION */
-
-        var RestoreReadyTimer;
+        // eslint-disable-next-line no-unused-vars
+        let RestoreReadyTimer;
         function RestoreReadyStatus() {
+            if (RestoreReadyTimer !== undefined) {
+                clearTimeout(RestoreReadyTimer);
+                RestoreReadyTimer = undefined;
+            }
+
             RestoreReadyTimer = setTimeout(() => {
-                if (AllNodesReady) {
-                    node.status({ fill: "green", shape: "dot", text: "All Nodes Ready!" });
-                    UI.status("All Nodes Ready!")
-                }
-                else {
-                    node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
-                    UI.status("Nodes : " + NodesReady.toString() + " Are Ready.")
+                const NotReady = [];
+                let AllReady = true;
+
+                Driver.controller.nodes.forEach((N) => {
+                    if (
+                        !N.ready ||
+                        ZWaveJS.InterviewStage[N.interviewStage] !== 'Complete'
+                    ) {
+                        NotReady.push(N.id);
+                        AllReady = false;
+                    }
+                });
+
+                if (AllReady) {
+                    node.status({
+                        fill: 'green',
+                        shape: 'dot',
+                        text: 'All nodes ready!'
+                    });
+                    UI.status('All nodes ready!');
+                } else {
+                    node.status({
+                        fill: 'yellow',
+                        shape: 'dot',
+                        text: 'Nodes : ' + NotReady.toString() + ' not ready.'
+                    });
+                    UI.status('Nodes : ' + NotReady.toString() + ' not ready.');
                 }
             }, 5000);
         }
 
         // Create Logger (if enabled)
-        if (config.logLevel !== "none") {
-
+        if (config.logLevel !== 'none') {
             Logger = Winston.createLogger();
 
-            let FileTransportOptions = {
-                filename: Path.join(RED.settings.userDir, "zwave-js-log.txt"),
+            const FileTransportOptions = {
+                filename: Path.join(RED.settings.userDir, 'zwave-js-log.txt'),
                 format: createDefaultTransportFormat(false, false),
                 level: config.logLevel
-            }
+            };
             if (config.logFile !== undefined && config.logFile.length > 0) {
-                FileTransportOptions.filename = config.logFile
+                FileTransportOptions.filename = config.logFile;
             }
 
-            FileTransport = new Winston.transports.File(FileTransportOptions)
-            Logger.add(FileTransport)
+            FileTransport = new Winston.transports.File(FileTransportOptions);
+            Logger.add(FileTransport);
         }
 
-        node.status({ fill: "red", shape: "dot", text: "Starting Z-Wave Driver..." });
-        UI.status("Starting Z-Wave Driver...")
+        node.status({
+            fill: 'red',
+            shape: 'dot',
+            text: 'Starting Z-Wave driver...'
+        });
+        UI.status('Starting Z-Wave driver...');
 
-        RED.events.on("zwjs:node:command", processMessageEvent);
+        RED.events.on('zwjs:node:command', processMessageEvent);
         async function processMessageEvent(MSG) {
-            await Input(MSG, undefined, undefined, true)
+            await Input(MSG, undefined, undefined, true);
         }
 
         DriverOptions = {};
@@ -680,236 +129,433 @@ module.exports = function (RED) {
         // Logging
         DriverOptions.logConfig = {};
         if (Logger !== undefined) {
-
             DriverOptions.logConfig.enabled = true;
 
-            if (config.logNodeFilter !== undefined && config.logNodeFilter.length > 0) {
-                let Nodes = config.logNodeFilter.split(",")
-                let NodesArray = [];
+            if (
+                config.logNodeFilter !== undefined &&
+                config.logNodeFilter.length > 0
+            ) {
+                const Nodes = config.logNodeFilter.split(',');
+                const NodesArray = [];
                 Nodes.forEach((N) => {
-                    NodesArray.push(parseInt(N))
-                })
+                    NodesArray.push(parseInt(N));
+                });
                 DriverOptions.logConfig.nodeFilter = NodesArray;
             }
-            DriverOptions.logConfig.transports = [FileTransport]
-        }
-        else {
+            DriverOptions.logConfig.transports = [FileTransport];
+        } else {
             DriverOptions.logConfig.enabled = false;
         }
 
         DriverOptions.storage = {};
 
         // Cache Dir
-        Log("debug", "NDERED", undefined, "[options] [storage.cacheDir]", Path.join(RED.settings.userDir, "zwave-js-cache"))
-        DriverOptions.storage.cacheDir = Path.join(RED.settings.userDir, "zwave-js-cache");
-        
+        Log(
+            'debug',
+            'NDERED',
+            undefined,
+            '[options] [storage.cacheDir]',
+            Path.join(RED.settings.userDir, 'zwave-js-cache')
+        );
+        DriverOptions.storage.cacheDir = Path.join(
+            RED.settings.userDir,
+            'zwave-js-cache'
+        );
 
         // Custom  Config Path
-        if (config.customConfigPath !== undefined && config.customConfigPath.length > 0) {
-            Log("debug", "NDERED", undefined, "[options] [storage.deviceConfigPriorityDir]", config.customConfigPath)
-            DriverOptions.storage.deviceConfigPriorityDir = config.customConfigPath
+        if (
+            config.customConfigPath !== undefined &&
+            config.customConfigPath.length > 0
+        ) {
+            Log(
+                'debug',
+                'NDERED',
+                undefined,
+                '[options] [storage.deviceConfigPriorityDir]',
+                config.customConfigPath
+            );
+            DriverOptions.storage.deviceConfigPriorityDir = config.customConfigPath;
         }
 
         // Disk throttle
-        if (config.valueCacheDiskThrottle !== undefined && config.valueCacheDiskThrottle.length > 0) {
-            Log("debug", "NDERED", undefined, "[options] [storage.throttle]", config.valueCacheDiskThrottle)
-            DriverOptions.storage.throttle = config.valueCacheDiskThrottle
+        if (
+            config.valueCacheDiskThrottle !== undefined &&
+            config.valueCacheDiskThrottle.length > 0
+        ) {
+            Log(
+                'debug',
+                'NDERED',
+                undefined,
+                '[options] [storage.throttle]',
+                config.valueCacheDiskThrottle
+            );
+            DriverOptions.storage.throttle = config.valueCacheDiskThrottle;
         }
 
-        // Timeout 
+        // Timeout
         DriverOptions.timeouts = {};
         if (config.ackTimeout !== undefined && config.ackTimeout.length > 0) {
-            Log("debug", "NDERED", undefined, "[options] [timeouts.ack]", config.ackTimeout)
+            Log(
+                'debug',
+                'NDERED',
+                undefined,
+                '[options] [timeouts.ack]',
+                config.ackTimeout
+            );
             DriverOptions.timeouts.ack = parseInt(config.ackTimeout);
         }
-        if (config.controllerTimeout !== undefined && config.controllerTimeout.length > 0) {
-            Log("debug", "NDERED", undefined, "[options] [timeouts.response]", config.controllerTimeout)
+        if (
+            config.controllerTimeout !== undefined &&
+            config.controllerTimeout.length > 0
+        ) {
+            Log(
+                'debug',
+                'NDERED',
+                undefined,
+                '[options] [timeouts.response]',
+                config.controllerTimeout
+            );
             DriverOptions.timeouts.response = parseInt(config.controllerTimeout);
         }
-        if (config.sendResponseTimeout !== undefined && config.sendResponseTimeout.length > 0) {
-            Log("debug", "NDERED", undefined, "[options] [timeouts.report]", config.sendResponseTimeout)
+        if (
+            config.sendResponseTimeout !== undefined &&
+            config.sendResponseTimeout.length > 0
+        ) {
+            Log(
+                'debug',
+                'NDERED',
+                undefined,
+                '[options] [timeouts.report]',
+                config.sendResponseTimeout
+            );
             DriverOptions.timeouts.report = parseInt(config.sendResponseTimeout);
         }
 
-        if (config.encryptionKey !== undefined && config.encryptionKey.length > 0 && config.encryptionKey.startsWith('[') && config.encryptionKey.endsWith(']')) {
+        DriverOptions.securityKeys = {};
 
-            let RemoveBrackets = config.encryptionKey.replace("[", "").replace("]", "");
-            let _Array = RemoveBrackets.split(",");
-
-            Log("debug", "NDERED", undefined, "[options] [networkKey]", "Provided as array","["+_Array+" bytes]")
-
-            let _Buffer = [];
-            for (let i = 0; i < _Array.length; i++) {
-                _Buffer.push(parseInt(_Array[i].trim()));
+        const GetKey = (Property, ZWAVEJSName) => {
+            if (config[Property] !== undefined && config[Property].length > 0) {
+                if (
+                    config[Property].startsWith('[') &&
+                    config[Property].endsWith(']')
+                ) {
+                    const RemoveBrackets = config[Property].replace('[', '').replace(
+                        ']',
+                        ''
+                    );
+                    const _Array = RemoveBrackets.split(',');
+                    const _Buffer = [];
+                    for (let i = 0; i < _Array.length; i++) {
+                        if (!isNaN(_Array[i].trim())) {
+                            _Buffer.push(parseInt(_Array[i].trim()));
+                        }
+                    }
+                    Log(
+                        'debug',
+                        'NDERED',
+                        undefined,
+                        '[options] [securityKeys.' + ZWAVEJSName + ']',
+                        'Provided as array',
+                        '[' + _Buffer.length + ' bytes]'
+                    );
+                    if (_Buffer.length === 16) {
+                        DriverOptions.securityKeys[ZWAVEJSName] = Buffer.from(_Buffer);
+                    }
+                } else {
+                    Log(
+                        'debug',
+                        'NDERED',
+                        undefined,
+                        '[options] [securityKeys.' + ZWAVEJSName + ']',
+                        'Provided as string',
+                        '[' + config[Property].length + ' characters]'
+                    );
+                    if (config[Property].length === 16) {
+                        DriverOptions.securityKeys[ZWAVEJSName] = Buffer.from(
+                            config[Property]
+                        );
+                    }
+                }
             }
+        };
 
-            DriverOptions.networkKey = Buffer.from(_Buffer);
-            canDoSecure = true;
-        }
-        else if (config.encryptionKey !== undefined && config.encryptionKey.length > 0) {
-
-            Log("debug", "NDERED", undefined, "[options] [networkKey]", "Provided as string","["+config.encryptionKey.length+" characters]")
-            DriverOptions.networkKey = Buffer.from(config.encryptionKey);
-            canDoSecure = true;
-        }
+        GetKey('encryptionKey', 'S0_Legacy');
+        GetKey('encryptionKeyS2U', 'S2_Unauthenticated');
+        GetKey('encryptionKeyS2A', 'S2_Authenticated');
+        GetKey('encryptionKeyS2AC', 'S2_AccessControl');
 
         function ShareNodeList() {
+            for (const Location in NodeList) delete NodeList[Location];
 
-            for (let Location in NodeList) delete NodeList[Location];
-
-            NodeList["No Location"] = []
+            NodeList['No location'] = [];
             Driver.controller.nodes.forEach((ZWN) => {
-                if(ZWN.isControllerNode()){
+                if (ZWN.isControllerNode()) {
                     return;
                 }
-                let Node = {
+                const Node = {
                     id: ZWN.id,
-                    name: ZWN.name !== undefined ? ZWN.name : "No Name",
-                    location: ZWN.location !== undefined ? ZWN.location : "No Location",
+                    name: ZWN.name !== undefined ? ZWN.name : 'No name',
+                    location: ZWN.location !== undefined ? ZWN.location : 'No location'
+                };
+                if (!NodeList.hasOwnProperty(Node.location)) {
+                    NodeList[Node.location] = [];
                 }
-                if(!NodeList.hasOwnProperty(Node.location)){
-                    NodeList[Node.location] = []
-                }
-                NodeList[Node.location].push(Node)
+                NodeList[Node.location].push(Node);
             });
         }
 
         function NodeCheck(ID, SkipReady) {
-
             if (Driver.controller.nodes.get(ID) === undefined) {
-                let ErrorMSG = "Node " + ID + " does not exist.";
+                const ErrorMSG = 'Node ' + ID + ' does not exist.';
                 throw new Error(ErrorMSG);
             }
 
             if (!SkipReady) {
-
                 if (!Driver.controller.nodes.get(ID).ready) {
-                    let ErrorMSG = "Node " + ID + " is not yet ready to receive commands.";
+                    const ErrorMSG =
+                        'Node ' + ID + ' is not yet ready to receive commands.';
                     throw new Error(ErrorMSG);
                 }
             }
-
         }
 
-        function ThrowVirtualNodeLimit(){
-            throw new Error('Multicast currently only supports ValueAPI:setValue commands.')
+        function ThrowVirtualNodeLimit() {
+            throw new Error(
+                'Multicast only supports ValueAPI:setValue and CCAPI set type commands.'
+            );
         }
 
-        node.on('close', (removed,done) => {
-
-            let Type = (removed ? "DELETE" : "RESTART")
-            Log("info", "NDERED", undefined, "[SHUTDOWN] ["+Type+"]", "Cleaning up...")
-            UI.unregister()
+        node.on('close', (removed, done) => {
+            const Type = removed ? 'DELETE' : 'RESTART';
+            Log(
+                'info',
+                'NDERED',
+                undefined,
+                '[SHUTDOWN] [' + Type + ']',
+                'Cleaning up...'
+            );
+            UI.unregister();
             Driver.destroy();
-            RED.events.off("zwjs:node:command", processMessageEvent);
+            RED.events.off('zwjs:node:command', processMessageEvent);
             if (done) {
                 done();
             }
-
         });
 
         node.on('input', Input);
 
         async function Input(msg, send, done, internal) {
-
-            var Type = "CONTROLLER";
-            if(internal !== undefined && internal){
-                Type = "EVENT"
+            let Type = 'CONTROLLER';
+            if (internal !== undefined && internal) {
+                Type = 'EVENT';
             }
 
-            Log("debug", "NDERED", "IN", "["+Type+"]", "Payload received.")
+            Log('debug', 'NDERED', 'IN', '[' + Type + ']', 'Payload received.');
 
             try {
-
-                if (msg.payload.mode === undefined) {
-                    await OldInput(msg, send)
-                }
-                else {
-
-                    let Mode = msg.payload.mode;
-                    switch (Mode) {
-                        case "CCAPI":
-                            await CCAPI(msg, send);
-                            break;
-                        case "ValueAPI":
-                            await ValueAPI(msg, send)
-                            break;
-                        case "DriverAPI":
-                            await DriverAPI(msg, send)
-                            break;
-                        case "ControllerAPI":
-                            await ControllerAPI(msg, send)
-                            break;
-                        case "AssociationsAPI":
-                            await AssociationsAPI(msg, send);
-                            break;
-                    }
+                const Mode = msg.payload.mode;
+                switch (Mode) {
+                    case 'IEAPI':
+                        await IEAPI(msg);
+                        break;
+                    case 'CCAPI':
+                        await CCAPI(msg, send);
+                        break;
+                    case 'ValueAPI':
+                        await ValueAPI(msg, send);
+                        break;
+                    case 'DriverAPI':
+                        await DriverAPI(msg, send);
+                        break;
+                    case 'ControllerAPI':
+                        await ControllerAPI(msg, send);
+                        break;
+                    case 'AssociationsAPI':
+                        await AssociationsAPI(msg, send);
+                        break;
                 }
 
                 if (done) {
-                    done()
+                    done();
                 }
-            }
-            catch (er) {
-
-                Log("error", "NDERED", undefined, "[ERROR] [INPUT]", er.message)
+            } catch (er) {
+                Log('error', 'NDERED', undefined, '[ERROR] [INPUT]', er.message);
 
                 if (done) {
                     done(er);
-                }
-                else {
+                } else {
                     node.error(er);
                 }
             }
         }
 
+        let _GrantResolve;
+        let _DSKResolve;
+
+        function CheckKey(strategy) {
+            if (strategy === 2) {
+                return;
+            }
+
+            const KeyRequirementsCFG = {
+                0: [
+                    'S0_Legacy',
+                    'S2_Unauthenticated',
+                    'S2_Authenticated',
+                    'S2_AccessControl'
+                ],
+                3: ['S0_Legacy'],
+                4: ['S2_Unauthenticated', 'S2_Authenticated', 'S2_AccessControl']
+            };
+
+            const KeyRequirementsLable = {
+                0: ['S0 ', 'S2 Unauth ', 'S2 Auth ', 'S2 Access Ctrl'],
+                3: ['S0'],
+                4: ['S2 Unauth ', 'S2 Auth ', 'S2 Access Ctrl']
+            };
+
+            const Set = KeyRequirementsCFG[strategy];
+
+            Set.forEach((KR) => {
+                if (DriverOptions.securityKeys[KR] === undefined) {
+                    const Label = KeyRequirementsLable[strategy];
+                    throw new Error(
+                        'The chosen inclusion strategy require the following keys to be present: ' +
+                        Label
+                    );
+                }
+            });
+        }
+
+        async function IEAPI(msg) {
+            const Method = msg.payload.method;
+            const Params = msg.payload.params || [];
+
+            const Callbacks = {
+                grantSecurityClasses: GrantSecurityClasses,
+                validateDSKAndEnterPIN: ValidateDSK,
+                abort: Abort
+            };
+
+            switch (Method) {
+                case 'beginInclusion':
+                    CheckKey(Params[0].strategy);
+                    Params[0].userCallbacks = Callbacks;
+                    await Driver.controller.beginInclusion(Params[0]);
+                    break;
+
+                case 'beginExclusion':
+                    await Driver.controller.beginExclusion();
+                    break;
+
+                case 'grantClasses':
+                    Grant(Params[0]);
+                    break;
+
+                case 'verifyDSK':
+                    VerifyDSK(Params[0]);
+                    break;
+
+                case 'replaceNode':
+                    CheckKey(Params[1].strategy);
+                    Params[1].userCallbacks = Callbacks;
+                    await Driver.controller.replaceFailedNode(Params[0], Params[1]);
+                    break;
+
+                case 'stop':
+                    const IS = await Driver.controller.stopInclusion();
+                    const ES = await Driver.controller.stopExclusion();
+                    if (IS || ES) {
+                        RestoreReadyStatus();
+                    }
+                    break;
+            }
+            return;
+        }
+
+        function GrantSecurityClasses(RequestedClasses) {
+            UI.sendEvent('node-inclusion-step', 'grant security', {
+                classes: RequestedClasses
+            });
+            return new Promise((res) => {
+                _GrantResolve = res;
+            });
+        }
+
+        function Grant(Classes) {
+            _GrantResolve({
+                securityClasses: Classes,
+                clientSideAuth: false
+            });
+        }
+
+        function ValidateDSK(DSK) {
+            UI.sendEvent('node-inclusion-step', 'verify dsk', { dsk: DSK });
+            return new Promise((res) => {
+                _DSKResolve = res;
+            });
+        }
+
+        function VerifyDSK(Pin) {
+            _DSKResolve(Pin);
+        }
+
+        function Abort() {
+            UI.sendEvent('node-inclusion-step', 'aborted');
+        }
+
         async function ControllerAPI(msg, send) {
+            const Method = msg.payload.method;
+            const Params = msg.payload.params || [];
+            const ReturnNode = { id: '' };
 
-            let Method = msg.payload.method
-            let Params = msg.payload.params || [];
-            let ReturnController = { id: "Controller" };
-            let ReturnNode = { id: "" };
-
-            Log("debug", "NDERED", "IN", undefined, printParams("ControllerAPI", undefined, Method, Params))
+            Log(
+                'debug',
+                'NDERED',
+                'IN',
+                undefined,
+                printParams('ControllerAPI', undefined, Method, Params)
+            );
 
             let SupportsNN = false;
 
             switch (Method) {
-
-                case "abortFirmwareUpdate":
-                    NodeCheck(Params[0])
-                    ReturnNode.id = Params[0]
-                    await Driver.controller.nodes.get(Params[0]).abortFirmwareUpdate()
-                    Send(ReturnNode, "FIRMWARE_UPDATE_ABORTED", undefined, send);
+                case 'abortFirmwareUpdate':
+                    NodeCheck(Params[0]);
+                    ReturnNode.id = Params[0];
+                    await Driver.controller.nodes.get(Params[0]).abortFirmwareUpdate();
+                    Send(ReturnNode, 'FIRMWARE_UPDATE_ABORTED', undefined, send);
                     break;
 
-                case "beginFirmwareUpdate":
-                    NodeCheck(Params[0])
-                    ReturnNode.id = Params[0]
-                    let Format = ZWaveJS.guessFirmwareFileFormat(Params[2], Params[3])
-                    let Firmware = ZWaveJS.extractFirmware(Params[3], Format)
-                    await Driver.controller.nodes.get(Params[0]).beginFirmwareUpdate(Firmware.data, Params[1])
-                    Send(ReturnNode, "FIRMWARE_UPDATE_STARTED", Params[1], send);
+                case 'beginFirmwareUpdate':
+                    NodeCheck(Params[0]);
+                    ReturnNode.id = Params[0];
+                    const Format = ZWaveJS.guessFirmwareFileFormat(Params[2], Params[3]);
+                    const Firmware = ZWaveJS.extractFirmware(Params[3], Format);
+                    await Driver.controller.nodes
+                        .get(Params[0])
+                        .beginFirmwareUpdate(Firmware.data, Params[1]);
+                    Send(ReturnNode, 'FIRMWARE_UPDATE_STARTED', Params[1], send);
                     break;
 
-                case "getRFRegion":
-                    let RFR = await Driver.controller.getRFRegion();
-                    Send(ReturnController, "CURRENT_RF_REGION", ZWaveJS.RFRegion[RFR], send);
+                case 'getRFRegion':
+                    const RFR = await Driver.controller.getRFRegion();
+                    Send(undefined, 'CURRENT_RF_REGION', ZWaveJS.RFRegion[RFR], send);
                     break;
 
-                case "setRFRegion":
+                case 'setRFRegion':
                     await Driver.controller.setRFRegion(ZWaveJS.RFRegion[Params[0]]);
-                    Send(ReturnController, "RF_REGION_SET", Params[0], send);
+                    Send(undefined, 'RF_REGION_SET', Params[0], send);
                     break;
 
-                case "toggleRF":
+                case 'toggleRF':
                     await Driver.controller.toggleRF(Params[0]);
-                    Send(ReturnController, "RF_STATUS", Params[0], send);
+                    Send(undefined, 'RF_STATUS', Params[0], send);
                     break;
 
-                case "getNodes":
-                    let Nodes = [];
-                    Driver.controller.nodes.forEach((N, NI) => {
+                case 'getNodes':
+                    const Nodes = [];
+                    Driver.controller.nodes.forEach((N) => {
                         Nodes.push({
                             nodeId: N.id,
                             name: N.name,
@@ -928,6 +574,7 @@ module.exports = function (RED) {
                             maxDataRate: N.maxDataRate,
                             supportsSecurity: N.supportsSecurity,
                             isSecure: N.isSecure,
+                            highestSecurityClass: N.getHighestSecurityClass(),
                             protocolVersion: ZWaveJS.ProtocolVersion[N.protocolVersion],
                             manufacturerId: N.manufacturerId,
                             productId: N.productId,
@@ -937,334 +584,372 @@ module.exports = function (RED) {
                             isControllerNode: N.isControllerNode(),
                             supportsBeaming: N.supportsBeaming,
                             keepAwake: N.keepAwake
-                        })
+                        });
                     });
-                    Send(ReturnController, "NODE_LIST", Nodes, send);
+                    Send(undefined, 'NODE_LIST', Nodes, send);
                     break;
 
-                case "keepNodeAwake":
-                    NodeCheck(Params[0])
-                    ReturnNode.id = Params[0]
-                    Driver.controller.nodes.get(Params[0]).keepAwake = Params[1]
-                    Send(ReturnNode, "NODE_KEEP_AWAKE", Params[1], send)
+                case 'keepNodeAwake':
+                    NodeCheck(Params[0]);
+                    ReturnNode.id = Params[0];
+                    Driver.controller.nodes.get(Params[0]).keepAwake = Params[1];
+                    Send(ReturnNode, 'NODE_KEEP_AWAKE', Params[1], send);
                     break;
 
-                case "getNodeNeighbors":
-                    NodeCheck(Params[0])
-                    let NIDs = await Driver.controller.getNodeNeighbors(Params[0]);
-                    ReturnNode.id = Params[0]
-                    Send(ReturnNode, "NODE_NEIGHBORS", NIDs, send);
+                case 'getNodeNeighbors':
+                    NodeCheck(Params[0]);
+                    const NIDs = await Driver.controller.getNodeNeighbors(Params[0]);
+                    ReturnNode.id = Params[0];
+                    Send(ReturnNode, 'NODE_NEIGHBORS', NIDs, send);
                     break;
 
-                case "setNodeName":
-                    NodeCheck(Params[0])
-                    Driver.controller.nodes.get(Params[0]).name = Params[1]
-                    SupportsNN = Driver.controller.nodes.get(Params[0]).supportsCC(CommandClasses["Node Naming and Location"])
+                case 'setNodeName':
+                    NodeCheck(Params[0]);
+                    Driver.controller.nodes.get(Params[0]).name = Params[1];
+                    SupportsNN = Driver.controller.nodes
+                        .get(Params[0])
+                        .supportsCC(CommandClasses['Node Naming and Location']);
                     if (SupportsNN) {
-                        await Driver.controller.nodes.get(Params[0]).commandClasses["Node Naming and Location"].setName(Params[1]);
+                        await Driver.controller.nodes
+                            .get(Params[0])
+                            .commandClasses['Node Naming and Location'].setName(Params[1]);
                     }
-                    ReturnNode.id = Params[0]
-                    Send(ReturnNode, "NODE_NAME_SET", Params[1], send)
+                    ReturnNode.id = Params[0];
+                    Send(ReturnNode, 'NODE_NAME_SET', Params[1], send);
                     ShareNodeList();
-                    break
+                    break;
 
-                case "setNodeLocation":
-                    NodeCheck(Params[0])
-                    Driver.controller.nodes.get(Params[0]).location = Params[1]
-                    SupportsNN = Driver.controller.nodes.get(Params[0]).supportsCC(CommandClasses["Node Naming and Location"])
+                case 'setNodeLocation':
+                    NodeCheck(Params[0]);
+                    Driver.controller.nodes.get(Params[0]).location = Params[1];
+                    SupportsNN = Driver.controller.nodes
+                        .get(Params[0])
+                        .supportsCC(CommandClasses['Node Naming and Location']);
                     if (SupportsNN) {
-                        await Driver.controller.nodes.get(Params[0]).commandClasses["Node Naming and Location"].setLocation(Params[1]);
+                        await Driver.controller.nodes
+                            .get(Params[0])
+                            .commandClasses['Node Naming and Location'].setLocation(
+                                Params[1]
+                            );
                     }
-                    ReturnNode.id = Params[0]
-                    Send(ReturnNode, "NODE_LOCATION_SET", Params[1], send)
+                    ReturnNode.id = Params[0];
+                    Send(ReturnNode, 'NODE_LOCATION_SET', Params[1], send);
                     ShareNodeList();
-                    break
+                    break;
 
-                case "refreshInfo":
-                    Params[0] = Params[0]
+                case 'refreshInfo':
                     NodeCheck(Params[0], true);
-                    let Stage = ZWaveJS.InterviewStage[Driver.controller.nodes.get(Params[0]).interviewStage];
-                    if (Stage !== "Complete") {
-                        let ErrorMSG = "Node " + Params[0] + " is already being interviewed. Current Interview Stage : " + Stage + "";
+                    const Stage =
+                        ZWaveJS.InterviewStage[
+                        Driver.controller.nodes.get(Params[0]).interviewStage
+                        ];
+                    if (Stage !== 'Complete') {
+                        const ErrorMSG =
+                            'Node ' +
+                            Params[0] +
+                            ' is already being interviewed. Current interview stage : ' +
+                            Stage +
+                            '';
                         throw new Error(ErrorMSG);
-                    }
-                    else {
+                    } else {
                         await Driver.controller.nodes.get(Params[0]).refreshInfo();
                     }
                     break;
 
-                case "hardReset":
+                case 'hardReset':
                     await Driver.hardReset();
-                    Send(ReturnController, "CONTROLLER_RESET_COMPLETE", undefined, send)
+                    Send(undefined, 'CONTROLLER_RESET_COMPLETE', undefined, send);
                     break;
 
-                case "beginHealingNetwork":
-                    await Driver.controller.beginHealingNetwork();
-                    Send(ReturnController, "NETWORK_HEAL_STARTED", undefined, send)
-                    node.status({ fill: "yellow", shape: "dot", text: "Network Heal Started." });
-                    UI.status("Network Heal Started.")
-                    break;
-
-                case "stopHealingNetwork":
-                    await Driver.controller.stopHealingNetwork();
-                    Send(ReturnController, "NETWORK_HEAL_STOPPED", undefined, send)
-                    node.status({ fill: "blue", shape: "dot", text: "Network Heal Stopped." });
-                    UI.status("Network Heal Stopped.")
+                case 'healNode':
+                    NodeCheck(Params[0]);
+                    ReturnNode.id = Params[0];
+                    Send(ReturnNode, 'NODE_HEAL_STARTED', undefined, send);
+                    node.status({
+                        fill: 'yellow',
+                        shape: 'dot',
+                        text: 'Node Heal Started: ' + Params[0]
+                    });
+                    UI.status('Node Heal Started: ' + Params[0]);
+                    const HealResponse = await Driver.controller.healNode(Params[0]);
+                    if (HealResponse) {
+                        node.status({
+                            fill: 'green',
+                            shape: 'dot',
+                            text: 'Node Heal Successful: ' + Params[0]
+                        });
+                        UI.status('Node Heal Successful: ' + Params[0]);
+                    } else {
+                        node.status({
+                            fill: 'red',
+                            shape: 'dot',
+                            text: 'Node Heal Unsuccessful: ' + Params[0]
+                        });
+                        UI.status('Node Heal Unsuccessful: ' + Params[0]);
+                    }
+                    Send(
+                        ReturnNode,
+                        'NODE_HEAL_FINISHED',
+                        { success: HealResponse },
+                        send
+                    );
                     RestoreReadyStatus();
                     break;
 
-                case "removeFailedNode":
+                case 'beginHealingNetwork':
+                    await Driver.controller.beginHealingNetwork();
+                    Send(undefined, 'NETWORK_HEAL_STARTED', undefined, send);
+                    node.status({
+                        fill: 'yellow',
+                        shape: 'dot',
+                        text: 'Network Heal Started.'
+                    });
+                    UI.status('Network Heal Started.');
+                    break;
+
+                case 'stopHealingNetwork':
+                    await Driver.controller.stopHealingNetwork();
+                    Send(undefined, 'NETWORK_HEAL_STOPPED', undefined, send);
+                    node.status({
+                        fill: 'blue',
+                        shape: 'dot',
+                        text: 'Network Heal Stopped.'
+                    });
+                    UI.status('Network Heal Stopped.');
+                    RestoreReadyStatus();
+                    break;
+
+                case 'removeFailedNode':
                     await Driver.controller.removeFailedNode(Params[0]);
                     break;
 
-                case "replaceFailedNode":
-                    if (!canDoSecure) {
-                        await Driver.controller.replaceFailedNode(Params[0], true);
-                    }
-                    else if (Params.length > 1) {
-                        await Driver.controller.replaceFailedNode(Params[0], Params[1]);
-                    }
-                    else {
-                        await Driver.controller.replaceFailedNode(Params[0], false);
-                    }
-                    break;
-
-                case "beginInclusion":
-                    if (!canDoSecure) {
-                        await Driver.controller.beginInclusion(true);
-                    }
-                    else if (Params !== undefined && Params.length > 0) {
-                        await Driver.controller.beginInclusion(Params[0]);
-                    }
-                    else {
-                        await Driver.controller.beginInclusion(false);
-                    }
-                    break;
-
-                case "stopInclusion":
-                    await Driver.controller.stopInclusion();
-                    break;
-
-                case "beginExclusion":
-                    await Driver.controller.beginExclusion();
-                    break;
-
-                case "stopExclusion":
-                    await Driver.controller.stopExclusion();
-                    break;
-
-                case "proprietaryFunction":
-
-                    let ZWaveMessage = new ZWaveJS.Message(Driver, {
+                case 'proprietaryFunction':
+                    const ZWaveMessage = new ZWaveJS.Message(Driver, {
                         type: ZWaveJS.MessageType.Request,
                         functionType: Params[0],
                         payload: Params[1]
-                    })
+                    });
 
-                    let MessageSettings = {
+                    const MessageSettings = {
                         priority: ZWaveJS.MessagePriority.Controller,
                         supportCheck: false
-                    }
+                    };
 
-                    await Driver.sendMessage(ZWaveMessage, MessageSettings)
+                    await Driver.sendMessage(ZWaveMessage, MessageSettings);
                     break;
-
             }
 
             return;
         }
 
         async function ValueAPI(msg, send) {
+            const Method = msg.payload.method;
+            const Params = msg.payload.params || [];
+            const Node = msg.payload.node;
+            const Multicast = Array.isArray(Node);
 
-            let Method = msg.payload.method;
-            let Params = msg.payload.params || []
-            let Node = msg.payload.node;
-            let Multicast = Array.isArray(Node)
-
-            var ZWaveNode;
-            if(Multicast){
-                ZWaveNode =  Driver.controller.getMulticastGroup(Node)
-            }
-            else{
+            let ZWaveNode;
+            if (Multicast) {
+                ZWaveNode = Driver.controller.getMulticastGroup(Node);
+            } else {
                 NodeCheck(Node);
-                ZWaveNode = Driver.controller.nodes.get(Node)
+                ZWaveNode = Driver.controller.nodes.get(Node);
             }
 
-            Log("debug", "NDERED", "IN", "[Node: " + ZWaveNode.id + "]", printParams("ValueAPI", undefined, Method, Params))
+            Log(
+                'debug',
+                'NDERED',
+                'IN',
+                '[Node: ' + ZWaveNode.id + ']',
+                printParams('ValueAPI', undefined, Method, Params)
+            );
 
-            let ReturnNode = { id: ZWaveNode.id }
+            const ReturnNode = { id: ZWaveNode.id };
 
             switch (Method) {
-
-                case "getDefinedValueIDs":
-                    if(Multicast) ThrowVirtualNodeLimit();
+                case 'getDefinedValueIDs':
+                    if (Multicast) ThrowVirtualNodeLimit();
                     const VIDs = ZWaveNode.getDefinedValueIDs();
-                    Send(ReturnNode, "VALUE_ID_LIST", VIDs, send);
+                    Send(ReturnNode, 'VALUE_ID_LIST', VIDs, send);
                     break;
 
-                case "getValueMetadata":
-                    if(Multicast) ThrowVirtualNodeLimit();
-                    let M = ZWaveNode.getValueMetadata(Params[0]);
-                    let ReturnObjectM = {
+                case 'getValueMetadata':
+                    if (Multicast) ThrowVirtualNodeLimit();
+                    const M = ZWaveNode.getValueMetadata(Params[0]);
+                    const ReturnObjectM = {
                         response: M,
                         valueId: Params[0]
-                    }
-                    Send(ReturnNode, "GET_VALUE_METADATA_RESPONSE", ReturnObjectM, send);
+                    };
+                    Send(ReturnNode, 'GET_VALUE_METADATA_RESPONSE', ReturnObjectM, send);
                     break;
 
-                case "getValue":
-                    if(Multicast) ThrowVirtualNodeLimit();
-                    let V = ZWaveNode.getValue(Params[0]);
-                    let ReturnObject = {
+                case 'getValue':
+                    if (Multicast) ThrowVirtualNodeLimit();
+                    const V = ZWaveNode.getValue(Params[0]);
+                    const ReturnObject = {
                         response: V,
                         valueId: Params[0]
-                    }
-                    Send(ReturnNode, "GET_VALUE_RESPONSE", ReturnObject, send);
+                    };
+                    Send(ReturnNode, 'GET_VALUE_RESPONSE', ReturnObject, send);
                     break;
 
-                case "setValue":
+                case 'setValue':
                     if (Params.length > 2) {
                         await ZWaveNode.setValue(Params[0], Params[1], Params[2]);
-                    }
-                    else {
+                    } else {
                         await ZWaveNode.setValue(Params[0], Params[1]);
                     }
                     break;
 
-                case "pollValue":
-                    if(Multicast) ThrowVirtualNodeLimit();
+                case 'pollValue':
+                    if (Multicast) ThrowVirtualNodeLimit();
                     await ZWaveNode.pollValue(Params[0]);
-                    break;;
+                    break;
             }
 
             return;
         }
 
         async function CCAPI(msg, send) {
-
-            let CC = msg.payload.cc;
-            let Method = msg.payload.method;
-            let Params = msg.payload.params || []
-            let Node = msg.payload.node;
-            let Endpoint = msg.payload.endpoint || 0
-            let EnumSelection = msg.payload.enums;
-            let ForceUpdate = msg.payload.forceUpdate
-            let Multicast = Array.isArray(Node)
-
-            if(Multicast) ThrowVirtualNodeLimit(); /* Until ZWJS V8 */
-
-            if(Multicast){
-                ZWaveNode =  Driver.controller.getMulticastGroup(Node)
-            }
-            else{
-                NodeCheck(Node);
-                ZWaveNode = Driver.controller.nodes.get(Node)
-            }
-
-            Log("debug", "NDERED", "IN", "[Node: " + ZWaveNode.id + "]", printParams("CCAPI", CC, Method, Params))
-
+            const CC = msg.payload.cc;
+            const Method = msg.payload.method;
+            const Params = msg.payload.params || [];
+            const Node = msg.payload.node;
+            const Endpoint = msg.payload.endpoint || 0;
+            const EnumSelection = msg.payload.enums;
+            const ForceUpdate = msg.payload.forceUpdate;
+            const Multicast = Array.isArray(Node);
             let IsEventResponse = true;
+
+            let ZWaveNode;
+            if (Multicast) {
+                ZWaveNode = Driver.controller.getMulticastGroup(Node);
+            } else {
+                NodeCheck(Node);
+                ZWaveNode = Driver.controller.nodes.get(Node);
+            }
+
+            Log(
+                'debug',
+                'NDERED',
+                'IN',
+                '[Node: ' + ZWaveNode.id + ']',
+                printParams('CCAPI', CC, Method, Params)
+            );
+
             if (msg.payload.responseThroughEvent !== undefined) {
                 IsEventResponse = msg.payload.responseThroughEvent;
             }
 
-            let ReturnNode = { id: ZWaveNode.id }
+            const ReturnNode = { id: ZWaveNode.id };
 
             if (EnumSelection !== undefined) {
-                let ParamIndexs = Object.keys(EnumSelection);
+                const ParamIndexs = Object.keys(EnumSelection);
                 ParamIndexs.forEach((PI) => {
-                    let EnumName = EnumSelection[PI]
-                    let Enum = ZWaveJS[EnumName]
+                    const EnumName = EnumSelection[PI];
+                    const Enum = ZWaveJS[EnumName];
                     Params[PI] = Enum[Params[PI]];
-                })
+                });
             }
 
-            let Result = await ZWaveNode.getEndpoint(Endpoint).invokeCCAPI(CommandClasses[CC], Method, ...Params)
+            const Result = await ZWaveNode.getEndpoint(Endpoint).invokeCCAPI(
+                CommandClasses[CC],
+                Method,
+                ...Params
+            );
             if (!IsEventResponse && ForceUpdate === undefined) {
-                Send(ReturnNode, "VALUE_UPDATED", Result, send)
+                Send(ReturnNode, 'VALUE_UPDATED', Result, send);
             }
 
             if (ForceUpdate !== undefined) {
+                if (Multicast) ThrowVirtualNodeLimit();
 
-                if(Multicast) ThrowVirtualNodeLimit();
-
-                let ValueID = {
+                const ValueID = {
                     commandClass: CommandClasses[CC],
                     endpoint: Endpoint
-                }
+                };
                 Object.keys(ForceUpdate).forEach((VIDK) => {
-                    ValueID[VIDK] = ForceUpdate[VIDK]
-                })
-                Log("debug", "NDERED", undefined, "[POLL]", printForceUpdate(Node,ValueID))
-                await ZWaveNode.pollValue(ValueID)
-
+                    ValueID[VIDK] = ForceUpdate[VIDK];
+                });
+                Log(
+                    'debug',
+                    'NDERED',
+                    undefined,
+                    '[POLL]',
+                    printForceUpdate(Node, ValueID)
+                );
+                await ZWaveNode.pollValue(ValueID);
             }
-
 
             return;
         }
 
         async function DriverAPI(msg, send) {
+            const Method = msg.payload.method;
+            const Params = msg.payload.params || [];
 
-            let Method = msg.payload.method;
-            let Params = msg.payload.params || []
-            let ReturnNode = { id: "N/A" };
-
-            Log("debug", "NDERED", "IN", undefined, printParams("DriverAPI", undefined, Method, Params))
+            Log(
+                'debug',
+                'NDERED',
+                'IN',
+                undefined,
+                printParams('DriverAPI', undefined, Method, Params)
+            );
 
             switch (Method) {
-
-                case "getNodeStatistics":
+                case 'getNodeStatistics':
                     if (Params.length < 1) {
-                        Send(ReturnNode, "NODE_STATISTICS", NodeStats, send);
-                    }
-                    else {
-                        let Stats = {};
+                        Send(undefined, 'NODE_STATISTICS', NodeStats, send);
+                    } else {
+                        const Stats = {};
                         Params.forEach((NID) => {
                             if (NodeStats.hasOwnProperty(NID)) {
                                 Stats[NID] = NodeStats[NID];
                             }
-                        })
-                        Send(ReturnNode, "NODE_STATISTICS", Stats, send);
+                        });
+                        Send(undefined, 'NODE_STATISTICS', Stats, send);
                     }
                     break;
 
-                case "getControllerStatistics":
+                case 'getControllerStatistics':
                     if (ControllerStats === undefined) {
-                        Send(ReturnNode, "CONTROLER_STATISTICS", "Statistics Are Pending", send);
-                    }
-                    else {
-                        Send(ReturnNode, "CONTROLER_STATISTICS", ControllerStats, send);
+                        Send(
+                            undefined,
+                            'CONTROLER_STATISTICS',
+                            'Statistics Are Pending',
+                            send
+                        );
+                    } else {
+                        Send(undefined, 'CONTROLER_STATISTICS', ControllerStats, send);
                     }
                     break;
 
-
-                case "getValueDB":
-                    let Result = [];
+                case 'getValueDB':
+                    const Result = [];
                     if (Params.length < 1) {
-                        Driver.controller.nodes.forEach((N, NI) => {
-                            Params.push(N.id)
+                        Driver.controller.nodes.forEach((N) => {
+                            Params.push(N.id);
                         });
                     }
                     Params.forEach((NID) => {
-                        let G = {
+                        const G = {
                             nodeId: NID,
                             nodeName: getNodeInfoForPayload(NID, 'name'),
                             nodeLocation: getNodeInfoForPayload(NID, 'location'),
                             values: []
-                        }
+                        };
                         const VIDs = Driver.controller.nodes.get(NID).getDefinedValueIDs();
                         VIDs.forEach((VID) => {
-                            let V = Driver.controller.nodes.get(NID).getValue(VID);
-                            let VI = {
+                            const V = Driver.controller.nodes.get(NID).getValue(VID);
+                            const VI = {
                                 currentValue: V,
                                 valueId: VID
-                            }
-                            G.values.push(VI)
-                        })
+                            };
+                            G.values.push(VI);
+                        });
                         Result.push(G);
-                    })
-                    Send(ReturnNode, "VALUE_DB", Result, send);
+                    });
+                    Send(undefined, 'VALUE_DB', Result, send);
                     break;
             }
 
@@ -1272,536 +957,675 @@ module.exports = function (RED) {
         }
 
         async function AssociationsAPI(msg, send) {
+            const Method = msg.payload.method;
+            const Params = msg.payload.params || [];
 
-            let Method = msg.payload.method
-            let Params = msg.payload.params || [];
+            Log(
+                'debug',
+                'NDERED',
+                'IN',
+                undefined,
+                printParams('AssociationsAPI', undefined, Method, Params)
+            );
 
-            Log("debug", "NDERED", "IN", undefined, printParams("AssociationsAPI", undefined, Method, Params))
-
-            let ReturnNode = { id: "" };
+            const ReturnNode = { id: '' };
+            let ResultData;
+            let PL;
             switch (Method) {
-                case "getAssociationGroups":
+                case 'getAssociationGroups':
                     NodeCheck(Params[0].nodeId);
-                    var ResultData = Driver.controller.getAssociationGroups(Params[0])
-                    var PL = []
+                    ResultData = Driver.controller.getAssociationGroups(Params[0]);
+                    PL = [];
                     ResultData.forEach((FV, FK) => {
-                        let A = {
+                        const A = {
                             GroupID: FK,
                             AssociationGroupInfo: FV
-                        }
+                        };
                         PL.push(A);
-                    })
+                    });
 
-                    ReturnNode.id = Params[0].nodeId
-                    Send(ReturnNode, "ASSOCIATION_GROUPS", { SourceAddress: Params[0], Groups: PL }, send)
+                    ReturnNode.id = Params[0].nodeId;
+                    Send(
+                        ReturnNode,
+                        'ASSOCIATION_GROUPS',
+                        { SourceAddress: Params[0], Groups: PL },
+                        send
+                    );
                     break;
 
-                case "getAllAssociationGroups":
+                case 'getAllAssociationGroups':
                     NodeCheck(Params[0]);
-                    var ResultData = Driver.controller.getAllAssociationGroups(Params[0])
-                    var PL = [];
+                    ResultData = Driver.controller.getAllAssociationGroups(Params[0]);
+                    PL = [];
                     ResultData.forEach((FV, FK) => {
-                        let A = {
+                        const A = {
                             Endpoint: FK,
                             Groups: []
-                        }
+                        };
                         FV.forEach((SV, SK) => {
-                            let B = {
+                            const B = {
                                 GroupID: SK,
                                 AssociationGroupInfo: SV
-                            }
-                            A.Groups.push(B)
-                        })
+                            };
+                            A.Groups.push(B);
+                        });
                         PL.push(A);
-                    })
+                    });
 
-                    ReturnNode.id = Params[0]
-                    Send(ReturnNode, "ALL_ASSOCIATION_GROUPS", PL, send)
+                    ReturnNode.id = Params[0];
+                    Send(ReturnNode, 'ALL_ASSOCIATION_GROUPS', PL, send);
                     break;
 
-                case "getAssociations":
+                case 'getAssociations':
                     NodeCheck(Params[0].nodeId);
-                    var ResultData = Driver.controller.getAssociations(Params[0])
-                    var PL = []
+                    ResultData = Driver.controller.getAssociations(Params[0]);
+                    PL = [];
                     ResultData.forEach((FV, FK) => {
-                        let A = {
+                        const A = {
                             GroupID: FK,
                             AssociationAddress: []
-                        }
+                        };
                         FV.forEach((AA) => {
                             A.AssociationAddress.push(AA);
                         });
 
-                        PL.push(A)
-                    })
+                        PL.push(A);
+                    });
 
-                    ReturnNode.id = Params[0].nodeId
-                    Send(ReturnNode, "ASSOCIATIONS", { SourceAddress: Params[0], Associations: PL }, send)
+                    ReturnNode.id = Params[0].nodeId;
+                    Send(
+                        ReturnNode,
+                        'ASSOCIATIONS',
+                        { SourceAddress: Params[0], Associations: PL },
+                        send
+                    );
                     break;
 
-                case "getAllAssociations":
+                case 'getAllAssociations':
                     NodeCheck(Params[0]);
-                    var ResultData = Driver.controller.getAllAssociations(Params[0]);
-                    var PL = []
+                    ResultData = Driver.controller.getAllAssociations(Params[0]);
+                    PL = [];
                     ResultData.forEach((FV, FK) => {
-                        let A = {
+                        const A = {
                             AssociationAddress: FK,
                             Associations: []
-                        }
+                        };
                         FV.forEach((SV, SK) => {
-                            let B = {
+                            const B = {
                                 GroupID: SK,
                                 AssociationAddress: SV
-                            }
-                            A.Associations.push(B)
+                            };
+                            A.Associations.push(B);
                         });
-                        PL.push(A)
-                    })
+                        PL.push(A);
+                    });
 
-                    ReturnNode.id = Params[0]
-                    Send(ReturnNode, "ALL_ASSOCIATIONS", PL, send)
+                    ReturnNode.id = Params[0];
+                    Send(ReturnNode, 'ALL_ASSOCIATIONS', PL, send);
                     break;
 
-                case "addAssociations":
+                case 'addAssociations':
                     NodeCheck(Params[0].nodeId);
                     Params[2].forEach((A) => {
-                        if (!Driver.controller.isAssociationAllowed(Params[0], Params[1], A)) {
-                            let ErrorMSG = "Association: Source " + JSON.stringify(Params[0]); +", Group " + Params[1] + ", Destination " + SON.stringify(A) + " is not allowed."
+                        if (
+                            !Driver.controller.isAssociationAllowed(Params[0], Params[1], A)
+                        ) {
+                            const ErrorMSG =
+                                'Association: Source ' + JSON.stringify(Params[0]);
+                            +', Group ' +
+                                Params[1] +
+                                ', Destination ' +
+                                JSON.stringify(A) +
+                                ' is not allowed.';
                             throw new Error(ErrorMSG);
                         }
-                    })
-                    await Driver.controller.addAssociations(Params[0], Params[1], Params[2])
-                    ReturnNode.id = Params[0].nodeId
-                    Send(ReturnNode, "ASSOCIATIONS_ADDED", undefined, send)
+                    });
+                    await Driver.controller.addAssociations(
+                        Params[0],
+                        Params[1],
+                        Params[2]
+                    );
+                    ReturnNode.id = Params[0].nodeId;
+                    Send(ReturnNode, 'ASSOCIATIONS_ADDED', undefined, send);
                     break;
 
-                case "removeAssociations":
+                case 'removeAssociations':
                     NodeCheck(Params[0].nodeId);
-                    await Driver.controller.removeAssociations(Params[0], Params[1], Params[2])
-                    ReturnNode.id = Params[0].nodeId
-                    Send(ReturnNode, "ASSOCIATIONS_REMOVED", undefined, send)
+                    await Driver.controller.removeAssociations(
+                        Params[0],
+                        Params[1],
+                        Params[2]
+                    );
+                    ReturnNode.id = Params[0].nodeId;
+                    Send(ReturnNode, 'ASSOCIATIONS_REMOVED', undefined, send);
                     break;
 
-                case "removeNodeFromAllAssociations":
+                case 'removeNodeFromAllAssociations':
                     NodeCheck(Params[0]);
-                    await Driver.controller.removeNodeFromAllAssociations(Params[0])
-                    ReturnNode.id = Params[0]
-                    Send(ReturnNode, "ALL_ASSOCIATIONS_REMOVED", undefined, send)
+                    await Driver.controller.removeNodeFromAllAssociations(Params[0]);
+                    ReturnNode.id = Params[0];
+                    Send(ReturnNode, 'ALL_ASSOCIATIONS_REMOVED', undefined, send);
                     break;
             }
 
             return;
-
         }
 
-
         function printParams(Mode, CC, Method, Params) {
-
-            let Lines = [];
+            const Lines = [];
             if (CC !== undefined) {
-                Lines.push("[API: " + Mode + "] [CC: " + CC + "] [Method: " + Method + "]")
+                Lines.push(
+                    '[API: ' + Mode + '] [CC: ' + CC + '] [Method: ' + Method + ']'
+                );
+            } else {
+                Lines.push('[API: ' + Mode + '] [Method: ' + Method + ']');
             }
-            else {
-                Lines.push("[API: " + Mode + "] [Method: " + Method + "]")
-            }
-
 
             if (Params.length > 0) {
-
-                Lines.push("└─[params]")
+                Lines.push('└─[params]');
                 let i = 0;
                 Params.forEach((P) => {
-
                     if (typeof P === 'object') {
-                        Lines.push("    " + (i + ": ") + JSON.stringify(P));
+                        Lines.push('    ' + (i + ': ') + JSON.stringify(P));
+                    } else {
+                        Lines.push('    ' + (i + ': ') + P);
                     }
-                    else {
-                        Lines.push("    " + (i + ": ") + P);
-                    }
-                    i++
-                })
+                    i++;
+                });
             }
 
-            return Lines
+            return Lines;
         }
 
         function printForceUpdate(NID, Value) {
-
-            let Lines = [];
-            Lines.push("[Node: " + NID + "]")
+            const Lines = [];
+            Lines.push('[Node: ' + NID + ']');
 
             if (Value !== undefined) {
+                Lines.push('└─[ValueID]');
 
-                Lines.push("└─[ValueID]")
-
-                let OBKeys = Object.keys(Value);
+                const OBKeys = Object.keys(Value);
                 OBKeys.forEach((K) => {
-                    Lines.push("    " + (K + ": ") + Value[K]);
-                })
+                    Lines.push('    ' + (K + ': ') + Value[K]);
+                });
             }
             return Lines;
         }
 
-
         function getNodeInfoForPayload(NodeID, Property) {
-            let Prop = Driver.controller.nodes.get(parseInt(NodeID))[Property];
-            return Prop
+            try {
+                const Prop = Driver.controller.nodes.get(parseInt(NodeID))[Property];
+                return Prop;
+            } catch (err) {
+                return undefined;
+            }
         }
 
         function Send(Node, Subject, Value, send) {
+            const PL = {};
 
-            let PL = { "node": Node.id }
-            if (Node.id !== 'N/A' && Node.id !== 'Controller') {
+            if (Node !== undefined) {
+                PL.node = Node.id;
+            }
 
-                let N = getNodeInfoForPayload(Node.id, 'name');
+            if (Node !== undefined) {
+                const N = getNodeInfoForPayload(Node.id, 'name');
                 if (N !== undefined) {
                     PL.nodeName = N;
                 }
-
-                let L = getNodeInfoForPayload(Node.id, 'location')
+                const L = getNodeInfoForPayload(Node.id, 'location');
                 if (L !== undefined) {
-                    PL.nodeLocation = L
+                    PL.nodeLocation = L;
                 }
             }
-            PL.event = Subject,
-                PL.timestamp = new Date().toJSON()
+            (PL.event = Subject), (PL.timestamp = new Date().toJSON());
             if (Value !== undefined) {
                 PL.object = Value;
             }
 
-            let _Subject = ""
-            if(Node.id !== 'N/A' && Node.id !== 'Controller' ){
-                _Subject = "[Node: "+Node.id+"] ["+Subject+"]"
-            }
-            else{
-                _Subject = "["+Subject+"]"
+            let _Subject = '';
+            if (Node !== undefined) {
+                _Subject = '[Node: ' + Node.id + '] [' + Subject + ']';
+            } else {
+                _Subject = '[' + Subject + ']';
             }
 
-            Log("debug","NDERED","OUT",_Subject,"Forwarding payload...")
+            Log('debug', 'NDERED', 'OUT', _Subject, 'Forwarding payload...');
 
             if (send) {
-                send({ "payload": PL })
-            }
-            else {
-                node.send({ "payload": PL });
+                send({ payload: PL });
+            } else {
+                node.send({ payload: PL });
             }
 
-            let AllowedSubjectsForDNs = [
-                "VALUE_NOTIFICATION",
-                "NOTIFICATION",
-                "VALUE_UPDATED",
-                "SLEEP",
-                "WAKE_UP",
-                "VALUE_ID_LIST",
-                "GET_VALUE_RESPONSE",
-                "GET_VALUE_METADATA_RESPONSE"
-            ]
+            const AllowedSubjectsForDNs = [
+                'VALUE_NOTIFICATION',
+                'NOTIFICATION',
+                'VALUE_UPDATED',
+                'SLEEP',
+                'WAKE_UP',
+                'VALUE_ID_LIST',
+                'GET_VALUE_RESPONSE',
+                'GET_VALUE_METADATA_RESPONSE'
+            ];
 
             if (AllowedSubjectsForDNs.includes(Subject)) {
-                RED.events.emit("zwjs:node:event:all", { "payload": PL })
-                RED.events.emit("zwjs:node:event:" + Node.id, { "payload": PL })
-                
+                RED.events.emit('zwjs:node:event:all', { payload: PL });
+                RED.events.emit('zwjs:node:event:' + Node.id, { payload: PL });
             }
         }
 
         InitDriver();
         StartDriver();
 
-        function InitDriver(){
-
+        function InitDriver() {
             DriverAttempts++;
             try {
-
-                Log("info", "NDERED", undefined, undefined, "Initializing Driver...")
+                Log('info', 'NDERED', undefined, undefined, 'Initializing driver...');
                 Driver = new ZWaveJS.Driver(config.serialPort, DriverOptions);
-    
-                if (config.sendUsageStatistics !== undefined && config.sendUsageStatistics) {
-                    Log("info", "NDERED", undefined, "[TELEMETRY]", "Enabling...")
-                    Driver.enableStatistics({ applicationName: ModulePackage.name, applicationVersion: ModulePackage.version })
-                }
-                else {
-                    Log("info", "NDERED", undefined, "[TELEMETRY]", "Disabling...")
+
+                if (
+                    config.sendUsageStatistics !== undefined &&
+                    config.sendUsageStatistics
+                ) {
+                    Log('info', 'NDERED', undefined, '[TELEMETRY]', 'Enabling...');
+                    Driver.enableStatistics({
+                        applicationName: ModulePackage.name,
+                        applicationVersion: ModulePackage.version
+                    });
+                } else {
+                    Log('info', 'NDERED', undefined, '[TELEMETRY]', 'Disabling...');
                     Driver.disableStatistics();
                 }
-            }
-            catch (e) {
-                Log("error", "NDERED", undefined, "[ERROR] [INIT]", e.message)
+            } catch (e) {
+                Log('error', 'NDERED', undefined, '[ERROR] [INIT]', e.message);
                 node.error(e);
                 return;
             }
 
             WireDriverEvents();
             UI.unregister();
-            UI.register(Driver, Input)
+            UI.register(Driver, Input);
         }
 
-        function WireDriverEvents(){
-
-            Driver.on("error", (e) => {
+        function WireDriverEvents() {
+            Driver.on('error', (e) => {
                 if (e.code === ZWaveErrorCodes.Driver_Failed) {
                     if (DriverAttempts >= MaxDriverAttempts) {
-                        Log("error", "NDERED", undefined, "[ERROR] [DRIVER]", e.message)
+                        Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
                         node.error(e);
-                    }else{
-                        Log("error", "NDERED", undefined, "[ERROR] [DRIVER]", e.message)
-                        Log("debug", "NDERED", undefined, undefined, "Will retry in "+RetryTime+"ms. Attempted: "+DriverAttempts+", Max: "+MaxDriverAttempts)
-                        node.error(new Error("Driver Failed: Will retry in "+RetryTime+"ms. Attempted: "+DriverAttempts+", Max: "+MaxDriverAttempts));
+                    } else {
+                        Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
+                        Log(
+                            'debug',
+                            'NDERED',
+                            undefined,
+                            undefined,
+                            'Will retry in ' +
+                            RetryTime +
+                            'ms. Attempted: ' +
+                            DriverAttempts +
+                            ', Max: ' +
+                            MaxDriverAttempts
+                        );
+                        node.error(
+                            new Error(
+                                'Driver Failed: Will retry in ' +
+                                RetryTime +
+                                'ms. Attempted: ' +
+                                DriverAttempts +
+                                ', Max: ' +
+                                MaxDriverAttempts
+                            )
+                        );
                         InitDriver();
-                        setTimeout(StartDriver,RetryTime)
+                        setTimeout(StartDriver, RetryTime);
                     }
                 } else {
-                    Log("error", "NDERED", undefined, "[ERROR] [DRIVER]", e.message)
+                    Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
                     node.error(e);
                 }
             });
 
-            Driver.on("all nodes ready", () => {
-                node.status({ fill: "green", shape: "dot", text: "All Nodes Ready!" });
-                AllNodesReady = true;
-                UI.status("All Nodes Ready!")
-            })
-    
-            Driver.once("driver ready", () => {
-    
+            Driver.on('all nodes ready', () => {
+                node.status({ fill: 'green', shape: 'dot', text: 'All nodes ready!' });
+                UI.status('All nodes ready!');
+            });
+
+            Driver.once('driver ready', () => {
                 DriverAttempts = 0;
 
-                node.status({ fill: "yellow", shape: "dot", text: "Interviewing Nodes..." });
-                UI.status("Interviewing Nodes...")
-    
-                let ReturnController = { id: "Controller" };
-    
+                node.status({
+                    fill: 'yellow',
+                    shape: 'dot',
+                    text: 'Initializing network...'
+                });
+                UI.status('Initializing network...');
+
                 // Add, Remove
-                Driver.controller.on("node added", (N) => {
-                    clearTimeout(RestoreReadyTimer)
+                Driver.controller.on('node added', (N) => {
+                    //clearTimeout(RestoreReadyTimer); <--- May no longer need to do this.
                     ShareNodeList();
                     WireNodeEvents(N);
-                    Send(N, "NODE_ADDED")
-                    Send(N, "INTERVIEW_STARTED");
-                    node.status({ fill: "yellow", shape: "dot", text: "Node: " + N.id + " Interview Started." });
-                    UI.status("Node: " + N.id + " Interview Started.")
-                })
-    
-                Driver.controller.on("node removed", (N) => {
+                    Send(N, 'NODE_ADDED');
+                    Send(N, 'INTERVIEW_STARTED');
+                    node.status({
+                        fill: 'yellow',
+                        shape: 'dot',
+                        text: 'Node: ' + N.id + ' interview started.'
+                    });
+                    UI.status('Node: ' + N.id + ' interview started.');
+                });
+
+                Driver.controller.on('node removed', (N) => {
                     ShareNodeList();
-                    Send(N, "NODE_REMOVED")
-                })
-    
+                    Send(N, 'NODE_REMOVED');
+                });
+
                 // Stats
-                Driver.controller.on("statistics updated", (S) => {
-                    ControllerStats = S
-                })
-    
+                Driver.controller.on('statistics updated', (S) => {
+                    ControllerStats = S;
+                });
+
                 // Include
-                Driver.controller.on("inclusion started", (Secure) => {
-                    Send(ReturnController, "INCLUSION_STARTED", { isSecureInclude: Secure })
-                    node.status({ fill: "yellow", shape: "dot", text: "Inclusion Started. Secure: " + Secure });
-                    UI.status("Inclusion Started. Secure: " + Secure)
-                })
-    
-                Driver.controller.on("inclusion failed", () => {
-                    Send(ReturnController, "INCLUSION_FAILED")
-                    node.status({ fill: "red", shape: "dot", text: "Inclusion Failed." });
-                    UI.status("Inclusion Failed.")
+                Driver.controller.on('inclusion started', (Secure) => {
+                    Send(undefined, 'INCLUSION_STARTED', { isSecureInclude: Secure });
+                    node.status({
+                        fill: 'yellow',
+                        shape: 'dot',
+                        text: 'Inclusion Started. Secure: ' + Secure
+                    });
+                    UI.status('Inclusion Started. Secure: ' + Secure);
+                });
+
+                Driver.controller.on('inclusion failed', () => {
+                    Send(undefined, 'INCLUSION_FAILED');
+                    node.status({ fill: 'red', shape: 'dot', text: 'Inclusion failed.' });
+                    UI.status('Inclusion failed.');
                     RestoreReadyStatus();
-                })
-    
-                Driver.controller.on("inclusion stopped", () => {
-                    Send(ReturnController, "INCLUSION_STOPPED")
-                    node.status({ fill: "green", shape: "dot", text: "Inclusion Stopped." });
-                    UI.status("Inclusion Stopped.")
-                    RestoreReadyStatus();
-                })
-    
+                });
+
+                Driver.controller.on('inclusion stopped', () => {
+                    Send(undefined, 'INCLUSION_STOPPED');
+                    node.status({
+                        fill: 'green',
+                        shape: 'dot',
+                        text: 'Inclusion Stopped.'
+                    });
+                    UI.status('Inclusion Stopped.');
+                });
+
                 // Exclusion
-                Driver.controller.on("exclusion started", () => {
-                    Send(ReturnController, "EXCLUSION_STARTED")
-                    node.status({ fill: "yellow", shape: "dot", text: "Exclusion Started." });
-                    UI.status("Exclusion Started.")
-                })
-    
-                Driver.controller.on("exclusion failed", () => {
-                    Send(ReturnController, "EXCLUSION_FAILED")
-                    node.status({ fill: "red", shape: "dot", text: "Exclusion Failed." });
-                    UI.status("Exclusion Failed.")
+                Driver.controller.on('exclusion started', () => {
+                    Send(undefined, 'EXCLUSION_STARTED');
+                    node.status({
+                        fill: 'yellow',
+                        shape: 'dot',
+                        text: 'Exclusion Started.'
+                    });
+                    UI.status('Exclusion Started.');
+                });
+
+                Driver.controller.on('exclusion failed', () => {
+                    Send(undefined, 'EXCLUSION_FAILED');
+                    node.status({ fill: 'red', shape: 'dot', text: 'Exclusion failed.' });
+                    UI.status('Exclusion failed.');
                     RestoreReadyStatus();
-                })
-    
-                Driver.controller.on("exclusion stopped", () => {
-                    Send(ReturnController, "EXCLUSION_STOPPED")
-                    node.status({ fill: "green", shape: "dot", text: "Exclusion Stopped." });
-                    UI.status("Exclusion Stopped.")
+                });
+
+                Driver.controller.on('exclusion stopped', () => {
+                    Send(undefined, 'EXCLUSION_STOPPED');
+                    node.status({
+                        fill: 'green',
+                        shape: 'dot',
+                        text: 'Exclusion stopped.'
+                    });
+                    UI.status('Exclusion stopped.');
                     RestoreReadyStatus();
-                })
-    
+                });
+
                 // Network Heal
-                Driver.controller.on("heal network done", () => {
-                    Send(ReturnController, "NETWORK_HEAL_DONE", { Successful: Heal_Done, Failed: Heal_Failed, Skipped: Heal_Skipped })
-                    node.status({ fill: "green", shape: "dot", text: "Network Heal Done." });
-                    UI.status("Network Heal Done.")
+                Driver.controller.on('heal network done', () => {
+                    Send(undefined, 'NETWORK_HEAL_DONE', {
+                        Successful: Heal_Done,
+                        Failed: Heal_Failed,
+                        Skipped: Heal_Skipped
+                    });
+                    node.status({
+                        fill: 'green',
+                        shape: 'dot',
+                        text: 'Network heal done.'
+                    });
+                    UI.status('Network heal done.');
                     RestoreReadyStatus();
-                })
-    
-                let Heal_Pending = []
-                let Heal_Done = []
-                let Heal_Failed = []
-                let Heal_Skipped = []
-    
-                Driver.controller.on("heal network progress", (P) => {
-    
+                });
+
+                const Heal_Pending = [];
+                const Heal_Done = [];
+                const Heal_Failed = [];
+                const Heal_Skipped = [];
+
+                Driver.controller.on('heal network progress', (P) => {
                     Heal_Pending.length = 0;
                     Heal_Done.length = 0;
                     Heal_Failed.length = 0;
                     Heal_Skipped.length = 0;
-    
+
                     P.forEach((V, K) => {
                         switch (V) {
-                            case "pending":
-                                Heal_Pending.push(K)
-                                break
-                            case "done":
-                                Heal_Done.push(K)
-                                break
-                            case "failed":
-                                Heal_Failed.push(K)
-                                break
-                            case "skipped":
-                                Heal_Skipped.push(K)
-                                break
+                            case 'pending':
+                                Heal_Pending.push(K);
+                                break;
+                            case 'done':
+                                Heal_Done.push(K);
+                                break;
+                            case 'failed':
+                                Heal_Failed.push(K);
+                                break;
+                            case 'skipped':
+                                Heal_Skipped.push(K);
+                                break;
                         }
-                    })
-                    node.status({ fill: "yellow", shape: "dot", text: "Healing Network Pending:[" + Heal_Pending.toString() + "], Done:[" + Heal_Done.toString() + "], Skipped:[" + Heal_Skipped.toString() + "], Failed:[" + Heal_Failed.toString() + "]" });
-                    UI.status("Healing Network Pending:[" + Heal_Pending.toString() + "], Done:[" + Heal_Done.toString() + "], Skipped:[" + Heal_Skipped.toString() + "], Failed:[" + Heal_Failed.toString() + "]")
-                })
-    
+                    });
+
+                    const Processed =
+                        Heal_Done.length + Heal_Failed.length + Heal_Skipped.length;
+                    const Remain = Heal_Pending.length;
+
+                    const Completed = (100 * Processed) / (Processed + Remain);
+
+                    node.status({
+                        fill: 'yellow',
+                        shape: 'dot',
+                        text:
+                            'Healing network ' +
+                            Math.round(Completed) +
+                            '%, Skipped:[' +
+                            Heal_Skipped +
+                            '], Failed:[' +
+                            Heal_Failed +
+                            ']'
+                    });
+
+                    UI.status(
+                        'Healing network ' +
+                        Math.round(Completed) +
+                        '%, Skipped:[' +
+                        Heal_Skipped +
+                        '], Failed:[' +
+                        Heal_Failed +
+                        ']'
+                    );
+                });
+
                 ShareNodeList();
-    
+
                 Driver.controller.nodes.forEach((ZWN) => {
                     WireNodeEvents(ZWN);
                 });
-    
             });
         }
 
         function WireNodeEvents(Node) {
-
-            Node.on("ready", (N) => {
-
+            Node.on('ready', (N) => {
                 if (N.isControllerNode()) {
                     return;
                 }
 
+                /*
                 if (NodesReady.indexOf(N.id) < 0) {
                     NodesReady.push(N.id);
-                    node.status({ fill: "green", shape: "dot", text: "Nodes : " + NodesReady.toString() + " Are Ready." });
-                    UI.status("Nodes : " + NodesReady.toString() + " Are Ready.")
+                    node.status({
+                        fill: 'yellow',
+                        shape: 'dot',
+                        text: 'Nodes : ' + NodesReady.toString() + ' are ready.'
+                    });
+                    UI.status('Preparing network...');
                 }
+                */
 
-                Node.on("statistics updated", (S) => {
-                    NodeStats[Node.id] = S
-                })
+                Node.on('statistics updated', (N, S) => {
+                    NodeStats[Node.id] = S;
+                });
 
-                Node.on("firmware update finished", (N, S, T) => {
-                    Send(N, "FIRMWARE_UPDATE_COMPLETE", S);
-                })
+                Node.on('firmware update finished', (N, S) => {
+                    Send(N, 'FIRMWARE_UPDATE_COMPLETE', S);
+                });
 
-                Node.on("value notification", (N, VL) => {
-                    Send(N, "VALUE_NOTIFICATION", VL);
-                })
+                Node.on('value notification', (N, VL) => {
+                    Send(N, 'VALUE_NOTIFICATION', VL);
+                });
 
-                Node.on("notification", (N, CC, ARGS) => {
-                    let OBJ = {
+                Node.on('notification', (N, CC, ARGS) => {
+                    const OBJ = {
                         ccId: CC,
                         args: ARGS
-                    }
-                    Send(N, "NOTIFICATION", OBJ);
-                })
+                    };
+                    Send(N, 'NOTIFICATION', OBJ);
+                });
 
-                Node.on("value added", (N, VL) => {
-                    Send(N, "VALUE_UPDATED", VL);
-                })
+                Node.on('value added', (N, VL) => {
+                    Send(N, 'VALUE_UPDATED', VL);
+                });
 
-                Node.on("value updated", (N, VL) => {
-                    Send(N, "VALUE_UPDATED", VL);
-                })
+                Node.on('value updated', (N, VL) => {
+                    Send(N, 'VALUE_UPDATED', VL);
+                });
 
-                Node.on("wake up", (N) => {
-                    Send(N, "WAKE_UP");
-                })
+                Node.on('wake up', (N) => {
+                    Send(N, 'WAKE_UP');
+                });
 
-                Node.on("sleep", (N) => {
-                    Send(N, "SLEEP");
-                })
-            })
+                Node.on('sleep', (N) => {
+                    Send(N, 'SLEEP');
+                });
+            });
 
-            Node.on("interview started", (N) => {
-                Send(N, "INTERVIEW_STARTED");
-                node.status({ fill: "yellow", shape: "dot", text: "Node: " + N.id + " Interview Started." });
-                UI.status("Node: " + N.id + " Interview Started.")
-            })
+            Node.on('interview started', (N) => {
+                Send(N, 'INTERVIEW_STARTED');
+                node.status({
+                    fill: 'yellow',
+                    shape: 'dot',
+                    text: 'Node: ' + N.id + ' interview started.'
+                });
+                UI.status('Node: ' + N.id + ' interview started.');
+            });
 
-            Node.on("interview failed", (N, Er) => {
-                Send(N, "INTERVIEW_FAILED", Er);
-                node.status({ fill: "red", shape: "dot", text: "Node: " + N.id + " Interview Failed." });
-                UI.status("Node: " + N.id + " Interview Failed.")
+            Node.on('interview failed', (N, Er) => {
+                Send(N, 'INTERVIEW_FAILED', Er);
+                node.status({
+                    fill: 'red',
+                    shape: 'dot',
+                    text: 'Node: ' + N.id + ' interview failed.'
+                });
+                UI.status('Node: ' + N.id + ' interview failed.');
                 RestoreReadyStatus();
-            })
+            });
 
-            Node.on("interview completed", (N) => {
-                Send(N, "INTERVIEW_COMPLETE");
-                node.status({ fill: "green", shape: "dot", text: "Node: " + N.id + " Interview Completed." });
-                UI.status("Node: " + N.id + " Interview Completed.")
+            Node.on('interview completed', (N) => {
+                Send(N, 'INTERVIEW_COMPLETE');
+                node.status({
+                    fill: 'green',
+                    shape: 'dot',
+                    text: 'Node: ' + N.id + ' interview completed.'
+                });
+                UI.status('Node: ' + N.id + ' interview completed.');
                 RestoreReadyStatus();
-            })
+            });
         }
 
         function StartDriver() {
-
-            Log("info", "NDERED", undefined, undefined, "Starting Driver...")
+            Log('info', 'NDERED', undefined, undefined, 'Starting driver...');
             Driver.start()
                 .catch((e) => {
-
                     if (e.code === ZWaveErrorCodes.Driver_Failed) {
                         if (DriverAttempts >= MaxDriverAttempts) {
-                            Log("error", "NDERED", undefined, "[ERROR] [DRIVER]", e.message)
+                            Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
                             node.error(e);
-                        }else{
-                            Log("error", "NDERED", undefined, "[ERROR] [DRIVER]", e.message)
-                            Log("debug", "NDERED", undefined, undefined, "Will retry in "+RetryTime+"ms. Attempted: "+DriverAttempts+", Max: "+MaxDriverAttempts)
-                            node.error(new Error("Driver Failed: Will retry in "+RetryTime+"ms. Attempted: "+DriverAttempts+", Max: "+MaxDriverAttempts));
+                        } else {
+                            Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
+                            Log(
+                                'debug',
+                                'NDERED',
+                                undefined,
+                                undefined,
+                                'Will retry in ' +
+                                RetryTime +
+                                'ms. Attempted: ' +
+                                DriverAttempts +
+                                ', Max: ' +
+                                MaxDriverAttempts
+                            );
+                            node.error(
+                                new Error(
+                                    'Driver failed: Will retry in ' +
+                                    RetryTime +
+                                    'ms. Attempted: ' +
+                                    DriverAttempts +
+                                    ', Max: ' +
+                                    MaxDriverAttempts
+                                )
+                            );
                             InitDriver();
-                            setTimeout(StartDriver,RetryTime)
+                            setTimeout(StartDriver, RetryTime);
                         }
                     } else {
-                        Log("error", "NDERED", undefined, "[ERROR] [DRIVER]", e.message)
+                        Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
                         node.error(e);
                     }
                 })
-            .then(()=>{
-                // now what - just sit and wait.
-            })
+                .then(() => {
+                    // now what - just sit and wait.
+                });
         }
-
     }
 
-    RED.nodes.registerType("zwave-js", Init);
+    RED.nodes.registerType('zwave-js', Init);
 
-    RED.httpAdmin.get("/zwjsgetnodelist", function (req, res) {
-        res.json(NodeList)
-    })
-
-    RED.httpAdmin.get("/zwjsgetversion", function (req, res) {
-        res.json({ "zwjsversion": ZWaveJSPackage.version, "moduleversion": ModulePackage.version })
-    })
-
-    RED.httpAdmin.get("/zwjsgetports", RED.auth.needsPermission('serial.read'), function (req, res) {
-        SP.list()
-            .then(ports => {
-                const a = ports.map(p => p.path);
-                res.json(a);
-            })
-            .catch(err => {
-                RED.log.error('Error listing serial ports', err)
-                res.json([]);
-            })
+    RED.httpAdmin.get('/zwjsgetnodelist', function (req, res) {
+        res.json(NodeList);
     });
-}
+
+    RED.httpAdmin.get('/zwjsgetversion', function (req, res) {
+        res.json({
+            zwjsversion: ZWaveJSPackage.version,
+            moduleversion: ModulePackage.version
+        });
+    });
+
+    RED.httpAdmin.get(
+        '/zwjsgetports',
+        RED.auth.needsPermission('serial.read'),
+        function (req, res) {
+            SP.list()
+                .then((ports) => {
+                    const a = ports.map((p) => p.path);
+                    res.json(a);
+                })
+                .catch((err) => {
+                    RED.log.error('Error listing serial ports', err);
+                    res.json([]);
+                });
+        }
+    );
+};
