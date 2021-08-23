@@ -1304,7 +1304,6 @@ module.exports = function (RED) {
 
                 // Add, Remove
                 Driver.controller.on('node added', (N) => {
-                    //clearTimeout(RestoreReadyTimer); <--- May no longer need to do this.
                     ShareNodeList();
                     WireNodeEvents(N);
                     Send(N, 'NODE_ADDED');
@@ -1471,18 +1470,6 @@ module.exports = function (RED) {
                 if (N.isControllerNode()) {
                     return;
                 }
-
-                /*
-                if (NodesReady.indexOf(N.id) < 0) {
-                    NodesReady.push(N.id);
-                    node.status({
-                        fill: 'yellow',
-                        shape: 'dot',
-                        text: 'Nodes : ' + NodesReady.toString() + ' are ready.'
-                    });
-                    UI.status('Preparing network...');
-                }
-                */
 
                 Node.on('statistics updated', (N, S) => {
                     NodeStats[Node.id] = S;
