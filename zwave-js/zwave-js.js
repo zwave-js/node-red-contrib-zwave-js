@@ -244,20 +244,23 @@ module.exports = function (RED) {
                         ''
                     );
                     const _Array = RemoveBrackets.split(',');
+                    const _Buffer = [];
+                    for (let i = 0; i < _Array.length; i++) {
+                        if(!isNaN(_Array[i].trim())){
+                            _Buffer.push(parseInt(_Array[i].trim()));
+                        }
+                    }
                     Log(
                         'debug',
                         'NDERED',
                         undefined,
                         '[options] [securityKeys.' + ZWAVEJSName + ']',
                         'Provided as array',
-                        '[' + _Array.length + ' bytes]'
+                        '[' + _Buffer.length + ' bytes]'
                     );
-
-                    const _Buffer = [];
-                    for (let i = 0; i < _Array.length; i++) {
-                        _Buffer.push(parseInt(_Array[i].trim()));
+                    if(_Buffer.length === 16){
+                        DriverOptions.securityKeys[ZWAVEJSName] = Buffer.from(_Buffer);
                     }
-                    DriverOptions.securityKeys[ZWAVEJSName] = Buffer.from(_Buffer);
                 } else {
                     Log(
                         'debug',
@@ -267,9 +270,11 @@ module.exports = function (RED) {
                         'Provided as string',
                         '[' + config[Property].length + ' characters]'
                     );
-                    DriverOptions.securityKeys[ZWAVEJSName] = Buffer.from(
-                        config[Property]
-                    );
+                    if(config[Property].length === 16){
+                        DriverOptions.securityKeys[ZWAVEJSName] = Buffer.from(
+                            config[Property]
+                        );
+                    }
                 }
             }
         };
