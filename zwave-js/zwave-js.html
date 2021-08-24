@@ -359,6 +359,7 @@
                 ackTimeout: { value: undefined },
                 controllerTimeout: { value: undefined },
                 sendResponseTimeout: { value: undefined },
+                logLevelPin: { value: "none" },
                 logLevel: { value: "none" },
                 logFile: { value: undefined },
                 logNodeFilter: { value: undefined },
@@ -501,7 +502,17 @@
         <strong>Z-Wave JS Logging</strong>
     </p>
     <div class="form-row">
-        <label  for="node-input-logLevel" style="width:130px"><i class="fa fa-pencil"></i> Log Level</label>
+        <label  for="node-input-logLevelPin" style="width:130px"><i class="fa fa-pencil"></i> Level (Pin 2)</label>
+        <select id="node-input-logLevelPin">
+            <option value="none">Logging Disabled</option>
+            <option value="error">Error</option>
+            <option value="warn">Warn</option>
+            <option value="info">Info</option>
+            <option value="verbose">Verbose</option>
+            <option value="debug">Debug</option>
+            <option value="silly">Silly</option>
+        </select>
+        <label  for="node-input-logLevel" style="width:130px"><i class="fa fa-pencil"></i> Level (File)</label>
         <select id="node-input-logLevel">
             <option value="none">Logging Disabled</option>
             <option value="error">Error</option>

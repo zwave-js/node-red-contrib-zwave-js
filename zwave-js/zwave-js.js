@@ -22,6 +22,7 @@ module.exports = function (RED) {
         let Driver;
         let Logger;
         let FileTransport;
+        let StreamTransport;
 
         const MaxDriverAttempts = 3;
         let DriverAttempts = 0;
@@ -95,10 +96,12 @@ module.exports = function (RED) {
             }, 5000);
         }
 
-        // Create Logger (if enabled)
-        if (config.logLevel !== 'none') {
+        // Create Logger (if needed)
+        if (config.logLevel !== 'none' || config.logLevelPin !== 'none') {
             Logger = Winston.createLogger();
+        }
 
+        if(config.logLevel !== 'none'){
             const FileTransportOptions = {
                 filename: Path.join(RED.settings.userDir, 'zwave-js-log.txt'),
                 format: createDefaultTransportFormat(false, false),
@@ -107,10 +110,21 @@ module.exports = function (RED) {
             if (config.logFile !== undefined && config.logFile.length > 0) {
                 FileTransportOptions.filename = config.logFile;
             }
-
             FileTransport = new Winston.transports.File(FileTransportOptions);
             Logger.add(FileTransport);
         }
+
+        if(config.logLevelPin !== 'none'){
+            const StreamTransportOptions = {
+                format: Winston.format.json(),
+                level: config.logLevelPin
+            };
+    
+            StreamTransport = new Winston.transports.File(StreamTransportOptions);
+            Logger.add(StreamTransport);
+        }
+
+
 
         node.status({
             fill: 'red',
@@ -130,7 +144,6 @@ module.exports = function (RED) {
         DriverOptions.logConfig = {};
         if (Logger !== undefined) {
             DriverOptions.logConfig.enabled = true;
-
             if (
                 config.logNodeFilter !== undefined &&
                 config.logNodeFilter.length > 0
@@ -142,7 +155,13 @@ module.exports = function (RED) {
                 });
                 DriverOptions.logConfig.nodeFilter = NodesArray;
             }
-            DriverOptions.logConfig.transports = [FileTransport];
+            DriverOptions.logConfig.transports = [];
+            if(FileTransport !== undefined){
+                DriverOptions.logConfig.transports.push(FileTransport)
+            }
+            if(StreamTransport !== undefined){
+                DriverOptions.logConfig.transports.push(StreamTransport)
+            }
         } else {
             DriverOptions.logConfig.enabled = false;
         }

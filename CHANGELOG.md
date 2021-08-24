@@ -1,5 +1,16 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 5.1.0
+     **New Features**
+     - Added a new **event-filter** node, allowing node events to be filter with ease.
+     - Added the ability to pipe log messages to a 2nd output pin of the Controller Node
+
+     **Fixes**
+     - Fix phantom parentheses in node location.
+
+     **Changes**
+     - Improvements to S2 paring wizard.
+
    - 5.0.0
 
      **Breaking Changes**
