@@ -116,11 +116,12 @@ module.exports = function (RED) {
 
         if(config.logLevelPin !== 'none'){
             const StreamTransportOptions = {
+                stream: ,
                 format: Winston.format.json(),
                 level: config.logLevelPin
             };
     
-            StreamTransport = new Winston.transports.File(StreamTransportOptions);
+            StreamTransport = new Winston.transports.Stream(StreamTransportOptions);
             Logger.add(StreamTransport);
         }
 
