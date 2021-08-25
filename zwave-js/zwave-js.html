@@ -365,7 +365,8 @@
                 logNodeFilter: { value: undefined },
                 sendUsageStatistics: { value: true },
                 valueCacheDiskThrottle: { value: "normal" },
-                customConfigPath: { value: undefined }
+                customConfigPath: { value: undefined },
+                outputs: { value: 1 },
             },
             inputs: 1,
             outputs: 1,
@@ -374,11 +375,26 @@
                 return this.name;
             },
             onpaletteadd: ZwaveJsUI.init,
-            oneditprepare: SortUI
+            oneditprepare: SortUI,
+            oneditsave: SortIO
         });
 
 
+    function SortIO(){
+        if($("#node-input-logLevelPin").val() !== 'none'){
+            this.outputs = 2
+        }
+        else{
+            this.outputs = 1
+        }
+    }
+
     function SortUI() {
+
+        // 5.0 -> 5.1
+        if(this.logLevelPin === undefined){
+            $("#node-input-logLevelPin").val('none');
+        }
 
         // 3.3 -> 3.4 
         if (this.valueCacheDiskThrottle === undefined) {
@@ -512,6 +528,8 @@
             <option value="debug">Debug</option>
             <option value="silly">Silly</option>
         </select>
+    </div>
+    <div class="form-row">
         <label  for="node-input-logLevel" style="width:130px"><i class="fa fa-pencil"></i> Level (File)</label>
         <select id="node-input-logLevel">
             <option value="none">Logging Disabled</option>
