@@ -1,0 +1,104 @@
+﻿<script type="text/javascript">
+
+    RED.nodes.registerType('event-filter',
+        {
+            category: 'ZWave JS',
+            color: 'rgb(46,145,205)',
+            defaults:
+            {
+                name: { value: "ZWave Event Filter" },
+            },
+            inputs: 1,
+            outputs: 1,
+            icon: "rbe.png",
+            label: function () {
+                return this.name;
+            }
+        });
+
+    
+
+</script>
+
+<script type="text/x-red" data-template-name="event-filter">
+
+  
+   
+    <p>
+        <strong>Basic settings.</strong><br />
+        Note: This node works in conjunction with the main Z-Wave JS Controller node,<br />
+        therefore, ensure it is in any one of your flows, and in a deployed state.
+    </p>
+    <div class="form-row">
+        <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="My ZWave Node">
+    </div>
+    <div class="form-row">
+        <label for="node-input-filteredMode" style="width:130px"><i class="fa fa-pencil"></i> Mode</label>
+        <select id="node-input-filteredMode" onchange="SortFilterChange()">
+            <option value="All">All Nodes</option>
+            <option value="Multiple">Multiple Nodes</option>
+            <option value="Multicast">Multicast</option>
+            <option value="Single">Specific Node</option>
+            <option value="Message">As Specified</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-datamode" style="width:130px"><i class="fa fa-pencil"></i> Data Mode</label>
+        <select id="node-input-datamode">
+            <option value="Send/Receive">Send/Receive</option>
+            <option value="Send">Send</option>
+            <option value="Receive">Receive</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-filteredNodeId" style="width:130px"><i class="fa fa-pencil"></i> Node ID(s)</label>
+        <select id="node-input-filteredNodeId">
+        </select>
+
+    </div>
+    <hr />
+    <table>
+        <tr>
+            <td style="width:70px;vertical-align:top"><strong>All Nodes</strong></td>
+            <td> - Will listen for updates on All Nodes.<br /> - You will need to specify the <strong>node</strong>, in your outgoing payload.</td>
+        </tr>
+        <tr><td colspan="2">&nbsp;</td></tr>
+        <tr>
+            <td style="width:70px;vertical-align:top"><strong>Multiple Nodes</strong></td>
+            <td> - Will listen for updates on the specified Nodes.<br /> - You will need to specify the <strong>node</strong>, in your outgoing payload.</td>
+        </tr>
+        <tr><td colspan="2">&nbsp;</td></tr>
+        <tr>
+            <td style="width:70px;vertical-align:top"><strong>Multicast</strong></td>
+            <td> - Like <strong>Multiple Nodes</strong>, but uses Multicast for outgoing payloads.<br /> - <strong>node</strong> in your outgoing payload, is ignored.<br /> - Limited to <strong>ValueAPI</strong> -> <strong>setValue</strong> and <strong>CCAPI</strong> set type commands only<br /> - Requires support from the device(s)</td>
+        </tr>
+        <tr><td colspan="2">&nbsp;</td></tr>
+        <tr>
+            <td style="width:70px;vertical-align:top"><strong>Specific Node</strong></td>
+            <td> - Will listen for updates on the specified Node.<br /> - <strong>node</strong>, in your outgoing payload, is ignored.</td>
+        </tr>
+        <tr><td colspan="2">&nbsp;</td></tr>
+        <tr>
+            <td style="width:70px;vertical-align:top"><strong>As Specified</strong></td>
+            <td> - Will listen for updates on the Node, that it last addressed a message to.<br /> - You will need to specify the <strong>node</strong>, in your outgoing payload.</td>
+        </tr>
+        <tr><td colspan="2">&nbsp;</td></tr>
+        <tr>
+            <td style="width:70px;vertical-align:top"><strong>Subflow Variable</strong></td>
+            <td> - Like <strong>Specific Node</strong>, but Node ID is taken from a <strong>ZW_NODE_ID</strong> subflow variable.<br /> - <strong>node</strong>, in your outgoing payload, is ignored.</td>
+        </tr>
+    </table>
+    
+   
+   
+   
+    
+   
+</script>
+
+<script type="text/x-red" data-help-name="event-filter">
+    <p>A Z-Wave event filter.</p>
+
+ 
+</script>

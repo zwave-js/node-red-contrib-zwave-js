@@ -35,7 +35,8 @@
   "node-red": {
     "nodes": {
       "zwave-js": "zwave-js/zwave-js.js",
-      "zwave-device": "zwave-js/zwave-device.js"
+      "zwave-device": "zwave-js/zwave-device.js",
+      "event-filter": "zwave-js/event-filter.js"
     }
   },
   "repository": {
