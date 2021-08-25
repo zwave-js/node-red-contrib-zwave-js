@@ -1005,7 +1005,7 @@ const ZwaveJsUI = (function () {
 					.find(`[data-nodeid='${node}'].zwave-js-node-row-location`)
 					.html(`(${object})`);
 				if (node == selectedNode) {
-					$('#zwave-js-selected-node-location').text(object);
+					$('#zwave-js-selected-node-location').text(`(${object})`);
 				}
 				GetNodes();
 				input.hide();
@@ -1013,7 +1013,9 @@ const ZwaveJsUI = (function () {
 			});
 		} else {
 			input.show();
-			input.val($('#zwave-js-selected-node-location').text());
+			let CurrentLocation = $('#zwave-js-selected-node-location').text();
+			CurrentLocation = CurrentLocation.substring(1, CurrentLocation.length-1);
+			input.val(CurrentLocation);
 			Button.html('Go');
 		}
 	}
