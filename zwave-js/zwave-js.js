@@ -10,6 +10,7 @@ module.exports = function (RED) {
     } = require('@zwave-js/core');
     const ZWaveJSPackage = require('zwave-js/package.json');
     const Winston = require('winston');
+    const MemoryStream = require('memorystream');
 
     const UI = require('./ui/server.js');
     UI.init(RED);
@@ -23,6 +24,7 @@ module.exports = function (RED) {
         let Logger;
         let FileTransport;
         let StreamTransport;
+        let MS;
 
         const MaxDriverAttempts = 3;
         let DriverAttempts = 0;
@@ -115,17 +117,19 @@ module.exports = function (RED) {
         }
 
         if(config.logLevelPin !== 'none'){
+
+            MS = new MemoryStream();
+            MS.on('data',(C) => {
+                node.send([undefined,{payload:JSON.parse(C.toString())}])
+            })
             const StreamTransportOptions = {
-                stream: ,
+                stream: MS,
                 format: Winston.format.json(),
                 level: config.logLevelPin
             };
-    
             StreamTransport = new Winston.transports.Stream(StreamTransportOptions);
             Logger.add(StreamTransport);
         }
-
-
 
         node.status({
             fill: 'red',
@@ -357,6 +361,14 @@ module.exports = function (RED) {
             UI.unregister();
             Driver.destroy();
             RED.events.off('zwjs:node:command', processMessageEvent);
+            if(Logger !== undefined){
+                Logger.clear();
+                Logger = undefined
+            }
+            if(MS !== undefined){
+                MS.destroy();
+                MS = undefined;
+            }
             if (done) {
                 done();
             }
