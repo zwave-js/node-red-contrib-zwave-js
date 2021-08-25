@@ -1719,7 +1719,7 @@ const ZwaveJsUI = (function () {
 					minHeight: 75,
 					buttons: {
 						'Add To Filter Set':function(){
-							ShowMe(JSON.stringify(data.valueId))
+							AddValueIDToFilter(data.valueId)
 						},
 						Close: function () {
 							$(this).dialog('destroy');

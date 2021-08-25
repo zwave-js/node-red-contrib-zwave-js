@@ -39,13 +39,12 @@
             $('#sortable').append('<li class="ui-state-default"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>VALUE_UPDATE: properyKey -> Other</li>')
         }
 
-        function ShowMe(message){
+        function AddValueIDToFilter(ValueID){
             if($('#sortable').length > 0){
-                
-                $('#sortable').append(message)
+                $('#sortable').append(ValueID)
             }
             else{
-                alert('No filter-node is currently being modifed.')
+                alert('No filter-node is currently being modified.')
             }
             
         }
