@@ -1,10 +1,4 @@
-﻿<style>
-  #sortable { list-style-type: none; margin: 0; padding: 0; width: 100%; }
-  #sortable li { margin: 0 3px 3px 3px; padding: 0.4em; padding-left: 1.5em; font-size: 1.4em; height: 18px; }
-  #sortable li span { position: absolute; margin-left: -1.3em; }
-</style>
-
-<script type="text/javascript">
+﻿<script type="text/javascript">
 
     RED.nodes.registerType('event-filter',
         {
@@ -27,25 +21,30 @@
         });
 
         function SortUI(){
-            $( "#sortable" ).sortable();
+            $("#filtersets").editableList({
+                header: $('<div>').append('<div>Filter Sets - order defines outputs</div>'),
+                sortable: true,
+                removable: true, 
+                addButton: 'add',
+                addItem:function(container, index, data){
+
+                 
+
+            
+
+                 $(container).html("<strong>Name:</strong> Motion and Air Temp Changes<br /><strong>Events:</strong> 1<br /><strong>ValueIDs:</strong> 2");
+                
+                }
+            });
+
+            $("#filtersets").editableList('addItem',{name:"banana"});
         }
 
         function DoSave(){
-            this.outputs = $('#sortable').children().length;
-        }
-
-        function Add(){
-
-            $('#sortable').append('<li class="ui-state-default"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>VALUE_UPDATE: properyKey -> Other</li>')
+            //this.outputs = $('#sortable').children().length;
         }
 
         function AddValueIDToFilter(ValueID){
-            if($('#sortable').length > 0){
-                $('#sortable').append(ValueID)
-            }
-            else{
-                alert('No filter-node is currently being modified.')
-            }
             
         }
 
@@ -62,17 +61,12 @@
         A filter set can include the event(s) to be filtered, and optionally ValueID(s)
     </p>
 
-    <button onclick="Add()">Add</button>
+  
+<div>
+   <ol id="filtersets" style="min-height:350px;min-width:400px">
+   </ol>
+</div>
 
-    
-
-    <ul id="sortable">
-        <li class="ui-state-default"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>VALUE_UPDATE: properyKey -> Motion</li>
-        <li class="ui-state-default"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>VALUE_UPDATE: properyKey -> Smoke</li>
-        <li class="ui-state-default"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>VALUE_UPDATE: properyKey -> Air Temp</li>
-
-      </ul>
-       
    
     
    
