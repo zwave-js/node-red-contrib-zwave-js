@@ -9,18 +9,31 @@ module.exports = function (RED) {
 
 		async function Input(msg, send, done) {
 
-
 			if(msg.payload !== undefined && msg.payload.event !== undefined){
-				send(msg);
+
+				const Filters = config.filters;
+
+				Filters.forEach((F) =>{
+					if(F.events.length > 0){
+						if(F.events.includes(msg.event)){
+							if(F.valueIds.length > 0){
+								
+
+
+							}
+							else{
+								send(msg);
+								break;
+							}
+						}
+					}
+				})
 			}
-			else{
-				if (done) {
-					done();
-				}
+			
+			if (done) {
+				done();
 			}
 
-			
-			
 		}
 
 		function IsValueIDMatch(ValueID, MSG){
@@ -33,16 +46,21 @@ module.exports = function (RED) {
 			const ValueIDKeys = Object.keys(ValueID)
 			const MSGKeys = Object.keys(Root)
 
+			let Match = true
+
 			ValueIDKeys.forEach((VIDK) =>{
 				if(MSGKeys.includes(VIDK)){
 					if(Root[VIDK] !== ValueID[VIDK]){
-						return false
+						Match = false;
+						break;
 					}
 				}else{
-					return false;
+					Match = false;
+					break;
 				}
 			})
-			return true;
+
+			return Match;
 		}
 
 		node.on('close', (done) => {
