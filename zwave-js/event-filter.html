@@ -7,41 +7,83 @@
             defaults:
             {
                 name: { value: "ZWave Event Filter" },
-                outputs: {value: 3}
+                filters: {value:[]},
+                outputs: {value: 0}
             },
             inputs: 1,
-            outputs: 3,
+            outputs: 0,
             icon: "rbe.png",
             label: function () {
                 return this.name;
             },
-
             oneditprepare: SortUI,
-            oneditsave:DoSave
+            oneditsave:DoSave,
+            outputLabels: function(index) {
+                return this.filters[index].name
+            }
         });
 
         function SortUI(){
+
             $("#filtersets").editableList({
                 header: $('<div>').append('<div>Filter Sets - order defines outputs</div>'),
                 sortable: true,
                 removable: true, 
-                addButton: 'add',
-                addItem:function(container, index, data){
-
-                 
-
-            
-
-                 $(container).html("<strong>Name:</strong> Motion and Air Temp Changes<br /><strong>Events:</strong> 1<br /><strong>ValueIDs:</strong> 2");
-                
-                }
+                addButton: 'Add Filter Set',
+                addItem:AddItem
             });
 
-            $("#filtersets").editableList('addItem',{name:"banana"});
+            this.filters.forEach((Item) => {
+                $("#filtersets").editableList('addItem',Item);
+            });
+
+        }
+        
+        function AddItem(container, index, data){
+            if (Object.keys(data).length === 0) {
+                    data.index = index;
+                    data.name = "Filter Name"
+                    data.valueIds = []
+                    data.events = ["VALUE_UPDATED"]
+                }
+            
+            $(container).data('filter',data)
+            $(container).html('<strong>Name:</strong> <input class="data-name" value="'+data.name+'" type="text"><br /><strong>ValueIDs:</strong> <span class="data-vids">"'+data.valueIds.length+'</span><br /><strong>Events:</strong><br /><input class="data-event-VALUE_UPDATED" type="checkbox"> VALUE_UPDATED<br /><input class="data-event-VALUE_NOTIFICATION" type="checkbox"> VALUE_NOTIFICATION<br /><input class="data-event-NOTIFICATION" type="checkbox"> NOTIFICATION<br /><input class="data-event-GET_VALUE_RESPONSE" type="checkbox"> GET_VALUE_RESPONSE');
+            SortChecbox($(container))
+        }
+
+        function SortChecbox(El){
+
+            const Data = El.data('filter');
+            Data.events.forEach((EV) =>{
+                El.find(".data-event-"+EV).prop('checked',true);
+            })
         }
 
         function DoSave(){
-            //this.outputs = $('#sortable').children().length;
+
+            this.outputs = $("#filtersets").editableList('length')
+            const Items = $("#filtersets").editableList('items')
+            const Events = ["VALUE_UPDATED","VALUE_NOTIFICATION","NOTIFICATION","GET_VALUE_RESPONSE"]
+            this.filters = [];
+
+            for(let i = 0;i<Items.length;i++){
+
+                const El = $(Items[i])
+                const ItemData = Items[i].data('filter');
+
+                ItemData.events = []
+                Events.forEach((EV) =>{
+
+                    if(El.find(".data-event-"+EV).prop('checked')){
+                        ItemData.events.push(EV)
+                    }
+                })
+                
+                ItemData.index = i;
+                ItemData.name = El.find(".data-name").val();
+                this.filters.push(ItemData);
+            }
         }
 
         function AddValueIDToFilter(ValueID){
@@ -63,7 +105,7 @@
 
   
 <div>
-   <ol id="filtersets" style="min-height:350px;min-width:400px">
+   <ol id="filtersets" style="min-height:450px;min-width:400px">
    </ol>
 </div>
 
