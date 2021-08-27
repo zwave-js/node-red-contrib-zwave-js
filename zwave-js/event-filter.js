@@ -12,55 +12,70 @@ module.exports = function (RED) {
 			if(msg.payload !== undefined && msg.payload.event !== undefined){
 
 				const Filters = config.filters;
+				let Matched = false
 
-				Filters.forEach((F) =>{
-					if(F.events.length > 0){
-						if(F.events.includes(msg.event)){
-							if(F.valueIds.length > 0){
-								
-
-
+				for (const Filter of Filters) {
+					if(Filter.events.length > 0){
+						if(Filter.events.includes(msg.payload.event)){
+							if(Filter.valueIds.length > 0){
+								for (const ValueID of Filter.valueIds) {
+									if(IsValueIDMatch(ValueID,msg)){
+										msg.filter = Filter
+										send(msg)
+										Matched = true;
+										break;
+									}
+								}
+								if(Matched){
+									break;
+								}
 							}
 							else{
-								send(msg);
+								msg.filter = Filter
+								send(msg)
 								break;
 							}
 						}
 					}
-				})
+				}  
 			}
-			
+
 			if (done) {
 				done();
 			}
-
 		}
 
 		function IsValueIDMatch(ValueID, MSG){
 
 			let Root = MSG.payload;
-			if(Root.hasOwnProperty("valueId")){
+			if(Root.hasOwnProperty("valueId") && Root.hasOwnProperty("response") ){
 				Root = MSG.payload.valueId;
 			}
 
 			const ValueIDKeys = Object.keys(ValueID)
 			const MSGKeys = Object.keys(Root)
 
+			if(!config.strict){
+				ValueIDKeys = ValueIDKeys.filter((K) => K !== 'endpoint');
+			}
+
 			let Match = true
 
-			ValueIDKeys.forEach((VIDK) =>{
+			for(const VIDK of ValueIDKeys){
 				if(MSGKeys.includes(VIDK)){
 					if(Root[VIDK] !== ValueID[VIDK]){
-						Match = false;
+						Match = false
 						break;
 					}
-				}else{
-					Match = false;
-					break;
 				}
-			})
-
+				else{
+					Match = false
+					break
+				}
+			}
 			return Match;
+
+			
 		}
 
 		node.on('close', (done) => {

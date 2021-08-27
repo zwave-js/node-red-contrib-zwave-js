@@ -7,11 +7,11 @@
             defaults:
             {
                 name: { value: "ZWave Event Filter" },
-                filters: {value:[]},
-                outputs: {value: 0}
+                filters: {value:[{strict:false,index:0,name:"Catch-All",valueIds:[],events:["VALUE_UPDATED","VALUE_NOTIFICATION","NOTIFICATION","GET_VALUE_RESPONSE"]}]},
+                outputs: {value: 1}
             },
             inputs: 1,
-            outputs: 0,
+            outputs: 1,
             icon: "rbe.png",
             label: function () {
                 return this.name;
@@ -23,6 +23,9 @@
             }
         });
 
+        
+                
+
         function SortUI(){
 
             $("#filtersets").editableList({
@@ -32,6 +35,8 @@
                 addButton: 'Add Filter Set',
                 addItem:AddItem
             });
+
+            
 
             this.filters.forEach((Item) => {
                 $("#filtersets").editableList('addItem',Item);
@@ -45,10 +50,39 @@
                     data.name = "Filter Name"
                     data.valueIds = []
                     data.events = ["VALUE_UPDATED"]
+                    data.strict = false
                 }
             
             $(container).data('filter',data)
-            $(container).html('<strong>Name:</strong> <input class="data-name" value="'+data.name+'" type="text"><br /><strong>ValueIDs:</strong> <span class="data-vids">"'+data.valueIds.length+'</span><br /><strong>Events:</strong><br /><input class="data-event-VALUE_UPDATED" type="checkbox"> VALUE_UPDATED<br /><input class="data-event-VALUE_NOTIFICATION" type="checkbox"> VALUE_NOTIFICATION<br /><input class="data-event-NOTIFICATION" type="checkbox"> NOTIFICATION<br /><input class="data-event-GET_VALUE_RESPONSE" type="checkbox"> GET_VALUE_RESPONSE');
+
+            const HTML = `
+            <table style="width:100%">
+                <tr>
+                    <td>Name</td>
+                    <td><input class="data-name" value="${data.name}" type="text"></td>
+                </tr>
+                <tr>
+                    <td>ValueIDs</td>
+                    <td><span class="data-vids">${data.valueIds.length}</span></td>
+                </tr>
+                <tr>
+                    <td>Strict (Match Endpoint)</td>
+                    <td><input class="data-event-Endpoint" type="checkbox"></td>
+                </tr>
+                <tr>
+                    <td>Events</td>
+                    <td>
+                        <input class="data-event-VALUE_UPDATED" type="checkbox"> VALUE_UPDATED<br />
+                        <input class="data-event-VALUE_NOTIFICATION" type="checkbox"> VALUE_NOTIFICATION<br />
+                        <input class="data-event-NOTIFICATION" type="checkbox"> NOTIFICATION<br />
+                        <input class="data-event-GET_VALUE_RESPONSE" type="checkbox"> GET_VALUE_RESPONSE
+                    </td>
+                </tr>
+            
+            `; 
+
+
+            $(container).html(HTML);
             SortChecbox($(container))
         }
 
@@ -58,6 +92,10 @@
             Data.events.forEach((EV) =>{
                 El.find(".data-event-"+EV).prop('checked',true);
             })
+
+            if(Data.strict){
+                El.find(".data-event-Endpoint").prop('checked',true);
+            }
         }
 
         function DoSave(){
@@ -79,9 +117,10 @@
                         ItemData.events.push(EV)
                     }
                 })
-                
+
                 ItemData.index = i;
                 ItemData.name = El.find(".data-name").val();
+                ItemData.strict = El.find(".data-event-Endpoint").prop('checked');
                 this.filters.push(ItemData);
             }
         }
