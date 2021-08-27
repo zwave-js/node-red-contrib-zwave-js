@@ -1720,6 +1720,7 @@ const ZwaveJsUI = (function () {
 					buttons: {
 						'Add To Filter Set':function(){
 							AddValueIDToFilter(data.valueId)
+							$(this).dialog('destroy');
 						},
 						Close: function () {
 							$(this).dialog('destroy');

@@ -9,19 +9,25 @@ module.exports = function (RED) {
 
 		async function Input(msg, send, done) {
 
+			const SendingArray = new Array(config.filters.length);
+
 			if(msg.payload !== undefined && msg.payload.event !== undefined){
 
 				const Filters = config.filters;
 				let Matched = false
 
+				let ArrayIndex = -1;
+
 				for (const Filter of Filters) {
+					ArrayIndex++;
 					if(Filter.events.length > 0){
 						if(Filter.events.includes(msg.payload.event)){
 							if(Filter.valueIds.length > 0){
 								for (const ValueID of Filter.valueIds) {
 									if(IsValueIDMatch(ValueID,msg)){
 										msg.filter = Filter
-										send(msg)
+										SendingArray[ArrayIndex] = msg;
+										send(SendingArray)
 										Matched = true;
 										break;
 									}
@@ -32,7 +38,8 @@ module.exports = function (RED) {
 							}
 							else{
 								msg.filter = Filter
-								send(msg)
+								SendingArray[ArrayIndex] = msg;
+								send(SendingArray)
 								break;
 							}
 						}
@@ -47,12 +54,12 @@ module.exports = function (RED) {
 
 		function IsValueIDMatch(ValueID, MSG){
 
-			let Root = MSG.payload;
+			let Root = MSG.payload.object;
 			if(Root.hasOwnProperty("valueId") && Root.hasOwnProperty("response") ){
-				Root = MSG.payload.valueId;
+				Root = MSG.payload.object.valueId;
 			}
 
-			const ValueIDKeys = Object.keys(ValueID)
+			let ValueIDKeys = Object.keys(ValueID)
 			const MSGKeys = Object.keys(Root)
 
 			if(!config.strict){
