@@ -54,6 +54,7 @@
                 }
             
             $(container).data('filter',data)
+            $(container).click(SetActiveFilter);
 
             const HTML = `
             <table style="width:100%">
@@ -84,6 +85,20 @@
 
             $(container).html(HTML);
             SortChecbox($(container))
+        }
+
+        let ActiveFilter;
+
+        function SetActiveFilter(){
+
+
+            const Items = $("#filtersets").editableList('items');
+            for(let i = 0;i<Items.length;i++){
+                Items[i].css({backgroundColor:'white'});
+            }
+            $(this).css({backgroundColor:'lightgray'});
+
+            ActiveFilter = $(this);
         }
 
         function SortChecbox(El){
@@ -126,6 +141,11 @@
         }
 
         function AddValueIDToFilter(ValueID){
+
+            ActiveFilter.data('filter').valueIds.push(ValueID);
+            const Count = ActiveFilter.data('filter').valueIds.length
+
+            ActiveFilter.find(".data-vids").html(Count);
             
         }
 
