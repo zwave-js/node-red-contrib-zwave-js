@@ -4,47 +4,43 @@ module.exports = function (RED) {
 		RED.nodes.createNode(this, config);
 		const node = this;
 
-
 		node.on('input', Input);
 
 		async function Input(msg, send, done) {
-
 			const SendingArray = new Array(config.filters.length);
 
-			if(msg.payload !== undefined && msg.payload.event !== undefined){
-
+			if (msg.payload !== undefined && msg.payload.event !== undefined) {
 				const Filters = config.filters;
-				let Matched = false
+				let Matched = false;
 
 				let ArrayIndex = -1;
 
 				for (const Filter of Filters) {
 					ArrayIndex++;
-					if(Filter.events.length > 0){
-						if(Filter.events.includes(msg.payload.event)){
-							if(Filter.valueIds.length > 0){
+					if (Filter.events.length > 0) {
+						if (Filter.events.includes(msg.payload.event)) {
+							if (Filter.valueIds.length > 0) {
 								for (const ValueID of Filter.valueIds) {
-									if(IsValueIDMatch(ValueID,msg)){
-										msg.filter = Filter
+									if (IsValueIDMatch(ValueID, msg)) {
+										msg.filter = Filter;
 										SendingArray[ArrayIndex] = msg;
-										send(SendingArray)
+										send(SendingArray);
 										Matched = true;
 										break;
 									}
 								}
-								if(Matched){
+								if (Matched) {
 									break;
 								}
-							}
-							else{
-								msg.filter = Filter
+							} else {
+								msg.filter = Filter;
 								SendingArray[ArrayIndex] = msg;
-								send(SendingArray)
+								send(SendingArray);
 								break;
 							}
 						}
 					}
-				}  
+				}
 			}
 
 			if (done) {
@@ -52,37 +48,33 @@ module.exports = function (RED) {
 			}
 		}
 
-		function IsValueIDMatch(ValueID, MSG){
-
+		function IsValueIDMatch(ValueID, MSG) {
 			let Root = MSG.payload.object;
-			if(Root.hasOwnProperty("valueId") && Root.hasOwnProperty("response") ){
+			if (Root.hasOwnProperty('valueId') && Root.hasOwnProperty('response')) {
 				Root = MSG.payload.object.valueId;
 			}
 
-			let ValueIDKeys = Object.keys(ValueID)
-			const MSGKeys = Object.keys(Root)
+			let ValueIDKeys = Object.keys(ValueID);
+			const MSGKeys = Object.keys(Root);
 
-			if(!config.strict){
+			if (!config.strict) {
 				ValueIDKeys = ValueIDKeys.filter((K) => K !== 'endpoint');
 			}
 
-			let Match = true
+			let Match = true;
 
-			for(const VIDK of ValueIDKeys){
-				if(MSGKeys.includes(VIDK)){
-					if(Root[VIDK] !== ValueID[VIDK]){
-						Match = false
+			for (const VIDK of ValueIDKeys) {
+				if (MSGKeys.includes(VIDK)) {
+					if (Root[VIDK] !== ValueID[VIDK]) {
+						Match = false;
 						break;
 					}
-				}
-				else{
-					Match = false
-					break
+				} else {
+					Match = false;
+					break;
 				}
 			}
 			return Match;
-
-			
 		}
 
 		node.on('close', (done) => {

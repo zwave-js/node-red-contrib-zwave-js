@@ -1,5 +1,7 @@
 ﻿<script type="text/javascript">
 
+    let Changed = false;
+
     RED.nodes.registerType('event-filter',
         {
             category: 'ZWave JS',
@@ -8,7 +10,8 @@
             {
                 name: { value: "ZWave Event Filter" },
                 filters: {value:[{strict:false,index:0,name:"Catch-All",valueIds:[],events:["VALUE_UPDATED","VALUE_NOTIFICATION","NOTIFICATION","GET_VALUE_RESPONSE"]}]},
-                outputs: {value: 1}
+                outputs: {value: 1},
+                changeDate: {value:undefined}
             },
             inputs: 1,
             outputs: 1,
@@ -17,7 +20,10 @@
                 return this.name;
             },
             oneditprepare: SortUI,
-            oneditsave:DoSave,
+            oneditsave: DoSave,
+            oneditcancel: function(){
+                Changed = false;
+            },
             outputLabels: function(index) {
                 return this.filters[index].name
             }
@@ -63,8 +69,8 @@
                     <td><input class="data-name" value="${data.name}" type="text"></td>
                 </tr>
                 <tr>
-                    <td>ValueIDs</td>
-                    <td><span class="data-vids">${data.valueIds.length}</span></td>
+                    <td>ValueIDs <span class="data-vid-count">${data.valueIds.length}</span> </td>
+                    <td><input class="data-valueid-editor" value="" type="text"></td>
                 </tr>
                 <tr>
                     <td>Strict (Match Endpoint)</td>
@@ -82,12 +88,45 @@
             
             `; 
 
-
             $(container).html(HTML);
+
+            const Refresh = $('<button>')
+                .addClass('ui-button')
+                .addClass('ui-corner-all')
+                .addClass('ui-widget')
+                .addClass('rightButton')
+                .html('&#8635;')
+                .click(()=>{
+                    SyncEdits()
+                })
+                .insertAfter($(container).find('.data-valueid-editor'))
+            $(container).find('.data-valueid-editor').typedInput({types: ["json"],default: "json"});
+            $(container).find('.data-valueid-editor').typedInput('value',JSON.stringify(data.valueIds));
+
+            
             SortChecbox($(container))
+
+     
         }
 
+        
         let ActiveFilter;
+
+        function SyncEdits(){
+
+
+            const JSONs = ActiveFilter.find('.data-valueid-editor').typedInput('value');
+            const NewObject = JSON.parse(JSONs);
+
+            ActiveFilter.data('filter').valueIds = NewObject
+            const Count = NewObject.length;
+            ActiveFilter.find(".data-vid-count").html(Count);
+
+            Changed = true;
+
+            
+        }
+
 
         function SetActiveFilter(){
 
@@ -114,6 +153,11 @@
         }
 
         function DoSave(){
+
+            if(Changed){
+                this.changeDate = new Date();
+                Changed = false
+            }
 
             this.outputs = $("#filtersets").editableList('length')
             const Items = $("#filtersets").editableList('items')
@@ -142,10 +186,15 @@
 
         function AddValueIDToFilter(ValueID){
 
-            ActiveFilter.data('filter').valueIds.push(ValueID);
-            const Count = ActiveFilter.data('filter').valueIds.length
+            const VIDs = ActiveFilter.data('filter').valueIds;
 
-            ActiveFilter.find(".data-vids").html(Count);
+            VIDs.push(ValueID);
+            const Count = VIDs.length
+
+            ActiveFilter.find(".data-vid-count").html(Count);
+            ActiveFilter.find('.data-valueid-editor').typedInput('value',JSON.stringify(VIDs));
+
+            Changed = true;
             
         }
 

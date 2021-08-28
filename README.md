@@ -2,7 +2,7 @@
 
 # node-red-contrib-zwave-js
 
-THE ultimate Z-Wave node for node-red based on Z-Wave JS.  
+THE most powerful Z-Wave node for node-red based on Z-Wave JS.  
 If you want a fully featured Z-Wave runtime in your node-red instance, look no further.  
 <br />  
 > ### ...node-red-contrib-zwave-js is _hands down the best zwave to node red option on the planet._  
@@ -22,6 +22,7 @@ If you want a fully featured Z-Wave runtime in your node-red instance, look no f
     - Network Actions (Include, Exclude, Heal etc etc)
   - 2 Different API models, catering for both experienced and inexperienced users.
   - Use one node for your entire network, or a node per Z-Wave device.
+  - An extremely advanced filter node, to route zwave messages around your flow(s).
   - Supports multicast to send commands to mulltiple nodes at the same time.
   - Access to all supported CC's provided by Z-Wave JS.
 
