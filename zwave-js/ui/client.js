@@ -15,7 +15,7 @@ let DriverReady = false;
 const ZwaveJsUI = (function () {
 	function modalAlert(message, title) {
 		const Buts = {
-			Ok: function () { }
+			Ok: function () {}
 		};
 		modalPrompt(message, title, Buts);
 	}
@@ -850,6 +850,8 @@ const ZwaveJsUI = (function () {
 					id: 'IEButton',
 					text: 'Abort',
 					click: function () {
+						ClearIETimer();
+						ClearSecurityCountDown();
 						ControllerCMD('IEAPI', 'stop', undefined, undefined, true);
 						$(this).dialog('destroy');
 					}
@@ -1014,7 +1016,10 @@ const ZwaveJsUI = (function () {
 		} else {
 			input.show();
 			let CurrentLocation = $('#zwave-js-selected-node-location').text();
-			CurrentLocation = CurrentLocation.substring(1, CurrentLocation.length-1);
+			CurrentLocation = CurrentLocation.substring(
+				1,
+				CurrentLocation.length - 1
+			);
 			input.val(CurrentLocation);
 			Button.html('Go');
 		}
@@ -1355,6 +1360,8 @@ const ZwaveJsUI = (function () {
 		switch (data.type) {
 			case 'node-collection-change':
 				if (data.event === 'node added') {
+					ClearIETimer();
+					ClearSecurityCountDown();
 					GetNodes();
 					if (
 						data.inclusionResult.lowSecurity !== undefined &&
@@ -1367,6 +1374,8 @@ const ZwaveJsUI = (function () {
 					$('#IEButton').text('Close');
 				}
 				if (data.event === 'node removed') {
+					ClearIETimer();
+					ClearSecurityCountDown();
 					GetNodes();
 					StepsAPI.setStepIndex(StepList.RemoveDone);
 					$('#IEButton').text('Close');
@@ -1376,15 +1385,21 @@ const ZwaveJsUI = (function () {
 			case 'node-inclusion-step':
 				if (data.event === 'grant security') {
 					ListRequestedClass(data.classes);
+					ClearIETimer();
+					StartSecurityCountDown();
 				}
 				if (data.event === 'verify dsk') {
 					DisplayDSK(data.dsk);
+					ClearIETimer();
+					StartSecurityCountDown();
 				}
 				if (data.event === 'inclusion started') {
 					StepsAPI.setStepIndex(StepList.NIF);
+					StartIECountDown();
 				}
 				if (data.event === 'exclusion started') {
 					StepsAPI.setStepIndex(StepList.Remove);
+					StartIECountDown();
 				}
 				break;
 
@@ -1401,6 +1416,45 @@ const ZwaveJsUI = (function () {
 				}
 				break;
 		}
+	}
+
+	let Timer;
+	let IETime;
+	let SecurityTime;
+	function ClearIETimer() {
+		if (Timer !== undefined) {
+			clearInterval(Timer);
+			Timer = undefined;
+		}
+	}
+	function StartIECountDown() {
+		ClearIETimer();
+		IETime = 30;
+		Timer = setInterval(() => {
+			IETime--;
+			$('.countdown').html(IETime + ' seconds remaining...');
+			if (IETime <= 0) {
+				ClearIETimer();
+				$('#IEButton').click();
+			}
+		}, 1000);
+	}
+	function ClearSecurityCountDown() {
+		if (Timer !== undefined) {
+			clearInterval(Timer);
+			Timer = undefined;
+		}
+	}
+	function StartSecurityCountDown() {
+		ClearSecurityCountDown();
+		SecurityTime = 240;
+		Timer = setInterval(() => {
+			SecurityTime--;
+			$('.countdown').html(SecurityTime + ' seconds remaining...');
+			if (SecurityTime <= 0) {
+				ClearSecurityCountDown();
+			}
+		}, 1000);
 	}
 
 	function renderNode(node) {
@@ -1692,12 +1746,12 @@ const ZwaveJsUI = (function () {
 			valueId.propertyKeyName ??
 			valueId.propertyName ??
 			valueId.property +
-			(valueId.propertyKey !== undefined
-				? `[0x${valueId.propertyKey
-					.toString(16)
-					.toUpperCase()
-					.padStart(2, '0')}]`
-				: '');
+				(valueId.propertyKey !== undefined
+					? `[0x${valueId.propertyKey
+							.toString(16)
+							.toUpperCase()
+							.padStart(2, '0')}]`
+					: '');
 		$('<span>')
 			.addClass('zwave-js-node-property-name')
 			.text(label)
@@ -1718,8 +1772,8 @@ const ZwaveJsUI = (function () {
 					title: 'Information',
 					minHeight: 75,
 					buttons: {
-						'Add To Filter Set':function(){
-							AddValueIDToFilter(data.valueId)
+						'Add To Filter Set': function () {
+							AddValueIDToFilter(data.valueId);
 							$(this).dialog('destroy');
 						},
 						Close: function () {
