@@ -15,7 +15,7 @@ let DriverReady = false;
 const ZwaveJsUI = (function () {
 	function modalAlert(message, title) {
 		const Buts = {
-			Ok: function () { }
+			Ok: function () {}
 		};
 		modalPrompt(message, title, Buts);
 	}
@@ -1752,12 +1752,12 @@ const ZwaveJsUI = (function () {
 			valueId.propertyKeyName ??
 			valueId.propertyName ??
 			valueId.property +
-			(valueId.propertyKey !== undefined
-				? `[0x${valueId.propertyKey
-					.toString(16)
-					.toUpperCase()
-					.padStart(2, '0')}]`
-				: '');
+				(valueId.propertyKey !== undefined
+					? `[0x${valueId.propertyKey
+							.toString(16)
+							.toUpperCase()
+							.padStart(2, '0')}]`
+					: '');
 		$('<span>')
 			.addClass('zwave-js-node-property-name')
 			.text(label)
