@@ -358,9 +358,14 @@ module.exports = function (RED) {
 			RED.events.off('zwjs:node:command', processMessageEvent);
 			if (Logger !== undefined) {
 				Logger.clear();
+				Logger = undefined;
 			}
 			if (Pin2Transport !== undefined) {
 				Pin2Transport.destroy();
+				Pin2Transport = undefined;
+			}
+			if (FileTransport !== undefined) {
+				FileTransport = undefined;
 			}
 			if (done) {
 				done();
