@@ -447,7 +447,7 @@ module.exports = function (RED) {
 					const Label = KeyRequirementsLable[strategy];
 					throw new Error(
 						'The chosen inclusion strategy require the following keys to be present: ' +
-							Label
+						Label
 					);
 				}
 			});
@@ -667,7 +667,7 @@ module.exports = function (RED) {
 					NodeCheck(Params[0], true);
 					const Stage =
 						ZWaveJS.InterviewStage[
-							Driver.controller.nodes.get(Params[0]).interviewStage
+						Driver.controller.nodes.get(Params[0]).interviewStage
 						];
 					if (Stage !== 'Complete') {
 						const ErrorMSG =
@@ -1288,20 +1288,20 @@ module.exports = function (RED) {
 							undefined,
 							undefined,
 							'Will retry in ' +
+							RetryTime +
+							'ms. Attempted: ' +
+							DriverAttempts +
+							', Max: ' +
+							MaxDriverAttempts
+						);
+						node.error(
+							new Error(
+								'Driver Failed: Will retry in ' +
 								RetryTime +
 								'ms. Attempted: ' +
 								DriverAttempts +
 								', Max: ' +
 								MaxDriverAttempts
-						);
-						node.error(
-							new Error(
-								'Driver Failed: Will retry in ' +
-									RetryTime +
-									'ms. Attempted: ' +
-									DriverAttempts +
-									', Max: ' +
-									MaxDriverAttempts
 							)
 						);
 						InitDriver();
@@ -1474,12 +1474,12 @@ module.exports = function (RED) {
 
 					UI.status(
 						'Healing network ' +
-							Math.round(Completed) +
-							'%, Skipped:[' +
-							Heal_Skipped +
-							'], Failed:[' +
-							Heal_Failed +
-							']'
+						Math.round(Completed) +
+						'%, Skipped:[' +
+						Heal_Skipped +
+						'], Failed:[' +
+						Heal_Failed +
+						']'
 					);
 				});
 
@@ -1583,20 +1583,20 @@ module.exports = function (RED) {
 								undefined,
 								undefined,
 								'Will retry in ' +
+								RetryTime +
+								'ms. Attempted: ' +
+								DriverAttempts +
+								', Max: ' +
+								MaxDriverAttempts
+							);
+							node.error(
+								new Error(
+									'Driver failed: Will retry in ' +
 									RetryTime +
 									'ms. Attempted: ' +
 									DriverAttempts +
 									', Max: ' +
 									MaxDriverAttempts
-							);
-							node.error(
-								new Error(
-									'Driver failed: Will retry in ' +
-										RetryTime +
-										'ms. Attempted: ' +
-										DriverAttempts +
-										', Max: ' +
-										MaxDriverAttempts
 								)
 							);
 							InitDriver();

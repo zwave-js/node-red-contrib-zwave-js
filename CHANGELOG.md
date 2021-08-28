@@ -10,7 +10,7 @@
      - Fix phantom parentheses in node location.
 
      **Changes**
-     - Improvements to S2 paring wizard.
+     - Improvements to the device paring wizard.
      - Bump Zwave JS to 8.2.1
 
    - 5.0.0
