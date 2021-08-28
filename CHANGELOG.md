@@ -3,7 +3,7 @@
   - 5.1.0  
   
      **New Features**
-     - Added a new **event-filter** node, allowing node events to be filter with ease.
+     - Added an extremely advanced **event-filter** node, allowing node events to be filtered with ease.
      - Added the ability to pipe log messages to a 2nd output pin of the Controller Node
 
      **Fixes**
@@ -11,6 +11,7 @@
 
      **Changes**
      - Improvements to S2 paring wizard.
+     - Bump Zwave JS to 8.2.1
 
    - 5.0.0
 
