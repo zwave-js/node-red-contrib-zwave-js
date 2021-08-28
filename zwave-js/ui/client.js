@@ -683,7 +683,8 @@ const ZwaveJsUI = (function () {
 		AddDone: 5,
 		AddDoneInsecure: 6,
 		RemoveDone: 7,
-		ReplaceSecurityMode: 8
+		ReplaceSecurityMode: 8,
+		Aborted: 9
 	};
 	const Security2Class = {
 		0: {
@@ -1400,6 +1401,11 @@ const ZwaveJsUI = (function () {
 				if (data.event === 'exclusion started') {
 					StepsAPI.setStepIndex(StepList.Remove);
 					StartIECountDown();
+				}
+				if (data.event === 'aborted') {
+					StepsAPI.setStepIndex(StepList.Aborted);
+					ClearIETimer();
+					ClearSecurityCountDown();
 				}
 				break;
 
