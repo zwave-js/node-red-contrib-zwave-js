@@ -21,7 +21,7 @@ module.exports = function (RED) {
 						if (Filter.events.includes(msg.payload.event)) {
 							if (Filter.valueIds.length > 0) {
 								for (const ValueID of Filter.valueIds) {
-									if (IsValueIDMatch(ValueID, msg)) {
+									if (IsValueIDMatch(ValueID, msg, msg.payload.event === 'GET_VALUE_RESPONSE')) {
 										msg.filter = Filter;
 										SendingArray[ArrayIndex] = msg;
 										send(SendingArray);
@@ -48,12 +48,12 @@ module.exports = function (RED) {
 			}
 		}
 
-		function IsValueIDMatch(ValueID, MSG) {
+		function IsValueIDMatch(ValueID, MSG, Response) {
 			let Root = MSG.payload.object;
-			if (Root.hasOwnProperty('valueId') && Root.hasOwnProperty('response')) {
+			if(Response){
 				Root = MSG.payload.object.valueId;
 			}
-
+			
 			let ValueIDKeys = Object.keys(ValueID);
 			const MSGKeys = Object.keys(Root);
 
