@@ -1,6 +1,7 @@
 ﻿<script type="text/javascript">
 
     let Changed = false;
+    let ActiveFilter = undefined;
 
     RED.nodes.registerType('event-filter',
         {
@@ -30,11 +31,7 @@
             }
         });
 
-        
-                
-
         function SortUI(){
-
             $("#filtersets").editableList({
                 header: $('<div>').append('<div>Filter Sets - order defines outputs</div>'),
                 sortable: true,
@@ -42,9 +39,6 @@
                 addButton: 'Add Filter Set',
                 addItem:AddItem
             });
-
-            
-
             this.filters.forEach((Item) => {
                 $("#filtersets").editableList('addItem',Item);
             });
@@ -59,7 +53,6 @@
                     data.events = ["VALUE_UPDATED"]
                     data.strict = false
                 }
-            
             $(container).data('filter',data)
             $(container).click(SetActiveFilter);
 
@@ -90,7 +83,6 @@
             `; 
 
             $(container).html(HTML);
-
             const Refresh = $('<button>')
                 .addClass('ui-button')
                 .addClass('ui-corner-all')
@@ -103,19 +95,13 @@
                 .insertAfter($(container).find('.data-valueid-editor'))
             $(container).find('.data-valueid-editor').typedInput({types: ["json"],default: "json"});
             $(container).find('.data-valueid-editor').typedInput('value',JSON.stringify(data.valueIds));
-
-            
             SortChecbox($(container))
-
-     
         }
 
         
-        let ActiveFilter;
+        
 
         function SyncEdits(){
-
-
             const JSONs = ActiveFilter.find('.data-valueid-editor').typedInput('value');
             const NewObject = JSON.parse(JSONs);
 
@@ -124,42 +110,33 @@
             ActiveFilter.find(".data-vid-count").html(Count);
 
             Changed = true;
-
-            
         }
 
 
         function SetActiveFilter(){
-
-
             const Items = $("#filtersets").editableList('items');
             for(let i = 0;i<Items.length;i++){
                 Items[i].css({backgroundColor:'white'});
             }
             $(this).css({backgroundColor:'lightgray'});
-
             ActiveFilter = $(this);
         }
 
         function SortChecbox(El){
-
             const Data = El.data('filter');
             Data.events.forEach((EV) =>{
                 El.find(".data-event-"+EV).prop('checked',true);
             })
-
             if(Data.strict){
                 El.find(".data-event-Endpoint").prop('checked',true);
             }
         }
 
         function DoSave(){
-
             if(Changed){
                 this.changeDate = new Date();
                 Changed = false
             }
-
             this.outputs = $("#filtersets").editableList('length')
             const Items = $("#filtersets").editableList('items')
             const Events = ["VALUE_UPDATED","VALUE_NOTIFICATION","NOTIFICATION","GET_VALUE_RESPONSE"]
