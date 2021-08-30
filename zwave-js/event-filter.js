@@ -24,6 +24,11 @@ module.exports = function (RED) {
 									if (IsValueIDMatch(ValueID, msg, msg.payload.event === 'GET_VALUE_RESPONSE')) {
 										msg.filter = Filter;
 										SendingArray[ArrayIndex] = msg;
+										node.status({
+											fill: 'green',
+											shape: 'dot',
+											text: 'Last match: '+Filter.name
+										});
 										send(SendingArray);
 										Matched = true;
 										break;
@@ -35,13 +40,36 @@ module.exports = function (RED) {
 							} else {
 								msg.filter = Filter;
 								SendingArray[ArrayIndex] = msg;
+								node.status({
+									fill: 'green',
+									shape: 'dot',
+									text: 'Last match: '+Filter.name
+								});
+								Matched = true;
 								send(SendingArray);
 								break;
 							}
 						}
 					}
 				}
+
+				if(!Matched){
+					node.status({
+						fill: 'yellow',
+						shape: 'dot',
+						text: 'No match'
+					});
+				}
 			}
+			else{
+				node.status({
+					fill: 'red',
+					shape: 'dot',
+					text: 'Not a ZWave message'
+				});
+			}
+
+		
 
 			if (done) {
 				done();

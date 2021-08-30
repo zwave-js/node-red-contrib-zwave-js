@@ -23,6 +23,7 @@
             oneditsave: DoSave,
             oneditcancel: function(){
                 Changed = false;
+                ActiveFilter = undefined;
             },
             outputLabels: function(index) {
                 return this.filters[index].name
@@ -182,19 +183,28 @@
                 ItemData.strict = El.find(".data-event-Endpoint").prop('checked');
                 this.filters.push(ItemData);
             }
+
+            ActiveFilter = undefined;
         }
 
         function AddValueIDToFilter(ValueID){
 
-            const VIDs = ActiveFilter.data('filter').valueIds;
+            if(ActiveFilter !== undefined){
+                const VIDs = ActiveFilter.data('filter').valueIds;
 
-            VIDs.push(ValueID);
-            const Count = VIDs.length
+                VIDs.push(ValueID);
+                const Count = VIDs.length
 
-            ActiveFilter.find(".data-vid-count").html(Count);
-            ActiveFilter.find('.data-valueid-editor').typedInput('value',JSON.stringify(VIDs));
+                ActiveFilter.find(".data-vid-count").html(Count);
+                ActiveFilter.find('.data-valueid-editor').typedInput('value',JSON.stringify(VIDs));
 
-            Changed = true;
+                Changed = true;
+                return true;
+            }else{
+                return false;
+            }
+
+           
             
         }
 
