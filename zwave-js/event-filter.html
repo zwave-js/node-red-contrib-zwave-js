@@ -170,20 +170,15 @@
     }
 
     function SetActiveFilter() {
-        const Items = $("#filtersets").editableList('items');
-        for (let i = 0; i < Items.length; i++) {
 
-          //  Items[i].css({
-          //      backgroundColor: 'white'
-          //  });
-            Items[i].parent().animate({height: "45px"}, 200)
+        if(ActiveFilter === undefined || ActiveFilter.data('data').id !== $(this).data('data').id){
+            const Items = $("#filtersets").editableList('items');
+            for (let i = 0; i < Items.length; i++) {
+                Items[i].parent().animate({height: "45px"}, 200)
+            }
+            ActiveFilter = $(this);
+            $(this).parent().animate({height: "200px"}, 200)
         }
-       // $(this).css({
-        //    backgroundColor: 'lightgray'
-       // });
-        ActiveFilter = $(this);
-
-        $(this).parent().animate({height: "200px"}, 200)
     }
 
     function SortChecbox(El) {
