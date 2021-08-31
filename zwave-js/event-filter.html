@@ -11,11 +11,11 @@
             {
                 name: { value: "ZWave Event Filter" },
                 filters: {value:[]},
-                outputs: {value: 1},
+                outputs: {value: 0},
                 changeDate: {value:undefined}
             },
             inputs: 1,
-            outputs: 1,
+            outputs: 0,
             icon: "rbe.png",
             label: function () {
                 return this.name;
@@ -31,9 +31,20 @@
             }
         });
 
+        function compare( a, b ) {
+                if (a.index < b.index) {
+                    return -1;
+                }
+                if (a.index > b.index) {
+                    return 1;
+                }
+                return 0;
+        }
+
         function SortUI(){
 
             $("#node-input-outputs").val("{}");
+            const OPs = JSON.parse($("#node-input-outputs").val())
 
             $("#filtersets").editableList({
                 header: $('<div>').append('<div>Filter Sets - order defines outputs</div>'),
@@ -41,15 +52,14 @@
                 removable: true, 
                 addButton: 'Add Filter Set',
                 addItem:AddItem,
-                sortItems:SortItems
+                sortItems:SortItems,
+                removeItem:RemoveItem
             });
 
-            const OPs = JSON.parse($("#node-input-outputs").val())
             let I = 0;
-            this.filters.forEach((Item) => {
+            this.filters.sort(compare).forEach((Item) => {
                 Item._id = I;
                 $("#filtersets").editableList('addItem',Item);
-
                 OPs[Item._id] = I
                 I++;
             });
@@ -66,6 +76,20 @@
             }
             $("#node-input-outputs").val(JSON.stringify(OPs))
 
+        }
+
+        function RemoveItem(Item){
+
+            const OPs = JSON.parse($("#node-input-outputs").val()||"{}")
+            if(item.hasOwnProperty("_id")){
+                OPs[Item._id] = -1
+            }
+            else{
+                delete OPs[Item.id]
+            }
+            
+            
+            $("#node-input-outputs").val(JSON.stringify(OPs))
         }
         
         function AddItem(container, index, data){
@@ -169,8 +193,7 @@
                 this.changeDate = new Date();
                 Changed = false
             }
-            //this.outputs = $("#filtersets").editableList('length')
-            const Items = $("#filtersets").editableList('items')
+            const Items = $("#filtersets").editableList('items').sort(compare)
             const Events = ["VALUE_UPDATED","VALUE_NOTIFICATION","NOTIFICATION","GET_VALUE_RESPONSE"]
             this.filters = [];
 
@@ -187,7 +210,7 @@
                     }
                 })
 
-                delete ItemData["_i"];
+                delete ItemData._id
                 ItemData.name = El.find(".data-name").val();
                 ItemData.strict = El.find(".data-event-Endpoint").prop('checked');
                 this.filters.push(ItemData);

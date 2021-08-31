@@ -6,6 +6,16 @@ module.exports = function (RED) {
 
 		node.on('input', Input);
 
+		function compare( a, b ) {
+			if (a.index < b.index) {
+				return -1;
+			}
+			if (a.index > b.index) {
+				return 1;
+			}
+			return 0;
+		}
+
 		async function Input(msg, send, done) {
 			const SendingArray = new Array(config.filters.length);
 
@@ -15,7 +25,7 @@ module.exports = function (RED) {
 
 				let ArrayIndex = -1;
 
-				for (const Filter of Filters) {
+				for (const Filter of Filters.sort(compare)) {
 					ArrayIndex++;
 					if (Filter.events.length > 0) {
 						if (Filter.events.includes(msg.payload.event)) {
