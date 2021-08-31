@@ -10,7 +10,7 @@
             defaults:
             {
                 name: { value: "ZWave Event Filter" },
-                filters: {value:[{strict:false,index:0,name:"Catch-All",valueIds:[],events:["VALUE_UPDATED","VALUE_NOTIFICATION","NOTIFICATION","GET_VALUE_RESPONSE"]}]},
+                filters: {value:[]},
                 outputs: {value: 1},
                 changeDate: {value:undefined}
             },
@@ -32,29 +32,57 @@
         });
 
         function SortUI(){
+
+            $("#node-input-outputs").val("{}");
+
             $("#filtersets").editableList({
                 header: $('<div>').append('<div>Filter Sets - order defines outputs</div>'),
                 sortable: true,
                 removable: true, 
                 addButton: 'Add Filter Set',
-                addItem:AddItem
+                addItem:AddItem,
+                sortItems:SortItems
             });
+
+            const OPs = JSON.parse($("#node-input-outputs").val())
             this.filters.forEach((Item) => {
                 $("#filtersets").editableList('addItem',Item);
+                OPs[Item.id] = Item.index;
             });
+            $("#node-input-outputs").val(JSON.stringify(OPs))
+
+        }
+
+        function SortItems(Items){
+
+            const OPs = JSON.parse($("#node-input-outputs").val()||"{}")
+            for(let i = 0;i<Items.length;i++){
+                Items[i].data('data').index = i;
+                OPs[Items[i].data('data').id] = i;
+            }
+            $("#node-input-outputs").val(JSON.stringify(OPs))
 
         }
         
         function AddItem(container, index, data){
+            
+
             if (Object.keys(data).length === 0) {
-                    data.index = index;
-                    data.name = "Filter Name"
-                    data.valueIds = []
-                    data.events = ["VALUE_UPDATED"]
-                    data.strict = false
-                }
-            $(container).data('filter',data)
+                data.index = index;
+                data.name = "Filter Name"
+                data.valueIds = []
+                data.events = ["VALUE_UPDATED"]
+                data.strict = false
+                data.id = Math.floor((0x99999 - 0x10000) * Math.random()).toString()
+
+                const OPs = JSON.parse($("#node-input-outputs").val()||"{}")
+                OPs[data.id] = index;
+                $("#node-input-outputs").val(JSON.stringify(OPs))
+            }
+            $(container).data('data',data)
             $(container).click(SetActiveFilter);
+
+            
 
             const HTML = `
             <table style="width:100%">
@@ -105,7 +133,7 @@
             const JSONs = ActiveFilter.find('.data-valueid-editor').typedInput('value');
             const NewObject = JSON.parse(JSONs);
 
-            ActiveFilter.data('filter').valueIds = NewObject
+            ActiveFilter.data('data').valueIds = NewObject
             const Count = NewObject.length;
             ActiveFilter.find(".data-vid-count").html(Count);
 
@@ -123,7 +151,7 @@
         }
 
         function SortChecbox(El){
-            const Data = El.data('filter');
+            const Data = El.data('data');
             Data.events.forEach((EV) =>{
                 El.find(".data-event-"+EV).prop('checked',true);
             })
@@ -137,7 +165,7 @@
                 this.changeDate = new Date();
                 Changed = false
             }
-            this.outputs = $("#filtersets").editableList('length')
+            //this.outputs = $("#filtersets").editableList('length')
             const Items = $("#filtersets").editableList('items')
             const Events = ["VALUE_UPDATED","VALUE_NOTIFICATION","NOTIFICATION","GET_VALUE_RESPONSE"]
             this.filters = [];
@@ -145,7 +173,7 @@
             for(let i = 0;i<Items.length;i++){
 
                 const El = $(Items[i])
-                const ItemData = Items[i].data('filter');
+                const ItemData = Items[i].data('data');
 
                 ItemData.events = []
                 Events.forEach((EV) =>{
@@ -155,7 +183,7 @@
                     }
                 })
 
-                ItemData.index = i;
+                //ItemData.index = i;
                 ItemData.name = El.find(".data-name").val();
                 ItemData.strict = El.find(".data-event-Endpoint").prop('checked');
                 this.filters.push(ItemData);
@@ -167,7 +195,7 @@
         function AddValueIDToFilter(ValueID){
 
             if(ActiveFilter !== undefined){
-                const VIDs = ActiveFilter.data('filter').valueIds;
+                const VIDs = ActiveFilter.data('data').valueIds;
 
                 VIDs.push(ValueID);
                 const Count = VIDs.length
@@ -191,7 +219,7 @@
 
 <script type="text/x-red" data-template-name="event-filter">
 
-  
+  <input type="hidden" id="node-input-outputs">
    
 
     <div class="form-row">
