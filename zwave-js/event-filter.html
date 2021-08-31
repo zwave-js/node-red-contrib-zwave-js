@@ -45,9 +45,13 @@
             });
 
             const OPs = JSON.parse($("#node-input-outputs").val())
+            let I = 0;
             this.filters.forEach((Item) => {
+                Item._id = I;
                 $("#filtersets").editableList('addItem',Item);
-                OPs[Item.id] = Item.index;
+
+                OPs[Item._id] = I
+                I++;
             });
             $("#node-input-outputs").val(JSON.stringify(OPs))
 
@@ -58,7 +62,7 @@
             const OPs = JSON.parse($("#node-input-outputs").val()||"{}")
             for(let i = 0;i<Items.length;i++){
                 Items[i].data('data').index = i;
-                OPs[Items[i].data('data').id] = i;
+                OPs[Items[i].data('data')._id ?? Items[i].data('data').id] = i;
             }
             $("#node-input-outputs").val(JSON.stringify(OPs))
 
@@ -183,7 +187,7 @@
                     }
                 })
 
-                //ItemData.index = i;
+                delete ItemData["_i"];
                 ItemData.name = El.find(".data-name").val();
                 ItemData.strict = El.find(".data-event-Endpoint").prop('checked');
                 this.filters.push(ItemData);
