@@ -6,7 +6,7 @@ module.exports = function (RED) {
 
 		node.on('input', Input);
 
-		function compare( a, b ) {
+		function compare(a, b) {
 			if (a.index < b.index) {
 				return -1;
 			}
@@ -31,13 +31,19 @@ module.exports = function (RED) {
 						if (Filter.events.includes(msg.payload.event)) {
 							if (Filter.valueIds.length > 0) {
 								for (const ValueID of Filter.valueIds) {
-									if (IsValueIDMatch(ValueID, msg, msg.payload.event === 'GET_VALUE_RESPONSE')) {
+									if (
+										IsValueIDMatch(
+											ValueID,
+											msg,
+											msg.payload.event === 'GET_VALUE_RESPONSE'
+										)
+									) {
 										msg.filter = Filter;
 										SendingArray[ArrayIndex] = msg;
 										node.status({
 											fill: 'green',
 											shape: 'dot',
-											text: 'Last match: '+Filter.name
+											text: 'Last match: ' + Filter.name
 										});
 										send(SendingArray);
 										Matched = true;
@@ -53,7 +59,7 @@ module.exports = function (RED) {
 								node.status({
 									fill: 'green',
 									shape: 'dot',
-									text: 'Last match: '+Filter.name
+									text: 'Last match: ' + Filter.name
 								});
 								Matched = true;
 								send(SendingArray);
@@ -63,23 +69,20 @@ module.exports = function (RED) {
 					}
 				}
 
-				if(!Matched){
+				if (!Matched) {
 					node.status({
 						fill: 'yellow',
 						shape: 'dot',
 						text: 'No match'
 					});
 				}
-			}
-			else{
+			} else {
 				node.status({
 					fill: 'red',
 					shape: 'dot',
 					text: 'Not a ZWave message'
 				});
 			}
-
-		
 
 			if (done) {
 				done();
@@ -88,10 +91,10 @@ module.exports = function (RED) {
 
 		function IsValueIDMatch(ValueID, MSG, Response) {
 			let Root = MSG.payload.object;
-			if(Response){
+			if (Response) {
 				Root = MSG.payload.object.valueId;
 			}
-			
+
 			let ValueIDKeys = Object.keys(ValueID);
 			const MSGKeys = Object.keys(Root);
 

@@ -1779,12 +1779,14 @@ const ZwaveJsUI = (function () {
 					minHeight: 75,
 					buttons: {
 						'Add To Filter Set': function () {
-							if(AddValueIDToFilter(data.valueId)){
+							if (AddValueIDToFilter(data.valueId)) {
 								$(this).dialog('destroy');
-							}else{
-								modalAlert('Please activate the target filter set.','No Active Filter Set')
+							} else {
+								modalAlert(
+									'Please activate the target filter set.',
+									'No Active Filter Set'
+								);
 							}
-							
 						},
 						Close: function () {
 							$(this).dialog('destroy');

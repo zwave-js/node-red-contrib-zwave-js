@@ -121,7 +121,7 @@ module.exports = function (RED) {
 			};
 			Pin2Transport = new Pin2LogTransport(Options);
 			Pin2Transport.getStream().on('data', (chunk) => {
-				node.send([undefined, JSON.parse(chunk.toString())]);
+				node.send([undefined, { payload: JSON.parse(chunk.toString()) }]);
 			});
 			Logger.add(Pin2Transport);
 		}
