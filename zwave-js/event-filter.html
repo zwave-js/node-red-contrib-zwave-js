@@ -88,6 +88,7 @@
 
         const Items = $("#filtersets").editableList('items');
         for (let i = 0; i < Items.length; i++) {
+            Items[i].data('data').index = i
             OPs[Items[i].data('data')._id ?? Items[i].data('data').id] = i
         }
 
@@ -110,6 +111,7 @@
         }
         $(container).data('data', data)
         $(container).click(SetActiveFilter);
+        $(container).parent().css({height:'45px',overflow:'hidden'})
 
         const HTML = `
             <table style="width:100%">
@@ -170,14 +172,18 @@
     function SetActiveFilter() {
         const Items = $("#filtersets").editableList('items');
         for (let i = 0; i < Items.length; i++) {
-            Items[i].css({
-                backgroundColor: 'white'
-            });
+
+          //  Items[i].css({
+          //      backgroundColor: 'white'
+          //  });
+            Items[i].parent().animate({height: "45px"}, 200)
         }
-        $(this).css({
-            backgroundColor: 'lightgray'
-        });
+       // $(this).css({
+        //    backgroundColor: 'lightgray'
+       // });
         ActiveFilter = $(this);
+
+        $(this).parent().animate({height: "200px"}, 200)
     }
 
     function SortChecbox(El) {
