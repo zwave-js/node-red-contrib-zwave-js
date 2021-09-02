@@ -25,6 +25,10 @@ module.exports = function (RED) {
 		let FileTransport;
 		let Pin2Transport;
 
+		let _GrantResolve = undefined;
+		let _DSKResolve = undefined;
+		let _ClientSideAuth = undefined;
+
 		const MaxDriverAttempts = 3;
 		let DriverAttempts = 0;
 		const RetryTime = 5000;
@@ -419,9 +423,6 @@ module.exports = function (RED) {
 			}
 		}
 
-		let _GrantResolve;
-		let _DSKResolve;
-
 		function CheckKey(strategy) {
 			if (strategy === 2) {
 				return;
@@ -498,14 +499,23 @@ module.exports = function (RED) {
 					if (IS || ES) {
 						RestoreReadyStatus();
 					}
+					if(_GrantResolve !== undefined){
+						_GrantResolve(false);
+						_GrantResolve = undefined
+					}
+					if(_DSKResolve !== undefined){
+						_DSKResolve(false);
+						_DSKResolve = undefined
+					}
 					break;
 			}
 			return;
 		}
 
-		function GrantSecurityClasses(RequestedClasses) {
+		function GrantSecurityClasses(_Request) {
+			_ClientSideAuth = _Request.clientSideAuth
 			UI.sendEvent('node-inclusion-step', 'grant security', {
-				classes: RequestedClasses
+				classes: _Request.securityClasses
 			});
 			return new Promise((res) => {
 				_GrantResolve = res;
@@ -515,8 +525,9 @@ module.exports = function (RED) {
 		function Grant(Classes) {
 			_GrantResolve({
 				securityClasses: Classes,
-				clientSideAuth: false
+				clientSideAuth: _ClientSideAuth
 			});
+			_GrantResolve = undefined;
 		}
 
 		function ValidateDSK(DSK) {
@@ -528,9 +539,16 @@ module.exports = function (RED) {
 
 		function VerifyDSK(Pin) {
 			_DSKResolve(Pin);
+			_DSKResolve = undefined;
 		}
 
 		function Abort() {
+			if(_GrantResolve !== undefined){
+				_GrantResolve = undefined
+			}
+			if(_DSKResolve !== undefined){
+				_DSKResolve = undefined
+			}
 			UI.sendEvent('node-inclusion-step', 'aborted');
 		}
 

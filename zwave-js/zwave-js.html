@@ -90,7 +90,8 @@
                     </tr>
                     <tr>
                         <td style="text-align: center;">
-                            Place your ZWave device into 'Inclusion Mode'
+                            Place your ZWave device into 'Inclusion Mode'.<br />
+                            Please ensure your device is within close proximity to the controller.
                             <br />
                             <br />
                             <span class="countdown" style="color: darkgray; font-size: 18px;"></span>
@@ -109,7 +110,8 @@
                     </tr>
                     <tr>
                         <td style="text-align: center;">
-                            Place your ZWave device into 'Exclusion Mode'
+                            Place your ZWave device into 'Exclusion Mode'.<br />
+                            Please ensure your device is within close proximity to the controller.
                             <br />
                             <br />
                             <span class="countdown" style="color: darkgray; font-size: 18px;"></span>
@@ -119,12 +121,48 @@
             </div>
             <!--Requested Security Classes-->
             <div class="step-tab-panel" data-step="Classes">
-                <br />
                 Select the S2 Security Classes you wish to grant!
                 <table id="S2Classes" style="width: 100%; padding: 10px;" cellpadding="5">
 
+                    <tr id="TR_2" style="opacity: 0.4;">
+                        <td style="width:130px">
+                             <input type="checkbox" id="SC_2" class="SecurityClassCB" disabled> 
+                        </td>
+                        <td>
+                            <lable class="SCLable" style="font-weight: bold;font-size: 18px;" for="SC_2">S2 Access Control</lable><br />
+                            S2 for door locks, garage doors, access control systems etc.
+                        </td>
+                    </tr>
+                    <tr  id="TR_1" style="opacity: 0.4;">
+                        <td style="width:130px">
+                             <input type="checkbox" id="SC_1" class="SecurityClassCB" disabled> 
+                        </td>
+                        <td>
+                            <lable class="SCLable" style="font-weight: bold;font-size: 18px;" for="SC_1">S2 Authenticated</lable><br />
+                            Allows the device that is being added, to be verifed that it is the corect one.
+                        </td>
+                    </tr>
+                    <tr  id="TR_0" style="opacity: 0.4;">
+                        <td style="width:130px">
+                             <input type="checkbox" id="SC_0" class="SecurityClassCB" disabled> 
+                        </td>
+                        <td>
+                            <lable class="SCLable" style="font-weight: bold;font-size: 18px;" for="SC_0">S2 Unauthenticated</lable><br />
+                            Like S2 Authenticated, but without verification that the device being added, is the correct one.
+                        </td>
+                    </tr>
+                    <tr  id="TR_7" style="opacity: 0.4;">
+                        <td style="width:130px">
+                             <input type="checkbox" id="SC_7" class="SecurityClassCB" disabled> 
+                        </td>
+                        <td>
+                            <lable class="SCLable" style="font-weight: bold;font-size: 18px;" for="SC_7">S0 Legacy</lable><br />
+                            S0 for devices that don't support S2.
+                        </td>
+                    </tr>
+
                 </table>
-                <button class="ui-button ui-corner-all ui-widget SecrutiyButton" style="margin-top: 20px; margin-left: 39%;" onclick="GrantSelected()">Grant Selected</button>
+                <button class="ui-button ui-corner-all ui-widget SecrutiyButton" style="margin-top: 10px; margin-left: 39%;" onclick="GrantSelected()">Grant Selected</button>
                 <br />
                 <br />
                 <div class="countdown" style="color: darkgray; font-size: 18px; text-align: center;"></div>
@@ -161,8 +199,9 @@
                         </td>
                     </tr>
                     <tr>
-                        <td style="text-align: center;">Your device has been added to the network,<br />
-                            it's interview will begin in a moment. It is safe to close this dialog.</td>
+                        <td style="text-align: center;">
+                            Your device has been added to the network. It will now be interviewed.<br />
+                            Please ensure it remains in close proximity, until the interview completes.</td>
                     </tr>
                 </table>
             </div>
@@ -176,8 +215,11 @@
                         </td>
                     </tr>
                     <tr>
-                        <td style="text-align: center;">Your device has been added to the network,<br />
-                            but the requested security class could not be achieved!</td>
+                        <td style="text-align: center;">
+                            Your device has been added to the network,<br />
+                            but the requested security class couldn't be achieved,<br /><br />
+                            It will now be interviewed.<br>Please ensure it remains in close proximity, until the interview completes.
+                        </td>
                     </tr>
                 </table>
             </div>

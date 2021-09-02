@@ -1,5 +1,7 @@
 'use strict';
 module.exports = function (RED) {
+	const LD = require('lodash');
+
 	function Init(config) {
 		RED.nodes.createNode(this, config);
 		const node = this;
@@ -35,7 +37,7 @@ module.exports = function (RED) {
 										IsValueIDMatch(
 											ValueID,
 											msg,
-											msg.payload.event === 'GET_VALUE_RESPONSE'
+											msg.payload.event
 										)
 									) {
 										msg.filter = Filter;
@@ -89,33 +91,44 @@ module.exports = function (RED) {
 			}
 		}
 
-		function IsValueIDMatch(ValueID, MSG, Response) {
+		function IsValueIDMatch(ValueID, MSG, Event) {
+
+			
 			let Root = MSG.payload.object;
-			if (Response) {
-				Root = MSG.payload.object.valueId;
-			}
 
-			let ValueIDKeys = Object.keys(ValueID);
-			const MSGKeys = Object.keys(Root);
-
-			if (!config.strict) {
-				ValueIDKeys = ValueIDKeys.filter((K) => K !== 'endpoint');
-			}
-
-			let Match = true;
-
-			for (const VIDK of ValueIDKeys) {
-				if (MSGKeys.includes(VIDK)) {
-					if (Root[VIDK] !== ValueID[VIDK]) {
-						Match = false;
-						break;
-					}
-				} else {
-					Match = false;
-					break;
+			if (Event === "GET_VALUE_RESPONSE") {
+				Root = Root.valueId;
+				if(!config.strict){
+					delete ValueID["endpoint"]
 				}
+				const Result = LD.isMatch(Root,ValueID)
+				return Result;
 			}
-			return Match;
+
+			if(Event === "VALUE_UPDATED"){
+				if(!config.strict){
+					delete ValueID["endpoint"]
+				}
+				const Result = LD.isMatch(Root,ValueID)
+				return Result;
+			}
+
+			if(Event === "NOTIFICATION"){
+				if(!config.strict){
+					delete ValueID.args["endpoint"]
+				}
+				const Result = LD.isMatch(Root,ValueID)
+				return Result;
+			}
+
+			if(Event === "VALUE_NOTIFICATION"){
+				if(!config.strict){
+					delete ValueID["endpoint"]
+				}
+				const Result = LD.isMatch(Root,ValueID)
+				return Result;
+			}
+			
 		}
 
 		node.on('close', (done) => {

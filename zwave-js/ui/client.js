@@ -12,6 +12,21 @@ let GrantSelected;
 let ValidateDSK;
 let DriverReady = false;
 
+let StepsAPI;
+const StepList = {
+	SecurityMode: 0,
+	NIF: 1,
+	Remove: 2,
+	Classes: 3,
+	DSK: 4,
+	AddDone: 5,
+	AddDoneInsecure: 6,
+	RemoveDone: 7,
+	ReplaceSecurityMode: 8,
+	Aborted: 9
+};
+
+
 const ZwaveJsUI = (function () {
 	function modalAlert(message, title) {
 		const Buts = {
@@ -673,55 +688,10 @@ const ZwaveJsUI = (function () {
 			});
 	}
 
-	let StepsAPI;
-	const StepList = {
-		SecurityMode: 0,
-		NIF: 1,
-		Remove: 2,
-		Classes: 3,
-		DSK: 4,
-		AddDone: 5,
-		AddDoneInsecure: 6,
-		RemoveDone: 7,
-		ReplaceSecurityMode: 8,
-		Aborted: 9
-	};
-	const Security2Class = {
-		0: {
-			name: 'S2 Unauthenticated',
-			description:
-				'Like S2 Authenticated, but without verification, that the device being added, is the correct one.'
-		},
-		1: {
-			name: 'S2 Authenticated',
-			description:
-				'Allows the device that is being added, to be verifed that it is the corect one.'
-		},
-		2: {
-			name: 'S2 Access Control',
-			description:
-				'S2 for door locks, garage doors, access control systems etc.'
-		},
-		7: {
-			name: 'S0 Legacy',
-			description: "S0 for devices that don't support S2."
-		}
-	};
-
 	function ListRequestedClass(Classes) {
-		Classes.securityClasses.forEach((SC) => {
-			const Class = Security2Class[SC.toString()];
-			$('#S2Classes').append(`
-			<tr>
-				<td style="width:130px">
-				 	<input type="checkbox" id="SC_${SC}" class="SecurityClassCB"> 
-				</td>
-				<td>
-					<lable class="SCLable" style="font-weight: bold;font-size: 18px;" for="SC_${SC}">${Class.name}</lable><br />
-					${Class.description}
-				</td>
-			</tr>
-			`);
+		Classes.forEach((SC) => {
+			$("tr#TR_"+SC).css({opacity:1.0})
+			$("input#SC_"+SC).prop('disabled',false)
 		});
 
 		StepsAPI.setStepIndex(StepList.Classes);
@@ -735,7 +705,7 @@ const ZwaveJsUI = (function () {
 	ValidateDSK = () => {
 		const B = event.target;
 
-		$(B).html('Please wait...');
+		$(B).html('Exchanging encryption keys, Please wait...');
 		$(B).prop('disabled', true);
 
 		ControllerCMD('IEAPI', 'verifyDSK', undefined, [$('#SC_DSK').val()], true);
@@ -744,7 +714,7 @@ const ZwaveJsUI = (function () {
 	GrantSelected = () => {
 		const B = event.target;
 
-		$(B).html('Please wait...');
+		$(B).html('Exchanging encryption keys, Please wait...');
 		$(B).prop('disabled', true);
 
 		const Granted = [];
