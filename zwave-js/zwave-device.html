@@ -1,342 +1,320 @@
 ﻿<script type="text/javascript">
+	RED.nodes.registerType('zwave-device', {
+		category: 'ZWave JS',
+		color: 'rgb(46,145,205)',
+		defaults: {
+			name: { value: 'Some Z-Wave Device' },
+			filteredNodeId: { value: 'All' },
+			multicast: { value: false },
+			datamode: { value: 'Send/Receive' },
+			outputs: { value: 1 },
+			inputs: { value: 1 }
+		},
+		inputs: 1,
+		outputs: 1,
+		icon: 'Node.svg',
+		label: function () {
+			return this.name;
+		},
+		oneditprepare: SortUI,
+		oneditsave: SetIO
+	});
 
-    RED.nodes.registerType('zwave-device',
-        {
-            category: 'ZWave JS',
-            color: 'rgb(46,145,205)',
-            defaults:
-            {
-                name: { value: "Some Z-Wave Device" },
-                filteredNodeId: { value: "All" },
-                multicast: { value: false },
-                datamode: { value: "Send/Receive" },
-                outputs: { value: 1 },
-                inputs: { value: 1 }
+	function SetIO() {
+		// I/O
+		switch ($('#node-input-datamode').val()) {
+			case 'Send':
+				this.outputs = 0;
+				this.inputs = 1;
+				break;
 
-            },
-            inputs: 1,
-            outputs: 1,
-            icon: "Node.svg",
-            label: function () {
-                return this.name;
-            },
-            oneditprepare: SortUI,
-            oneditsave: SetIO
-        });
+			case 'Receive':
+				this.outputs = 1;
+				this.inputs = 0;
+				break;
 
-    function SetIO() {
+			default:
+				this.outputs = 1;
+				this.inputs = 1;
+				break;
+		}
+	}
 
-        // I/O
-        switch ($("#node-input-datamode").val()) {
-            case "Send":
-                this.outputs = 0;
-                this.inputs = 1;
-                break
+	function SortUI() {
+		let node = this;
 
-            case "Receive":
-                this.outputs = 1;
-                this.inputs = 0;
-                break
+		// Subflow Options
+		const inSubflow = !!RED.nodes.subflow(node.z);
+		if (inSubflow) {
+			$('#node-input-filteredMode').append(
+				new Option('Subflow Variable: ZW_NODE_ID', 'Var')
+			);
+		}
 
-            default:
-                this.outputs = 1;
-                this.inputs = 1;
-                break
-        }
-    }
+		// I/O
+		if (this.datamode === undefined) {
+			$('#node-input-datamode').val('Send/Receive');
+		}
 
-    function SortUI() {
+		$.getJSON('zwjsgetnodelist', (data) => {
+			let Mode = $('#node-input-filteredMode');
+			let Filter = $('#node-input-filteredNodeId');
 
-        let node = this
+			Filter.empty();
 
-        // Subflow Options
-        const inSubflow = !!RED.nodes.subflow(node.z)
-        if (inSubflow) {
-            $("#node-input-filteredMode").append(new Option("Subflow Variable: ZW_NODE_ID", "Var"))
-        }
+			let Locations = Object.keys(data);
 
-        // I/O
-        if (this.datamode === undefined) {
-            $("#node-input-datamode").val('Send/Receive');
-        }
+			Locations.forEach((L) => {
+				let Location = data[L];
+				if (Location.length > 0) {
+					let OG = $('<optgroup label=" --- ' + L + ' --- ">');
+					Location.forEach((node) => {
+						OG.append(
+							new Option(node.id + ' : ' + node.name, node.id.toString())
+						);
+					});
+					Filter.append(OG);
+				}
+			});
 
-        $.getJSON("zwjsgetnodelist", (data) => {
+			if (this.filteredNodeId !== undefined) {
+				// Single
+				if (parseInt(this.filteredNodeId) !== NaN) {
+					Filter.css('height', '');
+					Filter.attr('multiple', null);
+					Filter.val(this.filteredNodeId);
+					Filter.prop('disabled', false);
+					Mode.val('Single');
+				}
 
-            let Mode = $("#node-input-filteredMode")
-            let Filter = $("#node-input-filteredNodeId")
+				// Multiple, Multicast
+				if (Array.isArray(this.filteredNodeId)) {
+					Filter.css('height', '150px');
+					Filter.attr('multiple', '');
+					Filter.val(this.filteredNodeId);
+					Filter.prop('disabled', false);
+					if (this.multicast) {
+						Mode.val('Multicast');
+					} else {
+						Mode.val('Multiple');
+					}
+				}
 
-            Filter.empty()
+				// All
+				if (this.filteredNodeId === 'All') {
+					Filter.css('height', '');
+					Filter.attr('multiple', null);
+					Filter.append(new Option('N/A', 'All'));
+					Filter.val('All');
+					Filter.prop('disabled', true);
+					Mode.val('All');
+				}
 
-            let Locations = Object.keys(data);
+				// As Specifed
+				if (this.filteredNodeId === 'AS') {
+					Filter.css('height', '');
+					Filter.attr('multiple', null);
+					Filter.append(new Option('N/A', 'AS'));
+					Filter.val('AS');
+					Filter.prop('disabled', true);
+					Mode.val('Message');
+				}
 
-            Locations.forEach((L) => {
-                let Location = data[L];
-                if (Location.length > 0) {
+				// Variable
+				if (this.filteredNodeId === 'Var') {
+					Filter.css('height', '');
+					Filter.attr('multiple', null);
+					Filter.append(new Option('N/A', 'Var'));
+					Filter.val('Var');
+					Filter.prop('disabled', true);
+					Mode.val('Var');
+				}
+			} else {
+				Filter.attr('multiple', null);
+				Filter.css('height', '');
+				Filter.append(new Option('N/A', 'All'));
+				Filter.val('All');
+				Filter.prop('disabled', true);
+				Mode.val('All');
+			}
+		});
+	}
 
-                    let OG = $("<optgroup label=\" --- " + L + " --- \">");
-                    Location.forEach((node) => {
-                        OG.append(new Option(node.id + " : " + node.name, node.id.toString()))
-                    })
-                    Filter.append(OG)
-                }
+	function SortFilterChange() {
+		let Mode = $('#node-input-filteredMode');
+		let Filter = $('#node-input-filteredNodeId');
 
-            })
+		switch (Mode.val()) {
+			case 'All':
+				Filter.css('height', '');
+				Filter.find('[value="Select Node"]').remove();
+				Filter.find('[value="AS"]').remove();
+				Filter.find('[value="Var"]').remove();
+				Filter.prepend(new Option('N/A', 'All'));
+				Filter.val('All');
+				Filter.prop('disabled', true);
+				Filter.attr('multiple', null);
+				$('#node-input-multicast').prop('checked', false);
+				break;
 
-            if (this.filteredNodeId !== undefined) {
+			case 'Message':
+				Filter.css('height', '');
+				Filter.find('[value="Select Node"]').remove();
+				Filter.find('[value="All"]').remove();
+				Filter.find('[value="Var"]').remove();
+				Filter.prepend(new Option('N/A', 'AS'));
+				Filter.val('AS');
+				Filter.prop('disabled', true);
+				Filter.attr('multiple', null);
+				$('#node-input-multicast').prop('checked', false);
+				break;
 
-                // Single
-                if (parseInt(this.filteredNodeId) !== NaN) {
-                    Filter.css('height', '');
-                    Filter.attr('multiple', null)
-                    Filter.val(this.filteredNodeId)
-                    Filter.prop('disabled', false);
-                    Mode.val('Single')
+			case 'Multiple':
+				Filter.css('height', '150px');
+				Filter.find('[value="Select Node"]').remove();
+				Filter.find('[value="All"]').remove();
+				Filter.find('[value="AS"]').remove();
+				Filter.find('[value="Var"]').remove();
+				Filter.prop('disabled', false);
+				Filter.attr('multiple', '');
+				$('#node-input-multicast').prop('checked', false);
+				break;
 
-                }
+			case 'Multicast':
+				Filter.css('height', '150px');
+				Filter.find('[value="Select Node"]').remove();
+				Filter.find('[value="All"]').remove();
+				Filter.find('[value="AS"]').remove();
+				Filter.find('[value="Var"]').remove();
+				Filter.prop('disabled', false);
+				Filter.attr('multiple', '');
+				$('#node-input-multicast').prop('checked', true);
+				break;
 
-                // Multiple, Multicast
-                if (Array.isArray(this.filteredNodeId)) {
-                    Filter.css('height', '150px');
-                    Filter.attr('multiple', '')
-                    Filter.val(this.filteredNodeId)
-                    Filter.prop('disabled', false);
-                    if (this.multicast) {
-                        Mode.val('Multicast')
-                    }
-                    else {
-                        Mode.val('Multiple')
-                    }
-                }
+			case 'Var':
+				Filter.css('height', '');
+				Filter.find('[value="Select Node"]').remove();
+				Filter.find('[value="AS"]').remove();
+				Filter.prepend(new Option('N/A', 'Var'));
+				Filter.val('Var');
+				Filter.prop('disabled', true);
+				Filter.attr('multiple', null);
+				$('#node-input-multicast').prop('checked', false);
+				break;
 
-                // All
-                if (this.filteredNodeId === "All") {
-                    Filter.css('height', '');
-                    Filter.attr('multiple', null)
-                    Filter.append(new Option("N/A", "All"));
-                    Filter.val("All")
-                    Filter.prop('disabled', true);
-                    Mode.val('All')
-                }
-
-                // As Specifed
-                if (this.filteredNodeId === "AS") {
-                    Filter.css('height', '');
-                    Filter.attr('multiple', null)
-                    Filter.append(new Option("N/A", "AS"));
-                    Filter.val("AS")
-                    Filter.prop('disabled', true);
-                    Mode.val('Message')
-                }
-
-                // Variable
-                if (this.filteredNodeId === "Var") {
-                    Filter.css('height', '');
-                    Filter.attr('multiple', null)
-                    Filter.append(new Option("N/A", "Var"));
-                    Filter.val("Var")
-                    Filter.prop('disabled', true);
-                    Mode.val('Var')
-                }
-
-            } else {
-
-                Filter.attr('multiple', null)
-                Filter.css('height', '');
-                Filter.append(new Option("N/A", "All"));
-                Filter.val("All")
-                Filter.prop('disabled', true);
-                Mode.val('All')
-            }
-
-
-        })
-    }
-
-    function SortFilterChange() {
-
-        let Mode = $("#node-input-filteredMode")
-        let Filter = $("#node-input-filteredNodeId")
-
-        switch (Mode.val()) {
-            case "All":
-                Filter.css('height', '');
-                Filter.find('[value="Select Node"]').remove();
-                Filter.find('[value="AS"]').remove();
-                Filter.find('[value="Var"]').remove();
-                Filter.prepend(new Option("N/A", "All"));
-                Filter.val("All")
-                Filter.prop('disabled', true);
-                Filter.attr('multiple', null)
-                $("#node-input-multicast").prop('checked', false);
-                break;
-
-            case "Message":
-                Filter.css('height', '');
-                Filter.find('[value="Select Node"]').remove();
-                Filter.find('[value="All"]').remove();
-                Filter.find('[value="Var"]').remove();
-                Filter.prepend(new Option("N/A", "AS"));
-                Filter.val("AS")
-                Filter.prop('disabled', true);
-                Filter.attr('multiple', null)
-                $("#node-input-multicast").prop('checked', false);
-                break;
-
-            case "Multiple":
-                Filter.css('height', '150px');
-                Filter.find('[value="Select Node"]').remove();
-                Filter.find('[value="All"]').remove();
-                Filter.find('[value="AS"]').remove();
-                Filter.find('[value="Var"]').remove();
-                Filter.prop('disabled', false);
-                Filter.attr('multiple', '')
-                $("#node-input-multicast").prop('checked', false);
-                break;
-
-            case "Multicast":
-                Filter.css('height', '150px');
-                Filter.find('[value="Select Node"]').remove();
-                Filter.find('[value="All"]').remove();
-                Filter.find('[value="AS"]').remove();
-                Filter.find('[value="Var"]').remove();
-                Filter.prop('disabled', false);
-                Filter.attr('multiple', '')
-                $("#node-input-multicast").prop('checked', true);
-                break;
-
-            case "Var":
-                Filter.css('height', '');
-                Filter.find('[value="Select Node"]').remove();
-                Filter.find('[value="AS"]').remove();
-                Filter.prepend(new Option("N/A", "Var"));
-                Filter.val("Var")
-                Filter.prop('disabled', true);
-                Filter.attr('multiple', null)
-                $("#node-input-multicast").prop('checked', false);
-                break;
-
-            default:
-                Filter.css('height', '');
-                Filter.find('[value="All"]').remove();
-                Filter.find('[value="AS"]').remove();
-                Filter.find('[value="Var"]').remove();
-                Filter.prepend(new Option("Select Node", "Select Node"));
-                Filter.val("Select Node")
-                Filter.prop('disabled', false);
-                Filter.attr('multiple', null)
-                $("#node-input-multicast").prop('checked', false);
-                break;
-        }
-    }
-
+			default:
+				Filter.css('height', '');
+				Filter.find('[value="All"]').remove();
+				Filter.find('[value="AS"]').remove();
+				Filter.find('[value="Var"]').remove();
+				Filter.prepend(new Option('Select Node', 'Select Node'));
+				Filter.val('Select Node');
+				Filter.prop('disabled', false);
+				Filter.attr('multiple', null);
+				$('#node-input-multicast').prop('checked', false);
+				break;
+		}
+	}
 </script>
 
 <script type="text/x-red" data-template-name="zwave-device">
 
-    <input type="checkbox" id="node-input-multicast" style="display: none">
-   
-    <p>
-        <strong>Basic settings.</strong><br />
-        Note: This node works in conjunction with the main Z-Wave JS Controller node,<br />
-        therefore, ensure it is in any one of your flows, and in a deployed state.
-    </p>
-    <div class="form-row">
-        <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
-        <input type="text" id="node-input-name" placeholder="My ZWave Node">
-    </div>
-    <div class="form-row">
-        <label for="node-input-filteredMode" style="width:130px"><i class="fa fa-pencil"></i> Mode</label>
-        <select id="node-input-filteredMode" onchange="SortFilterChange()">
-            <option value="All">All Nodes</option>
-            <option value="Multiple">Multiple Nodes</option>
-            <option value="Multicast">Multicast</option>
-            <option value="Single">Specific Node</option>
-            <option value="Message">As Specified</option>
-        </select>
-    </div>
-    <div class="form-row">
-        <label for="node-input-datamode" style="width:130px"><i class="fa fa-pencil"></i> Data Mode</label>
-        <select id="node-input-datamode">
-            <option value="Send/Receive">Send/Receive</option>
-            <option value="Send">Send</option>
-            <option value="Receive">Receive</option>
-        </select>
-    </div>
-    <div class="form-row">
-        <label for="node-input-filteredNodeId" style="width:130px"><i class="fa fa-pencil"></i> Node ID(s)</label>
-        <select id="node-input-filteredNodeId">
-        </select>
+	<input type="checkbox" id="node-input-multicast" style="display: none">
 
-    </div>
-    <hr />
-    <table>
-        <tr>
-            <td style="width:70px;vertical-align:top"><strong>All Nodes</strong></td>
-            <td> - Will listen for updates on All Nodes.<br /> - You will need to specify the <strong>node</strong>, in your outgoing payload.</td>
-        </tr>
-        <tr><td colspan="2">&nbsp;</td></tr>
-        <tr>
-            <td style="width:70px;vertical-align:top"><strong>Multiple Nodes</strong></td>
-            <td> - Will listen for updates on the specified Nodes.<br /> - You will need to specify the <strong>node</strong>, in your outgoing payload.</td>
-        </tr>
-        <tr><td colspan="2">&nbsp;</td></tr>
-        <tr>
-            <td style="width:70px;vertical-align:top"><strong>Multicast</strong></td>
-            <td> - Like <strong>Multiple Nodes</strong>, but uses Multicast for outgoing payloads.<br /> - <strong>node</strong> in your outgoing payload, is ignored.<br /> - Limited to <strong>ValueAPI</strong> -> <strong>setValue</strong> and <strong>CCAPI</strong> set type commands only<br /> - Requires support from the device(s)</td>
-        </tr>
-        <tr><td colspan="2">&nbsp;</td></tr>
-        <tr>
-            <td style="width:70px;vertical-align:top"><strong>Specific Node</strong></td>
-            <td> - Will listen for updates on the specified Node.<br /> - <strong>node</strong>, in your outgoing payload, is ignored.</td>
-        </tr>
-        <tr><td colspan="2">&nbsp;</td></tr>
-        <tr>
-            <td style="width:70px;vertical-align:top"><strong>As Specified</strong></td>
-            <td> - Will listen for updates on the Node, that it last addressed a message to.<br /> - You will need to specify the <strong>node</strong>, in your outgoing payload.</td>
-        </tr>
-        <tr><td colspan="2">&nbsp;</td></tr>
-        <tr>
-            <td style="width:70px;vertical-align:top"><strong>Subflow Variable</strong></td>
-            <td> - Like <strong>Specific Node</strong>, but Node ID is taken from a <strong>ZW_NODE_ID</strong> subflow variable.<br /> - <strong>node</strong>, in your outgoing payload, is ignored.</td>
-        </tr>
-    </table>
-    
-   
-   
-   
-    
-   
+	<p>
+	    <strong>Basic settings.</strong><br />
+	    Note: This node works in conjunction with the main Z-Wave JS Controller node,<br />
+	    therefore, ensure it is in any one of your flows, and in a deployed state.
+	</p>
+	<div class="form-row">
+	    <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
+	    <input type="text" id="node-input-name" placeholder="My ZWave Node">
+	</div>
+	<div class="form-row">
+	    <label for="node-input-filteredMode" style="width:130px"><i class="fa fa-pencil"></i> Mode</label>
+	    <select id="node-input-filteredMode" onchange="SortFilterChange()">
+	        <option value="All">All Nodes</option>
+	        <option value="Multiple">Multiple Nodes</option>
+	        <option value="Multicast">Multicast</option>
+	        <option value="Single">Specific Node</option>
+	        <option value="Message">As Specified</option>
+	    </select>
+	</div>
+	<div class="form-row">
+	    <label for="node-input-datamode" style="width:130px"><i class="fa fa-pencil"></i> Data Mode</label>
+	    <select id="node-input-datamode">
+	        <option value="Send/Receive">Send/Receive</option>
+	        <option value="Send">Send</option>
+	        <option value="Receive">Receive</option>
+	    </select>
+	</div>
+	<div class="form-row">
+	    <label for="node-input-filteredNodeId" style="width:130px"><i class="fa fa-pencil"></i> Node ID(s)</label>
+	    <select id="node-input-filteredNodeId">
+	    </select>
+
+	</div>
+	<hr />
+	<table>
+	    <tr>
+	        <td style="width:70px;vertical-align:top"><strong>All Nodes</strong></td>
+	        <td> - Will listen for updates on All Nodes.<br /> - You will need to specify the <strong>node</strong>, in your outgoing payload.</td>
+	    </tr>
+	    <tr><td colspan="2">&nbsp;</td></tr>
+	    <tr>
+	        <td style="width:70px;vertical-align:top"><strong>Multiple Nodes</strong></td>
+	        <td> - Will listen for updates on the specified Nodes.<br /> - You will need to specify the <strong>node</strong>, in your outgoing payload.</td>
+	    </tr>
+	    <tr><td colspan="2">&nbsp;</td></tr>
+	    <tr>
+	        <td style="width:70px;vertical-align:top"><strong>Multicast</strong></td>
+	        <td> - Like <strong>Multiple Nodes</strong>, but uses Multicast for outgoing payloads.<br /> - <strong>node</strong> in your outgoing payload, is ignored.<br /> - Limited to <strong>ValueAPI</strong> -> <strong>setValue</strong> and <strong>CCAPI</strong> set type commands only<br /> - Requires support from the device(s)</td>
+	    </tr>
+	    <tr><td colspan="2">&nbsp;</td></tr>
+	    <tr>
+	        <td style="width:70px;vertical-align:top"><strong>Specific Node</strong></td>
+	        <td> - Will listen for updates on the specified Node.<br /> - <strong>node</strong>, in your outgoing payload, is ignored.</td>
+	    </tr>
+	    <tr><td colspan="2">&nbsp;</td></tr>
+	    <tr>
+	        <td style="width:70px;vertical-align:top"><strong>As Specified</strong></td>
+	        <td> - Will listen for updates on the Node, that it last addressed a message to.<br /> - You will need to specify the <strong>node</strong>, in your outgoing payload.</td>
+	    </tr>
+	    <tr><td colspan="2">&nbsp;</td></tr>
+	    <tr>
+	        <td style="width:70px;vertical-align:top"><strong>Subflow Variable</strong></td>
+	        <td> - Like <strong>Specific Node</strong>, but Node ID is taken from a <strong>ZW_NODE_ID</strong> subflow variable.<br /> - <strong>node</strong>, in your outgoing payload, is ignored.</td>
+	    </tr>
+	</table>
 </script>
 
 <script type="text/x-red" data-help-name="zwave-device">
-    <p>A Z-Wave device node.</p>
+	    <p>A Z-Wave device node.</p>
 
-    <p>
-        <code>Input:</code><br />
-        A <strong>payload</strong> object containing a command to send.<br />
-        <strong>params</strong> will be dependant on the type of command you are sending.
-<pre>
-{
-   mode: "CCAPI",
-   cc: "Configuration",
-   method: "set",
-   params: [0x18,0x03,1]
-}
-</pre>
-    </p>
+	    <p>
+	        <code>Input:</code><br />
+	        A <strong>payload</strong> object containing a command to send.<br />
+	        <strong>params</strong> will be dependant on the type of command you are sending.
+	<pre>
+	{
+	   mode: "CCAPI",
+	   cc: "Configuration",
+	   method: "set",
+	   params: [0x18,0x03,1]
+	}
+	</pre>
+	    </p>
 
-    <p>
-        <code>Output:</code><br />
-        A <strong>payload</strong> containing an event that has occured within the zwave network.<br />
-        The contents of <strong>object</strong> is dependant on the event.
-<pre>
-{
-   event: "VALUE_UPDATED",
-   timestamp: "23-12-2020T12:23:23+000",
-   object: ...
-}
-</pre>
-    </p>
-
-
+	    <p>
+	        <code>Output:</code><br />
+	        A <strong>payload</strong> containing an event that has occured within the zwave network.<br />
+	        The contents of <strong>object</strong> is dependant on the event.
+	<pre>
+	{
+	   event: "VALUE_UPDATED",
+	   timestamp: "23-12-2020T12:23:23+000",
+	   object: ...
+	}
+	</pre>
+	    </p>
 </script>
