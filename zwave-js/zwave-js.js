@@ -119,14 +119,16 @@ module.exports = function (RED) {
 			Logger.add(FileTransport);
 		}
 
+		function P2Log(Info) {
+			node.send([undefined, { payload: Info }]);
+		}
+
 		if (config.logLevelPin !== 'none') {
 			const Options = {
-				level: config.logLevelPin
+				level: config.logLevelPin,
+				callback: P2Log
 			};
 			Pin2Transport = new Pin2LogTransport(Options);
-			Pin2Transport.getStream().on('data', (chunk) => {
-				node.send([undefined, { payload: JSON.parse(chunk.toString()) }]);
-			});
 			Logger.add(Pin2Transport);
 		}
 
@@ -365,7 +367,6 @@ module.exports = function (RED) {
 				Logger = undefined;
 			}
 			if (Pin2Transport !== undefined) {
-				Pin2Transport.destroy();
 				Pin2Transport = undefined;
 			}
 			if (FileTransport !== undefined) {
@@ -499,13 +500,13 @@ module.exports = function (RED) {
 					if (IS || ES) {
 						RestoreReadyStatus();
 					}
-					if(_GrantResolve !== undefined){
+					if (_GrantResolve !== undefined) {
 						_GrantResolve(false);
-						_GrantResolve = undefined
+						_GrantResolve = undefined;
 					}
-					if(_DSKResolve !== undefined){
+					if (_DSKResolve !== undefined) {
 						_DSKResolve(false);
-						_DSKResolve = undefined
+						_DSKResolve = undefined;
 					}
 					break;
 			}
@@ -513,7 +514,7 @@ module.exports = function (RED) {
 		}
 
 		function GrantSecurityClasses(_Request) {
-			_ClientSideAuth = _Request.clientSideAuth
+			_ClientSideAuth = _Request.clientSideAuth;
 			UI.sendEvent('node-inclusion-step', 'grant security', {
 				classes: _Request.securityClasses
 			});
@@ -543,11 +544,11 @@ module.exports = function (RED) {
 		}
 
 		function Abort() {
-			if(_GrantResolve !== undefined){
-				_GrantResolve = undefined
+			if (_GrantResolve !== undefined) {
+				_GrantResolve = undefined;
 			}
-			if(_DSKResolve !== undefined){
-				_DSKResolve = undefined
+			if (_DSKResolve !== undefined) {
+				_DSKResolve = undefined;
 			}
 			UI.sendEvent('node-inclusion-step', 'aborted');
 		}

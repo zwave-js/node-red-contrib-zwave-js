@@ -1,27 +1,24 @@
-const Stream = require('stream');
 const WinstonTransport = require('winston-transport');
+
+let _CallBack = undefined;
 
 class Pin2LogTransport extends WinstonTransport {
 	constructor(options) {
+		_CallBack = options.callback;
+		delete options.callback;
 		super(options);
-		this.formattedMessageSymbol = Symbol.for('message');
-		this.passThroughStream = new Stream.PassThrough();
 	}
 }
 
 Pin2LogTransport.prototype.log = function (info, next) {
-	const logObject = JSON.stringify(info);
-	this.passThroughStream.write(logObject);
+	if (_CallBack !== undefined) {
+		_CallBack(info);
+	}
 	next();
 };
 
-Pin2LogTransport.prototype.getStream = function () {
-	return this.passThroughStream;
-};
-
-Pin2LogTransport.prototype.destroy = function () {
-	this.passThroughStream.end();
-	this.passThroughStream.destroy();
+Pin2LogTransport.close = function () {
+	_CallBack = undefined;
 };
 
 module.exports = {

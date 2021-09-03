@@ -21,7 +21,11 @@ module.exports = function (RED) {
 		async function Input(msg, send, done) {
 			const SendingArray = new Array(config.filters.length);
 
-			if (msg.payload !== undefined && msg.payload.event !== undefined) {
+			if (
+				msg.payload !== undefined &&
+				msg.payload.event !== undefined &&
+				msg.payload.node !== undefined
+			) {
 				const Filters = config.filters;
 				let Matched = false;
 
@@ -33,13 +37,7 @@ module.exports = function (RED) {
 						if (Filter.events.includes(msg.payload.event)) {
 							if (Filter.valueIds.length > 0) {
 								for (const ValueID of Filter.valueIds) {
-									if (
-										IsValueIDMatch(
-											ValueID,
-											msg,
-											msg.payload.event
-										)
-									) {
+									if (IsValueIDMatch(ValueID, msg, msg.payload.event)) {
 										msg.filter = Filter;
 										SendingArray[ArrayIndex] = msg;
 										node.status({
@@ -92,43 +90,37 @@ module.exports = function (RED) {
 		}
 
 		function IsValueIDMatch(ValueID, MSG, Event) {
-
-			
 			let Root = MSG.payload.object;
 
-			if (Event === "GET_VALUE_RESPONSE") {
+			if (Event === 'GET_VALUE_RESPONSE') {
 				Root = Root.valueId;
-				if(!config.strict){
-					delete ValueID["endpoint"]
+				if (!config.strict) {
+					delete ValueID['endpoint'];
 				}
-				const Result = LD.isMatch(Root,ValueID)
+				const Result = LD.isMatch(Root, ValueID);
 				return Result;
 			}
 
-			if(Event === "VALUE_UPDATED"){
-				if(!config.strict){
-					delete ValueID["endpoint"]
+			if (Event === 'VALUE_UPDATED') {
+				if (!config.strict) {
+					delete ValueID['endpoint'];
 				}
-				const Result = LD.isMatch(Root,ValueID)
+				const Result = LD.isMatch(Root, ValueID);
 				return Result;
 			}
 
-			if(Event === "NOTIFICATION"){
-				if(!config.strict){
-					delete ValueID.args["endpoint"]
-				}
-				const Result = LD.isMatch(Root,ValueID)
+			if (Event === 'NOTIFICATION') {
+				const Result = LD.isMatch(Root, ValueID);
 				return Result;
 			}
 
-			if(Event === "VALUE_NOTIFICATION"){
-				if(!config.strict){
-					delete ValueID["endpoint"]
+			if (Event === 'VALUE_NOTIFICATION') {
+				if (!config.strict) {
+					delete ValueID['endpoint'];
 				}
-				const Result = LD.isMatch(Root,ValueID)
+				const Result = LD.isMatch(Root, ValueID);
 				return Result;
 			}
-			
 		}
 
 		node.on('close', (done) => {

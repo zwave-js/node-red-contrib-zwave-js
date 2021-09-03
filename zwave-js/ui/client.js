@@ -26,7 +26,6 @@ const StepList = {
 	Aborted: 9
 };
 
-
 const ZwaveJsUI = (function () {
 	function modalAlert(message, title) {
 		const Buts = {
@@ -690,8 +689,8 @@ const ZwaveJsUI = (function () {
 
 	function ListRequestedClass(Classes) {
 		Classes.forEach((SC) => {
-			$("tr#TR_"+SC).css({opacity:1.0})
-			$("input#SC_"+SC).prop('disabled',false)
+			$('tr#TR_' + SC).css({ opacity: 1.0 });
+			$('input#SC_' + SC).prop('disabled', false);
 		});
 
 		StepsAPI.setStepIndex(StepList.Classes);
@@ -705,7 +704,9 @@ const ZwaveJsUI = (function () {
 	ValidateDSK = () => {
 		const B = event.target;
 
-		$(B).html('Exchanging encryption keys, Please wait...');
+		$(B).html('Please wait...');
+		ClearIETimer();
+		ClearSecurityCountDown();
 		$(B).prop('disabled', true);
 
 		ControllerCMD('IEAPI', 'verifyDSK', undefined, [$('#SC_DSK').val()], true);
@@ -714,7 +715,9 @@ const ZwaveJsUI = (function () {
 	GrantSelected = () => {
 		const B = event.target;
 
-		$(B).html('Exchanging encryption keys, Please wait...');
+		$(B).html('Please wait...');
+		ClearIETimer();
+		ClearSecurityCountDown();
 		$(B).prop('disabled', true);
 
 		const Granted = [];
