@@ -106,9 +106,8 @@
 		}
 		$(container).data('data', data);
 		$(container).click(SetActiveFilter);
-		$(container)
-			.parent()
-			.css({ height: '45px', overflow: 'hidden', minWidth: '400px' });
+		$(container).css({ minWidth: '400px' });
+		$(container).parent().css({ height: '45px', overflow: 'hidden' });
 
 		const HTML = `
             <table style="width:100%">
