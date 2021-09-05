@@ -1190,7 +1190,7 @@ module.exports = function (RED) {
 			const Lines = [];
 			Lines.push('[Node: ' + NID + ']');
 
-			if (Value !== undefined) {
+			if (typeof Value !== 'undefined') {
 				Lines.push('└─[ValueID]');
 
 				const OBKeys = Object.keys(Value);

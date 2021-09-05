@@ -365,7 +365,7 @@ const ZwaveJsUI = (function () {
 			_Nodes.push(ND);
 		});
 
-		if (Neigbhors === undefined) {
+		if (typeof Neigbhors === 'undefined') {
 			Nodes.forEach((N) => {
 				if (N.isControllerNode) {
 					return;
