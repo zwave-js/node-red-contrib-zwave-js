@@ -79,7 +79,7 @@
 
 			if (this.filteredNodeId !== undefined) {
 				// Single
-				if (parseInt(this.filteredNodeId) !== NaN) {
+				if (!isNaN(parseInt(this.filteredNodeId))) {
 					Filter.css('height', '');
 					Filter.attr('multiple', null);
 					Filter.val(this.filteredNodeId);
