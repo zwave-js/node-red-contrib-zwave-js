@@ -1,7 +1,8 @@
 ![Image](./resources/ReadMe.png)  
 
 <p align="center">
-# node-red-contrib-zwave-js
+<h2>node-red-contrib-zwave-js</h2>
+<hr />
 <img alt="NPM" src="https://img.shields.io/npm/l/node-red-contrib-zwave-js"> <img alt="NPM" src="https://img.shields.io/npm/v/node-red-contrib-zwave-js"> <img alt="node-current" src="https://img.shields.io/node/v/node-red-contrib-zwave-js"> <img alt="LGTM Grade" src="https://img.shields.io/lgtm/grade/javascript/github/zwave-js/node-red-contrib-zwave-js">
 </p>
 
