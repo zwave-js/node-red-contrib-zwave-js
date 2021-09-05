@@ -5,13 +5,14 @@
      **New Features**
      - Added an extremely advanced **event-filter** node, allowing node events to be filtered with ease.
      - Added the ability to pipe log messages to a 2nd output pin of the Controller Node
+     - Added a new event type: **ALL_NODES_READY** 
 
      **Fixes**
      - Fix phantom parentheses in node location.
 
      **Changes**
      - Improvements to the device paring wizard.
-     - Bump Zwave JS to 8.2.1
+     - Bump Zwave JS to 8.2.2
 
    - 5.0.0
 
