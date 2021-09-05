@@ -1339,6 +1339,7 @@ module.exports = function (RED) {
 			Driver.on('all nodes ready', () => {
 				node.status({ fill: 'green', shape: 'dot', text: 'All nodes ready!' });
 				UI.status('All nodes ready!');
+				Send(undefined,"ALL_NODES_READY")
 			});
 
 			Driver.once('driver ready', () => {
