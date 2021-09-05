@@ -12,7 +12,7 @@
 
      **Changes**
      - Improvements to the device paring wizard.
-     - Bump Zwave JS to 8.2.2
+     - Bump Zwave JS to 8.2.3
 
    - 5.0.0
 
