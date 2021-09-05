@@ -2,9 +2,11 @@
 
 # node-red-contrib-wave-js
 
-<img alt="NPM" src="https://img.shields.io/npm/l/node-red-contrib-zwave-js"> <img alt="NPM" src="https://img.shields.io/npm/v/node-red-contrib-zwave-js"> <img alt="node-current" src="https://img.shields.io/node/v/node-red-contrib-zwave-js"> 
-[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/zwave-js/node-red-contrib-zwave-js.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/zwave-js/node-red-contrib-zwave-js/context:javascript) <img alt="npms.io (maintenance)" src="https://img.shields.io/npms-io/maintenance-score/node-red-contrib-zwave-js"> <img alt="David" src="https://img.shields.io/david/marcus-j-davies/node-red-contrib-zwave-js">
-
+[![License](https://img.shields.io/npm/l/node-red-contrib-zwave-js)](https://github.com/zwave-js/node-red-contrib-zwave-js/blob/main/LICENSE)
+[![Version](https://img.shields.io/npm/v/node-red-contrib-zwave-js)](https://www.npmjs.com/package/node-red-contrib-zwave-js)
+[![Node Version](https://img.shields.io/node/v/node-red-contrib-zwave-js)](https://www.npmjs.com/package/node-red-contrib-zwave-js)
+[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/zwave-js/node-red-contrib-zwave-js.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/zwave-js/node-red-contrib-zwave-js/context:javascript)
+[![Maintenance](https://img.shields.io/david/marcus-j-davies/node-red-contrib-zwave-js)](https://www.npmjs.com/package/node-red-contrib-zwave-js)
 
 
 THE most powerful Z-Wave node for node-red based on Z-Wave JS.  
