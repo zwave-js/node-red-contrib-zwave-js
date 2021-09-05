@@ -1,6 +1,9 @@
 ![Image](./resources/ReadMe.png)  
 
 # node-red-contrib-zwave-js
+<img alt="NPM" src="https://img.shields.io/npm/l/node-red-contrib-zwave-js">
+<img alt="NPM" src="https://img.shields.io/npm/v/node-red-contrib-zwave-js/latest">
+
 
 THE most powerful Z-Wave node for node-red based on Z-Wave JS.  
 If you want a fully featured Z-Wave runtime in your node-red instance, look no further.  
