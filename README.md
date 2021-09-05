@@ -1,7 +1,9 @@
 ![Image](./resources/ReadMe.png)  
 
+<p align="center">
 # node-red-contrib-zwave-js
 <img alt="NPM" src="https://img.shields.io/npm/l/node-red-contrib-zwave-js"> <img alt="NPM" src="https://img.shields.io/npm/v/node-red-contrib-zwave-js"> <img alt="node-current" src="https://img.shields.io/node/v/node-red-contrib-zwave-js"> <img alt="LGTM Grade" src="https://img.shields.io/lgtm/grade/javascript/github/zwave-js/node-red-contrib-zwave-js">
+</p>
 
 
 THE most powerful Z-Wave node for node-red based on Z-Wave JS.  
