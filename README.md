@@ -2,7 +2,7 @@
 
 # node-red-contrib-wave-js
 
-<img alt="NPM" src="https://img.shields.io/npm/l/node-red-contrib-zwave-js"> <img alt="NPM" src="https://img.shields.io/npm/v/node-red-contrib-zwave-js"> <img alt="node-current" src="https://img.shields.io/node/v/node-red-contrib-zwave-js"> <img alt="LGTM Grade" src="https://img.shields.io/lgtm/grade/javascript/github/zwave-js/node-red-contrib-zwave-js">
+<img alt="NPM" src="https://img.shields.io/npm/l/node-red-contrib-zwave-js"> <img alt="NPM" src="https://img.shields.io/npm/v/node-red-contrib-zwave-js"> <img alt="node-current" src="https://img.shields.io/node/v/node-red-contrib-zwave-js"> <img alt="LGTM Grade" src="https://img.shields.io/lgtm/grade/javascript/github/zwave-js/node-red-contrib-zwave-js"> <img alt="David" src="https://img.shields.io/david/marcus-j-davies/node-red-contrib-zwave-js">
 
 
 
