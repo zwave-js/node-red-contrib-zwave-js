@@ -627,6 +627,7 @@
 		$.getJSON('zwjsgetversion', function (data) {
 			$('#MOD_Version').val(data.moduleversion);
 			$('#ZWJS_Version').val(data.zwjsversion);
+			$('#ZWJS_CFGVersion').val(data.zwjscfgversion);
 		});
 	}
 </script>
@@ -756,6 +757,10 @@
 	<div class="form-row">
 	    <label  for="ZWJS_Version" style="width:130px"><i class="fa fa-info"></i> Driver Version</label>
 	    <input type="text" id="ZWJS_Version" readonly>
+	</div>
+	<div class="form-row">
+	    <label  for="ZWJS_CFGVersion" style="width:130px"><i class="fa fa-info"></i> DB Version</label>
+	    <input type="text" id="ZWJS_CFGVersion" readonly>
 	</div>
 </script>
 

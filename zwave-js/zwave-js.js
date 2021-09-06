@@ -9,6 +9,7 @@ module.exports = function (RED) {
 		ZWaveErrorCodes
 	} = require('@zwave-js/core');
 	const ZWaveJSPackage = require('zwave-js/package.json');
+	const ZWaveCFGPackage = require('@zwave-js/config/package.json');
 	const Winston = require('winston');
 	const { Pin2LogTransport } = require('./Pin2LogTransport');
 
@@ -1189,15 +1190,12 @@ module.exports = function (RED) {
 		function printForceUpdate(NID, Value) {
 			const Lines = [];
 			Lines.push('[Node: ' + NID + ']');
+			Lines.push('└─[ValueID]');
+			const OBKeys = Object.keys(Value);
+			OBKeys.forEach((K) => {
+				Lines.push('    ' + (K + ': ') + Value[K]);
+			});
 
-			if (typeof Value !== 'undefined') {
-				Lines.push('└─[ValueID]');
-
-				const OBKeys = Object.keys(Value);
-				OBKeys.forEach((K) => {
-					Lines.push('    ' + (K + ': ') + Value[K]);
-				});
-			}
 			return Lines;
 		}
 
@@ -1646,6 +1644,7 @@ module.exports = function (RED) {
 	RED.httpAdmin.get('/zwjsgetversion', function (req, res) {
 		res.json({
 			zwjsversion: ZWaveJSPackage.version,
+			zwjscfgversion: ZWaveCFGPackage.version,
 			moduleversion: ModulePackage.version
 		});
 	});
