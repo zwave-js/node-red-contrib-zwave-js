@@ -1,5 +1,11 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 5.1.1  
+
+    **Changes**
+     - Display Driver DB Version in node config
+     - Bump serial ports to 9.2.1 
+
   - 5.1.0  
   
      **New Features**
