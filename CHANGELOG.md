@@ -5,6 +5,7 @@
     **Changes**
      - Display Driver DB Version in node config
      - Bump serial ports to 9.2.1 
+     - Fix LGTM Alerts
 
   - 5.1.0  
   
