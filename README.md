@@ -1,8 +1,16 @@
 ![Image](./resources/ReadMe.png)  
 
-# node-red-contrib-zwave-js
+# node-red-contrib-wave-js
 
-THE ultimate Z-Wave node for node-red based on Z-Wave JS.  
+[![License](https://img.shields.io/npm/l/node-red-contrib-zwave-js)](https://github.com/zwave-js/node-red-contrib-zwave-js/blob/main/LICENSE)
+[![Version](https://img.shields.io/npm/v/node-red-contrib-zwave-js)](https://www.npmjs.com/package/node-red-contrib-zwave-js)
+[![Node Version](https://img.shields.io/node/v/node-red-contrib-zwave-js)](https://www.npmjs.com/package/node-red-contrib-zwave-js)
+[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/zwave-js/node-red-contrib-zwave-js.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/zwave-js/node-red-contrib-zwave-js/context:javascript)
+[![Maintenance](https://img.shields.io/npms-io/maintenance-score/node-red-contrib-zwave-js)](https://www.npmjs.com/package/node-red-contrib-zwave-js)
+[![Dependencies](https://img.shields.io/david/marcus-j-davies/node-red-contrib-zwave-js)](https://www.npmjs.com/package/node-red-contrib-zwave-js)
+
+
+THE most powerful Z-Wave node for node-red based on Z-Wave JS.  
 If you want a fully featured Z-Wave runtime in your node-red instance, look no further.  
 <br />  
 > ### ...node-red-contrib-zwave-js is _hands down the best zwave to node red option on the planet._  
@@ -22,6 +30,7 @@ If you want a fully featured Z-Wave runtime in your node-red instance, look no f
     - Network Actions (Include, Exclude, Heal etc etc)
   - 2 Different API models, catering for both experienced and inexperienced users.
   - Use one node for your entire network, or a node per Z-Wave device.
+  - An extremely advanced filter node, to route zwave messages around your flow(s).
   - Supports multicast to send commands to mulltiple nodes at the same time.
   - Access to all supported CC's provided by Z-Wave JS.
 

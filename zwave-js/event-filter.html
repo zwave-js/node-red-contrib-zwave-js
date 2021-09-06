@@ -1,0 +1,287 @@
+﻿<script type="text/javascript">
+	let Changed = false;
+	let ActiveFilter = undefined;
+
+	RED.nodes.registerType('event-filter', {
+		category: 'ZWave JS',
+		color: 'rgb(46,145,205)',
+		defaults: {
+			name: { value: 'ZWave Event Filter' },
+			filters: { value: [] },
+			outputs: { value: 0 },
+			changeDate: { value: undefined }
+		},
+		inputs: 1,
+		outputs: 0,
+		icon: 'rbe.png',
+		label: function () {
+			return this.name;
+		},
+		oneditprepare: SortUI,
+		oneditsave: DoSave,
+		oneditcancel: function () {
+			Changed = false;
+			ActiveFilter = undefined;
+		},
+		outputLabels: function (index) {
+			return this.filters[index].name;
+		}
+	});
+
+	function compare(a, b) {
+		if (a.index < b.index) {
+			return -1;
+		}
+		if (a.index > b.index) {
+			return 1;
+		}
+		return 0;
+	}
+
+	function SortUI() {
+		$('#node-input-outputs').val('{}');
+		const OPs = JSON.parse($('#node-input-outputs').val());
+
+		$('#filtersets').editableList({
+			header: $('<div>').append(
+				'<div>Filter Sets - order defines outputs</div>'
+			),
+			sortable: true,
+			removable: true,
+			addButton: 'Add Filter Set',
+			addItem: AddItem,
+			sortItems: SortItems,
+			removeItem: RemoveItem
+		});
+
+		let I = 0;
+		this.filters.sort(compare).forEach((Item) => {
+			Item._id = I;
+			$('#filtersets').editableList('addItem', Item);
+			OPs[Item._id] = I;
+			I++;
+		});
+		$('#node-input-outputs').val(JSON.stringify(OPs));
+	}
+
+	function SortItems(Items) {
+		const OPs = JSON.parse($('#node-input-outputs').val() || '{}');
+
+		for (let i = 0; i < Items.length; i++) {
+			Items[i].data('data').index = i;
+			OPs[Items[i].data('data')._id ?? Items[i].data('data').id] = i;
+		}
+		$('#node-input-outputs').val(JSON.stringify(OPs));
+	}
+
+	function RemoveItem(Item) {
+		const OPs = JSON.parse($('#node-input-outputs').val() || '{}');
+		if (Item.hasOwnProperty('_id')) {
+			OPs[Item._id] = -1;
+		} else {
+			delete OPs[Item.id];
+		}
+
+		const Items = $('#filtersets').editableList('items');
+		for (let i = 0; i < Items.length; i++) {
+			Items[i].data('data').index = i;
+			OPs[Items[i].data('data')._id ?? Items[i].data('data').id] = i;
+		}
+
+		$('#node-input-outputs').val(JSON.stringify(OPs));
+	}
+
+	function AddItem(container, index, data) {
+		if (Object.keys(data).length === 0) {
+			data.index = index;
+			data.name = 'Filter Name';
+			data.valueIds = [];
+			data.events = ['VALUE_UPDATED'];
+			data.strict = false;
+			data.id = Math.floor((0x99999 - 0x10000) * Math.random()).toString();
+
+			const OPs = JSON.parse($('#node-input-outputs').val() || '{}');
+			OPs[data.id] = index;
+			$('#node-input-outputs').val(JSON.stringify(OPs));
+		}
+		$(container).data('data', data);
+		$(container).click(SetActiveFilter);
+		$(container).css({ minWidth: '400px' });
+		$(container).parent().css({ height: '45px', overflow: 'hidden' });
+
+		const HTML = `
+            <table style="width:100%">
+                <tr>
+                    <td>Name</td>
+                    <td><input class="data-name" value="${data.name}" type="text"></td>
+                </tr>
+                <tr>
+                    <td>ValueIDs <span class="data-vid-count">${data.valueIds.length}</span> </td>
+                    <td><input class="data-valueid-editor" value="" type="text"></td>
+                </tr>
+                <tr>
+                    <td>Strict (Match Endpoint)</td>
+                    <td><input class="data-event-Endpoint" type="checkbox"></td>
+                </tr>
+                <tr>
+                    <td>Events</td>
+                    <td>
+                        <input class="data-event-VALUE_UPDATED" type="checkbox"> VALUE_UPDATED<br />
+                        <input class="data-event-VALUE_NOTIFICATION" type="checkbox"> VALUE_NOTIFICATION<br />
+                        <input class="data-event-NOTIFICATION" type="checkbox"> NOTIFICATION<br />
+                        <input class="data-event-GET_VALUE_RESPONSE" type="checkbox"> GET_VALUE_RESPONSE
+                    </td>
+                </tr>
+            
+            `;
+
+		$(container).html(HTML);
+		$('<button>')
+			.addClass('ui-button')
+			.addClass('ui-corner-all')
+			.addClass('ui-widget')
+			.addClass('rightButton')
+			.html('&#8635;')
+			.click(() => {
+				SyncEdits();
+			})
+			.insertAfter($(container).find('.data-valueid-editor'));
+		$(container)
+			.find('.data-valueid-editor')
+			.typedInput({
+				types: ['json'],
+				default: 'json'
+			});
+		$(container)
+			.find('.data-valueid-editor')
+			.typedInput('value', JSON.stringify(data.valueIds));
+		SortChecbox($(container));
+	}
+
+	function SyncEdits() {
+		const JSONs = ActiveFilter.find('.data-valueid-editor').typedInput('value');
+		const NewObject = JSON.parse(JSONs);
+
+		ActiveFilter.data('data').valueIds = NewObject;
+		const Count = NewObject.length;
+		ActiveFilter.find('.data-vid-count').html(Count);
+
+		Changed = true;
+	}
+
+	function SetActiveFilter() {
+		if (
+			ActiveFilter === undefined ||
+			ActiveFilter.data('data').id !== $(this).data('data').id
+		) {
+			const Items = $('#filtersets').editableList('items');
+			for (let i = 0; i < Items.length; i++) {
+				Items[i].parent().animate({ height: '45px' }, 200);
+			}
+			ActiveFilter = $(this);
+			$(this).parent().animate({ height: '200px' }, 200);
+		}
+	}
+
+	function SortChecbox(El) {
+		const Data = El.data('data');
+		Data.events.forEach((EV) => {
+			El.find('.data-event-' + EV).prop('checked', true);
+		});
+		if (Data.strict) {
+			El.find('.data-event-Endpoint').prop('checked', true);
+		}
+	}
+
+	function DoSave() {
+		if (Changed) {
+			this.changeDate = new Date();
+			Changed = false;
+		}
+		const Items = $('#filtersets').editableList('items').sort(compare);
+		const Events = [
+			'VALUE_UPDATED',
+			'VALUE_NOTIFICATION',
+			'NOTIFICATION',
+			'GET_VALUE_RESPONSE'
+		];
+		this.filters = [];
+
+		for (let i = 0; i < Items.length; i++) {
+			const El = $(Items[i]);
+			const ItemData = Items[i].data('data');
+
+			ItemData.events = [];
+			Events.forEach((EV) => {
+				if (El.find('.data-event-' + EV).prop('checked')) {
+					ItemData.events.push(EV);
+				}
+			});
+
+			delete ItemData._id;
+			ItemData.name = El.find('.data-name').val();
+			ItemData.strict = El.find('.data-event-Endpoint').prop('checked');
+			this.filters.push(ItemData);
+		}
+
+		ActiveFilter = undefined;
+	}
+
+	function AddValueIDToFilter(ValueID) {
+		if (ActiveFilter !== undefined) {
+			const VIDs = ActiveFilter.data('data').valueIds;
+
+			VIDs.push(ValueID);
+			const Count = VIDs.length;
+
+			ActiveFilter.find('.data-vid-count').html(Count);
+			ActiveFilter.find('.data-valueid-editor').typedInput(
+				'value',
+				JSON.stringify(VIDs)
+			);
+
+			Changed = true;
+			return true;
+		} else {
+			return false;
+		}
+	}
+</script>
+
+<script type="text/x-red" data-template-name="event-filter">
+
+	<input type="hidden" id="node-input-outputs">
+
+
+	  <div class="form-row">
+	      <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
+	      <input type="text" id="node-input-name" placeholder="Filter Name">
+	  </div>
+
+	  <p>
+	      Add your filter sets below.<br />
+	      each set of filters, becomes an output pin.<br /><br />
+	      A filter set can include the event(s) to be filtered, and optionally ValueID(s)
+	  </p>
+
+	  <div>
+	      <ol id="filtersets" style="min-height:450px;min-width:400px"> </ol>
+	  </div>
+</script>
+
+<script type="text/x-red" data-help-name="event-filter">
+	<p>A Z-Wave event filter.</p>
+
+	<p>
+	    <code>Input:</code><br />
+	    A <strong>payload</strong> object from the controller or device-node to be processed.<br />
+
+	</p>
+
+	<p>
+	    <code>Output:</code><br />
+	    A <strong>payload</strong> containing  the event if it had a matching rule.<br />
+	    A <strong>filter</strong> object will also be provided, that denotes the matched rule.
+
+	</p>
+</script>

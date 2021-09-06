@@ -12,10 +12,24 @@ let GrantSelected;
 let ValidateDSK;
 let DriverReady = false;
 
+let StepsAPI;
+const StepList = {
+	SecurityMode: 0,
+	NIF: 1,
+	Remove: 2,
+	Classes: 3,
+	DSK: 4,
+	AddDone: 5,
+	AddDoneInsecure: 6,
+	RemoveDone: 7,
+	ReplaceSecurityMode: 8,
+	Aborted: 9
+};
+
 const ZwaveJsUI = (function () {
 	function modalAlert(message, title) {
 		const Buts = {
-			Ok: function () { }
+			Ok: function () {}
 		};
 		modalPrompt(message, title, Buts);
 	}
@@ -351,7 +365,7 @@ const ZwaveJsUI = (function () {
 			_Nodes.push(ND);
 		});
 
-		if (Neigbhors === undefined) {
+		if (typeof Neigbhors === 'undefined') {
 			Nodes.forEach((N) => {
 				if (N.isControllerNode) {
 					return;
@@ -673,54 +687,10 @@ const ZwaveJsUI = (function () {
 			});
 	}
 
-	let StepsAPI;
-	const StepList = {
-		SecurityMode: 0,
-		NIF: 1,
-		Remove: 2,
-		Classes: 3,
-		DSK: 4,
-		AddDone: 5,
-		AddDoneInsecure: 6,
-		RemoveDone: 7,
-		ReplaceSecurityMode: 8
-	};
-	const Security2Class = {
-		0: {
-			name: 'S2 Unauthenticated',
-			description:
-				'Like S2 Authenticated, but without verification, that the device being added, is the correct one.'
-		},
-		1: {
-			name: 'S2 Authenticated',
-			description:
-				'Allows the device that is being added, to be verifed that it is the corect one.'
-		},
-		2: {
-			name: 'S2 Access Control',
-			description:
-				'S2 for door locks, garage doors, access control systems etc.'
-		},
-		7: {
-			name: 'S0 Legacy',
-			description: "S0 for devices that don't support S2."
-		}
-	};
-
 	function ListRequestedClass(Classes) {
-		Classes.securityClasses.forEach((SC) => {
-			const Class = Security2Class[SC.toString()];
-			$('#S2Classes').append(`
-			<tr>
-				<td style="width:130px">
-				 	<input type="checkbox" id="SC_${SC}" class="SecurityClassCB"> 
-				</td>
-				<td>
-					<lable class="SCLable" style="font-weight: bold;font-size: 18px;" for="SC_${SC}">${Class.name}</lable><br />
-					${Class.description}
-				</td>
-			</tr>
-			`);
+		Classes.forEach((SC) => {
+			$('tr#TR_' + SC).css({ opacity: 1.0 });
+			$('input#SC_' + SC).prop('disabled', false);
 		});
 
 		StepsAPI.setStepIndex(StepList.Classes);
@@ -735,6 +705,8 @@ const ZwaveJsUI = (function () {
 		const B = event.target;
 
 		$(B).html('Please wait...');
+		ClearIETimer();
+		ClearSecurityCountDown();
 		$(B).prop('disabled', true);
 
 		ControllerCMD('IEAPI', 'verifyDSK', undefined, [$('#SC_DSK').val()], true);
@@ -744,6 +716,8 @@ const ZwaveJsUI = (function () {
 		const B = event.target;
 
 		$(B).html('Please wait...');
+		ClearIETimer();
+		ClearSecurityCountDown();
 		$(B).prop('disabled', true);
 
 		const Granted = [];
@@ -850,6 +824,8 @@ const ZwaveJsUI = (function () {
 					id: 'IEButton',
 					text: 'Abort',
 					click: function () {
+						ClearIETimer();
+						ClearSecurityCountDown();
 						ControllerCMD('IEAPI', 'stop', undefined, undefined, true);
 						$(this).dialog('destroy');
 					}
@@ -1005,7 +981,7 @@ const ZwaveJsUI = (function () {
 					.find(`[data-nodeid='${node}'].zwave-js-node-row-location`)
 					.html(`(${object})`);
 				if (node == selectedNode) {
-					$('#zwave-js-selected-node-location').text(object);
+					$('#zwave-js-selected-node-location').text(`(${object})`);
 				}
 				GetNodes();
 				input.hide();
@@ -1013,7 +989,12 @@ const ZwaveJsUI = (function () {
 			});
 		} else {
 			input.show();
-			input.val($('#zwave-js-selected-node-location').text());
+			let CurrentLocation = $('#zwave-js-selected-node-location').text();
+			CurrentLocation = CurrentLocation.substring(
+				1,
+				CurrentLocation.length - 1
+			);
+			input.val(CurrentLocation);
 			Button.html('Go');
 		}
 	}
@@ -1353,6 +1334,8 @@ const ZwaveJsUI = (function () {
 		switch (data.type) {
 			case 'node-collection-change':
 				if (data.event === 'node added') {
+					ClearIETimer();
+					ClearSecurityCountDown();
 					GetNodes();
 					if (
 						data.inclusionResult.lowSecurity !== undefined &&
@@ -1365,6 +1348,8 @@ const ZwaveJsUI = (function () {
 					$('#IEButton').text('Close');
 				}
 				if (data.event === 'node removed') {
+					ClearIETimer();
+					ClearSecurityCountDown();
 					GetNodes();
 					StepsAPI.setStepIndex(StepList.RemoveDone);
 					$('#IEButton').text('Close');
@@ -1374,15 +1359,26 @@ const ZwaveJsUI = (function () {
 			case 'node-inclusion-step':
 				if (data.event === 'grant security') {
 					ListRequestedClass(data.classes);
+					ClearIETimer();
+					StartSecurityCountDown();
 				}
 				if (data.event === 'verify dsk') {
 					DisplayDSK(data.dsk);
+					ClearIETimer();
+					StartSecurityCountDown();
 				}
 				if (data.event === 'inclusion started') {
 					StepsAPI.setStepIndex(StepList.NIF);
+					StartIECountDown();
 				}
 				if (data.event === 'exclusion started') {
 					StepsAPI.setStepIndex(StepList.Remove);
+					StartIECountDown();
+				}
+				if (data.event === 'aborted') {
+					StepsAPI.setStepIndex(StepList.Aborted);
+					ClearIETimer();
+					ClearSecurityCountDown();
 				}
 				break;
 
@@ -1399,6 +1395,45 @@ const ZwaveJsUI = (function () {
 				}
 				break;
 		}
+	}
+
+	let Timer;
+	let IETime;
+	let SecurityTime;
+	function ClearIETimer() {
+		if (Timer !== undefined) {
+			clearInterval(Timer);
+			Timer = undefined;
+		}
+	}
+	function StartIECountDown() {
+		ClearIETimer();
+		IETime = 30;
+		Timer = setInterval(() => {
+			IETime--;
+			$('.countdown').html(IETime + ' seconds remaining...');
+			if (IETime <= 0) {
+				ClearIETimer();
+				$('#IEButton').click();
+			}
+		}, 1000);
+	}
+	function ClearSecurityCountDown() {
+		if (Timer !== undefined) {
+			clearInterval(Timer);
+			Timer = undefined;
+		}
+	}
+	function StartSecurityCountDown() {
+		ClearSecurityCountDown();
+		SecurityTime = 240;
+		Timer = setInterval(() => {
+			SecurityTime--;
+			$('.countdown').html(SecurityTime + ' seconds remaining...');
+			if (SecurityTime <= 0) {
+				ClearSecurityCountDown();
+			}
+		}, 1000);
 	}
 
 	function renderNode(node) {
@@ -1690,12 +1725,12 @@ const ZwaveJsUI = (function () {
 			valueId.propertyKeyName ??
 			valueId.propertyName ??
 			valueId.property +
-			(valueId.propertyKey !== undefined
-				? `[0x${valueId.propertyKey
-					.toString(16)
-					.toUpperCase()
-					.padStart(2, '0')}]`
-				: '');
+				(valueId.propertyKey !== undefined
+					? `[0x${valueId.propertyKey
+							.toString(16)
+							.toUpperCase()
+							.padStart(2, '0')}]`
+					: '');
 		$('<span>')
 			.addClass('zwave-js-node-property-name')
 			.text(label)
@@ -1716,6 +1751,16 @@ const ZwaveJsUI = (function () {
 					title: 'Information',
 					minHeight: 75,
 					buttons: {
+						'Add To Filter Set': function () {
+							if (AddValueIDToFilter(data.valueId)) {
+								$(this).dialog('destroy');
+							} else {
+								modalAlert(
+									'Please activate the target filter set.',
+									'No Active Filter Set'
+								);
+							}
+						},
 						Close: function () {
 							$(this).dialog('destroy');
 						}
