@@ -1190,15 +1190,12 @@ module.exports = function (RED) {
 		function printForceUpdate(NID, Value) {
 			const Lines = [];
 			Lines.push('[Node: ' + NID + ']');
+			Lines.push('└─[ValueID]');
+			const OBKeys = Object.keys(Value);
+			OBKeys.forEach((K) => {
+				Lines.push('    ' + (K + ': ') + Value[K]);
+			});
 
-			if (typeof Value !== 'undefined') {
-				Lines.push('└─[ValueID]');
-
-				const OBKeys = Object.keys(Value);
-				OBKeys.forEach((K) => {
-					Lines.push('    ' + (K + ': ') + Value[K]);
-				});
-			}
 			return Lines;
 		}
 

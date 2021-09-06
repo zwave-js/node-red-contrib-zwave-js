@@ -324,7 +324,7 @@ const ZwaveJsUI = (function () {
 		});
 	}
 
-	async function GenerateMapJSON(Nodes, Neigbhors) {
+	async function GenerateMapJSON(Nodes) {
 		const _Promises = [];
 		const _Nodes = [];
 		const _Edges = [];
@@ -365,79 +365,47 @@ const ZwaveJsUI = (function () {
 			_Nodes.push(ND);
 		});
 
-		if (typeof Neigbhors === 'undefined') {
-			Nodes.forEach((N) => {
-				if (N.isControllerNode) {
-					return;
-				}
+		Nodes.forEach((N) => {
+			if (N.isControllerNode) {
+				return;
+			}
 
-				const P = new Promise((res) => {
-					ControllerCMD('ControllerAPI', 'getNodeNeighbors', undefined, [
-						N.nodeId
-					]).then(({ node, object }) => {
-						object.forEach((NodeNeighbor) => {
-							const Neighbor = _Nodes.filter(
-								(Node) => Node.id === NodeNeighbor
-							)[0];
-							if (Neighbor.canRoute) {
-								const AlreadyAttached = _Edges.filter(
-									(E) => E.from === NodeNeighbor && E.to === node
-								);
-								if (AlreadyAttached.length < 1) {
-									const Color = {
-										highlight: Neighbor.isControllerNode ? 'green' : '#000000',
-										color: '#d3d3d3'
-									};
-									_Edges.push({
-										color: Color,
-										from: node,
-										to: NodeNeighbor,
-										arrows: { to: { enabled: true, type: 'arrow' } }
-									});
-								} else {
-									_Edges.filter(
-										(E) => E.from === NodeNeighbor && E.to === node
-									)[0].arrows.from = { enabled: true, type: 'arrow' };
-								}
-							}
-						});
-						res();
-					});
-				});
-				_Promises.push(P);
-			});
-			await Promise.all(_Promises);
-		} else {
-			Neigbhors.forEach(({ node, object }) => {
-				if (_Nodes.filter((Node) => Node.id === node)[0].isControllerNode) {
-					return;
-				}
-				object.forEach((NodeNeighbor) => {
-					const Neighbor = _Nodes.filter((Node) => Node.id === NodeNeighbor)[0];
-					if (Neighbor.canRoute) {
-						const AlreadyAttached = _Edges.filter(
-							(E) => E.from === NodeNeighbor && E.to === node
-						);
-						if (AlreadyAttached.length < 1) {
-							const Color = {
-								highlight: Neighbor.isControllerNode ? 'green' : '#000000',
-								color: '#d3d3d3'
-							};
-							_Edges.push({
-								color: Color,
-								from: node,
-								to: NodeNeighbor,
-								arrows: { to: { enabled: true, type: 'arrow' } }
-							});
-						} else {
-							_Edges.filter(
+			const P = new Promise((res) => {
+				ControllerCMD('ControllerAPI', 'getNodeNeighbors', undefined, [
+					N.nodeId
+				]).then(({ node, object }) => {
+					object.forEach((NodeNeighbor) => {
+						const Neighbor = _Nodes.filter(
+							(Node) => Node.id === NodeNeighbor
+						)[0];
+						if (Neighbor.canRoute) {
+							const AlreadyAttached = _Edges.filter(
 								(E) => E.from === NodeNeighbor && E.to === node
-							)[0].arrows.from = { enabled: true, type: 'arrow' };
+							);
+							if (AlreadyAttached.length < 1) {
+								const Color = {
+									highlight: Neighbor.isControllerNode ? 'green' : '#000000',
+									color: '#d3d3d3'
+								};
+								_Edges.push({
+									color: Color,
+									from: node,
+									to: NodeNeighbor,
+									arrows: { to: { enabled: true, type: 'arrow' } }
+								});
+							} else {
+								_Edges.filter(
+									(E) => E.from === NodeNeighbor && E.to === node
+								)[0].arrows.from = { enabled: true, type: 'arrow' };
+							}
 						}
-					}
+					});
+					res();
 				});
 			});
-		}
+			_Promises.push(P);
+		});
+		await Promise.all(_Promises);
 
 		return { _Nodes, _Edges };
 	}
