@@ -1,5 +1,9 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 5.1.2
+    **Changes**
+     - Read me typo
+
   - 5.1.1  
 
     **Changes**
