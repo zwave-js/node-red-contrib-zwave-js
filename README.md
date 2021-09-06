@@ -1,6 +1,6 @@
 ![Image](./resources/ReadMe.png)  
 
-# node-red-contrib-wave-js
+# node-red-contrib-zwave-js
 
 [![License](https://img.shields.io/npm/l/node-red-contrib-zwave-js)](https://github.com/zwave-js/node-red-contrib-zwave-js/blob/main/LICENSE)
 [![Version](https://img.shields.io/npm/v/node-red-contrib-zwave-js)](https://www.npmjs.com/package/node-red-contrib-zwave-js)
