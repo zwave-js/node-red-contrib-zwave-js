@@ -5,6 +5,9 @@
     **New Features**
      - Implement official device db update mechanism.
 
+    **Fixes**
+     - Correctly report the Config DB version as used by the driver.
+
   - 5.1.2
 
     **Changes**
