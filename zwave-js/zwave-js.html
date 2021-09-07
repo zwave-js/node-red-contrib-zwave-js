@@ -583,8 +583,8 @@
 						'DB Updated'
 					);
 					$('#ZWJS_CFGVersion').val(object.version);
-					$(event.target).prop('disabled',false)
-					$(event.target).html('Check For Updates')
+					Button.prop('disabled',false)
+					Button.html('Check For Updates')
 				} else {
 					modalAlert('No DB update is availbale.', 'No Updates Available');
 					Button.prop('disabled',false)
