@@ -88,7 +88,7 @@ module.exports = {
 		RED.httpAdmin.post('/zwave-js/cmd', async (req, res) => {
 			const timeout = setTimeout(() => res.status(504).end(), 5000);
 
-			if(req.body.noTimeout){
+			if (req.body.noTimeout) {
 				clearTimeout(timeout);
 			}
 

@@ -569,32 +569,33 @@
 	}
 
 	function DBUpdate() {
+		const Button = $(event.target);
 
-		const Button = $(event.target)
-
-		Button.prop('disabled',true)
-		Button.html('Please Wait')
+		Button.prop('disabled', true);
+		Button.html('Please Wait');
 
 		ZwaveJsUI.ControllerCMD('DriverAPI', 'installConfigUpdate')
 			.then(({ object }) => {
 				if (object.installed) {
 					modalAlert(
-						'The Device Database has been updated to '+object.version+', please restart Node Red, to complete the update.',
+						'The Device Database has been updated to ' +
+							object.version +
+							', please restart Node Red, to complete the update.',
 						'DB Updated'
 					);
 					$('#ZWJS_CFGVersion').val(object.version);
-					Button.prop('disabled',false)
-					Button.html('Check For Updates')
+					Button.prop('disabled', false);
+					Button.html('Check For Updates');
 				} else {
 					modalAlert('No DB update is availbale.', 'No Updates Available');
-					Button.prop('disabled',false)
-					Button.html('Check For Updates')
+					Button.prop('disabled', false);
+					Button.html('Check For Updates');
 				}
 			})
 			.catch((err) => {
 				modalAlert(err.responseText, 'DB Update Failed');
-				Button.prop('disabled',false)
-				Button.html('Check For Updates')
+				Button.prop('disabled', false);
+				Button.html('Check For Updates');
 			});
 	}
 

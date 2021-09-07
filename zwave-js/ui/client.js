@@ -607,7 +607,7 @@ const ZwaveJsUI = (function () {
 			return;
 		}
 
-		const NoTimeoutFor = ['installConfigUpdate']
+		const NoTimeoutFor = ['installConfigUpdate'];
 
 		const Options = {
 			url: `zwave-js/cmd`,
@@ -629,7 +629,7 @@ const ZwaveJsUI = (function () {
 			Payload.noWait = dontwait;
 		}
 
-		if(NoTimeoutFor.includes(method)){
+		if (NoTimeoutFor.includes(method)) {
 			Options.timeout = 0;
 			Payload.noTimeout = true;
 		}
