@@ -607,11 +607,17 @@ const ZwaveJsUI = (function () {
 			return;
 		}
 
+		const NoTimeoutFor = ['installConfigUpdate']
+
 		const Options = {
 			url: `zwave-js/cmd`,
 			method: 'POST',
 			contentType: 'application/json'
 		};
+
+		if(NoTimeoutFor.contains(method)){
+			Options.timeout = 0;
+		}
 
 		const Payload = {
 			mode: mode,

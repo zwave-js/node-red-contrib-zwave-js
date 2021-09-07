@@ -948,11 +948,15 @@ module.exports = function (RED) {
 
 			switch (Method) {
 				case 'installConfigUpdate':
-					const UpdateInstalled = await Driver.installConfigUpdate();
+					let Success = false;
+					const Version = await Driver.checkForConfigUpdates();
+					if(Version !== undefined){
+						Success = await Driver.installConfigUpdate();
+					}
 					Send(
 						undefined,
 						'DB_UPDATE_RESULT',
-						{ installed: UpdateInstalled },
+						{ installed: Success,version:Version },
 						send
 					);
 					break;
