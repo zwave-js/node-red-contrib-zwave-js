@@ -947,6 +947,11 @@ module.exports = function (RED) {
 			);
 
 			switch (Method) {
+				case 'installConfigUpdate':
+					const UpdateInstalled = await Driver.installConfigUpdate();
+					Send(undefined, 'DB_UPDATE_RESULT', {installed:UpdateInstalled}, send);
+					break
+
 				case 'getNodeStatistics':
 					if (Params.length < 1) {
 						Send(undefined, 'NODE_STATISTICS', NodeStats, send);

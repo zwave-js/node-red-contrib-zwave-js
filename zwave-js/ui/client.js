@@ -2015,5 +2015,5 @@ const ZwaveJsUI = (function () {
 		});
 	}
 
-	return { init };
+	return { init:init, ControllerCMD:ControllerCMD };
 })();
