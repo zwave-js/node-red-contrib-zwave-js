@@ -615,7 +615,7 @@ const ZwaveJsUI = (function () {
 			contentType: 'application/json'
 		};
 
-		if(NoTimeoutFor.contains(method)){
+		if(NoTimeoutFor.includes(method)){
 			Options.timeout = 0;
 		}
 
