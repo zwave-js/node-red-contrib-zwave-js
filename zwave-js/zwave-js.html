@@ -569,6 +569,12 @@
 	}
 
 	function DBUpdate() {
+
+		const Button = $(event.target)
+
+		Button.prop('disabled',true)
+		Button.html('Please Wait')
+
 		ZwaveJsUI.ControllerCMD('DriverAPI', 'installConfigUpdate')
 			.then(({ object }) => {
 				if (object.installed) {
@@ -577,12 +583,18 @@
 						'DB Updated'
 					);
 					$('#ZWJS_CFGVersion').val(object.version);
+					$(event.target).prop('disabled',false)
+					$(event.target).html('Check For Updates')
 				} else {
 					modalAlert('No DB update is availbale.', 'No Updates Available');
+					Button.prop('disabled',false)
+					Button.html('Check For Updates')
 				}
 			})
 			.catch((err) => {
 				modalAlert(err.responseText, 'DB Update Failed');
+				Button.prop('disabled',false)
+				Button.html('Check For Updates')
 			});
 	}
 
