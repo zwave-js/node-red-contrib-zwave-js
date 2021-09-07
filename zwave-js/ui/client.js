@@ -615,10 +615,6 @@ const ZwaveJsUI = (function () {
 			contentType: 'application/json'
 		};
 
-		if(NoTimeoutFor.includes(method)){
-			Options.timeout = 0;
-		}
-
 		const Payload = {
 			mode: mode,
 			method: method
@@ -631,6 +627,11 @@ const ZwaveJsUI = (function () {
 		}
 		if (dontwait !== undefined) {
 			Payload.noWait = dontwait;
+		}
+
+		if(NoTimeoutFor.includes(method)){
+			Options.timeout = 0;
+			Payload.noTimeout = true;
 		}
 
 		Options.data = JSON.stringify(Payload);
