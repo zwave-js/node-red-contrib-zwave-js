@@ -1,4 +1,10 @@
   # node-red-contrib-zwave-js Change Log
+  
+   - 5.2.0
+
+    **New Features**
+     - Implement official config db update function in node config
+     - Bump Zwave JS to 8.2.4
 
   - 5.1.2
 

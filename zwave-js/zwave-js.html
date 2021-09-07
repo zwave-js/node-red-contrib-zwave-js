@@ -531,8 +531,7 @@
 </script>
 
 <script type="text/javascript">
-
-function modalAlert(message, title) {
+	function modalAlert(message, title) {
 		const Buts = {
 			Ok: function () {}
 		};
@@ -569,19 +568,21 @@ function modalAlert(message, title) {
 			.dialog(Options);
 	}
 
-	function DBUpdate(){
-		ZwaveJsUI.ControllerCMD("DriverAPI","installConfigUpdate")
-		.then(({object}) => {
-			if(object.installed){
-				modalAlert('The Device Database has been updated, please restart Node-Red.','DB Updated')
-			}
-			else{
-				modalAlert('No DB update is availbale.','No Updates Available')
-			}
-		})
-		.catch((err) => {
-			modalAlert(err.responseText, 'DB Update Failed');
-		});
+	function DBUpdate() {
+		ZwaveJsUI.ControllerCMD('DriverAPI', 'installConfigUpdate')
+			.then(({ object }) => {
+				if (object.installed) {
+					modalAlert(
+						'The Device Database has been updated, please restart Node-Red.',
+						'DB Updated'
+					);
+				} else {
+					modalAlert('No DB update is availbale.', 'No Updates Available');
+				}
+			})
+			.catch((err) => {
+				modalAlert(err.responseText, 'DB Update Failed');
+			});
 	}
 
 	RED.nodes.registerType('zwave-js', {
@@ -813,7 +814,7 @@ function modalAlert(message, title) {
 	</div>
 	<div class="form-row">
 	    <label  for="ZWJS_CFGVersion" style="width:130px"><i class="fa fa-info"></i> DB Version</label>
-	    <input type="text" id="ZWJS_CFGVersion" style="width: calc(70% - 152px)" readonly> 
+	    <input type="text" id="ZWJS_CFGVersion" style="width: calc(70% - 152px)" readonly>
 		<button class="ui-button ui-corner-all ui-widget" style="width:152px" id="node-dialog-updates" onclick="DBUpdate()">Check For Updates</button>
 	</div>
 </script>
