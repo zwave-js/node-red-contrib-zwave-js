@@ -8,7 +8,6 @@ module.exports = function (RED) {
 		CommandClasses,
 		ZWaveErrorCodes
 	} = require('@zwave-js/core');
-	const ZWaveJSPackage = require('zwave-js/package.json');
 	const Winston = require('winston');
 	const { Pin2LogTransport } = require('./Pin2LogTransport');
 
@@ -1655,6 +1654,8 @@ module.exports = function (RED) {
 	});
 
 	RED.httpAdmin.get('/zwjsgetversion', function (req, res) {
+		delete require.cache[require.resolve('zwave-js/package.json')];
+		const ZWaveJSPackage = require('zwave-js/package.json');
 		res.json({
 			zwjsversion: ZWaveJSPackage.version,
 			zwjscfgversion: ZWaveJSPackage.dependencies['@zwave-js/config'],
