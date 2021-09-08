@@ -1551,14 +1551,16 @@ module.exports = function (RED) {
 			});
 
 			Node.on('interview failed', (N, Er) => {
-				Send(N, 'INTERVIEW_FAILED', Er);
-				node.status({
-					fill: 'red',
-					shape: 'dot',
-					text: 'Node: ' + N.id + ' interview failed.'
-				});
-				UI.status('Node: ' + N.id + ' interview failed.');
-				RestoreReadyStatus();
+				if (Er.isFinal) {
+					Send(N, 'INTERVIEW_FAILED', Er);
+					node.status({
+						fill: 'red',
+						shape: 'dot',
+						text: 'Node: ' + N.id + ' interview failed.'
+					});
+					UI.status('Node: ' + N.id + ' interview failed.');
+					RestoreReadyStatus();
+				}
 			});
 
 			Node.on('interview completed', (N) => {

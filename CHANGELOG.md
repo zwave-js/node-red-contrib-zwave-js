@@ -16,7 +16,7 @@
 
     **Fixes**
      - Correctly report the Config DB version as used by the driver.
-
+     - Interview Failed event, is now only triggered on the last retry.
   - 5.1.2
 
     **Changes**
