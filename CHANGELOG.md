@@ -1,9 +1,18 @@
   # node-red-contrib-zwave-js Change Log
   
-  - 5.2.0
+  - 6.0.0
+
+    **Breaking Changes**
+     - The network keys MUST now be a hex string.
+        - If you currently use a 16 character string, use a string to hex  converter (http://string-functions.com/string-hex.aspx)
+        - If using a byte array, simply copy the array and patse it back in,
+          it will convert the byte array to its hex string equivalent.
+
+        If you do not use security, this breaking change does not apply.
 
     **New Features**
      - Implement official device db update mechanism.
+     - Network keys can now be generated
 
     **Fixes**
      - Correctly report the Config DB version as used by the driver.

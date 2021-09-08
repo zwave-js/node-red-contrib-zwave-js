@@ -568,6 +568,35 @@
 			.dialog(Options);
 	}
 
+	function handleNetworkKeyPaste(e) {
+		e.stopPropagation();
+		e.preventDefault();
+
+		const clipboardData = e.clipboardData || window.clipboardData;
+		let pastedData = clipboardData.getData('Text');
+
+		if (pastedData) {
+			pastedData = pastedData
+				.trim()
+				.replace(/0x/g, '')
+				.replace(/\[/g, '')
+				.replace(/\]/g, '')
+				.replace(/[^0-9a-fA-F]+/g, '')
+				.toLowerCase()
+				.slice(0, 32);
+		}
+		$(event.target).val(pastedData);
+	}
+
+	function genKey() {
+		const bytes = new Uint8Array(16);
+		window.crypto.getRandomValues(bytes);
+		const hexKey = [...bytes]
+			.map((x) => x.toString(16).padStart(2, '0'))
+			.join('');
+		$(event.target).prev().val(hexKey);
+	}
+
 	function DBUpdate() {
 		const Button = $(event.target);
 
@@ -732,19 +761,23 @@
 	</p>
 	<div class="form-row">
 	    <label for="node-input-encryptionKey" style="width:130px"><i class="fa fa-pencil"></i> S0</label>
-	    <input type="text" id="node-input-encryptionKey" placeholder="[0x01,0x02,..] or plain text">
+	    <input type="text" id="node-input-encryptionKey" placeholder="32 character hexadecimal" style="width: calc(70% - 152px)" onpaste="handleNetworkKeyPaste(event)">
+		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
 	</div>
 	<div class="form-row">
 	    <label for="node-input-encryptionKeyS2U" style="width:130px"><i class="fa fa-pencil"></i> S2 Unauth</label>
-	    <input type="text" id="node-input-encryptionKeyS2U" placeholder="[0x01,0x02,..] or plain text">
+	    <input type="text" id="node-input-encryptionKeyS2U" placeholder="32 character hexadecimal" style="width: calc(70% - 152px)" onpaste="handleNetworkKeyPaste(event)">
+		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
 	</div>
 	<div class="form-row">
 	    <label for="node-input-encryptionKeyS2A" style="width:130px"><i class="fa fa-pencil"></i> S2 Auth</label>
-	    <input type="text" id="node-input-encryptionKeyS2A" placeholder="[0x01,0x02,..] or plain text">
+	    <input type="text" id="node-input-encryptionKeyS2A" placeholder="32 character hexadecimal" style="width: calc(70% - 152px)" onpaste="handleNetworkKeyPaste(event)">
+		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
 	</div>
 	<div class="form-row">
 	    <label for="node-input-encryptionKeyS2AC" style="width:130px"><i class="fa fa-pencil"></i> S2 Access Ctrl</label>
-	    <input type="text" id="node-input-encryptionKeyS2AC" placeholder="[0x01,0x02,..] or plain text">
+	    <input type="text" id="node-input-encryptionKeyS2AC" placeholder="32 character hexadecimal" style="width: calc(70% - 152px)" onpaste="handleNetworkKeyPaste(event)">
+		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
 	</div>
 	<br />
 	<p>

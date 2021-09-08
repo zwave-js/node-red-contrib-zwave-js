@@ -259,46 +259,18 @@ module.exports = function (RED) {
 
 		const GetKey = (Property, ZWAVEJSName) => {
 			if (config[Property] !== undefined && config[Property].length > 0) {
-				if (
-					config[Property].startsWith('[') &&
-					config[Property].endsWith(']')
-				) {
-					const RemoveBrackets = config[Property].replace('[', '').replace(
-						']',
-						''
-					);
-					const _Array = RemoveBrackets.split(',');
-					const _Buffer = [];
-					for (let i = 0; i < _Array.length; i++) {
-						if (!isNaN(_Array[i].trim())) {
-							_Buffer.push(parseInt(_Array[i].trim()));
-						}
-					}
-					Log(
-						'debug',
-						'NDERED',
-						undefined,
-						'[options] [securityKeys.' + ZWAVEJSName + ']',
-						'Provided as array',
-						'[' + _Buffer.length + ' bytes]'
-					);
-					if (_Buffer.length === 16) {
-						DriverOptions.securityKeys[ZWAVEJSName] = Buffer.from(_Buffer);
-					}
-				} else {
-					Log(
-						'debug',
-						'NDERED',
-						undefined,
-						'[options] [securityKeys.' + ZWAVEJSName + ']',
-						'Provided as string',
-						'[' + config[Property].length + ' characters]'
-					);
-					if (config[Property].length === 16) {
-						DriverOptions.securityKeys[ZWAVEJSName] = Buffer.from(
-							config[Property]
-						);
-					}
+				const Buf = Buffer.from(config[Property], 'hex');
+				Log(
+					'debug',
+					'NDERED',
+					undefined,
+					'[options] [securityKeys.' + ZWAVEJSName + ']',
+					'Encryption key provided',
+					'[' + Buf.length + ' bytes]'
+				);
+
+				if (Buf.length === 16) {
+					DriverOptions.securityKeys[ZWAVEJSName] = Buffer.from(Buf);
 				}
 			}
 		};
