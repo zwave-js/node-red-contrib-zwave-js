@@ -5,16 +5,16 @@
   "description": "An extremely powerful, easy to use, and feature rich Z-Wave node for Node Red, based on Z-Wave JS.",
   "dependencies": {
     "@serialport/bindings": "9.2.1",
-    "express": "4.17.1",
-    "lodash": "4.17.21",
+    "express": "^4.17.1",
+    "lodash": "^4.17.21",
     "serialport": "9.2.1",
-    "winston": "3.3.3",
-    "winston-transport": "4.4.0",
+    "winston": "^3.3.3",
+    "winston-transport": "^4.4.0",
     "zwave-js": "^8.2.3"
   },
   "devDependencies": {
-    "eslint": "7.32.0",
-    "prettier": "2.3.2"
+    "eslint": "^7.32.0",
+    "prettier": "^2.4.0"
   },
   "engines": {
     "node": ">=12.22.2",

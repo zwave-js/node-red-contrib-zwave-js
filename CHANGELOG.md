@@ -10,6 +10,11 @@
 
         If you do not use security, this breaking change does not apply.
 
+     - The following events have been named correctly according to the driver.
+        - NETWORK_HEAL_DONE -> HEAL_NETWORK_DONE
+        - FIRMWARE_UPDATE_COMPLETE -> FIRMWARE_UPDATE_FINISHED
+        - INTERVIEW_COMPLETE -> INTERVIEW_COMPLETED
+
     **New Features**
      - Implement official device db update mechanism.
      - Network keys can now be generated
@@ -17,6 +22,11 @@
     **Fixes**
      - Correctly report the Config DB version as used by the driver.
      - Interview Failed event, is now only triggered on the last retry.
+
+    **Changes**
+     - Default log file name is now zwave-js.log
+     - Bump ZWave JS to 8.3.0
+
   - 5.1.2
 
     **Changes**
