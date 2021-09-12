@@ -18,10 +18,12 @@
     **New Features**
      - Implement official device db update mechanism.
      - Network keys can now be generated
+     - S2 Supervision Get has now been implemented (Driver)
 
     **Fixes**
      - Correctly report the Config DB version as used by the driver.
      - Interview Failed event, is now only triggered on the last retry.
+     - S2 Endpoint interview now correctly completes (Driver)
 
     **Changes**
      - Default log file name is now zwave-js.log
