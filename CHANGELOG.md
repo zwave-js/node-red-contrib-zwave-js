@@ -1,4 +1,33 @@
   # node-red-contrib-zwave-js Change Log
+  
+  - 6.0.0
+
+    **Breaking Changes**
+     - The network keys MUST now be a hex string.
+        - If you currently use a 16 character string, use a string to hex  converter (http://string-functions.com/string-hex.aspx)
+        - If using a byte array, simply copy the array and patse it back in,
+          it will convert the byte array to its hex string equivalent.
+
+        If you do not use security, this breaking change does not apply.
+
+     - The following events have been named correctly according to the driver.
+        - NETWORK_HEAL_DONE -> HEAL_NETWORK_DONE
+        - FIRMWARE_UPDATE_COMPLETE -> FIRMWARE_UPDATE_FINISHED
+        - INTERVIEW_COMPLETE -> INTERVIEW_COMPLETED
+
+    **New Features**
+     - Implement official device db update mechanism.
+     - Network keys can now be generated
+     - S2 Supervision Get has now been implemented (Driver)
+
+    **Fixes**
+     - Correctly report the Config DB version as used by the driver.
+     - Interview Failed event, is now only triggered on the last retry.
+     - S2 Endpoint interview now correctly completes (Driver)
+
+    **Changes**
+     - Default log file name is now zwave-js.log
+     - Bump ZWave JS to 8.3.1
 
   - 5.1.2
 

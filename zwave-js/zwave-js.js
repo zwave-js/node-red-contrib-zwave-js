@@ -8,10 +8,47 @@ module.exports = function (RED) {
 		CommandClasses,
 		ZWaveErrorCodes
 	} = require('@zwave-js/core');
-	const ZWaveJSPackage = require('zwave-js/package.json');
-	const ZWaveCFGPackage = require('@zwave-js/config/package.json');
 	const Winston = require('winston');
 	const { Pin2LogTransport } = require('./Pin2LogTransport');
+
+	function sanitizeEventName(event) {
+		return {
+			zwaveName: event,
+			redName: event.replace(/ /g, '_').toUpperCase(),
+			statusName:
+				event.charAt(0).toUpperCase() + event.substr(1).toLowerCase() + '.',
+			statusNameWithNode: (event, Node) => {
+				return 'Node: ' + Node.id + ' ' + event.statusName;
+			}
+		};
+	}
+
+	const event_DriverReady = sanitizeEventName('driver ready');
+	const event_AllNodesReady = sanitizeEventName('all nodes ready');
+	const event_NodeAdded = sanitizeEventName('node added');
+	const event_NodeRemoved = sanitizeEventName('node removed');
+	const event_StatisticsUpdated = sanitizeEventName('statistics updated');
+	const event_InclusionStarted = sanitizeEventName('inclusion started');
+	const event_InclusionFailed = sanitizeEventName('inclusion failed');
+	const event_InclusionStopped = sanitizeEventName('inclusion stopped');
+	const event_ExclusionStarted = sanitizeEventName('exclusion started');
+	const event_ExclusionFailed = sanitizeEventName('exclusion failed');
+	const event_ExclusionStopped = sanitizeEventName('exclusion stopped');
+	const event_NetworkHealDone = sanitizeEventName('heal network done');
+	const event_FirmwareUpdateFinished = sanitizeEventName(
+		'firmware update finished'
+	);
+	const event_ValueNotification = sanitizeEventName('value notification');
+	const event_Notification = sanitizeEventName('notification');
+	const event_ValueUpdated = sanitizeEventName('value updated');
+	const event_ValueAdded = sanitizeEventName('value added');
+	const event_Wake = sanitizeEventName('wake up');
+	const event_Sleep = sanitizeEventName('sleep');
+	const event_InterviewStarted = sanitizeEventName('interview started');
+	const event_InterviewFailed = sanitizeEventName('interview failed');
+	const event_InterviewCompleted = sanitizeEventName('interview completed');
+	const event_Ready = sanitizeEventName('ready');
+	const event_HealNetworkProgress = sanitizeEventName('heal network progress');
 
 	const UI = require('./ui/server.js');
 	UI.init(RED);
@@ -19,7 +56,7 @@ module.exports = function (RED) {
 
 	function Init(config) {
 		RED.nodes.createNode(this, config);
-		const node = this;
+		const RedNode = this;
 
 		let Driver;
 		let Logger;
@@ -85,19 +122,19 @@ module.exports = function (RED) {
 				});
 
 				if (AllReady) {
-					node.status({
+					RedNode.status({
 						fill: 'green',
 						shape: 'dot',
-						text: 'All nodes ready!'
+						text: event_AllNodesReady.statusName
 					});
-					UI.status('All nodes ready!');
+					UI.status(event_AllNodesReady.statusName);
 				} else {
-					node.status({
+					RedNode.status({
 						fill: 'yellow',
 						shape: 'dot',
-						text: 'Nodes : ' + NotReady.toString() + ' not ready.'
+						text: 'Nodes : ' + NotReady.toString() + ' Not ready.'
 					});
-					UI.status('Nodes : ' + NotReady.toString() + ' not ready.');
+					UI.status('Nodes : ' + NotReady.toString() + ' Not ready.');
 				}
 			}, 5000);
 		}
@@ -109,7 +146,7 @@ module.exports = function (RED) {
 
 		if (config.logLevel !== 'none') {
 			const FileTransportOptions = {
-				filename: Path.join(RED.settings.userDir, 'zwave-js-log.txt'),
+				filename: Path.join(RED.settings.userDir, 'zwave-js.log'),
 				format: createDefaultTransportFormat(false, false),
 				level: config.logLevel
 			};
@@ -121,7 +158,7 @@ module.exports = function (RED) {
 		}
 
 		function P2Log(Info) {
-			node.send([undefined, { payload: Info }]);
+			RedNode.send([undefined, { payload: Info }]);
 		}
 
 		if (config.logLevelPin !== 'none') {
@@ -133,7 +170,7 @@ module.exports = function (RED) {
 			Logger.add(Pin2Transport);
 		}
 
-		node.status({
+		RedNode.status({
 			fill: 'red',
 			shape: 'dot',
 			text: 'Starting Z-Wave driver...'
@@ -261,46 +298,18 @@ module.exports = function (RED) {
 
 		const GetKey = (Property, ZWAVEJSName) => {
 			if (config[Property] !== undefined && config[Property].length > 0) {
-				if (
-					config[Property].startsWith('[') &&
-					config[Property].endsWith(']')
-				) {
-					const RemoveBrackets = config[Property].replace('[', '').replace(
-						']',
-						''
-					);
-					const _Array = RemoveBrackets.split(',');
-					const _Buffer = [];
-					for (let i = 0; i < _Array.length; i++) {
-						if (!isNaN(_Array[i].trim())) {
-							_Buffer.push(parseInt(_Array[i].trim()));
-						}
-					}
-					Log(
-						'debug',
-						'NDERED',
-						undefined,
-						'[options] [securityKeys.' + ZWAVEJSName + ']',
-						'Provided as array',
-						'[' + _Buffer.length + ' bytes]'
-					);
-					if (_Buffer.length === 16) {
-						DriverOptions.securityKeys[ZWAVEJSName] = Buffer.from(_Buffer);
-					}
-				} else {
-					Log(
-						'debug',
-						'NDERED',
-						undefined,
-						'[options] [securityKeys.' + ZWAVEJSName + ']',
-						'Provided as string',
-						'[' + config[Property].length + ' characters]'
-					);
-					if (config[Property].length === 16) {
-						DriverOptions.securityKeys[ZWAVEJSName] = Buffer.from(
-							config[Property]
-						);
-					}
+				const Buf = Buffer.from(config[Property], 'hex');
+				Log(
+					'debug',
+					'NDERED',
+					undefined,
+					'[options] [securityKeys.' + ZWAVEJSName + ']',
+					'Encryption key provided',
+					'[' + Buf.length + ' bytes]'
+				);
+
+				if (Buf.length === 16) {
+					DriverOptions.securityKeys[ZWAVEJSName] = Buffer.from(Buf);
 				}
 			}
 		};
@@ -351,7 +360,7 @@ module.exports = function (RED) {
 			);
 		}
 
-		node.on('close', (removed, done) => {
+		RedNode.on('close', (removed, done) => {
 			const Type = removed ? 'DELETE' : 'RESTART';
 			Log(
 				'info',
@@ -378,7 +387,7 @@ module.exports = function (RED) {
 			}
 		});
 
-		node.on('input', Input);
+		RedNode.on('input', Input);
 
 		async function Input(msg, send, done, internal) {
 			let Type = 'CONTROLLER';
@@ -420,7 +429,7 @@ module.exports = function (RED) {
 				if (done) {
 					done(er);
 				} else {
-					node.error(er);
+					RedNode.error(er);
 				}
 			}
 		}
@@ -715,7 +724,7 @@ module.exports = function (RED) {
 					NodeCheck(Params[0]);
 					ReturnNode.id = Params[0];
 					Send(ReturnNode, 'NODE_HEAL_STARTED', undefined, send);
-					node.status({
+					RedNode.status({
 						fill: 'yellow',
 						shape: 'dot',
 						text: 'Node Heal Started: ' + Params[0]
@@ -723,14 +732,14 @@ module.exports = function (RED) {
 					UI.status('Node Heal Started: ' + Params[0]);
 					const HealResponse = await Driver.controller.healNode(Params[0]);
 					if (HealResponse) {
-						node.status({
+						RedNode.status({
 							fill: 'green',
 							shape: 'dot',
 							text: 'Node Heal Successful: ' + Params[0]
 						});
 						UI.status('Node Heal Successful: ' + Params[0]);
 					} else {
-						node.status({
+						RedNode.status({
 							fill: 'red',
 							shape: 'dot',
 							text: 'Node Heal Unsuccessful: ' + Params[0]
@@ -749,7 +758,7 @@ module.exports = function (RED) {
 				case 'beginHealingNetwork':
 					await Driver.controller.beginHealingNetwork();
 					Send(undefined, 'NETWORK_HEAL_STARTED', undefined, send);
-					node.status({
+					RedNode.status({
 						fill: 'yellow',
 						shape: 'dot',
 						text: 'Network Heal Started.'
@@ -760,7 +769,7 @@ module.exports = function (RED) {
 				case 'stopHealingNetwork':
 					await Driver.controller.stopHealingNetwork();
 					Send(undefined, 'NETWORK_HEAL_STOPPED', undefined, send);
-					node.status({
+					RedNode.status({
 						fill: 'blue',
 						shape: 'dot',
 						text: 'Network Heal Stopped.'
@@ -947,6 +956,20 @@ module.exports = function (RED) {
 			);
 
 			switch (Method) {
+				case 'installConfigUpdate':
+					let Success = false;
+					const Version = await Driver.checkForConfigUpdates();
+					if (Version !== undefined) {
+						Success = await Driver.installConfigUpdate();
+					}
+					Send(
+						undefined,
+						'DB_UPDATE_RESULT',
+						{ installed: Success, version: Version },
+						send
+					);
+					break;
+
 				case 'getNodeStatistics':
 					if (Params.length < 1) {
 						Send(undefined, 'NODE_STATISTICS', NodeStats, send);
@@ -1242,7 +1265,7 @@ module.exports = function (RED) {
 			if (send) {
 				send({ payload: PL });
 			} else {
-				node.send({ payload: PL });
+				RedNode.send({ payload: PL });
 			}
 
 			const AllowedSubjectsForDNs = [
@@ -1286,7 +1309,7 @@ module.exports = function (RED) {
 				}
 			} catch (e) {
 				Log('error', 'NDERED', undefined, '[ERROR] [INIT]', e.message);
-				node.error(e);
+				RedNode.error(e);
 				return;
 			}
 
@@ -1300,7 +1323,7 @@ module.exports = function (RED) {
 				if (e.code === ZWaveErrorCodes.Driver_Failed) {
 					if (DriverAttempts >= MaxDriverAttempts) {
 						Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
-						node.error(e);
+						RedNode.error(e);
 					} else {
 						Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
 						Log(
@@ -1315,7 +1338,7 @@ module.exports = function (RED) {
 								', Max: ' +
 								MaxDriverAttempts
 						);
-						node.error(
+						RedNode.error(
 							new Error(
 								'Driver Failed: Will retry in ' +
 									RetryTime +
@@ -1330,20 +1353,26 @@ module.exports = function (RED) {
 					}
 				} else {
 					Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
-					node.error(e);
+					RedNode.error(e);
 				}
 			});
 
-			Driver.on('all nodes ready', () => {
-				node.status({ fill: 'green', shape: 'dot', text: 'All nodes ready!' });
-				UI.status('All nodes ready!');
-				Send(undefined, 'ALL_NODES_READY');
+			// All nodes ready
+			Driver.on(event_AllNodesReady.zwaveName, () => {
+				RedNode.status({
+					fill: 'green',
+					shape: 'dot',
+					text: event_AllNodesReady.statusName
+				});
+				UI.status(event_AllNodesReady.statusName);
+				Send(undefined, event_AllNodesReady.redName);
 			});
 
-			Driver.once('driver ready', () => {
+			// driver ready
+			Driver.once(event_DriverReady.zwaveName, () => {
 				DriverAttempts = 0;
 
-				node.status({
+				RedNode.status({
 					fill: 'yellow',
 					shape: 'dot',
 					text: 'Initializing network...'
@@ -1351,99 +1380,110 @@ module.exports = function (RED) {
 				UI.status('Initializing network...');
 
 				// Add, Remove
-				Driver.controller.on('node added', (N) => {
+				Driver.controller.on(event_NodeAdded.zwaveName, (N) => {
 					ShareNodeList();
 					WireNodeEvents(N);
-					Send(N, 'NODE_ADDED');
-					Send(N, 'INTERVIEW_STARTED');
-					node.status({
+					Send(N, event_NodeAdded.redName);
+					Send(N, event_InterviewStarted.redName);
+					RedNode.status({
 						fill: 'yellow',
 						shape: 'dot',
-						text: 'Node: ' + N.id + ' interview started.'
+						text: event_InterviewStarted.statusNameWithNode(
+							event_InterviewStarted,
+							N
+						)
 					});
-					UI.status('Node: ' + N.id + ' interview started.');
+					UI.status(
+						event_InterviewStarted.statusNameWithNode(event_InterviewStarted, N)
+					);
 				});
 
-				Driver.controller.on('node removed', (N) => {
+				Driver.controller.on(event_NodeRemoved.zwaveName, (N) => {
 					ShareNodeList();
-					Send(N, 'NODE_REMOVED');
+					Send(N, event_NodeRemoved.redName);
 				});
 
 				// Stats
-				Driver.controller.on('statistics updated', (S) => {
+				Driver.controller.on(event_StatisticsUpdated.zwaveName, (S) => {
 					ControllerStats = S;
 				});
 
 				// Include
-				Driver.controller.on('inclusion started', (Secure) => {
-					Send(undefined, 'INCLUSION_STARTED', { isSecureInclude: Secure });
-					node.status({
+				Driver.controller.on(event_InclusionStarted.zwaveName, (Secure) => {
+					Send(undefined, event_InclusionStarted.redName, {
+						isSecureInclude: Secure
+					});
+					RedNode.status({
 						fill: 'yellow',
 						shape: 'dot',
-						text: 'Inclusion Started. Secure: ' + Secure
+						text: event_InclusionStarted.statusName
 					});
-					UI.status('Inclusion Started. Secure: ' + Secure);
+					UI.status(event_InclusionStarted.statusName);
 				});
-
-				Driver.controller.on('inclusion failed', () => {
-					Send(undefined, 'INCLUSION_FAILED');
-					node.status({ fill: 'red', shape: 'dot', text: 'Inclusion failed.' });
-					UI.status('Inclusion failed.');
+				Driver.controller.on(event_InclusionFailed.zwaveName, () => {
+					Send(undefined, event_InclusionFailed.redName);
+					RedNode.status({
+						fill: 'red',
+						shape: 'dot',
+						text: event_InclusionFailed.statusName
+					});
+					UI.status(event_InclusionFailed.statusName);
 					RestoreReadyStatus();
 				});
-
-				Driver.controller.on('inclusion stopped', () => {
-					Send(undefined, 'INCLUSION_STOPPED');
-					node.status({
+				Driver.controller.on(event_InclusionStopped.zwaveName, () => {
+					Send(undefined, event_InclusionStopped.redName);
+					RedNode.status({
 						fill: 'green',
 						shape: 'dot',
-						text: 'Inclusion Stopped.'
+						text: event_InclusionStopped.statusName
 					});
-					UI.status('Inclusion Stopped.');
+					UI.status(event_InclusionStopped.statusName);
 				});
 
 				// Exclusion
-				Driver.controller.on('exclusion started', () => {
-					Send(undefined, 'EXCLUSION_STARTED');
-					node.status({
+				Driver.controller.on(event_ExclusionStarted.zwaveName, () => {
+					Send(undefined, event_ExclusionStarted.redName);
+					RedNode.status({
 						fill: 'yellow',
 						shape: 'dot',
-						text: 'Exclusion Started.'
+						text: event_ExclusionStarted.statusName
 					});
-					UI.status('Exclusion Started.');
+					UI.status(event_ExclusionStarted.statusName);
 				});
-
-				Driver.controller.on('exclusion failed', () => {
-					Send(undefined, 'EXCLUSION_FAILED');
-					node.status({ fill: 'red', shape: 'dot', text: 'Exclusion failed.' });
-					UI.status('Exclusion failed.');
+				Driver.controller.on(event_ExclusionFailed.zwaveName, () => {
+					Send(undefined, event_ExclusionFailed.redName);
+					RedNode.status({
+						fill: 'red',
+						shape: 'dot',
+						text: event_ExclusionFailed.statusName
+					});
+					UI.status(event_ExclusionFailed.statusName);
 					RestoreReadyStatus();
 				});
-
-				Driver.controller.on('exclusion stopped', () => {
-					Send(undefined, 'EXCLUSION_STOPPED');
-					node.status({
+				Driver.controller.on(event_ExclusionStopped.zwaveName, () => {
+					Send(undefined, event_ExclusionStopped.redName);
+					RedNode.status({
 						fill: 'green',
 						shape: 'dot',
-						text: 'Exclusion stopped.'
+						text: event_ExclusionStopped.statusName
 					});
-					UI.status('Exclusion stopped.');
+					UI.status(event_ExclusionStopped.statusName);
 					RestoreReadyStatus();
 				});
 
-				// Network Heal
-				Driver.controller.on('heal network done', () => {
-					Send(undefined, 'NETWORK_HEAL_DONE', {
+				// Heal
+				Driver.controller.on(event_NetworkHealDone.zwaveName, () => {
+					Send(undefined, event_NetworkHealDone.redName, {
 						Successful: Heal_Done,
 						Failed: Heal_Failed,
 						Skipped: Heal_Skipped
 					});
-					node.status({
+					RedNode.status({
 						fill: 'green',
 						shape: 'dot',
-						text: 'Network heal done.'
+						text: event_NetworkHealDone.statusName
 					});
-					UI.status('Network heal done.');
+					UI.status(event_NetworkHealDone.statusName);
 					RestoreReadyStatus();
 				});
 
@@ -1452,7 +1492,7 @@ module.exports = function (RED) {
 				const Heal_Failed = [];
 				const Heal_Skipped = [];
 
-				Driver.controller.on('heal network progress', (P) => {
+				Driver.controller.on(event_HealNetworkProgress.zwaveName, (P) => {
 					Heal_Pending.length = 0;
 					Heal_Done.length = 0;
 					Heal_Failed.length = 0;
@@ -1481,7 +1521,7 @@ module.exports = function (RED) {
 
 					const Completed = (100 * Processed) / (Processed + Remain);
 
-					node.status({
+					RedNode.status({
 						fill: 'yellow',
 						shape: 'dot',
 						text:
@@ -1514,77 +1554,97 @@ module.exports = function (RED) {
 		}
 
 		function WireNodeEvents(Node) {
-			Node.on('ready', (N) => {
+			Node.on(event_Ready.zwaveName, (N) => {
 				if (N.isControllerNode()) {
 					return;
 				}
 
-				Node.on('statistics updated', (N, S) => {
+				Node.on(event_StatisticsUpdated.zwaveName, (N, S) => {
 					NodeStats[Node.id] = S;
 				});
 
-				Node.on('firmware update finished', (N, S) => {
-					Send(N, 'FIRMWARE_UPDATE_COMPLETE', S);
+				Node.on(event_FirmwareUpdateFinished.zwaveName, (N, S) => {
+					Send(N, event_FirmwareUpdateFinished.redName, S);
 				});
 
-				Node.on('value notification', (N, VL) => {
-					Send(N, 'VALUE_NOTIFICATION', VL);
+				Node.on(event_ValueNotification.zwaveName, (N, VL) => {
+					Send(N, event_ValueNotification.redName, VL);
 				});
 
-				Node.on('notification', (N, CC, ARGS) => {
+				Node.on(event_Notification.zwaveName, (N, CC, ARGS) => {
 					const OBJ = {
 						ccId: CC,
 						args: ARGS
 					};
-					Send(N, 'NOTIFICATION', OBJ);
+					Send(N, event_Notification.redName, OBJ);
 				});
 
-				Node.on('value added', (N, VL) => {
-					Send(N, 'VALUE_UPDATED', VL);
+				Node.on(event_ValueUpdated.zwaveName, (N, VL) => {
+					Send(N, event_ValueUpdated.redName, VL);
 				});
 
-				Node.on('value updated', (N, VL) => {
-					Send(N, 'VALUE_UPDATED', VL);
+				Node.on(event_ValueAdded.zwaveName, (N, VL) => {
+					Send(N, 'VALUE_UPDATED', VL); // we dont differentiate between added, update - cant see the need.
 				});
 
-				Node.on('wake up', (N) => {
-					Send(N, 'WAKE_UP');
+				Node.on(event_Wake.zwaveName, (N) => {
+					Send(N, event_Wake.redName);
 				});
 
-				Node.on('sleep', (N) => {
-					Send(N, 'SLEEP');
+				Node.on(event_Sleep.zwaveName, (N) => {
+					Send(N, event_Sleep.redName);
 				});
 			});
 
-			Node.on('interview started', (N) => {
-				Send(N, 'INTERVIEW_STARTED');
-				node.status({
+			Node.on(event_InterviewStarted.zwaveName, (N) => {
+				Send(N, event_InterviewStarted.redName);
+				RedNode.status({
 					fill: 'yellow',
 					shape: 'dot',
-					text: 'Node: ' + N.id + ' interview started.'
+					text: event_InterviewStarted.statusNameWithNode(
+						event_InterviewStarted,
+						N
+					)
 				});
-				UI.status('Node: ' + N.id + ' interview started.');
+				UI.status(
+					event_InterviewStarted.statusNameWithNode(event_InterviewStarted, N)
+				);
 			});
 
-			Node.on('interview failed', (N, Er) => {
-				Send(N, 'INTERVIEW_FAILED', Er);
-				node.status({
-					fill: 'red',
-					shape: 'dot',
-					text: 'Node: ' + N.id + ' interview failed.'
-				});
-				UI.status('Node: ' + N.id + ' interview failed.');
-				RestoreReadyStatus();
+			Node.on(event_InterviewFailed.zwaveName, (N, Er) => {
+				if (Er.isFinal) {
+					Send(N, event_InterviewFailed.redName, Er);
+					RedNode.status({
+						fill: 'red',
+						shape: 'dot',
+						text: event_InterviewFailed.statusNameWithNode(
+							event_InterviewFailed,
+							N
+						)
+					});
+					UI.status(
+						event_InterviewFailed.statusNameWithNode(event_InterviewFailed, N)
+					);
+					RestoreReadyStatus();
+				}
 			});
 
-			Node.on('interview completed', (N) => {
-				Send(N, 'INTERVIEW_COMPLETE');
-				node.status({
+			Node.on(event_InterviewCompleted.zwaveName, (N) => {
+				Send(N, event_InterviewCompleted.redName);
+				RedNode.status({
 					fill: 'green',
 					shape: 'dot',
-					text: 'Node: ' + N.id + ' interview completed.'
+					text: event_InterviewCompleted.statusNameWithNode(
+						event_InterviewCompleted,
+						N
+					)
 				});
-				UI.status('Node: ' + N.id + ' interview completed.');
+				UI.status(
+					event_InterviewCompleted.statusNameWithNode(
+						event_InterviewCompleted,
+						N
+					)
+				);
 				RestoreReadyStatus();
 			});
 		}
@@ -1596,7 +1656,7 @@ module.exports = function (RED) {
 					if (e.code === ZWaveErrorCodes.Driver_Failed) {
 						if (DriverAttempts >= MaxDriverAttempts) {
 							Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
-							node.error(e);
+							RedNode.error(e);
 						} else {
 							Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
 							Log(
@@ -1611,7 +1671,7 @@ module.exports = function (RED) {
 									', Max: ' +
 									MaxDriverAttempts
 							);
-							node.error(
+							RedNode.error(
 								new Error(
 									'Driver failed: Will retry in ' +
 										RetryTime +
@@ -1626,7 +1686,7 @@ module.exports = function (RED) {
 						}
 					} else {
 						Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
-						node.error(e);
+						RedNode.error(e);
 					}
 				})
 				.then(() => {
@@ -1642,9 +1702,11 @@ module.exports = function (RED) {
 	});
 
 	RED.httpAdmin.get('/zwjsgetversion', function (req, res) {
+		delete require.cache[require.resolve('zwave-js/package.json')];
+		const ZWaveJSPackage = require('zwave-js/package.json');
 		res.json({
 			zwjsversion: ZWaveJSPackage.version,
-			zwjscfgversion: ZWaveCFGPackage.version,
+			zwjscfgversion: ZWaveJSPackage.dependencies['@zwave-js/config'],
 			moduleversion: ModulePackage.version
 		});
 	});

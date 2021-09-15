@@ -607,6 +607,8 @@ const ZwaveJsUI = (function () {
 			return;
 		}
 
+		const NoTimeoutFor = ['installConfigUpdate'];
+
 		const Options = {
 			url: `zwave-js/cmd`,
 			method: 'POST',
@@ -625,6 +627,11 @@ const ZwaveJsUI = (function () {
 		}
 		if (dontwait !== undefined) {
 			Payload.noWait = dontwait;
+		}
+
+		if (NoTimeoutFor.includes(method)) {
+			Options.timeout = 0;
+			Payload.noTimeout = true;
 		}
 
 		Options.data = JSON.stringify(Payload);
@@ -2015,5 +2022,5 @@ const ZwaveJsUI = (function () {
 		});
 	}
 
-	return { init };
+	return { init: init, ControllerCMD: ControllerCMD };
 })();

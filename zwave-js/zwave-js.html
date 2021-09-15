@@ -531,6 +531,103 @@
 </script>
 
 <script type="text/javascript">
+	function modalAlert(message, title) {
+		const Buts = {
+			Ok: function () {}
+		};
+		modalPrompt(message, title, Buts);
+	}
+
+	function modalPrompt(message, title, buttons, addCancel) {
+		const Options = {
+			draggable: false,
+			modal: true,
+			resizable: false,
+			width: 'auto',
+			title: title,
+			minHeight: 75,
+			buttons: {}
+		};
+
+		Object.keys(buttons).forEach((BT) => {
+			Options.buttons[BT] = function () {
+				$(this).dialog('destroy');
+				buttons[BT]();
+			};
+		});
+
+		if (addCancel) {
+			Options.buttons['Cancel'] = function () {
+				$(this).dialog('destroy');
+			};
+		}
+
+		$('<div>')
+			.css({ padding: 10, maxWidth: 500, wordWrap: 'break-word' })
+			.html(message)
+			.dialog(Options);
+	}
+
+	function handleNetworkKeyPaste(e) {
+		e.stopPropagation();
+		e.preventDefault();
+
+		const clipboardData = e.clipboardData || window.clipboardData;
+		let pastedData = clipboardData.getData('Text');
+
+		if (pastedData) {
+			pastedData = pastedData
+				.trim()
+				.replace(/0x/g, '')
+				.replace(/\[/g, '')
+				.replace(/\]/g, '')
+				.replace(/[^0-9a-fA-F]+/g, '')
+				.toLowerCase()
+				.slice(0, 32);
+		}
+		$(event.target).val(pastedData);
+	}
+
+	function genKey() {
+		const bytes = new Uint8Array(16);
+		window.crypto.getRandomValues(bytes);
+		const hexKey = [...bytes]
+			.map((x) => x.toString(16).padStart(2, '0'))
+			.join('');
+		$(event.target).prev().val(hexKey);
+	}
+
+	function DBUpdate() {
+		const Button = $(event.target);
+
+		Button.prop('disabled', true);
+		Button.html('Please Wait');
+
+		ZwaveJsUI.ControllerCMD('DriverAPI', 'installConfigUpdate')
+			.then(({ object }) => {
+				if (object.installed) {
+					modalAlert(
+						'The Device Database has been updated to ' +
+							object.version +
+							', please restart Node Red, to complete the update.',
+						'DB Updated'
+					);
+					$('#ZWJS_CFGVersion').val(object.version);
+					Button.prop('disabled', false);
+					Button.html('Check For Updates');
+				} else {
+					modalAlert('No DB update is availbale.', 'No Updates Available');
+					Button.prop('disabled', false);
+					Button.html('Check For Updates');
+				}
+			})
+			.catch((err) => {
+				modalAlert(err.responseText, 'DB Update Failed');
+				Button.prop('disabled', false);
+				Button.html('Check For Updates');
+			});
+	}
+
 	RED.nodes.registerType('zwave-js', {
 		category: 'ZWave JS',
 		color: 'rgb(46,145,205)',
@@ -664,19 +761,23 @@
 	</p>
 	<div class="form-row">
 	    <label for="node-input-encryptionKey" style="width:130px"><i class="fa fa-pencil"></i> S0</label>
-	    <input type="text" id="node-input-encryptionKey" placeholder="[0x01,0x02,..] or plain text">
+	    <input type="text" id="node-input-encryptionKey" placeholder="32 character hexadecimal" style="width: calc(70% - 152px)" onpaste="handleNetworkKeyPaste(event)">
+		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
 	</div>
 	<div class="form-row">
 	    <label for="node-input-encryptionKeyS2U" style="width:130px"><i class="fa fa-pencil"></i> S2 Unauth</label>
-	    <input type="text" id="node-input-encryptionKeyS2U" placeholder="[0x01,0x02,..] or plain text">
+	    <input type="text" id="node-input-encryptionKeyS2U" placeholder="32 character hexadecimal" style="width: calc(70% - 152px)" onpaste="handleNetworkKeyPaste(event)">
+		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
 	</div>
 	<div class="form-row">
 	    <label for="node-input-encryptionKeyS2A" style="width:130px"><i class="fa fa-pencil"></i> S2 Auth</label>
-	    <input type="text" id="node-input-encryptionKeyS2A" placeholder="[0x01,0x02,..] or plain text">
+	    <input type="text" id="node-input-encryptionKeyS2A" placeholder="32 character hexadecimal" style="width: calc(70% - 152px)" onpaste="handleNetworkKeyPaste(event)">
+		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
 	</div>
 	<div class="form-row">
 	    <label for="node-input-encryptionKeyS2AC" style="width:130px"><i class="fa fa-pencil"></i> S2 Access Ctrl</label>
-	    <input type="text" id="node-input-encryptionKeyS2AC" placeholder="[0x01,0x02,..] or plain text">
+	    <input type="text" id="node-input-encryptionKeyS2AC" placeholder="32 character hexadecimal" style="width: calc(70% - 152px)" onpaste="handleNetworkKeyPaste(event)">
+		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
 	</div>
 	<br />
 	<p>
@@ -724,7 +825,7 @@
 	</div>
 	<div class="form-row">
 	    <label  for="node-input-logFile" style="width:130px"><i class="fa fa-pencil"></i> Log File</label>
-	    <input type="text" id="node-input-logFile" placeholder="zwave-js-log.txt">
+	    <input type="text" id="node-input-logFile" placeholder="zwave-js.log">
 	</div>
 	<div class="form-row">
 	    <label  for="node-input-logFile" style="width:130px"><i class="fa fa-pencil"></i> Node Filter</label>
@@ -760,7 +861,8 @@
 	</div>
 	<div class="form-row">
 	    <label  for="ZWJS_CFGVersion" style="width:130px"><i class="fa fa-info"></i> DB Version</label>
-	    <input type="text" id="ZWJS_CFGVersion" readonly>
+	    <input type="text" id="ZWJS_CFGVersion" style="width: calc(70% - 152px)" readonly>
+		<button class="ui-button ui-corner-all ui-widget" style="width:152px" id="node-dialog-updates" onclick="DBUpdate()">Check For Updates</button>
 	</div>
 </script>
 
