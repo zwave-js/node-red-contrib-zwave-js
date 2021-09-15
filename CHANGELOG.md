@@ -27,7 +27,7 @@
 
     **Changes**
      - Default log file name is now zwave-js.log
-     - Bump ZWave JS to 8.3.0
+     - Bump ZWave JS to 8.3.1
 
   - 5.1.2
 
