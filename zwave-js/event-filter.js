@@ -1,4 +1,3 @@
-'use strict';
 module.exports = function (RED) {
 	const LD = require('lodash');
 

@@ -7,6 +7,8 @@
 			filteredNodeId: { value: 'All' },
 			multicast: { value: false },
 			datamode: { value: 'Send/Receive' },
+			messagesPerMS: { value: 2 },
+			messageInterval: { value: 1000 },
 			outputs: { value: 1 },
 			inputs: { value: 1 }
 		},
@@ -54,6 +56,13 @@
 		// I/O
 		if (this.datamode === undefined) {
 			$('#node-input-datamode').val('Send/Receive');
+		}
+
+		if (this.messagesPerMS === undefined) {
+			$('#node-input-messagesPerMS').val(2);
+		}
+		if (this.messageInterval === undefined) {
+			$('#node-input-messageInterval').val(1000);
 		}
 
 		$.getJSON('zwjsgetnodelist', (data) => {
@@ -241,6 +250,10 @@
 	    </select>
 	</div>
 	<div class="form-row">
+	    <label for="node-input-messagesPerMS" style="width:130px"><i class="fa fa-pencil"></i> Multiple Throttle</label>
+	    <input style="width:50px" type="text" id="node-input-messagesPerMS" placeholder="2"> commands / <input style="width:50px" type="text" id="node-input-messageInterval" placeholder="1000"> ms
+	</div>
+	<div class="form-row">
 	    <label for="node-input-datamode" style="width:130px"><i class="fa fa-pencil"></i> Data Mode</label>
 	    <select id="node-input-datamode">
 	        <option value="Send/Receive">Send/Receive</option>
@@ -263,7 +276,7 @@
 	    <tr><td colspan="2">&nbsp;</td></tr>
 	    <tr>
 	        <td style="width:70px;vertical-align:top"><strong>Multiple Nodes</strong></td>
-	        <td> - Will listen for updates on the specified Nodes.<br /> - You will need to specify the <strong>node</strong>, in your outgoing payload.</td>
+	        <td> - Will listen for updates on the specified Nodes.<br /> - Will send individual messages to each selected node.<br />- If <strong>node</strong> is specified, it will only address that node, but will continue to receive for selected nodes.</td>
 	    </tr>
 	    <tr><td colspan="2">&nbsp;</td></tr>
 	    <tr>

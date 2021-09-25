@@ -1,8 +1,31 @@
-'use strict';
 module.exports = function (RED) {
+	const Limiter = require('limiter');
+	const LD = require('lodash');
 	function Init(config) {
 		RED.nodes.createNode(this, config);
 		const node = this;
+
+		const LimiterSettings = {
+			tokensPerInterval: 2,
+			interval: 1000
+		};
+
+		if (
+			config.messagesPerMS !== undefined &&
+			!isNaN(config.messagesPerMS) &&
+			parseInt(config.messagesPerMS) > 0
+		) {
+			if (
+				config.messageInterval !== undefined &&
+				!isNaN(config.messageInterval) &&
+				parseInt(config.messageInterval) > 0
+			) {
+				LimiterSettings.tokensPerInterval = parseInt(config.messagesPerMS);
+				LimiterSettings.interval = parseInt(config.messageInterval);
+			}
+		}
+
+		const RateLimiter = new Limiter.RateLimiter(LimiterSettings);
 
 		let Out = true;
 		let DynamicIDListener = -1;
@@ -111,7 +134,10 @@ module.exports = function (RED) {
 						msg.payload.node.push(parseInt(N));
 					});
 					// Multiple
-				} else if (Array.isArray(config.filteredNodeId)) {
+				} else if (
+					Array.isArray(config.filteredNodeId) &&
+					msg.payload.node !== undefined
+				) {
 					if (!config.filteredNodeId.includes(msg.payload.node.toString())) {
 						const ErrorMSG =
 							'Target node is not enabled. Please add this node to the list of nodes to listen to.';
@@ -137,9 +163,31 @@ module.exports = function (RED) {
 					return;
 				}
 
-				RED.events.emit('zwjs:node:command', msg);
-				if (done) {
-					done();
+				if (
+					msg.payload.node === undefined &&
+					Array.isArray(config.filteredNodeId)
+				) {
+					for (let i = 0; i < config.filteredNodeId.length; i++) {
+						node.status({
+							fill: 'yellow',
+							shape: 'dot',
+							text: 'Mode: Multiple (Throttling)'
+						});
+						await RateLimiter.removeTokens(1);
+						const TR = LD.cloneDeep(msg);
+						TR.payload.node = parseInt(config.filteredNodeId[i]);
+						RED.events.emit('zwjs:node:command', TR);
+					}
+					node.status({
+						fill: 'green',
+						shape: 'dot',
+						text: 'Mode: Multiple'
+					});
+				} else {
+					RED.events.emit('zwjs:node:command', msg);
+					if (done) {
+						done();
+					}
 				}
 			} catch (Err) {
 				const E = new Error(Err.message);
