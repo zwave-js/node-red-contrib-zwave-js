@@ -1,5 +1,13 @@
   # node-red-contrib-zwave-js Change Log
-  
+
+  - 6.1.0
+
+     **Changes**
+     - The device node set to **Multiple Nodes**, now supports omitting the **node** in your payload.
+       The submitted payload will be distrbuted to each node, but will do so with rate limiting, which can be changed.
+
+       Including a **node** in your payload, will target that node only - providing it is selected.
+
   - 6.0.0
 
     **Breaking Changes**

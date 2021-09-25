@@ -1,5 +1,3 @@
-'use strict';
-
 /* eslint-env jquery */
 /* eslint-env browser */
 /*eslint no-undef: "warn"*/
