@@ -6,8 +6,8 @@ module.exports = function (RED) {
 		const node = this;
 
 		const LimiterSettings = {
-			tokensPerInterval: 2,
-			interval: 1000
+			tokensPerInterval: 1,
+			interval: 250
 		};
 
 		if (
