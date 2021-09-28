@@ -169,7 +169,7 @@ const ZwaveJsUI = (function () {
 				];
 
 				if (parseInt(EI.val()) > 0) {
-					PL[2][0].endpoint = EI.val(parseInt(EI.val()));
+					PL[2][0].endpoint = parseInt(EI.val());
 				}
 
 				ControllerCMD('AssociationsAPI', 'addAssociations', undefined, PL)
