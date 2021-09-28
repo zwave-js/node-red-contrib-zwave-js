@@ -1,8 +1,16 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 6.1.1 
+  
+    **Fixes**
+     - Fixed multi-channel associations uisng the HTML element its self as opposed to its value.
+
+    **Changes**
+     - Bump ZWave-JS to 8.4.1
+
   - 6.1.0
 
-     **Changes**
+    **Changes**
      - The device node set to **Multiple Nodes**, now supports omitting the **node** in your payload.
        The submitted payload will be distrbuted to each node, but will do so with rate limiting, which can be changed.
 
