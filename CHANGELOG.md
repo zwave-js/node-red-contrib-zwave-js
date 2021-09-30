@@ -1,5 +1,16 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 6.2.0 
+  
+    **New Features**
+     - Added a new **cmd-factory** node, that allows to construct commands with little to no knowledge in the required format
+     - Added power source icon and battery level in the UI node list
+     - Added **powerSource** property to the **NODE_LIST** response.
+
+    **Changes**
+     - Bump ZWave-JS to 8.4.1
+     - The node status on the UI, has been updated to make use of icons, as opposed to text
+
   - 6.1.1 
   
     **Fixes**

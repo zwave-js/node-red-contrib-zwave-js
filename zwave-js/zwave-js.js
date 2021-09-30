@@ -642,7 +642,22 @@ module.exports = function (RED) {
 							deviceConfig: N.deviceConfig,
 							isControllerNode: N.isControllerNode(),
 							supportsBeaming: N.supportsBeaming,
-							keepAwake: N.keepAwake
+							keepAwake: N.keepAwake,
+							powerSource: {
+								type: N.supportsCC(CommandClasses.Battery)
+									? 'battery'
+									: 'mains',
+								level: N.getValue({
+									commandClass: 128,
+									endpoint: 0,
+									property: 'level'
+								}),
+								isLow: N.getValue({
+									commandClass: 128,
+									endpoint: 0,
+									property: 'isLow'
+								})
+							}
 						});
 					});
 					Send(undefined, 'NODE_LIST', Nodes, send);
