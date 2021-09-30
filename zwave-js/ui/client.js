@@ -1514,6 +1514,7 @@ const ZwaveJsUI = (function () {
 				break;
 			case 'DEAD':
 				i.addClass('fa fa-exclamation-triangle fa-2x');
+				i.css({ color: 'red' });
 				RED.popover.tooltip(i, 'Failed');
 				break;
 		}
