@@ -10,6 +10,7 @@
     **Changes**
      - Bump ZWave-JS to 8.4.1
      - The node status on the UI, has been updated to make use of icons, as opposed to text
+     - Improvements to internal driver event santisization routines
 
   - 6.1.1 
   
