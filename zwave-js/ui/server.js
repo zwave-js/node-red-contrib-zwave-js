@@ -1,6 +1,8 @@
 const express = require('express');
 const SP = require('serialport');
 const ModulePackage = require('../../package.json');
+const { CommandClasses } = require('@zwave-js/core');
+const { getAPI } = require('zwave-js/lib/commandclass/CommandClass');
 
 const _Context = {};
 let _NodeList;
@@ -40,6 +42,29 @@ module.exports = {
 
 	init: (RED) => {
 		_RED = RED;
+
+		// CC LIst
+		RED.httpAdmin.get(
+			'/zwave-js/cfg-cclist',
+			RED.auth.needsPermission('flows.read'),
+			function (req, res) {
+				const CCNames = Object.keys(CommandClasses).filter((K) => isNaN(K));
+				res.json(CCNames);
+			}
+		);
+		// CC Op list
+		RED.httpAdmin.get(
+			'/zwave-js/cfg-cclist/:CC',
+			RED.auth.needsPermission('flows.read'),
+			function (req, res) {
+				const API = getAPI(CommandClasses[req.params.CC.replace(/-/g, ' ')]);
+				const Methods = Object.getOwnPropertyNames(API.prototype).filter(
+					(m) => m !== 'constructor' && m !== 'supportsCommand'
+				);
+
+				res.json(Methods);
+			}
+		);
 
 		// Node List
 		RED.httpAdmin.get(

@@ -1,0 +1,147 @@
+﻿<script type="text/javascript">
+	RED.nodes.registerType('cmd-factory', {
+		category: 'ZWave JS',
+		color: 'rgb(46,145,205)',
+		defaults: {
+			name: { value: 'ZWave CMD Factory' },
+			node: { value: 'topic' },
+			endpoint: { value: 'endpoint' },
+			cc: { value: 'Select Command Class' },
+			method: { value: 'Select Method' },
+			params: { value: 'payload' },
+			noEvent: { value: false },
+			forceUpdate: { value: 'forceUpdate' }
+		},
+		inputs: 1,
+		outputs: 1,
+		icon: 'CMDF.svg',
+		label: function () {
+			return this.name;
+		},
+		oneditprepare: SortUI
+	});
+
+	function SortUI() {
+		$.getJSON('zwave-js/cfg-cclist', (data) => {
+			data.forEach((CC) => {
+				$('#node-input-cc').append(
+					"<option value='" + CC + "'>" + CC + '</option>'
+				);
+			});
+		});
+
+		$('#node-input-node').typedInput({ types: ['jsonata'] });
+		$('#node-input-node')
+			.next('.red-ui-typedInput-container')
+			.css({ width: '280px' });
+		$('#node-input-endpoint').typedInput({ types: ['jsonata'] });
+		$('#node-input-endpoint')
+			.next('.red-ui-typedInput-container')
+			.css({ width: '280px' });
+		$('#node-input-params').typedInput({ types: ['jsonata'] });
+		$('#node-input-params')
+			.next('.red-ui-typedInput-container')
+			.css({ width: '280px' });
+		$('#node-input-forceUpdate').typedInput({ types: ['jsonata'] });
+		$('#node-input-forceUpdate')
+			.next('.red-ui-typedInput-container')
+			.css({ width: '280px' });
+	}
+
+	function GetMethods() {
+		const CC = $('#node-input-cc').find(':selected').text().trim();
+		$.getJSON('zwave-js/cfg-cclist/' + CC.replace(/ /g, '-'), (data) => {
+			$('#node-input-method').empty();
+			$('#node-input-method').append('<option value="">Select Method</option>');
+			data.forEach((M) => {
+				$('#node-input-method').append(
+					"<option value='" + M + "'>" + M + '</option>'
+				);
+			});
+		});
+	}
+</script>
+
+<script type="text/x-red" data-template-name="cmd-factory">
+
+	<p>
+	    All JSONata expressions are based on the root path of <strong>msg</strong>,
+		<br />i.e specifying <strong>payload</strong> will yield the object stored at <strong>msg.payload</strong><br /
+	</p>
+	<p>
+	    <strong>Basic Settings.</strong>
+	</p>
+	<div class="form-row">
+	    <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
+	    <input type="text" id="node-input-name" placeholder="ZWave CMD Factory">
+	</div>
+	<p>
+	    <strong>Command Class.</strong>
+	</p>
+	<div class="form-row">
+	    <label for="node-input-cc" style="width:130px"><i class="fa fa-pencil"></i> CC</label>
+		<select id="node-input-cc" onchange="GetMethods()">
+	        <option value="">Select Command Class</option>
+	    </select>
+	</div>
+	<div class="form-row">
+	    <label for="node-input-method" style="width:130px"><i class="fa fa-pencil"></i> Method</label>
+		<select id="node-input-method">
+	        <option value="">Select Method</option>
+	    </select>
+	</div>
+	<div class="form-row">
+	    <label for="node-input-noEvent" style="width:130px"><i class="fa fa-pencil"></i> Await Result (Get)</label>
+	    <input type="checkbox" id="node-input-noEvent">
+	</div>
+	<div class="form-row">
+	    <label for="node-input-forceUpdate" style="width:130px"><i class="fa fa-pencil"></i> Force Update</label>
+	    <input style="width:50px" type="text" id="node-input-forceUpdate" placeholder="forceUpdate">
+	</div>
+	<p>
+	    <strong>Command Parameters.</strong>
+	</p>
+	<div class="form-row">
+	    <label for="node-input-node" style="width:130px"><i class="fa fa-pencil"></i> Node</label>
+	    <input style="width:50px" type="text" id="node-input-node" placeholder="topic">
+	</div>
+	<div class="form-row">
+	    <label for="node-input-endpoint" style="width:130px"><i class="fa fa-pencil"></i> Endpoint</label>
+	    <input style="width:50px" type="text" id="node-input-endpoint" placeholder="endpoint">
+	</div>
+	<div class="form-row">
+	    <label for="node-input-params" style="width:130px"><i class="fa fa-pencil"></i> Params</label>
+	    <input style="width:50px" type="text" id="node-input-params" placeholder="payload">
+	</div>
+</script>
+
+<script type="text/x-red" data-help-name="cmd-factory">
+	    <p>A Z-Wave device node.</p>
+
+	    <p>
+	        <code>Input:</code><br />
+	        A <strong>payload</strong> object containing a command to send.<br />
+	        <strong>params</strong> will be dependant on the type of command you are sending.
+	<pre>
+	{
+	   mode: "CCAPI",
+	   cc: "Configuration",
+	   method: "set",
+	   params: [0x18,0x03,1]
+	}
+	</pre>
+	    </p>
+
+	    <p>
+	        <code>Output:</code><br />
+	        A <strong>payload</strong> containing an event that has occured within the zwave network.<br />
+	        The contents of <strong>object</strong> is dependant on the event.
+	<pre>
+	{
+	   event: "VALUE_UPDATED",
+	   timestamp: "23-12-2020T12:23:23+000",
+	   object: ...
+	}
+	</pre>
+	    </p>
+</script>

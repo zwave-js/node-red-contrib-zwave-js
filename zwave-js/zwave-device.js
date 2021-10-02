@@ -3,7 +3,7 @@ module.exports = function (RED) {
 	const LD = require('lodash');
 	function Init(config) {
 		RED.nodes.createNode(this, config);
-		const node = this;
+		const RedNode = this;
 
 		const LimiterSettings = {
 			tokensPerInterval: 1,
@@ -47,7 +47,11 @@ module.exports = function (RED) {
 		}
 
 		if (config.filteredNodeId === 'Var') {
-			const VarValue = RED.util.evaluateNodeProperty('ZW_NODE_ID', 'env', node);
+			const VarValue = RED.util.evaluateNodeProperty(
+				'ZW_NODE_ID',
+				'env',
+				RedNode
+			);
 			if (isNaN(VarValue)) {
 				throw new Error("The 'ZW_NODE_ID' variable is not a number.");
 			}
@@ -59,13 +63,13 @@ module.exports = function (RED) {
 				if (Out) RED.events.on(`zwjs:node:event:${N}`, processEventMessage);
 			});
 			if (config.multicast) {
-				node.status({
+				RedNode.status({
 					fill: 'green',
 					shape: 'dot',
 					text: 'Mode: Mulitcast'
 				});
 			} else {
-				node.status({
+				RedNode.status({
 					fill: 'green',
 					shape: 'dot',
 					text: 'Mode: Multiple'
@@ -77,16 +81,16 @@ module.exports = function (RED) {
 					`zwjs:node:event:${config.filteredNodeId}`,
 					processEventMessage
 				);
-			node.status({
+			RedNode.status({
 				fill: 'green',
 				shape: 'dot',
 				text: `Mode: Specific Node (${config.filteredNodeId})`
 			});
 		} else if (config.filteredNodeId === 'All') {
 			if (Out) RED.events.on('zwjs:node:event:all', processEventMessage);
-			node.status({ fill: 'green', shape: 'dot', text: 'Mode: All Nodes' });
+			RedNode.status({ fill: 'green', shape: 'dot', text: 'Mode: All Nodes' });
 		} else if (config.filteredNodeId === 'AS') {
-			node.status({
+			RedNode.status({
 				fill: 'green',
 				shape: 'dot',
 				text: 'Mode: As Specifed (Waiting)'
@@ -94,10 +98,10 @@ module.exports = function (RED) {
 		}
 
 		function processEventMessage(MSG) {
-			node.send(MSG);
+			RedNode.send(MSG);
 		}
 
-		node.on('input', Input);
+		RedNode.on('input', Input);
 		async function Input(msg, send, done) {
 			try {
 				// Switch Listener (for AS)
@@ -111,7 +115,7 @@ module.exports = function (RED) {
 						if (Out)
 							RED.events.on(`zwjs:node:event:${Node}`, processEventMessage);
 						DynamicIDListener = Node;
-						node.status({
+						RedNode.status({
 							fill: 'green',
 							shape: 'dot',
 							text: `Mode: As Specifed (${Node})`
@@ -145,7 +149,7 @@ module.exports = function (RED) {
 						if (done) {
 							done(Err);
 						} else {
-							node.error(Err);
+							RedNode.error(Err);
 						}
 						return;
 					}
@@ -158,7 +162,7 @@ module.exports = function (RED) {
 					if (done) {
 						done(Err);
 					} else {
-						node.error(Err);
+						RedNode.error(Err);
 					}
 					return;
 				}
@@ -168,7 +172,7 @@ module.exports = function (RED) {
 					Array.isArray(config.filteredNodeId)
 				) {
 					for (let i = 0; i < config.filteredNodeId.length; i++) {
-						node.status({
+						RedNode.status({
 							fill: 'yellow',
 							shape: 'dot',
 							text: 'Mode: Multiple (Throttling)'
@@ -178,7 +182,7 @@ module.exports = function (RED) {
 						TR.payload.node = parseInt(config.filteredNodeId[i]);
 						RED.events.emit('zwjs:node:command', TR);
 					}
-					node.status({
+					RedNode.status({
 						fill: 'green',
 						shape: 'dot',
 						text: 'Mode: Multiple'
@@ -194,13 +198,13 @@ module.exports = function (RED) {
 				if (done) {
 					done(E);
 				} else {
-					node.error(E);
+					RedNode.error(E);
 				}
 				return;
 			}
 		}
 
-		node.on('close', (done) => {
+		RedNode.on('close', (done) => {
 			if (Array.isArray(config.filteredNodeId)) {
 				config.filteredNodeId.forEach((N) => {
 					RED.events.off(`zwjs:node:event:${N}`, processEventMessage);
