@@ -680,7 +680,7 @@
 			$('#node-input-valueCacheDiskThrottle').val('normal');
 		}
 
-		$.getJSON('zwjsgetports', (data) => {
+		$.getJSON('zwave-js/cfg-serialports', (data) => {
 			$('#node-input-serialPort').empty();
 			$('#node-input-serialPort').append(
 				new Option('Select Port', 'Select Port')
@@ -721,7 +721,7 @@
 			});
 		});
 
-		$.getJSON('zwjsgetversion', function (data) {
+		$.getJSON('zwave-js/cfg-version', (data) => {
 			$('#MOD_Version').val(data.moduleversion);
 			$('#ZWJS_Version').val(data.zwjsversion);
 			$('#ZWJS_CFGVersion').val(data.zwjscfgversion);

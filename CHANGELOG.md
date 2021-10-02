@@ -10,7 +10,15 @@
     **Changes**
      - Bump ZWave-JS to 8.4.1
      - The node status on the UI, has been updated to make use of icons, as opposed to text
-     - Improvements to internal driver event sanitization routines
+
+    **Internal Changes**
+     - Improvements to driver event sanitization routines
+     - Security enhancements to the HTTP API
+     - Moved all HTTP API endpoints to the ui/server.js module
+
+    **Fixes**
+     - Fixed a potential issuse, if the node-red admin ui path is set to a custom value.
+
 
   - 6.1.1 
   

@@ -139,7 +139,7 @@ const ZwaveJsUI = (function () {
 		FirmwareForm = $('<div>').css({ padding: 10 }).html('Please wait...');
 		FirmwareForm.dialog(Options);
 
-		$.getJSON('zwjsgetnodelist', (data) => {
+		$.getJSON('zwave-js/cfg-nodelist', (data) => {
 			FirmwareForm.html('');
 			const Template = $('#TPL_Firmware').html();
 			const templateScript = Handlebars.compile(Template);

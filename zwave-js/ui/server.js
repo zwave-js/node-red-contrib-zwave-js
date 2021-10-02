@@ -1,6 +1,9 @@
 const express = require('express');
+const SP = require('serialport');
+const ModulePackage = require('../../package.json');
 
 const _Context = {};
+let _NodeList;
 let _RED;
 
 let LatestStatus;
@@ -31,97 +34,158 @@ module.exports = {
 		_SendStatus();
 	},
 
+	upateNodeList: (Nodes) => {
+		_NodeList = Nodes;
+	},
+
 	init: (RED) => {
 		_RED = RED;
 
+		// Node List
+		RED.httpAdmin.get(
+			'/zwave-js/cfg-nodelist',
+			RED.auth.needsPermission('flows.read'),
+			function (req, res) {
+				res.json(_NodeList);
+			}
+		);
+
+		// Version
+		RED.httpAdmin.get(
+			'/zwave-js/cfg-version',
+			RED.auth.needsPermission('flows.read'),
+			function (req, res) {
+				delete require.cache[require.resolve('zwave-js/package.json')];
+				const ZWaveJSPackage = require('zwave-js/package.json');
+				res.json({
+					zwjsversion: ZWaveJSPackage.version,
+					zwjscfgversion: ZWaveJSPackage.dependencies['@zwave-js/config'],
+					moduleversion: ModulePackage.version
+				});
+			}
+		);
+
+		// serial ports
+		RED.httpAdmin.get(
+			'/zwave-js/cfg-serialports',
+			RED.auth.needsPermission('flows.read'),
+			function (req, res) {
+				SP.list()
+					.then((ports) => {
+						const a = ports.map((p) => p.path);
+						res.json(a);
+					})
+					.catch((err) => {
+						RED.log.error('Error listing serial ports', err);
+						res.json([]);
+					});
+			}
+		);
+
 		// Driver State
-		RED.httpAdmin.get('/zwave-js/fetch-driver-status', function (req, res) {
-			res.status(200).end();
-			_SendStatus();
-		});
+		RED.httpAdmin.get(
+			'/zwave-js/fetch-driver-status',
+			RED.auth.needsPermission('flows.read'),
+			function (req, res) {
+				res.status(200).end();
+				_SendStatus();
+			}
+		);
 
 		// ready Check
-		RED.httpAdmin.get('/zwave-js/driverready', function (req, res) {
-			const Loaded = _Context.hasOwnProperty('controller');
-			res.contentType('application/json');
-			res.send({ ready: Loaded });
-		});
+		RED.httpAdmin.get(
+			'/zwave-js/driverready',
+			RED.auth.needsPermission('flows.read'),
+			function (req, res) {
+				const Loaded = _Context.hasOwnProperty('controller');
+				res.contentType('application/json');
+				res.send({ ready: Loaded });
+			}
+		);
 
 		/* Res */
 		RED.httpAdmin.use('/zwave-js/res', express.static(__dirname));
 
 		// Frimware
-		RED.httpAdmin.post('/zwave-js/firmwareupdate/:code', function (req, res) {
-			let _Buffer = Buffer.alloc(0);
-			req.on('data', (Data) => {
-				_Buffer = Buffer.concat([_Buffer, Data]);
-			});
+		RED.httpAdmin.post(
+			'/zwave-js/firmwareupdate/:code',
+			RED.auth.needsPermission('flows.write'),
+			function (req, res) {
+				let _Buffer = Buffer.alloc(0);
+				req.on('data', (Data) => {
+					_Buffer = Buffer.concat([_Buffer, Data]);
+				});
 
-			req.once('end', () => {
-				const Code = req.params.code;
-				const CodeBuffer = Buffer.from(Code, 'base64');
-				const CodeString = CodeBuffer.toString('ascii');
-				const Parts = CodeString.split(':');
+				req.once('end', () => {
+					const Code = req.params.code;
+					const CodeBuffer = Buffer.from(Code, 'base64');
+					const CodeString = CodeBuffer.toString('ascii');
+					const Parts = CodeString.split(':');
 
-				const PL = {
-					mode: 'ControllerAPI',
-					method: 'beginFirmwareUpdate',
-					params: [parseInt(Parts[0]), parseInt(Parts[1]), Parts[2], _Buffer]
-				};
+					const PL = {
+						mode: 'ControllerAPI',
+						method: 'beginFirmwareUpdate',
+						params: [parseInt(Parts[0]), parseInt(Parts[1]), Parts[2], _Buffer]
+					};
 
-				const Success = () => {
-					res.status(200).end();
-					SendNodeStatus({ id: Parts[0] }, 'UPDATING FIRMWARE');
-				};
+					const Success = () => {
+						res.status(200).end();
+						SendNodeStatus({ id: Parts[0] }, 'UPDATING FIRMWARE');
+					};
 
-				const Error = (err) => {
-					if (err) {
-						res.status(500).send(err.message);
-					}
-				};
-				_Context.input({ payload: PL }, Success, Error);
-			});
-		});
+					const Error = (err) => {
+						if (err) {
+							res.status(500).send(err.message);
+						}
+					};
+					_Context.input({ payload: PL }, Success, Error);
+				});
+			}
+		);
 
 		// Commands
-		RED.httpAdmin.post('/zwave-js/cmd', async (req, res) => {
-			const timeout = setTimeout(() => res.status(504).end(), 5000);
+		RED.httpAdmin.post(
+			'/zwave-js/cmd',
+			RED.auth.needsPermission('flows.write'),
+			async (req, res) => {
+				const timeout = setTimeout(() => res.status(504).end(), 5000);
 
-			if (req.body.noTimeout) {
-				clearTimeout(timeout);
-			}
-
-			try {
-				if (req.body.noWait) {
-					res.status(202).end();
+				if (req.body.noTimeout) {
+					clearTimeout(timeout);
 				}
 
-				_Context.input(
-					{ payload: req.body },
-					(zwaveRes) => {
-						clearTimeout(timeout);
-						if (!req.body.noWait) {
-							res.send(zwaveRes.payload);
-						}
-					},
-					(err) => {
-						if (err) {
+				try {
+					if (req.body.noWait) {
+						res.status(202).end();
+					}
+
+					_Context.input(
+						{ payload: req.body },
+						(zwaveRes) => {
 							clearTimeout(timeout);
 							if (!req.body.noWait) {
-								res.status(500).send(err.message);
+								res.send(zwaveRes.payload);
+							}
+						},
+						(err) => {
+							if (err) {
+								clearTimeout(timeout);
+								if (!req.body.noWait) {
+									res.status(500).send(err.message);
+								}
 							}
 						}
+					);
+				} catch (err) {
+					clearTimeout(timeout);
+					if (!req.body.noWait) {
+						res
+							.status(500)
+							.send('_Context.input, is re-initializing. Please try again.');
 					}
-				);
-			} catch (err) {
-				clearTimeout(timeout);
-				if (!req.body.noWait) {
-					res
-						.status(500)
-						.send('_Context.input, is re-initializing. Please try again.');
 				}
 			}
-		});
+		);
 	},
 	sendEvent: (Type, Event, args) => {
 		_RED.comms.publish(`/zwave-js/cmd`, {

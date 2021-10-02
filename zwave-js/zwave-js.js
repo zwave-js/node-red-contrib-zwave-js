@@ -1,5 +1,4 @@
 module.exports = function (RED) {
-	const SP = require('serialport');
 	const Path = require('path');
 	const ModulePackage = require('../package.json');
 	const ZWaveJS = require('zwave-js');
@@ -52,7 +51,6 @@ module.exports = function (RED) {
 
 	const UI = require('./ui/server.js');
 	UI.init(RED);
-	const NodeList = {};
 
 	function Init(config) {
 		RED.nodes.createNode(this, config);
@@ -320,7 +318,7 @@ module.exports = function (RED) {
 		GetKey('encryptionKeyS2AC', 'S2_AccessControl');
 
 		function ShareNodeList() {
-			for (const Location in NodeList) delete NodeList[Location];
+			const NodeList = {};
 
 			NodeList['No location'] = [];
 			Driver.controller.nodes.forEach((ZWN) => {
@@ -337,6 +335,8 @@ module.exports = function (RED) {
 				}
 				NodeList[Node.location].push(Node);
 			});
+
+			UI.upateNodeList(NodeList);
 		}
 
 		function NodeCheck(ID, SkipReady) {
@@ -1711,34 +1711,4 @@ module.exports = function (RED) {
 	}
 
 	RED.nodes.registerType('zwave-js', Init);
-
-	RED.httpAdmin.get('/zwjsgetnodelist', function (req, res) {
-		res.json(NodeList);
-	});
-
-	RED.httpAdmin.get('/zwjsgetversion', function (req, res) {
-		delete require.cache[require.resolve('zwave-js/package.json')];
-		const ZWaveJSPackage = require('zwave-js/package.json');
-		res.json({
-			zwjsversion: ZWaveJSPackage.version,
-			zwjscfgversion: ZWaveJSPackage.dependencies['@zwave-js/config'],
-			moduleversion: ModulePackage.version
-		});
-	});
-
-	RED.httpAdmin.get(
-		'/zwjsgetports',
-		RED.auth.needsPermission('serial.read'),
-		function (req, res) {
-			SP.list()
-				.then((ports) => {
-					const a = ports.map((p) => p.path);
-					res.json(a);
-				})
-				.catch((err) => {
-					RED.log.error('Error listing serial ports', err);
-					res.json([]);
-				});
-		}
-	);
 };

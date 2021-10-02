@@ -70,7 +70,7 @@
 			$('#node-input-messageInterval').val(250);
 		}
 
-		$.getJSON('zwjsgetnodelist', (data) => {
+		$.getJSON('zwave-js/cfg-nodelist', (data) => {
 			Filter.empty();
 
 			let Locations = Object.keys(data);
