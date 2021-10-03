@@ -138,32 +138,17 @@
 </script>
 
 <script type="text/x-red" data-help-name="cmd-factory">
-	    <p>A Z-Wave device node.</p>
+	    <p>A Command generator node.</p>
 
 	    <p>
 	        <code>Input:</code><br />
-	        A <strong>payload</strong> object containing a command to send.<br />
-	        <strong>params</strong> will be dependant on the type of command you are sending.
-	<pre>
-	{
-	   mode: "CCAPI",
-	   cc: "Configuration",
-	   method: "set",
-	   params: [0x18,0x03,1]
-	}
-	</pre>
+	        A <strong>msg</strong> object that is to be used as inputs to the command.
+
 	    </p>
 
 	    <p>
 	        <code>Output:</code><br />
-	        A <strong>payload</strong> containing an event that has occured within the zwave network.<br />
-	        The contents of <strong>object</strong> is dependant on the event.
-	<pre>
-	{
-	   event: "VALUE_UPDATED",
-	   timestamp: "23-12-2020T12:23:23+000",
-	   object: ...
-	}
-	</pre>
+	        A <strong>payload</strong> containing a valid zwave command.
+
 	    </p>
 </script>
