@@ -31,6 +31,7 @@ If you want a fully featured Z-Wave runtime in your node-red instance, look no f
   - 2 Different API models, catering for both experienced and inexperienced users.
   - Use one node for your entire network, or a node per Z-Wave device.
   - An extremely advanced filter node, to route zwave messages around your flow(s).
+  - An extremely helpful command factory node, removing the need to learn the message format.
   - Supports multicast to send commands to mulltiple nodes at the same time.
   - Access to all supported CC's provided by Z-Wave JS.
 

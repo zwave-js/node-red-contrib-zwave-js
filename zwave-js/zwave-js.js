@@ -10,44 +10,48 @@ module.exports = function (RED) {
 	const Winston = require('winston');
 	const { Pin2LogTransport } = require('./Pin2LogTransport');
 
-	function sanitizeEventName(event) {
-		return {
-			zwaveName: event,
-			redName: event.replace(/ /g, '_').toUpperCase(),
-			statusName:
-				event.charAt(0).toUpperCase() + event.substr(1).toLowerCase() + '.',
-			statusNameWithNode: (event, Node) => {
-				return 'Node: ' + Node.id + ' ' + event.statusName;
-			}
-		};
+	class SanitizedEventName {
+		constructor(event) {
+			this.zwaveName = event;
+			this.redName = event.replace(/ /g, '_').toUpperCase();
+			this.statusName =
+				event.charAt(0).toUpperCase() + event.substr(1).toLowerCase() + '.';
+			this.statusNameWithNode = (Node) => {
+				return 'Node: ' + Node.id + ' ' + this.statusName;
+			};
+		}
 	}
 
-	const event_DriverReady = sanitizeEventName('driver ready');
-	const event_AllNodesReady = sanitizeEventName('all nodes ready');
-	const event_NodeAdded = sanitizeEventName('node added');
-	const event_NodeRemoved = sanitizeEventName('node removed');
-	const event_StatisticsUpdated = sanitizeEventName('statistics updated');
-	const event_InclusionStarted = sanitizeEventName('inclusion started');
-	const event_InclusionFailed = sanitizeEventName('inclusion failed');
-	const event_InclusionStopped = sanitizeEventName('inclusion stopped');
-	const event_ExclusionStarted = sanitizeEventName('exclusion started');
-	const event_ExclusionFailed = sanitizeEventName('exclusion failed');
-	const event_ExclusionStopped = sanitizeEventName('exclusion stopped');
-	const event_NetworkHealDone = sanitizeEventName('heal network done');
-	const event_FirmwareUpdateFinished = sanitizeEventName(
+	const event_DriverReady = new SanitizedEventName('driver ready');
+	const event_AllNodesReady = new SanitizedEventName('all nodes ready');
+	const event_NodeAdded = new SanitizedEventName('node added');
+	const event_NodeRemoved = new SanitizedEventName('node removed');
+	const event_StatisticsUpdated = new SanitizedEventName('statistics updated');
+	const event_InclusionStarted = new SanitizedEventName('inclusion started');
+	const event_InclusionFailed = new SanitizedEventName('inclusion failed');
+	const event_InclusionStopped = new SanitizedEventName('inclusion stopped');
+	const event_ExclusionStarted = new SanitizedEventName('exclusion started');
+	const event_ExclusionFailed = new SanitizedEventName('exclusion failed');
+	const event_ExclusionStopped = new SanitizedEventName('exclusion stopped');
+	const event_NetworkHealDone = new SanitizedEventName('heal network done');
+	const event_FirmwareUpdateFinished = new SanitizedEventName(
 		'firmware update finished'
 	);
-	const event_ValueNotification = sanitizeEventName('value notification');
-	const event_Notification = sanitizeEventName('notification');
-	const event_ValueUpdated = sanitizeEventName('value updated');
-	const event_ValueAdded = sanitizeEventName('value added');
-	const event_Wake = sanitizeEventName('wake up');
-	const event_Sleep = sanitizeEventName('sleep');
-	const event_InterviewStarted = sanitizeEventName('interview started');
-	const event_InterviewFailed = sanitizeEventName('interview failed');
-	const event_InterviewCompleted = sanitizeEventName('interview completed');
-	const event_Ready = sanitizeEventName('ready');
-	const event_HealNetworkProgress = sanitizeEventName('heal network progress');
+	const event_ValueNotification = new SanitizedEventName('value notification');
+	const event_Notification = new SanitizedEventName('notification');
+	const event_ValueUpdated = new SanitizedEventName('value updated');
+	const event_ValueAdded = new SanitizedEventName('value added');
+	const event_Wake = new SanitizedEventName('wake up');
+	const event_Sleep = new SanitizedEventName('sleep');
+	const event_InterviewStarted = new SanitizedEventName('interview started');
+	const event_InterviewFailed = new SanitizedEventName('interview failed');
+	const event_InterviewCompleted = new SanitizedEventName(
+		'interview completed'
+	);
+	const event_Ready = new SanitizedEventName('ready');
+	const event_HealNetworkProgress = new SanitizedEventName(
+		'heal network progress'
+	);
 
 	const UI = require('./ui/server.js');
 	UI.init(RED);
@@ -1403,14 +1407,9 @@ module.exports = function (RED) {
 					RedNode.status({
 						fill: 'yellow',
 						shape: 'dot',
-						text: event_InterviewStarted.statusNameWithNode(
-							event_InterviewStarted,
-							N
-						)
+						text: event_InterviewStarted.statusNameWithNode(N)
 					});
-					UI.status(
-						event_InterviewStarted.statusNameWithNode(event_InterviewStarted, N)
-					);
+					UI.status(event_InterviewStarted.statusNameWithNode(N));
 				});
 
 				Driver.controller.on(event_NodeRemoved.zwaveName, (N) => {
@@ -1616,14 +1615,9 @@ module.exports = function (RED) {
 				RedNode.status({
 					fill: 'yellow',
 					shape: 'dot',
-					text: event_InterviewStarted.statusNameWithNode(
-						event_InterviewStarted,
-						N
-					)
+					text: event_InterviewStarted.statusNameWithNode(N)
 				});
-				UI.status(
-					event_InterviewStarted.statusNameWithNode(event_InterviewStarted, N)
-				);
+				UI.status(event_InterviewStarted.statusNameWithNode(N));
 			});
 
 			Node.on(event_InterviewFailed.zwaveName, (N, Er) => {
@@ -1632,14 +1626,9 @@ module.exports = function (RED) {
 					RedNode.status({
 						fill: 'red',
 						shape: 'dot',
-						text: event_InterviewFailed.statusNameWithNode(
-							event_InterviewFailed,
-							N
-						)
+						text: event_InterviewFailed.statusNameWithNode(N)
 					});
-					UI.status(
-						event_InterviewFailed.statusNameWithNode(event_InterviewFailed, N)
-					);
+					UI.status(event_InterviewFailed.statusNameWithNode(N));
 					RestoreReadyStatus();
 				}
 			});
@@ -1649,17 +1638,9 @@ module.exports = function (RED) {
 				RedNode.status({
 					fill: 'green',
 					shape: 'dot',
-					text: event_InterviewCompleted.statusNameWithNode(
-						event_InterviewCompleted,
-						N
-					)
+					text: event_InterviewCompleted.statusNameWithNode(N)
 				});
-				UI.status(
-					event_InterviewCompleted.statusNameWithNode(
-						event_InterviewCompleted,
-						N
-					)
-				);
+				UI.status(event_InterviewCompleted.statusNameWithNode(N));
 				RestoreReadyStatus();
 			});
 		}

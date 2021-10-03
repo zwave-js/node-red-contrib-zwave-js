@@ -8,7 +8,7 @@
      - Added **powerSource** property to the **NODE_LIST** response.
 
     **Changes**
-     - Bump ZWave-JS to 8.4.1
+     - Bump serialport package.
      - The node status on the UI, has been updated to make use of icons, as opposed to text
 
     **Internal Changes**

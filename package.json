@@ -4,11 +4,11 @@
   "license": "MIT",
   "description": "An extremely powerful, easy to use, and feature rich Z-Wave node for Node Red, based on Z-Wave JS.",
   "dependencies": {
-    "@serialport/bindings": "9.2.1",
+    "@serialport/bindings": "9.2.4",
     "express": "^4.17.1",
     "limiter": "^2.1.0",
     "lodash": "^4.17.21",
-    "serialport": "9.2.1",
+    "serialport": "9.2.4",
     "winston": "^3.3.3",
     "winston-transport": "^4.4.0",
     "zwave-js": "^8.4.1"
@@ -22,7 +22,7 @@
     "npm": ">=6.14.13"
   },
   "scripts": {
-    "preinstall": "npm install --build-from-source --production @serialport/bindings@9.2.1 && npm install --build-from-source --production serialport@9.2.1"
+    "preinstall": "npm install --build-from-source --production @serialport/bindings@9.2.4 && npm install --build-from-source --production serialport@9.2.4"
   },
   "keywords": [
     "node-red",
