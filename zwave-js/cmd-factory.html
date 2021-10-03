@@ -21,12 +21,30 @@
 		oneditprepare: SortUI
 	});
 
+	function GoToInfo() {
+		event.preventDefault();
+
+		const URL =
+			'https://zwave-js.github.io/node-zwave-js/#/api/CCs/' +
+			$('#node-input-cc').find(':selected').text().trim().replace(/ /g, '') +
+			'?id=' +
+			$('#node-input-method').find(':selected').text().trim().toLowerCase();
+		var link = document.createElement('a');
+		link.href = URL;
+		link.setAttribute('target', '_blank');
+		document.body.appendChild(link);
+		link.click();
+		link.remove();
+	}
+
 	function SortUI() {
 		$.getJSON('zwave-js/cfg-cclist', (data) => {
 			data.forEach((CC) => {
-				$('#node-input-cc').append(
-					"<option value='" + CC + "'>" + CC + '</option>'
-				);
+				$('#node-input-cc').append(new Option(CC, CC));
+			});
+			$('#node-input-cc').val(this.cc);
+			GetMethods(() => {
+				$('#node-input-method').val(this.method);
 			});
 		});
 
@@ -48,16 +66,19 @@
 			.css({ width: '280px' });
 	}
 
-	function GetMethods() {
+	function GetMethods(cb) {
 		const CC = $('#node-input-cc').find(':selected').text().trim();
 		$.getJSON('zwave-js/cfg-cclist/' + CC.replace(/ /g, '-'), (data) => {
 			$('#node-input-method').empty();
-			$('#node-input-method').append('<option value="">Select Method</option>');
+			$('#node-input-method').append(
+				new Option('Select Method', 'Select Method')
+			);
 			data.forEach((M) => {
-				$('#node-input-method').append(
-					"<option value='" + M + "'>" + M + '</option>'
-				);
+				$('#node-input-method').append(new Option(M, M));
 			});
+			if (typeof cb === 'function') {
+				cb();
+			}
 		});
 	}
 </script>
@@ -81,14 +102,15 @@
 	<div class="form-row">
 	    <label for="node-input-cc" style="width:130px"><i class="fa fa-pencil"></i> CC</label>
 		<select id="node-input-cc" onchange="GetMethods()">
-	        <option value="">Select Command Class</option>
+	        <option value="Select Command Class">Select Command Class</option>
 	    </select>
 	</div>
 	<div class="form-row">
 	    <label for="node-input-method" style="width:130px"><i class="fa fa-pencil"></i> Method</label>
-		<select id="node-input-method">
-	        <option value="">Select Method</option>
-	    </select>
+		<select style="margin-bottom:5px" id="node-input-method">
+	        <option value="Select Method">Select Method</option>
+	    </select><br />
+		<a style="margin-left:135px" onclick="GoToInfo()" href="#">View Parameter Definition</a>
 	</div>
 	<div class="form-row">
 	    <label for="node-input-noEvent" style="width:130px"><i class="fa fa-pencil"></i> Await Result (Get)</label>
@@ -110,7 +132,7 @@
 	    <input style="width:50px" type="text" id="node-input-endpoint" placeholder="endpoint">
 	</div>
 	<div class="form-row">
-	    <label for="node-input-params" style="width:130px"><i class="fa fa-pencil"></i> Params</label>
+	    <label for="node-input-params" style="width:130px"><i class="fa fa-pencil"></i> Params []</label>
 	    <input style="width:50px" type="text" id="node-input-params" placeholder="payload">
 	</div>
 </script>

@@ -7,6 +7,8 @@ const { getAPI } = require('zwave-js/lib/commandclass/CommandClass');
 const _Context = {};
 let _NodeList;
 let _RED;
+let _CCs;
+let _CCMethods;
 
 let LatestStatus;
 const _SendStatus = () => {
@@ -48,8 +50,25 @@ module.exports = {
 			'/zwave-js/cfg-cclist',
 			RED.auth.needsPermission('flows.read'),
 			function (req, res) {
-				const CCNames = Object.keys(CommandClasses).filter((K) => isNaN(K));
-				res.json(CCNames);
+				if (_CCs !== undefined) {
+					res.json(_CCs);
+				} else {
+					const Check = (CC) => {
+						const API = getAPI(CommandClasses[CC]);
+						if (API !== undefined) {
+							const Methods = Object.getOwnPropertyNames(API.prototype).filter(
+								(m) => m !== 'constructor' && m !== 'supportsCommand'
+							);
+							_CCMethods[CC] = Methods;
+						}
+						return API;
+					};
+					_CCMethods = {};
+					_CCs = Object.keys(CommandClasses).filter(
+						(K) => isNaN(K) && Check(K) !== undefined
+					);
+					res.json(_CCs);
+				}
 			}
 		);
 		// CC Op list
@@ -57,12 +76,7 @@ module.exports = {
 			'/zwave-js/cfg-cclist/:CC',
 			RED.auth.needsPermission('flows.read'),
 			function (req, res) {
-				const API = getAPI(CommandClasses[req.params.CC.replace(/-/g, ' ')]);
-				const Methods = Object.getOwnPropertyNames(API.prototype).filter(
-					(m) => m !== 'constructor' && m !== 'supportsCommand'
-				);
-
-				res.json(Methods);
+				res.json(_CCMethods[req.params.CC.replace(/-/g, ' ')]);
 			}
 		);
 
