@@ -15,6 +15,8 @@
      - Improvements to driver event sanitization routines
      - Security enhancements to the HTTP API
      - Moved all HTTP API endpoints to the ui/server.js module
+     - The **serialport** package is no longer forcibly compiled, and is left for serialport to decide  
+       if compilation is necessary.
 
     **Fixes**
      - Fixed a potential issuse, if the node-red admin ui path is set to a custom value.
