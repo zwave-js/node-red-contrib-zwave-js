@@ -9,6 +9,7 @@
 			datamode: { value: 'Send/Receive' },
 			messagesPerMS: { value: 1 },
 			messageInterval: { value: 250 },
+			isolated: { value: false },
 			outputs: { value: 1 },
 			inputs: { value: 1 }
 		},
@@ -61,6 +62,13 @@
 		// I/O
 		if (this.datamode === undefined) {
 			$('#node-input-datamode').val('Send/Receive');
+			$('#IsolatedDiv').css({ display: 'block' });
+		} else {
+			if (this.datamode === 'Send/Receive') {
+				$('#IsolatedDiv').css({ display: 'block' });
+			} else {
+				$('#IsolatedDiv').css({ display: 'none' });
+			}
 		}
 
 		if (this.messagesPerMS === undefined) {
@@ -230,6 +238,14 @@
 				break;
 		}
 	}
+
+	function showIsolated() {
+		if ($('#node-input-datamode').val() == 'Send/Receive') {
+			$('#IsolatedDiv').css({ display: 'block' });
+		} else {
+			$('#IsolatedDiv').css({ display: 'none' });
+		}
+	}
 </script>
 
 <script type="text/x-red" data-template-name="zwave-device">
@@ -261,17 +277,20 @@
 	</div>
 	<div class="form-row">
 	    <label for="node-input-datamode" style="width:130px"><i class="fa fa-pencil"></i> Data Mode</label>
-	    <select id="node-input-datamode">
+	    <select id="node-input-datamode" onchange="showIsolated()">
 	        <option value="Send/Receive">Send/Receive</option>
 	        <option value="Send">Send</option>
 	        <option value="Receive">Receive</option>
 	    </select>
 	</div>
+	<div class="form-row" id="IsolatedDiv">
+	    <label for="node-input-isolated" style="width:130px"><i class="fa fa-pencil"></i> Isolated getValue</label>
+	    <input type="checkbox" id="node-input-isolated" />
+	</div>
 	<div class="form-row">
 	    <label for="node-input-filteredNodeId" style="width:130px"><i class="fa fa-pencil"></i> Node ID(s)</label>
 	    <select id="node-input-filteredNodeId">
 	    </select>
-
 	</div>
 	<hr />
 	<table>

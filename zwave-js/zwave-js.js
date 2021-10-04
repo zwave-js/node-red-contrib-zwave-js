@@ -375,7 +375,7 @@ module.exports = function (RED) {
 			);
 			UI.unregister();
 			Driver.destroy();
-			RED.events.off('zwjs:node:command', processMessageEvent);
+			RED.events.removeListener('zwjs:node:command', processMessageEvent);
 			if (Logger !== undefined) {
 				Logger.clear();
 				Logger = undefined;
@@ -868,6 +868,9 @@ module.exports = function (RED) {
 						response: V,
 						valueId: Params[0]
 					};
+					if (msg.isolatedNodeId !== undefined) {
+						ReturnObject.isolatedNodeId = msg.isolatedNodeId;
+					}
 					Send(ReturnNode, 'GET_VALUE_RESPONSE', ReturnObject, send);
 					break;
 
@@ -1253,6 +1256,8 @@ module.exports = function (RED) {
 		function Send(Node, Subject, Value, send) {
 			const PL = {};
 
+			let IsolatedNodeId;
+
 			if (Node !== undefined) {
 				PL.node = Node.id;
 			}
@@ -1269,6 +1274,8 @@ module.exports = function (RED) {
 			}
 			(PL.event = Subject), (PL.timestamp = new Date().toJSON());
 			if (Value !== undefined) {
+				IsolatedNodeId = Value.isolatedNodeId;
+				delete Value['isolatedNodeId'];
 				PL.object = Value;
 			}
 
@@ -1299,8 +1306,14 @@ module.exports = function (RED) {
 			];
 
 			if (AllowedSubjectsForDNs.includes(Subject)) {
-				RED.events.emit('zwjs:node:event:all', { payload: PL });
-				RED.events.emit('zwjs:node:event:' + Node.id, { payload: PL });
+				if (IsolatedNodeId !== undefined) {
+					RED.events.emit(`zwjs:node:event:isloated:${IsolatedNodeId}`, {
+						payload: PL
+					});
+				} else {
+					RED.events.emit('zwjs:node:event:all', { payload: PL });
+					RED.events.emit('zwjs:node:event:' + Node.id, { payload: PL });
+				}
 			}
 		}
 

@@ -31,6 +31,26 @@ module.exports = function (RED) {
 				if (config.params !== undefined && config.params.length > 0) {
 					const EXP = RED.util.prepareJSONataExpression(config.params, RedNode);
 					Params = RED.util.evaluateJSONataExpression(EXP, msg);
+
+					if (Params !== undefined && !Array.isArray(Params)) {
+						if (done) {
+							done(
+								new Error(
+									'Params do not evaluate to an Array object. evaulted type : ' +
+										typeof Params
+								)
+							);
+						} else {
+							RedNode.error(
+								new Error(
+									'Params do not evaluate to an Array object. evaulted type : ' +
+										typeof Params
+								)
+							);
+						}
+
+						return;
+					}
 				}
 
 				if (config.forceUpdate !== undefined && config.forceUpdate.length > 0) {

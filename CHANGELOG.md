@@ -6,7 +6,7 @@
      - Added a new **cmd-factory** node, that allows to construct commands with little to no knowledge in the required format
      - Added power source icon and battery level in the UI node list
      - Added **powerSource** property to the **NODE_LIST** response.
-     - Device-Nodes now have ability to receive isolated responses to **getValue**
+     - Device-Nodes now have the ability to receive isolated responses to **getValue**
 
     **Changes**
      - Bump serialport package.

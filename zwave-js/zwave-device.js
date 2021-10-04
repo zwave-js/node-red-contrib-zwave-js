@@ -102,13 +102,34 @@ module.exports = function (RED) {
 		}
 
 		RedNode.on('input', Input);
+		function AddIsolatedNodeID(msg) {
+			RED.events.removeAllListeners(`zwjs:node:event:isloated:${RedNode.id}`);
+			if (
+				msg.payload.mode === 'ValueAPI' &&
+				msg.payload.method === 'getValue' &&
+				config.datamode !== undefined &&
+				config.datamode === 'Send/Receive' &&
+				config.isolated !== undefined &&
+				config.isolated
+			) {
+				msg.isolatedNodeId = RedNode.id;
+
+				RED.events.on(
+					`zwjs:node:event:isloated:${RedNode.id}`,
+					processEventMessage
+				);
+			}
+
+			return msg;
+		}
 		async function Input(msg, send, done) {
 			try {
+				msg = AddIsolatedNodeID(msg);
 				// Switch Listener (for AS)
 				if (config.filteredNodeId === 'AS') {
 					const Node = msg.payload.node;
 					if (Node !== DynamicIDListener) {
-						RED.events.off(
+						RED.events.removeListener(
 							`zwjs:node:event:${DynamicIDListener}`,
 							processEventMessage
 						);
@@ -207,17 +228,20 @@ module.exports = function (RED) {
 		RedNode.on('close', (done) => {
 			if (Array.isArray(config.filteredNodeId)) {
 				config.filteredNodeId.forEach((N) => {
-					RED.events.off(`zwjs:node:event:${N}`, processEventMessage);
+					RED.events.removeListener(
+						`zwjs:node:event:${N}`,
+						processEventMessage
+					);
 				});
 			} else if (!isNaN(config.filteredNodeId)) {
-				RED.events.off(
+				RED.events.removeListener(
 					`zwjs:node:event:${config.filteredNodeId}`,
 					processEventMessage
 				);
 			} else if (config.filteredNodeId === 'All') {
-				RED.events.off('zwjs:node:event:all', processEventMessage);
+				RED.events.removeListener('zwjs:node:event:all', processEventMessage);
 			} else if (config.filteredNodeId === 'AS') {
-				RED.events.off(
+				RED.events.removeListener(
 					`zwjs:node:event:${DynamicIDListener}`,
 					processEventMessage
 				);
