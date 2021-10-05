@@ -12,9 +12,10 @@
 			noEvent: { value: false },
 			forceUpdate: { value: 'forceUpdate' },
 			api: { value: 'CCAPI' },
-			vapimode: { value: 'setValue' },
-			vapivalue: { value: 'payload' },
-			valueid: { value: 'valueId' }
+			vapiMode: { value: 'setValue' },
+			vapiValue: { value: 'payload' },
+			vapiValueId: { value: 'valueId' },
+			vapiOptions: { value: 'options' }
 		},
 		inputs: 1,
 		outputs: 1,
@@ -55,27 +56,31 @@
 		$('#node-input-node').typedInput({ types: ['jsonata'] });
 		$('#node-input-node')
 			.next('.red-ui-typedInput-container')
-			.css({ width: '280px' });
+			.css({ width: '300px' });
 		$('#node-input-endpoint').typedInput({ types: ['jsonata'] });
 		$('#node-input-endpoint')
 			.next('.red-ui-typedInput-container')
-			.css({ width: '280px' });
+			.css({ width: '300px' });
 		$('#node-input-params').typedInput({ types: ['jsonata'] });
 		$('#node-input-params')
 			.next('.red-ui-typedInput-container')
-			.css({ width: '280px' });
+			.css({ width: '300px' });
 		$('#node-input-forceUpdate').typedInput({ types: ['jsonata'] });
 		$('#node-input-forceUpdate')
 			.next('.red-ui-typedInput-container')
-			.css({ width: '280px' });
-		$('#node-input-vapivalue').typedInput({ types: ['jsonata'] });
-		$('#node-input-vapivalue')
+			.css({ width: '300px' });
+		$('#node-input-vapiValue').typedInput({ types: ['jsonata'] });
+		$('#node-input-vapiValue')
 			.next('.red-ui-typedInput-container')
-			.css({ width: '280px' });
-		$('#node-input-valueid').typedInput({ types: ['jsonata'] });
-		$('#node-input-valueid')
+			.css({ width: '300px' });
+		$('#node-input-vapiValueId').typedInput({ types: ['jsonata'] });
+		$('#node-input-vapiValueId')
 			.next('.red-ui-typedInput-container')
-			.css({ width: '280px' });
+			.css({ width: '300px' });
+		$('#node-input-vapiOptions').typedInput({ types: ['jsonata'] });
+		$('#node-input-vapiOptions')
+			.next('.red-ui-typedInput-container')
+			.css({ width: '300px' });
 
 		if (this.api !== undefined) {
 			SortAPI(this.api);
@@ -141,15 +146,15 @@
 	    <strong>ValueAPI Command Settings.</strong>
 	</p>
 	<div class="form-row" forapi="ValueAPI">
-	    <label for="node-input-vapimode" style="width:130px"><i class="fa fa-pencil"></i> Mode</label>
-		<select id="node-input-vapimode">
+	    <label for="node-input-vapiMode" style="width:130px"><i class="fa fa-pencil"></i> Mode</label>
+		<select id="node-input-vapiMode">
 	        <option value="setValue">Set</option>
 			<option value="getValue">Get</option>
 	    </select>
 	</div>
 	<div class="form-row" forapi="ValueAPI">
-	    <label for="node-input-valueid" style="width:130px"><i class="fa fa-pencil"></i> ValueID { }</label>
-	    <input style="width:50px" type="text" id="node-input-valueid" placeholder="forceUpdate">
+	    <label for="node-input-vapiValueId" style="width:130px"><i class="fa fa-pencil"></i> ValueID { }</label>
+	    <input style="width:50px" type="text" id="node-input-vapiValueId" placeholder="valueId">
 	</div>
 	<p forapi="CCAPI">
 	    <strong>Command Class.</strong>
@@ -172,7 +177,7 @@
 	    <input type="checkbox" id="node-input-noEvent">
 	</div>
 	<div class="form-row" forapi="CCAPI">
-	    <label for="node-input-forceUpdate" style="width:130px"><i class="fa fa-pencil"></i> Force Update</label>
+	    <label for="node-input-forceUpdate" style="width:130px"><i class="fa fa-pencil"></i> Force Update { }</label>
 	    <input style="width:50px" type="text" id="node-input-forceUpdate" placeholder="forceUpdate">
 	</div>
 	<p>
@@ -191,8 +196,12 @@
 	    <input style="width:50px" type="text" id="node-input-params" placeholder="payload">
 	</div>
 	<div class="form-row" forapi="ValueAPI">
-	    <label for="node-input-vapivalue" style="width:130px"><i class="fa fa-pencil"></i> Value</label>
-	    <input style="width:50px" type="text" id="node-input-vapivalue" placeholder="payload">
+	    <label for="node-input-vapiOptions" style="width:130px"><i class="fa fa-pencil"></i> Set Options { }</label>
+	    <input style="width:50px" type="text" id="node-input-vapiOptions" placeholder="options">
+	</div>
+	<div class="form-row" forapi="ValueAPI">
+	    <label for="node-input-vapiValue" style="width:130px"><i class="fa fa-pencil"></i> Value</label>
+	    <input style="width:50px" type="text" id="node-input-vapiValue" placeholder="payload">
 	</div>
 </script>
 
