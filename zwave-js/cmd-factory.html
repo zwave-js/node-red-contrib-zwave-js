@@ -10,7 +10,11 @@
 			method: { value: 'Select Method' },
 			params: { value: 'payload' },
 			noEvent: { value: false },
-			forceUpdate: { value: 'forceUpdate' }
+			forceUpdate: { value: 'forceUpdate' },
+			api: { value: 'CCAPI' },
+			vapimode: { value: 'setValue' },
+			vapivalue: { value: 'payload' },
+			valueid: { value: 'valueId' }
 		},
 		inputs: 1,
 		outputs: 1,
@@ -64,6 +68,21 @@
 		$('#node-input-forceUpdate')
 			.next('.red-ui-typedInput-container')
 			.css({ width: '280px' });
+		$('#node-input-vapivalue').typedInput({ types: ['jsonata'] });
+		$('#node-input-vapivalue')
+			.next('.red-ui-typedInput-container')
+			.css({ width: '280px' });
+		$('#node-input-valueid').typedInput({ types: ['jsonata'] });
+		$('#node-input-valueid')
+			.next('.red-ui-typedInput-container')
+			.css({ width: '280px' });
+
+		if (this.api !== undefined) {
+			SortAPI(this.api);
+		} else {
+			$('#node-input-api').val('CCAPI');
+			$("[forAPI='ValueID']").css({ display: 'none' });
+		}
 	}
 
 	function GetMethods(cb) {
@@ -81,6 +100,21 @@
 			}
 		});
 	}
+
+	function SortAPI(Value) {
+		let API = Value || $('#node-input-api').find(':selected').text().trim();
+		switch (API) {
+			case 'CCAPI':
+				$("[forAPI='ValueID']").css({ display: 'none' });
+				$("[forAPI='CCAPI']").css({ display: 'block' });
+				break;
+
+			case 'ValueAPI':
+				$("[forAPI='ValueID']").css({ display: 'block' });
+				$("[forAPI='CCAPI']").css({ display: 'none' });
+				break;
+		}
+	}
 </script>
 
 <script type="text/x-red" data-template-name="cmd-factory">
@@ -96,27 +130,48 @@
 	    <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
 	    <input type="text" id="node-input-name" placeholder="ZWave CMD Factory">
 	</div>
-	<p>
+	<div class="form-row">
+	    <label for="node-input-api" style="width:130px"><i class="fa fa-pencil"></i> API</label>
+	    <select id="node-input-api" onchange="SortAPI">
+	        <option value="CCAPI">CCAPI</option>
+			<option value="ValueAPI">ValueAPI</option>
+	    </select>
+	</div>
+	<p forAPI="ValueAPI">
+	    <strong>ValueAPI Command Settings.</strong>
+	</p>
+	<div class="form-row" forAPI="ValueAPI">
+	    <label for="node-input-vapimode" style="width:130px"><i class="fa fa-pencil"></i> Mode</label>
+		<select id="node-input-vapimode">
+	        <option value="setValue">Set</option>
+			<option value="getValue">Get</option>
+	    </select>
+	</div>
+	<div class="form-row" forAPI="ValueAPI">
+	    <label for="node-input-valueid" style="width:130px"><i class="fa fa-pencil"></i> ValueID { }</label>
+	    <input style="width:50px" type="text" id="node-input-valueid" placeholder="forceUpdate">
+	</div>
+	<p forAPI="CCAPI">
 	    <strong>Command Class.</strong>
 	</p>
-	<div class="form-row">
+	<div class="form-row" forAPI="CCAPI">
 	    <label for="node-input-cc" style="width:130px"><i class="fa fa-pencil"></i> CC</label>
 		<select id="node-input-cc" onchange="GetMethods()">
 	        <option value="Select Command Class">Select Command Class</option>
 	    </select>
 	</div>
-	<div class="form-row">
+	<div class="form-row" forAPI="CCAPI">
 	    <label for="node-input-method" style="width:130px"><i class="fa fa-pencil"></i> Method</label>
 		<select style="margin-bottom:5px" id="node-input-method">
 	        <option value="Select Method">Select Method</option>
 	    </select><br />
 		<a style="margin-left:135px" onclick="GoToInfo()" href="#">View Parameter Definition</a>
 	</div>
-	<div class="form-row">
+	<div class="form-row" forAPI="CCAPI">
 	    <label for="node-input-noEvent" style="width:130px"><i class="fa fa-pencil"></i> Await Result (Get)</label>
 	    <input type="checkbox" id="node-input-noEvent">
 	</div>
-	<div class="form-row">
+	<div class="form-row" forAPI="CCAPI">
 	    <label for="node-input-forceUpdate" style="width:130px"><i class="fa fa-pencil"></i> Force Update</label>
 	    <input style="width:50px" type="text" id="node-input-forceUpdate" placeholder="forceUpdate">
 	</div>
@@ -131,9 +186,13 @@
 	    <label for="node-input-endpoint" style="width:130px"><i class="fa fa-pencil"></i> Endpoint</label>
 	    <input style="width:50px" type="text" id="node-input-endpoint" placeholder="endpoint">
 	</div>
-	<div class="form-row">
-	    <label for="node-input-params" style="width:130px"><i class="fa fa-pencil"></i> Params []</label>
+	<div class="form-row" forAPI="CCAPI">
+	    <label for="node-input-params" style="width:130px"><i class="fa fa-pencil"></i> Params [ ]</label>
 	    <input style="width:50px" type="text" id="node-input-params" placeholder="payload">
+	</div>
+	<div class="form-row" forAPI="ValueAPI">
+	    <label for="node-input-vapivalue" style="width:130px"><i class="fa fa-pencil"></i> Value</label>
+	    <input style="width:50px" type="text" id="node-input-vapivalue" placeholder="payload">
 	</div>
 </script>
 
