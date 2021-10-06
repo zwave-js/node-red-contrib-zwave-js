@@ -162,7 +162,7 @@ module.exports = function (RED) {
 						}
 						break;
 
-					case 'Specifc':
+					case 'Specific':
 						msg.payload.node = parseInt(config.filteredNodeId);
 						break;
 
