@@ -1476,7 +1476,6 @@ const ZwaveJsUI = (function () {
 				default:
 					L.append('<span class="fa fa-unlock-alt fa-stack-2x"></span>');
 					RED.popover.tooltip(L, 'No Security!');
-					'<span class="fa-stack"><span class="fa fa-unlock-alt fa-stack-2x"></span></span>';
 					break;
 			}
 		} else {
