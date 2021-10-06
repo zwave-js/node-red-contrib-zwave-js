@@ -126,13 +126,6 @@
 
 <script type="text/x-red" data-template-name="cmd-factory">
 
-	<p>
-	    All JSONata expressions are based on the root path of <strong>msg</strong>,
-		<br />i.e specifying <strong>payload</strong> will yield the object stored at <strong>msg.payload</strong><br /
-	</p>
-	<p>
-	    <strong>Basic Settings.</strong>
-	</p>
 	<div class="form-row">
 	    <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
 	    <input type="text" id="node-input-name" placeholder="ZWave CMD Factory">
@@ -145,7 +138,7 @@
 	    </select>
 	</div>
 	<p forapi="ValueAPI">
-	    <strong>ValueAPI Command Settings.</strong>
+	    <strong>ValueAPI Command Settings</strong>
 	</p>
 	<div class="form-row" forapi="ValueAPI">
 	    <label for="node-input-vapiMode" style="width:130px"><i class="fa fa-pencil"></i> Mode</label>
@@ -159,7 +152,7 @@
 	    <input style="width:50px" type="text" id="node-input-vapiValueId" placeholder="valueId">
 	</div>
 	<p forapi="CCAPI">
-	    <strong>Command Class.</strong>
+	    <strong>Command Class</strong>
 	</p>
 	<div class="form-row" forapi="CCAPI">
 	    <label for="node-input-cc" style="width:130px"><i class="fa fa-pencil"></i> CC</label>
@@ -183,7 +176,7 @@
 	    <input style="width:50px" type="text" id="node-input-forceUpdate" placeholder="forceUpdate">
 	</div>
 	<p>
-	    <strong>Command Parameters.</strong>
+	    <strong>Command Parameters</strong>
 	</p>
 	<div class="form-row">
 	    <label for="node-input-node" style="width:130px"><i class="fa fa-pencil"></i> Node</label>
@@ -205,6 +198,9 @@
 	    <label for="node-input-vapiValue" style="width:130px"><i class="fa fa-pencil"></i> Value</label>
 	    <input style="width:50px" type="text" id="node-input-vapiValue" placeholder="payload">
 	</div>
+	<div class="form-tips" id="node-tip">
+ 	    Tip: Fields labeled with the symbol <img src="red/images/typedInput/expr.svg" style="margin-right: 4px;height: 18px;"> are <strong>required</strong> to be valid <a href="http://jsonata.org/" target="_blank">JSONata</a> expressions.
+ 	</div>
 </script>
 
 <script type="text/x-red" data-help-name="cmd-factory">
