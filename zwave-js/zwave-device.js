@@ -29,6 +29,8 @@ module.exports = function (RED) {
 
 		let Out = true;
 		let DynamicIDListener = -1;
+		let DeviceMode;
+		let VarNode;
 
 		if (config.datamode !== undefined) {
 			switch (config.datamode) {
@@ -47,6 +49,7 @@ module.exports = function (RED) {
 		}
 
 		if (config.filteredNodeId === 'Var') {
+			DeviceMode = 'Var';
 			const VarValue = RED.util.evaluateNodeProperty(
 				'ZW_NODE_ID',
 				'env',
@@ -55,20 +58,27 @@ module.exports = function (RED) {
 			if (isNaN(VarValue)) {
 				throw new Error("The 'ZW_NODE_ID' variable is not a number.");
 			}
-			config.filteredNodeId = VarValue;
+			VarNode = VarValue;
+			if (Out) {
+				RED.events.on(`zwjs:node:event:${VarNode}`, processEventMessage);
+			}
 		}
 
 		if (Array.isArray(config.filteredNodeId)) {
-			config.filteredNodeId.forEach((N) => {
-				if (Out) RED.events.on(`zwjs:node:event:${N}`, processEventMessage);
-			});
+			if (Out) {
+				config.filteredNodeId.forEach((N) => {
+					RED.events.on(`zwjs:node:event:${N}`, processEventMessage);
+				});
+			}
 			if (config.multicast) {
+				DeviceMode = 'Multicast';
 				RedNode.status({
 					fill: 'green',
 					shape: 'dot',
 					text: 'Mode: Mulitcast'
 				});
 			} else {
+				DeviceMode = 'Multiple';
 				RedNode.status({
 					fill: 'green',
 					shape: 'dot',
@@ -76,20 +86,26 @@ module.exports = function (RED) {
 				});
 			}
 		} else if (!isNaN(config.filteredNodeId)) {
-			if (Out)
+			DeviceMode = 'Specific';
+			if (Out) {
 				RED.events.on(
 					`zwjs:node:event:${config.filteredNodeId}`,
 					processEventMessage
 				);
+			}
 			RedNode.status({
 				fill: 'green',
 				shape: 'dot',
 				text: `Mode: Specific Node (${config.filteredNodeId})`
 			});
 		} else if (config.filteredNodeId === 'All') {
-			if (Out) RED.events.on('zwjs:node:event:all', processEventMessage);
+			DeviceMode = 'All';
+			if (Out) {
+				RED.events.on('zwjs:node:event:all', processEventMessage);
+			}
 			RedNode.status({ fill: 'green', shape: 'dot', text: 'Mode: All Nodes' });
 		} else if (config.filteredNodeId === 'AS') {
+			DeviceMode = 'AS';
 			RedNode.status({
 				fill: 'green',
 				shape: 'dot',
@@ -125,73 +141,61 @@ module.exports = function (RED) {
 		async function Input(msg, send, done) {
 			try {
 				msg = AddIsolatedNodeID(msg);
-				// Switch Listener (for AS)
-				if (config.filteredNodeId === 'AS') {
-					const Node = msg.payload.node;
-					if (Node !== DynamicIDListener) {
-						RED.events.removeListener(
-							`zwjs:node:event:${DynamicIDListener}`,
-							processEventMessage
-						);
-						if (Out)
-							RED.events.on(`zwjs:node:event:${Node}`, processEventMessage);
-						DynamicIDListener = Node;
-						RedNode.status({
-							fill: 'green',
-							shape: 'dot',
-							text: `Mode: As Specifed (${Node})`
-						});
-					}
-				}
 
-				// Override Node - Specifc Node
-				if (
-					!isNaN(config.filteredNodeId) &&
-					!Array.isArray(config.filteredNodeId)
-				) {
-					msg.payload.node = parseInt(config.filteredNodeId);
-				}
-
-				// Multicast
-				if (Array.isArray(config.filteredNodeId) && config.multicast) {
-					msg.payload.node = [];
-					config.filteredNodeId.forEach((N) => {
-						msg.payload.node.push(parseInt(N));
-					});
-					// Multiple
-				} else if (
-					Array.isArray(config.filteredNodeId) &&
-					msg.payload.node !== undefined
-				) {
-					if (!config.filteredNodeId.includes(msg.payload.node.toString())) {
-						const ErrorMSG =
-							'Target node is not enabled. Please add this node to the list of nodes to listen to.';
-						const Err = new Error(ErrorMSG);
-						if (done) {
-							done(Err);
-						} else {
-							RedNode.error(Err);
+				switch (DeviceMode) {
+					case 'AS':
+						const Node = msg.payload.node;
+						if (Node !== DynamicIDListener) {
+							RED.events.removeListener(
+								`zwjs:node:event:${DynamicIDListener}`,
+								processEventMessage
+							);
+							if (Out) {
+								RED.events.on(`zwjs:node:event:${Node}`, processEventMessage);
+							}
+							DynamicIDListener = Node;
+							RedNode.status({
+								fill: 'green',
+								shape: 'dot',
+								text: `Mode: As Specifed (${Node})`
+							});
 						}
-						return;
-					}
+						break;
+
+					case 'Specifc':
+						msg.payload.node = parseInt(config.filteredNodeId);
+						break;
+
+					case 'Var':
+						msg.payload.node = parseInt(VarNode);
+						break;
+
+					case 'Multicast':
+						msg.payload.node = [];
+						config.filteredNodeId.forEach((N) => {
+							msg.payload.node.push(parseInt(N));
+						});
+						break;
+
+					case 'Multiple':
+						if (msg.payload.node !== undefined) {
+							if (
+								!config.filteredNodeId.includes(msg.payload.node.toString())
+							) {
+								throw new Error('Target node is not in the allowed list.');
+							}
+						}
+						break;
 				}
 
 				const AllowedModes = ['CCAPI', 'ValueAPI'];
 				if (!AllowedModes.includes(msg.payload.mode)) {
-					const ErrorMSG = `Only modes: ${AllowedModes} are allowed through this node type.`;
-					const Err = new Error(ErrorMSG);
-					if (done) {
-						done(Err);
-					} else {
-						RedNode.error(Err);
-					}
-					return;
+					throw new Error(
+						`Only modes: ${AllowedModes} are allowed through this node type.`
+					);
 				}
 
-				if (
-					msg.payload.node === undefined &&
-					Array.isArray(config.filteredNodeId)
-				) {
+				if (DeviceMode === 'Multiple' && msg.payload.node === undefined) {
 					for (let i = 0; i < config.filteredNodeId.length; i++) {
 						RedNode.status({
 							fill: 'yellow',
@@ -226,25 +230,43 @@ module.exports = function (RED) {
 		}
 
 		RedNode.on('close', (done) => {
-			if (Array.isArray(config.filteredNodeId)) {
-				config.filteredNodeId.forEach((N) => {
+			RED.events.removeAllListeners(`zwjs:node:event:isloated:${RedNode.id}`);
+
+			switch (DeviceMode) {
+				case 'Specifc':
 					RED.events.removeListener(
-						`zwjs:node:event:${N}`,
+						`zwjs:node:event:${config.filteredNodeId}`,
 						processEventMessage
 					);
-				});
-			} else if (!isNaN(config.filteredNodeId)) {
-				RED.events.removeListener(
-					`zwjs:node:event:${config.filteredNodeId}`,
-					processEventMessage
-				);
-			} else if (config.filteredNodeId === 'All') {
-				RED.events.removeListener('zwjs:node:event:all', processEventMessage);
-			} else if (config.filteredNodeId === 'AS') {
-				RED.events.removeListener(
-					`zwjs:node:event:${DynamicIDListener}`,
-					processEventMessage
-				);
+					break;
+
+				case 'Var':
+					RED.events.removeListener(
+						`zwjs:node:event:${VarNode}`,
+						processEventMessage
+					);
+					break;
+
+				case 'Multiple':
+				case 'Multicast':
+					config.filteredNodeId.forEach((N) => {
+						RED.events.removeListener(
+							`zwjs:node:event:${N}`,
+							processEventMessage
+						);
+					});
+					break;
+
+				case 'All':
+					RED.events.removeListener('zwjs:node:event:all', processEventMessage);
+					break;
+
+				case 'AS':
+					RED.events.removeListener(
+						`zwjs:node:event:${DynamicIDListener}`,
+						processEventMessage
+					);
+					break;
 			}
 
 			DynamicIDListener = -1;

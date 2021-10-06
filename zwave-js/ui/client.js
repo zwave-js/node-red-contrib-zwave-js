@@ -1439,31 +1439,52 @@ const ZwaveJsUI = (function () {
 	}
 
 	function renderLock(node) {
-		let SM = '';
+		const L = $('<span>');
+		L.addClass('fa-stack');
 		if (node.highestSecurityClass !== undefined) {
 			switch (node.highestSecurityClass) {
 				case 0:
-				case 1:
-				case 2:
-					SM =
-						'<span class="fa-stack"><span class="fa fa-lock fa-stack-2x"></span><strong class="fa-stack-1x" style="font-size:80%; color:white; margin-top:4px">S2</strong></span>';
+					L.append('<span class="fa fa-lock fa-stack-2x"></span>');
+					L.append(
+						'<strong class="fa-stack-1x" style="font-size:80%; color:white; margin-top:4px">S2</strong>'
+					);
+					RED.popover.tooltip(L, 'S2 | Unauthenticated');
 					break;
+				case 1:
+					L.append('<span class="fa fa-lock fa-stack-2x"></span>');
+					L.append(
+						'<strong class="fa-stack-1x" style="font-size:80%; color:white; margin-top:4px">S2</strong>'
+					);
+					RED.popover.tooltip(L, 'S2 | Authenticated');
+					break;
+				case 2:
+					L.append('<span class="fa fa-lock fa-stack-2x"></span>');
+					L.append(
+						'<strong class="fa-stack-1x" style="font-size:80%; color:white; margin-top:4px">S2</strong>'
+					);
+					RED.popover.tooltip(L, 'S2 | Access Control');
+					break;
+
 				case 7:
-					SM =
-						'<span class="fa-stack"><span class="fa fa-lock fa-stack-2x"></span><strong class="fa-stack-1x" style="font-size:80%; color:white; margin-top:4px">S1</strong></span>';
+					L.append('<span class="fa fa-lock fa-stack-2x"></span>');
+					L.append(
+						'<strong class="fa-stack-1x" style="font-size:80%; color:white; margin-top:4px">S0</strong>'
+					);
+					RED.popover.tooltip(L, 'S0 | Legacy');
 					break;
 
 				default:
-					SM =
-						'<span class="fa-stack"><span class="fa fa-unlock-alt fa-stack-2x"></span></span>';
+					L.append('<span class="fa fa-unlock-alt fa-stack-2x"></span>');
+					RED.popover.tooltip(L, 'No Security!');
+					'<span class="fa-stack"><span class="fa fa-unlock-alt fa-stack-2x"></span></span>';
 					break;
 			}
 		} else {
-			SM =
-				'<span class="fa-stack"><span class="fa fa-unlock-alt fa-stack-2x"></span></span>';
+			L.append('<span class="fa fa-unlock-alt fa-stack-2x"></span>');
+			RED.popover.tooltip(L, 'No Security!');
 		}
 
-		return SM;
+		return L;
 	}
 
 	function renderNode(node) {

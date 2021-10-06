@@ -70,23 +70,22 @@ module.exports = function (RED) {
 				Value = RED.util.evaluateJSONataExpression(EXP, msg);
 			}
 
-			if (typeof ValueID !== 'object') {
-				throw new Error(
-					'[ValueID] does not evaluate to an object. Evaluated type: ' +
-						typeof ValueID
-				);
+			if (ValueID === undefined) {
+				throw new Error('[ValueID] is missing.');
+			} else if (typeof ValueID !== 'object' || Array.isArray(ValueID)) {
+				throw new Error('[ValueID] does not evaluate to an object.');
 			}
+
 			if (Endpoint !== undefined) {
 				ValueID.endpoint = Endpoint;
 			}
 			if (config.vapiMode === 'setValue' && Value === undefined) {
 				throw new Error('[Value] is missing');
 			}
-			if (Options !== undefined && typeof Options !== 'object') {
-				throw new Error(
-					'[Set Options] do not evaluate to an object. Evaluated type: ' +
-						typeof Options
-				);
+			if (Options !== undefined) {
+				if (typeof Options !== 'object' || Array.isArray(Options)) {
+					throw new Error('[Set Options] do not evaluate to an object.');
+				}
 			}
 
 			const RM = {};
@@ -149,17 +148,16 @@ module.exports = function (RED) {
 				ForceUpdate = RED.util.evaluateJSONataExpression(EXP, msg);
 			}
 
-			if (Params !== undefined && !Array.isArray(Params)) {
-				throw new Error(
-					'[Params] do not evaluate to an array. Evaluated type: ' +
-						typeof Params
-				);
+			if (Params !== undefined) {
+				if (!Array.isArray(Params)) {
+					throw new Error('[Params] do not evaluate to an array.');
+				}
 			}
-			if (ForceUpdate !== undefined && typeof ForceUpdate !== 'object') {
-				throw new Error(
-					'[Force Update] does not evaluate to an object. Evaluated type: ' +
-						typeof ForceUpdate
-				);
+
+			if (ForceUpdate !== undefined) {
+				if (typeof ForceUpdate !== 'object' || Array.isArray(ForceUpdate)) {
+					throw new Error('[Force Update] does not evaluate to an object.');
+				}
 			}
 
 			const RM = {};

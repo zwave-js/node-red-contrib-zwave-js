@@ -31,9 +31,9 @@
 
 		const URL =
 			'https://zwave-js.github.io/node-zwave-js/#/api/CCs/' +
-			$('#node-input-cc').find(':selected').text().trim().replace(/ /g, '') +
+			$('#node-input-cc').val().replace(/ /g, '') +
 			'?id=' +
-			$('#node-input-method').find(':selected').text().trim().toLowerCase();
+			$('#node-input-method').val().toLowerCase();
 		var link = document.createElement('a');
 		link.href = URL;
 		link.setAttribute('target', '_blank');
@@ -91,23 +91,25 @@
 	}
 
 	function GetMethods(cb) {
-		const CC = $('#node-input-cc').find(':selected').text().trim();
-		$.getJSON('zwave-js/cfg-cclist/' + CC.replace(/ /g, '-'), (data) => {
-			$('#node-input-method').empty();
-			$('#node-input-method').append(
-				new Option('Select Method', 'Select Method')
-			);
-			data.forEach((M) => {
-				$('#node-input-method').append(new Option(M, M));
+		const CC = $('#node-input-cc').val();
+		if (CC) {
+			$.getJSON('zwave-js/cfg-cclist/' + CC.replace(/ /g, '-'), (data) => {
+				$('#node-input-method').empty();
+				$('#node-input-method').append(
+					new Option('Select Method', 'Select Method')
+				);
+				data.forEach((M) => {
+					$('#node-input-method').append(new Option(M, M));
+				});
+				if (typeof cb === 'function') {
+					cb();
+				}
 			});
-			if (typeof cb === 'function') {
-				cb();
-			}
-		});
+		}
 	}
 
 	function SortAPI(Value) {
-		const API = Value || $('#node-input-api').find(':selected').text().trim();
+		const API = Value || $('#node-input-api').val();
 		switch (API) {
 			case 'CCAPI':
 				$("[forapi='ValueAPI']").css({ display: 'none' });
