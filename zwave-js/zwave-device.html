@@ -252,11 +252,6 @@
 
 	<input type="checkbox" id="node-input-multicast" style="display: none">
 
-	<p>
-	    <strong>Basic settings.</strong><br />
-	    Note: This node works in conjunction with the main Z-Wave JS Controller node,<br />
-	    therefore, ensure it is in any one of your flows, and in a deployed state.
-	</p>
 	<div class="form-row">
 	    <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
 	    <input type="text" id="node-input-name" placeholder="My ZWave Node">
@@ -292,38 +287,9 @@
 	    <select id="node-input-filteredNodeId">
 	    </select>
 	</div>
-	<hr />
-	<table>
-	    <tr>
-	        <td style="width:70px;vertical-align:top"><strong>All Nodes</strong></td>
-	        <td> - Will listen for updates on All Nodes.<br /> - You will need to specify the <strong>node</strong>, in your outgoing payload.</td>
-	    </tr>
-	    <tr><td colspan="2">&nbsp;</td></tr>
-	    <tr>
-	        <td style="width:70px;vertical-align:top"><strong>Multiple Nodes</strong></td>
-	        <td> - Will listen for updates on the specified Nodes.<br /> - Will send individual messages to each selected node.<br />- If <strong>node</strong> is specified, it will only address that node, but will continue to receive for selected nodes.</td>
-	    </tr>
-	    <tr><td colspan="2">&nbsp;</td></tr>
-	    <tr>
-	        <td style="width:70px;vertical-align:top"><strong>Multicast</strong></td>
-	        <td> - Like <strong>Multiple Nodes</strong>, but uses Multicast for outgoing payloads.<br /> - <strong>node</strong> in your outgoing payload, is ignored.<br /> - Limited to <strong>ValueAPI</strong> -> <strong>setValue</strong> and <strong>CCAPI</strong> set type commands only<br /> - Requires support from the device(s)</td>
-	    </tr>
-	    <tr><td colspan="2">&nbsp;</td></tr>
-	    <tr>
-	        <td style="width:70px;vertical-align:top"><strong>Specific Node</strong></td>
-	        <td> - Will listen for updates on the specified Node.<br /> - <strong>node</strong>, in your outgoing payload, is ignored.</td>
-	    </tr>
-	    <tr><td colspan="2">&nbsp;</td></tr>
-	    <tr>
-	        <td style="width:70px;vertical-align:top"><strong>As Specified</strong></td>
-	        <td> - Will listen for updates on the Node, that it last addressed a message to.<br /> - You will need to specify the <strong>node</strong>, in your outgoing payload.</td>
-	    </tr>
-	    <tr><td colspan="2">&nbsp;</td></tr>
-	    <tr>
-	        <td style="width:70px;vertical-align:top"><strong>Subflow Variable</strong></td>
-	        <td> - Like <strong>Specific Node</strong>, but Node ID is taken from a <strong>ZW_NODE_ID</strong> subflow variable.<br /> - <strong>node</strong>, in your outgoing payload, is ignored.</td>
-	    </tr>
-	</table>
+	<div class="form-tips" id="node-tip">
+ 	    Note: This node works in conjunction with the main Z-Wave JS Controller node, therefore, ensure the controller node is in one of your flows and in a deployed state before using this node.
+ 	</div>
 </script>
 
 <script type="text/x-red" data-help-name="zwave-device">
