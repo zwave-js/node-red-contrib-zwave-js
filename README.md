@@ -13,7 +13,7 @@
 THE most powerful Z-Wave node for node-red based on Z-Wave JS.  
 If you want a fully featured Z-Wave runtime in your node-red instance, look no further.  
 <br />  
-> ### ...node-red-contrib-zwave-js is _hands down the best zwave to node red option on the planet._  
+> ### ...node-red-contrib-zwave-js is _hands down the best Z-Wave to Node-RED option on the planet._  
 > [@CRXPorter](https://github.com/crxporter), July 2021.  
 <br />  
 
@@ -21,7 +21,7 @@ If you want a fully featured Z-Wave runtime in your node-red instance, look no f
   - Does not require a build of any static library
   - Stable
   - Supports ZWave S0 and S2 Security
-  - A Built in Node-Red User Interface tab:
+  - A Built in Node-RED User Interface tab:
     - Device Configuration
     - CC Value Updating
     - Association Management
