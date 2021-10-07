@@ -271,7 +271,7 @@
 	    <input style="width:50px" type="text" id="node-input-messagesPerMS" placeholder="1"> node(s) / <input style="width:50px" type="text" id="node-input-messageInterval" placeholder="250"> ms
 	</div>
 	<div class="form-row">
-	    <label for="node-input-datamode" style="width:130px"><i class="fa fa-pencil"></i> Data Mode</label>
+	    <label for="node-input-datamode" style="width:130px"><i class="fa fa-pencil"></i> Network Mode</label>
 	    <select id="node-input-datamode" onchange="showIsolated()">
 	        <option value="Send/Receive">Send/Receive</option>
 	        <option value="Send">Send</option>
@@ -301,7 +301,7 @@ This node works in conjuction with the main Z-Wave JS Controller node. It is use
 
 The **Mode** will determine which Z-Wave device(s) this node will communicate with. See below for more information.
 
-The **Data Mode** will determine if the node will send, receive, or both. 
+The **Network Mode** will determine if the node will send, receive, or both. 
 
 `Send` mode will send messages *from* Node-RED *to* the Z-Wave device(s).
 
