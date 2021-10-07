@@ -199,7 +199,10 @@
 	    <input style="width:50px" type="text" id="node-input-vapiValue" placeholder="payload">
 	</div>
 	<div class="form-tips" id="node-tip">
- 	    Tip: Fields labeled with the symbol <img src="red/images/typedInput/expr.svg" style="margin-right: 4px;height: 18px;"> are <strong>required</strong> to be valid <a href="http://jsonata.org/" target="_blank">JSONata</a> expressions.
+ 	    Fields labeled with the symbol <img src="red/images/typedInput/expr.svg" style="margin-right: 4px;height: 18px;"> are <strong>required</strong> to be valid <a href="http://jsonata.org/" target="_blank">JSONata</a> expressions.
+ 	</div>
+	<div class="form-tips" id="node-tip">
+ 	    All JSONata expressions are based on the root path of <code>msg</code>, i.e specifying <code>payload</code> will yield the object stored at <code>msg.payload</code>.
  	</div>
 </script>
 
