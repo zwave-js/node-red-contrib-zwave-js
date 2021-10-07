@@ -733,8 +733,10 @@
 
 	<p>
 	    <strong>Z-Wave JS Analytics Reporting</strong><br />
- 	    Please allow the Z-Wave JS project to collect some anonymized data regarding the devices you own so that we can generate statistics that allow us to better focus our development efforts. This information is not tracked to any identifiable user or IP address and <strong>cannot be used to identify you</strong>.<br /><br />
- 	    For more specifics about the data collected, click <a target="_blank" href="https://zwave-js.github.io/node-zwave-js/#/data-collection/user-disclosure">here</a>.
+		    Please allow the Z-Wave JS project to collect some anonymized data regarding the devices you own<br />
+			so that we can generate statistics that allow us to better focus our development efforts.<br />
+			This information is not tracked to any identifiable user or IP address and <strong>cannot be used to identify you</strong>.<br /><br />
+		    For more specifics about the data collected, click <a target="_blank" style="text-decoration:underline;color:blue" href="https://zwave-js.github.io/node-zwave-js/#/data-collection/user-disclosure">here</a>.
 
 	</p>
 	<div class="form-row">
@@ -865,9 +867,9 @@
 	</div>
 </script>
 
-
+<!-- prettier-ignore -->
 <script type="text/markdown" data-help-name="zwave-js">
-<p>A Z-Wave Controller for Node-RED.</p>
+<p>A Z-Wave controller for Node-RED.</p>
  
 Based on [Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/), this is the main node, it is responsible for everything and serves as the configuration for your USB Z-Wave radio.
 
@@ -891,7 +893,7 @@ The format of each `msg.payload` object is dependant on which API is being used.
 
 **[Controller API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Controller-API)** is used for network wide operations such as healing your network, manual firmware updates, removing failed nodes, and more.
 
-**[Associations API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Associations-API)** is used to send change advanced associations between specific devices.
+**[Associations API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Associations-API)** is used to manage advanced associations between specific devices.
 
 **[Driver API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Driver-API)** is a small set of methods which can pull data from the Z-Wave JS library. It allows to get the full (locally stored) Value Database and some statistics.
 

@@ -199,17 +199,18 @@
 	    <input style="width:50px" type="text" id="node-input-vapiValue" placeholder="payload">
 	</div>
 	<div class="form-tips" id="node-tip">
- 	    All JSONata expressions are based on the root path of <code>msg</code>, i.e specifying <code>payload</code> will yield the object stored at <code>msg.payload</code>.
- 	</div>
+		    All JSONata expressions are based on the root path of <code>msg</code>, i.e specifying <code>payload</code> will yield the object stored at <code>msg.payload</code>.
+		</div>
 </script>
 
+<!-- prettier-ignore -->
 <script type="text/markdown" data-help-name="cmd-factory">
-<p>A Command generator node.</p>
+<p>A Z-Wave command generator node.</p>
  
 The `cmd-factory` node is used to formulate messages which are ready to be sent to your Z-Wave device nodes. Messages output from this node should be passed directly to the Input of a `zwave-device` or `zwave-js` node. Details and examples are available on [this](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Command-Factory) wiki page.
 
 <div class="form-tips" id="node-tip">
-    Fields labeled with the symbol <img src="red/images/typedInput/expr.svg" style="margin-right: 4px;height: 18px;"> are <strong>required</strong> to be valid <a href="http://jsonata.org/" target="_blank">JSONata</a> expressions.
+    Fields labeled with the symbol <img src="red/images/typedInput/expr.svg" style="margin-right: 4px;height: 18px;"> must be either valid  <a href="http://jsonata.org/" target="_blank">JSONata</a> expressions or left empty if not used.
 </div>
 
 ### Setup
