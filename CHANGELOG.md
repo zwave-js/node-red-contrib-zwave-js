@@ -11,6 +11,8 @@
     **Changes**
      - Bump serialport package.
      - The node status on the UI, has been updated to make use of icons, as opposed to text
+     - Overhauled Help/guide material in each node
+     - **Data Mode** has been renamed to **Network Mode** on the device node
 
     **Internal Changes**
      - Improvements to driver event sanitization routines
