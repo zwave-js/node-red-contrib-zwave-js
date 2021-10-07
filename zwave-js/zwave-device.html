@@ -292,33 +292,63 @@
  	</div>
 </script>
 
-<script type="text/x-red" data-help-name="zwave-device">
-	    <p>A Z-Wave device node.</p>
+<script type="text/markdown" data-help-name="zwave-device">
+<p>A Z-Wave device node.</p>
+ 
+This node works in conjuction with the main Z-Wave JS Controller node. It is used to send and/or receive messages to a single or multiple Z-Wave devices. Full details for the `zwave-device` node are available [here](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Z-Wave-Device-Node). 
 
-	    <p>
-	        <code>Input:</code><br />
-	        A <strong>payload</strong> object containing a command to send.<br />
-	        <strong>params</strong> will be dependant on the type of command you are sending.
-	<pre>
-	{
-	   mode: "CCAPI",
-	   cc: "Configuration",
-	   method: "set",
-	   params: [0x18,0x03,1]
-	}
-	</pre>
-	    </p>
+### Setup
 
-	    <p>
-	        <code>Output:</code><br />
-	        A <strong>payload</strong> containing an event that has occured within the zwave network.<br />
-	        The contents of <strong>object</strong> is dependant on the event.
-	<pre>
-	{
-	   event: "VALUE_UPDATED",
-	   timestamp: "23-12-2020T12:23:23+000",
-	   object: ...
-	}
-	</pre>
-	    </p>
+The **Mode** will determine which Z-Wave device(s) this node will communicate with. See below for more information.
+
+The **Data Mode** will determine if the node will send, receive, or both. 
+
+`Send` mode will send messages *from* Node-RED *to* the Z-Wave device(s).
+
+`Receive` mode means it will receive messages *from* the Z-Wave device(s) *to* your Node-RED flows.
+
+`Send/Receive` will of course do both sending and receiving.
+
+### Mode Option Details
+
+**All Nodes** 
+ - Device node will Output messages for all Nodes 
+ - Messages Input to the Device node will require a `node` property
+ 
+**Multiple Nodes** 
+ - Device node will Output messages from the specified Nodes
+ - Input messages will be sent as individual messages to each selected node
+ - If a `node` property is specified in the Input, it will only address that node but will continue sending Output payloads for all selected nodes
+
+**Multicast**
+ - Like **Multiple Nodes**, but uses Z-Wave Multicast for Input messages
+ - The `node` property in your Input messages will be ignored
+ - Limited to **Value API** `setValue` and **CCAPI** `set` type commands
+ - Requires that the selected devices support Z-Wave Multicast methods
+
+**Specific Node**
+ - Will listen for updates on the specified node only
+ - If Input is sent with `node` property, it will be ignored
+
+**As Specified**
+ - Will listen for updates on the specified node, whichever node was specified most recently in an Input message
+ - Messages which are Input will need a `node` property specified
+
+**Subflow Variable**
+ - Like **Specific Node**, but the Node ID is taken from the `ZW_NODE_ID` subflow Variable
+ - The `node` property in an Input message is ignored
+
+### Input Messages
+
+It is *highly recommended* to form Input messages using the **cmd-factory** node.
+
+The input to this node is expected to be a `msg.payload` object containing a Z-Wave command. The device node can receive commands for the configured device(s) **Devices** on your Z-Wave network, as determined by the **Node ID(s)** field.
+
+The format of each `msg.payload` object is dependant on which API is being used. The device node will accept any command from either [Value API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Value-API) or [CC API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/CC-API). Follow the links for more details on the proper formatting and message options for each API.
+
+### Output Messages
+
+Messages will be Output from this node according to the **Mode** chosen. See above for details on each mode option.
+
+It is recommended to use the `event-filter` node immediately following the `zwave-device` node in order to filter and sort the messages coming from your devices.
 </script>

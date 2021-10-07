@@ -865,35 +865,44 @@
 	</div>
 </script>
 
-<script type="text/x-red" data-help-name="zwave-js">
-	    <p>A Z-Wave Controller for node red.</p>
 
-	    <p>
-	        <code>Input:</code><br />
-	        A <strong>payload</strong> object containing a command.<br />
-	        <strong>params</strong> will be dependant on the type of command you are sending.
-	<pre>
-	{
-	   node: 2,
-	   mode: "CCAPI",
-	   cc: "Configuration",
-	   method: "set",
-	   params: [0x18,0x03,1]
-	}
-	</pre>
-	    </p>
+<script type="text/markdown" data-help-name="zwave-js">
+<p>A Z-Wave Controller for Node-RED.</p>
+ 
+Based on [Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/), this is the main node, it is responsible for everything and serves as the configuration for your USB Z-Wave radio.
 
-	    <p>
-	        <code>Output:</code><br />
-	        A <strong>payload</strong> containing an event that has occured within the zwave network.<br />
-	        The contents of <strong>object</strong> is dependant on the event.
-	<pre>
-	{
-	   node: 2,
-	   event: "VALUE_UPDATED",
-	   timestamp: "23-12-2020T12:23:23+000",
-	   object: ...
-	}
-	</pre>
-	    </p>
+### Setup 
+
+The only **required** field is "Serial Port", where you must select the location of your USB Z-Wave radio (typically `/dev/ttyACM0` on most Linux setups).
+
+Encryption keys are required only if you are pairing devices in secure mode. They may be entered manually as hex strings or generated randomly using the "Generate" button on the right of each field. If these keys are lost, all devices paired in secure mode will need to be reset to factory and paired again as new devices.
+
+Other settings for logging and more advanced use are available. Please visit our [wiki page](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Controller-Node-Setup) for more information on the advanced settings.
+
+<div class="form-tips" id="node-tip">
+Once this node is properly linked to a USB controller, the Z-Wave network setup will be available in the UI panel on the right side of your Node-RED editor. Click <a href="https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/User-Interface">here</a> for more information about this user interface.
+</div>
+
+### Inputs
+
+The input to this node is expected to be a `msg.payload` object containing a Z-Wave command. The zwave-js node can receive commands for the **Controller** itself or for any of the **Devices** on your Z-Wave network.
+
+The format of each `msg.payload` object is dependant on which API is being used. The zwave-js node will accept any command from any of the APIs available. Follow the links below for more details on the proper formatting and message options for each API.
+
+**[Controller API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Controller-API)** is used for network wide operations such as healing your network, manual firmware updates, removing failed nodes, and more.
+
+**[Associations API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Associations-API)** is used to send change advanced associations between specific devices.
+
+**[Driver API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Driver-API)** is a small set of methods which can pull data from the Z-Wave JS library. It allows to get the full (locally stored) Value Database and some statistics.
+
+**[CC API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/CC-API)** is option 1 of 2 for communication to a single Z-Wave device (node) on your network. These messages can be formed using the **cmd-factory** node.
+
+**[Value API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Value-API)** is option 2 of 2 for communication to a single Z-Wave device (node) on your network. These messages can be formed using the **cmd-factory** node.
+
+### Outputs
+
+The first output from this node will consist of **all** messages. This includes messages related to the controller and any Z-Wave device on your network. There is no internal filter, all messages from the controller and all nodes will always be output from this node. Detailed information about the messages from Z-Wave into Node-RED is available [here](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Payload-Messaging-Format).
+
+A second output is provided when the **Z-Wave JS Logging** from Pin 2 is enabled. Select a log level in the "Level (Pin 2)" field to enable JSON logs being output into your Node-RED flows.
+
 </script>

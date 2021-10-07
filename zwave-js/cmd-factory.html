@@ -206,18 +206,45 @@
  	</div>
 </script>
 
-<script type="text/x-red" data-help-name="cmd-factory">
-	<p>A Command generator node.</p>
+<script type="text/markdown" data-help-name="cmd-factory">
+<p>A Command generator node.</p>
+ 
+The `cmd-factory` node is used to formulate messages which are ready to be sent to your Z-Wave device nodes. Messages output from this node should be passed directly to the Input of a `zwave-device` or `zwave-js` node. Details and examples are available on [this](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Command-Factory) wiki page.
 
-	<p>
-	    <code>Input:</code><br />
-	    A <strong>msg</strong> object that is to be used as inputs to the command.
+<div class="form-tips" id="node-tip">
+    Fields labeled with the symbol <img src="red/images/typedInput/expr.svg" style="margin-right: 4px;height: 18px;"> are <strong>required</strong> to be valid <a href="http://jsonata.org/" target="_blank">JSONata</a> expressions.
+</div>
 
-	</p>
+### Setup
 
-	<p>
-	    <code>Output:</code><br />
-	    A <strong>payload</strong> containing a valid zwave command.
+The node can formulate messages to a Z-Wave device using either [Value API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Value-API) or [CC API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/CC-API). Little to no knowledge of the inner workings of Z-Wave JS are needed in order to use this node.
 
-	</p>
+Generally it is recommended to use the `CCAPI` option, as it is simpler to put together the commands.
+
+
+### Command Class (CCAPI)
+
+Please choose the `CC` which you would like to control (see the UI on your device to learn which it supports). Choose the `Method` which corresponds to the message you are wanting to send.
+
+`Await Result (Get)` Some CC **Get** type methods, do not return a value, via an event mechanism, we therefore need to wait for the value as part of the command, instead of depending on an event.
+
+`Force Update` causes a poll on the property contained in this object (it must evaluate to a partial ValueID). This is needed if your target device does not acknowledge a recently updated value.
+
+### ValueAPI Command Settings (ValueAPI)
+
+Please choose the `Method` which you would like to use, either setting a value or retrieving a value.
+
+`ValueID` should evaluate to a valid Value ID. Value ID's can be viewed by double clicking a value title in the UI.
+
+### Command Parameters
+
+`Node` - this field should evaluate to an integer which will determine to which node the output message is sent. This may evaluate to `undefined` if you are sending to a device node set to `Specific Node`, `Multicast`, or `Multiple Nodes`.
+
+`Endpoint` - this field should evaluate to an integer which matches your device endpoint.
+
+`Params` (CCAPI) - this field should evaluate to an array containing the parameters for your selected `Method` under **Command Class**. Click the link "View Parameter Definition" for details on how the specific Params array should be formatted for this message.
+
+`Set Options` (ValueAPI) - this value should evaluate to an object specifying  parameters around your **Set** operation, i.e setting a duration for a brightness change being one example.
+
+`Value` (ValueAPI) - this field should evaluate to the value you are providing. It is only required for the **Set** method
 </script>
