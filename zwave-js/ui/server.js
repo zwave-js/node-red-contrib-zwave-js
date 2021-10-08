@@ -169,7 +169,6 @@ module.exports = {
 
 					const Success = () => {
 						res.status(200).end();
-						SendNodeStatus({ id: Parts[0] }, 'UPDATING FIRMWARE');
 					};
 
 					const Error = (err) => {
