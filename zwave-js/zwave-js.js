@@ -869,7 +869,8 @@ module.exports = function (RED) {
 						valueId: Params[0]
 					};
 					if (msg.isolatedNodeId !== undefined) {
-						ReturnObject.isolatedNodeId = msg.isolatedNodeId;
+						ReturnNode.targetFlowNode = msg.isolatedNodeId;
+						delete msg['isolatedNodeId'];
 					}
 					Send(ReturnNode, 'GET_VALUE_RESPONSE', ReturnObject, send);
 					break;
@@ -1260,6 +1261,7 @@ module.exports = function (RED) {
 
 			if (Node !== undefined) {
 				PL.node = Node.id;
+				IsolatedNodeId = Node.targetFlowNode || undefined;
 			}
 
 			if (Node !== undefined) {
@@ -1272,10 +1274,9 @@ module.exports = function (RED) {
 					PL.nodeLocation = L;
 				}
 			}
-			(PL.event = Subject), (PL.timestamp = new Date().toJSON());
+			PL.event = Subject;
+			PL.timestamp = new Date().toJSON();
 			if (Value !== undefined) {
-				IsolatedNodeId = Value.isolatedNodeId;
-				delete Value['isolatedNodeId'];
 				PL.object = Value;
 			}
 
@@ -1286,8 +1287,7 @@ module.exports = function (RED) {
 				_Subject = '[' + Subject + ']';
 			}
 
-			Log('debug', 'NDERED', 'OUT', _Subject, 'Forwarding payload...');
-
+			Log('debug', 'NDERED', 'OUT', _Subject, '[DIRECT] Forwarding payload...');
 			if (send) {
 				send({ payload: PL });
 			} else {
@@ -1307,10 +1307,24 @@ module.exports = function (RED) {
 
 			if (AllowedSubjectsForDNs.includes(Subject)) {
 				if (IsolatedNodeId !== undefined) {
+					Log(
+						'debug',
+						'NDERED',
+						'OUT',
+						_Subject,
+						'[ISOLATED] [' + IsolatedNodeId + '] Forwarding payload...'
+					);
 					RED.events.emit(`zwjs:node:event:isloated:${IsolatedNodeId}`, {
 						payload: PL
 					});
 				} else {
+					Log(
+						'debug',
+						'NDERED',
+						'OUT',
+						_Subject,
+						'[EVENT] Forwarding payload...'
+					);
 					RED.events.emit('zwjs:node:event:all', { payload: PL });
 					RED.events.emit('zwjs:node:event:' + Node.id, { payload: PL });
 				}

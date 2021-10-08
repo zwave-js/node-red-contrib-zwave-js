@@ -135,12 +135,10 @@ module.exports = function (RED) {
 					processEventMessage
 				);
 			}
-
-			return msg;
 		}
 		async function Input(msg, send, done) {
 			try {
-				msg = AddIsolatedNodeID(msg);
+				AddIsolatedNodeID(msg);
 
 				switch (DeviceMode) {
 					case 'AS':
@@ -214,9 +212,9 @@ module.exports = function (RED) {
 					});
 				} else {
 					RED.events.emit('zwjs:node:command', msg);
-					if (done) {
-						done();
-					}
+				}
+				if (done) {
+					done();
 				}
 			} catch (Err) {
 				const E = new Error(Err.message);
@@ -233,7 +231,7 @@ module.exports = function (RED) {
 			RED.events.removeAllListeners(`zwjs:node:event:isloated:${RedNode.id}`);
 
 			switch (DeviceMode) {
-				case 'Specifc':
+				case 'Specific':
 					RED.events.removeListener(
 						`zwjs:node:event:${config.filteredNodeId}`,
 						processEventMessage
