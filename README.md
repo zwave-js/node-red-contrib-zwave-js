@@ -56,4 +56,4 @@ The node is straightforward to use, and removes all the complexities that you wo
 
  - [AlCalzone](https://github.com/AlCalzone) for creating [ZWave-JS](https://github.com/zwave-js/node-zwave-js) that makes this possible.
  - [CRXPorter](https://github.com/crxporter) for creating all the help material/finding this project.
- - [thk](https://github.com/thk-socal) for the relentless beta testing
+ - [thk](https://github.com/thk-socal) for the relentless beta testing.
