@@ -7,12 +7,16 @@
 [![Node Version](https://img.shields.io/node/v/node-red-contrib-zwave-js)](https://www.npmjs.com/package/node-red-contrib-zwave-js)
 [![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/zwave-js/node-red-contrib-zwave-js.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/zwave-js/node-red-contrib-zwave-js/context:javascript)
 [![Maintenance](https://img.shields.io/npms-io/maintenance-score/node-red-contrib-zwave-js)](https://www.npmjs.com/package/node-red-contrib-zwave-js)
-[![Dependencies](https://img.shields.io/david/marcus-j-davies/node-red-contrib-zwave-js)](https://www.npmjs.com/package/node-red-contrib-zwave-js)
-
+[![Dependencies](https://img.shields.io/david/marcus-j-davies/node-red-contrib-zwave-js)](https://www.npmjs.com/package/node-red-contrib-zwave-js)  
 
 THE most powerful Z-Wave node for Node-RED based on Z-Wave JS.  
-If you want a fully featured Z-Wave runtime in your node-red instance, look no further.  
+
+This module goes far beyond just providing basic functionality,  
+its a framework, a set of tools to get the most out of your z-wave network.  
+
+So if you want a fully featured Z-Wave runtime in your node-red instance, look no further.
 <br />  
+
 > ### ...node-red-contrib-zwave-js is _hands down the best Z-Wave to Node-RED option on the planet._  
 > [@CRXPorter](https://github.com/crxporter), July 2021.  
 <br />  
@@ -44,8 +48,12 @@ The node is straightforward to use, and removes all the complexities that you wo
 ![Image](./resources/Demo.png)  
 
  - [Wiki](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/getting-started)
+ - [Just Show Me How](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/First-Z-Wave-Flow-Setup)
  - [Change Log](./CHANGELOG.md)
 
 
+## Awesome peaple
 
-
+ - [AlCalzone](https://github.com/AlCalzone) for creating the backend [JS Driver](https://github.com/zwave-js/node-zwave-js) that makes this possible.
+ - [CRXPorter](https://github.com/crxporter) for creating all the help material/finding this project.
+ - [thk](https://github.com/thk-socal) for the relentless beta testing
