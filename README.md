@@ -48,7 +48,6 @@ The node is straightforward to use, and removes all the complexities that you wo
  - [Just Show Me How](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/First-Z-Wave-Flow-Setup)
  - [Change Log](./CHANGELOG.md)
 
-
 ## Awesome peaple
 
  - [AlCalzone](https://github.com/AlCalzone) for creating [ZWave-JS](https://github.com/zwave-js/node-zwave-js) that makes this possible.
