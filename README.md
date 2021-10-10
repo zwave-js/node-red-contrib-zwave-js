@@ -10,8 +10,9 @@
 [![Dependencies](https://img.shields.io/david/marcus-j-davies/node-red-contrib-zwave-js)](https://www.npmjs.com/package/node-red-contrib-zwave-js)  
 
 THE most powerful Z-Wave node for Node-RED based on Z-Wave JS.  
-If you want a fully featured Z-Wave runtime/framework in your node-red instance, look no further.
+If you want a fully featured Z-Wave framework in your node-red instance, look no further.
 <br />  
+
 
 > ### ...node-red-contrib-zwave-js is _hands down the best Z-Wave to Node-RED option on the planet._  
 > [@CRXPorter](https://github.com/crxporter), July 2021.  
