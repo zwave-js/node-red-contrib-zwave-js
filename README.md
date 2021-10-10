@@ -55,5 +55,6 @@ The node is straightforward to use, and removes all the complexities that you wo
 ## Awesome peaple
 
  - [AlCalzone](https://github.com/AlCalzone) for creating [ZWave-JS](https://github.com/zwave-js/node-zwave-js) that makes this possible.
+ - [hufftheweevil](https://github.com/hufftheweevil) for creating the User Interface tab.
  - [CRXPorter](https://github.com/crxporter) for creating all the help material/finding this project.
  - [thk](https://github.com/thk-socal) for the relentless beta testing.
