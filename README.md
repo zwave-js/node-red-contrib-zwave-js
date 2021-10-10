@@ -9,46 +9,47 @@
 [![Maintenance](https://img.shields.io/npms-io/maintenance-score/node-red-contrib-zwave-js)](https://www.npmjs.com/package/node-red-contrib-zwave-js)
 [![Dependencies](https://img.shields.io/david/marcus-j-davies/node-red-contrib-zwave-js)](https://www.npmjs.com/package/node-red-contrib-zwave-js)  
 
-THE most powerful Z-Wave node for Node-RED based on Z-Wave JS.  
-If you want a fully featured Z-Wave framework in your node-red instance, look no further.
-<br />  
-
+THE most powerful Z-Wave node for Node-RED based on Z-Wave JS. If you want a fully featured Z-Wave framework in your node-red instance, look no further.
 
 > ### ...node-red-contrib-zwave-js is _hands down the best Z-Wave to Node-RED option on the planet._  
 > [@CRXPorter](https://github.com/crxporter), July 2021.  
-<br />  
 
-  - 100% Javascript, so it's blazing fast and runs in the same memory space as your flows.
-  - Does not require a build of any static library
-  - Stable
-  - Supports ZWave S0 and S2 Security
-  - A Built in Node-RED User Interface tab:
-    - Device Configuration
-    - CC Value Updating
-    - Association Management
-    - Firmware Updating
-    - Network Map
-    - Network Actions (Include, Exclude, Heal etc etc)
-  - 2 Different API models, catering for both experienced and inexperienced users.
-  - Use one node for your entire network, or a node per Z-Wave device.
-  - An extremely advanced filter node, to route zwave messages around your flow(s).
-  - An extremely helpful command factory node, removing the need to learn the message format.
-  - Supports multicast to send commands to mulltiple nodes at the same time.
-  - Access to all supported CC's provided by Z-Wave JS.
+### What is it?
 
-**node-red-contrib-zwave-js** is based on  [&#x1F517;Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/).  
-Z-Wave JS is actively  maintained, fast and supports S0 and S2 secure devices.
+ - 100% Javascript, part of the awesome [Z-Wave JS](https://github.com/zwave-js) project
+ - Does not require a build of any static library
+ - Stable
+ - Full Z-Wave control inside Node-RED including:
+   - S0 and S2 Security
+   - Multicast commands
+   - Firmware updates
+   - Associations management
 
-It offers a massive amount of flexibility and is packed full of features.   
-The node is straightforward to use, and removes all the complexities that you would otherwise need to deal with.
+Since `node-red-contrib-zwave-js` is based on [Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/), we have the support and active maintenance from the amazing group of developers who have built the libraries, APIs, and config files which run this contrib.
 
-![Image](./resources/Demo.png)  
+### The User Interface
 
- - [Wiki](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/getting-started)
- - [Just Show Me How](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/First-Z-Wave-Flow-Setup)
+![Image](./resources/ZWUI.gif) 
+
+Included with the contrib is a [user interface](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/User-Interface) where Z-Wave network management is handled. The controller side of the UI is used to include/exclude devices, heal the network, update firmware, and view the network map for diagnosing problems. The device side of the UI is used to configure devices, manage associations, and provide setup help for the nodes which will be used in your flows.
+
+### The Nodes
+
+![Image](./resources/Demo.png)
+
+There are 4 node types included with this contrib ([click here](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/node-types) for full details about these nodes)
+ - `zwjs-controller`: this node is used to set up a connection to your USB Z-Wave controller, set security keys, and manage various advanced controller options
+ - `zwave-device`: this node is used to send and receive messages to one or more of the Z-Wave devices on your network
+ - `event-filter`: this node is used to filter and sort messages from your Z-Wave devices
+ - `cmd-factory`: this node simplifies creation of messages being sent to your Z-Wave devices
+
+### Getting Started Links
+ - [Installing](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/getting-started): System requirements and install instructions
+ - [Just Show Me How](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/First-Z-Wave-Flow-Setup): first day walkthrough
+ - [Wiki](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/getting-started): everything we know about
  - [Change Log](./CHANGELOG.md)
 
-## Awesome peaple
+### Awesome peaple
 
  - [AlCalzone](https://github.com/AlCalzone) for creating [ZWave-JS](https://github.com/zwave-js/node-zwave-js) that makes this possible.
  - [hufftheweevil](https://github.com/hufftheweevil) for creating the User Interface tab.
