@@ -2,7 +2,7 @@ const express = require('express');
 const SP = require('serialport');
 const ModulePackage = require('../../package.json');
 const { CommandClasses } = require('@zwave-js/core');
-const { getAPI } = require('zwave-js/lib/commandclass/CommandClass');
+const ZWaveJS = require('zwave-js');
 
 const _Context = {};
 let _NodeList;
@@ -54,7 +54,7 @@ module.exports = {
 					res.json(_CCs);
 				} else {
 					const Check = (CC) => {
-						const API = getAPI(CommandClasses[CC]);
+						const API = ZWaveJS.getAPI(CommandClasses[CC]);
 						if (API !== undefined) {
 							const Methods = Object.getOwnPropertyNames(API.prototype).filter(
 								(m) => m !== 'constructor' && m !== 'supportsCommand'
