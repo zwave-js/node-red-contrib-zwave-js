@@ -20,10 +20,14 @@ The most powerful Z-Wave node for Node-RED based on Z-Wave JS. If you want a ful
  - Does not require a build of any static library
  - Stable
  - Full Z-Wave control inside Node-RED including:
-   - S0 and S2 Security
-   - Multicast commands
+   - Device inclusion/exclusion wizard
+   - S0 and S2 security support
+   - Network mesh graph
    - Firmware updates
    - Associations management
+   - Filter node for handling incoming messages from your devices
+   - Factory node for simplifying the formatting of outgoing messages
+   - Multicast command support
 
 Since `node-red-contrib-zwave-js` is based on [Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/), we have the support and active maintenance from the amazing group of developers who have built the libraries, APIs, and config files which run this contrib.
 
@@ -49,9 +53,10 @@ There are 4 node types included with this contrib ([click here](https://github.c
  - [Wiki](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/getting-started): everything we know about
  - [Change Log](./CHANGELOG.md)
 
-### Awesome people
+### Awesome People - Thanks!
 
- - [AlCalzone](https://github.com/AlCalzone) for creating [ZWave-JS](https://github.com/zwave-js/node-zwave-js) that makes this possible.
- - [hufftheweevil](https://github.com/hufftheweevil) for creating the User Interface tab.
- - [CRXPorter](https://github.com/crxporter) for creating all the help material/finding this project.
- - [thk](https://github.com/thk-socal) for the relentless beta testing.
+ - [marcus-j-davies](https://github.com/marcus-j-davies) our main developer who claims "*my software doesn't have bugs*"
+ - [AlCalzone](https://github.com/AlCalzone) for creating [ZWave-JS](https://github.com/zwave-js/node-zwave-js) that makes this possible
+ - [hufftheweevil](https://github.com/hufftheweevil) for creating the User Interface tab
+ - [CRXPorter](https://github.com/crxporter) for creating all the help material/finding this project
+ - [thk](https://github.com/thk-socal) for the relentless beta testing
