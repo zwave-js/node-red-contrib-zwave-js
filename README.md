@@ -49,7 +49,7 @@ There are 4 node types included with this contrib ([click here](https://github.c
  - [Wiki](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/getting-started): everything we know about
  - [Change Log](./CHANGELOG.md)
 
-### Awesome peaple
+### Awesome people
 
  - [AlCalzone](https://github.com/AlCalzone) for creating [ZWave-JS](https://github.com/zwave-js/node-zwave-js) that makes this possible.
  - [hufftheweevil](https://github.com/hufftheweevil) for creating the User Interface tab.
