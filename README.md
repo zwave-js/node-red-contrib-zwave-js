@@ -16,7 +16,8 @@ The most powerful Z-Wave node for Node-RED based on Z-Wave JS. If you want a ful
 
 ### What is it?
 
- - 100% Javascript, part of the awesome [Z-Wave JS](https://github.com/zwave-js) project
+ - Part of the awesome [Z-Wave JS](https://github.com/zwave-js) org
+ - 100% Javascript, so its blazing fast!
  - Does not require a build of any static library
  - Stable
  - Full Z-Wave control inside Node-RED including:
