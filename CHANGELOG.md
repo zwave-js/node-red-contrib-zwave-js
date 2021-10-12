@@ -10,6 +10,7 @@
 
     **Changes**
      - Bump serialport package.
+     - Bump zwave-js.
      - The node status on the UI, has been updated to make use of icons, as opposed to text
      - A Complete overhaul on Help/guide material for each node
      - **Data Mode** has been renamed to **Network Mode** on the device node
@@ -18,7 +19,7 @@
      - Improvements to driver event sanitization routines
      - Security enhancements to the HTTP API
      - Moved all HTTP API endpoints to the ui/server.js module
-     - The **serialport** package is no longer forcibly compiled, and is left for serialport to decide  
+     - The **serialport** package is no longer forcibly compiled, and is now left for serialport to decide  
        if compilation is necessary.
 
     **Fixes**
