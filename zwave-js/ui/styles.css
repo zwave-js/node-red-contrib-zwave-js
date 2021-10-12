@@ -10,26 +10,29 @@
 	display: flex;
 }
 .zwave-js-node-row-id {
-	width: 10%;
+	width: 5%;
 	padding-left: 10px;
 }
 .zwave-js-node-row-name {
 	width: 50%;
 }
 .zwave-js-node-row-status {
-	width: 20%;
+	width: 11%;
 	font-size: x-small;
 	text-align: center;
 }
 .zwave-js-node-row-ready {
-	width: 10%;
+	width: 11%;
 	text-align: center;
 }
 .zwave-js-node-row-security {
-	width: 10%;
+	width: 11%;
 	text-align: center;
 }
-
+.zwave-js-node-row-battery {
+	width: 11%;
+	text-align: center;
+}
 
 .zwave-js-status-box {
 	margin-left: 5px;
@@ -135,6 +138,6 @@ table#zwave-js-associations-table tr:first-of-type {
 	display: none;
 }
 
-.SecrutiyButton{
+.SecrutiyButton {
 	width: 130px;
 }

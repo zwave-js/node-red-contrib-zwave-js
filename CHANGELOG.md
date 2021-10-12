@@ -1,5 +1,31 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 6.2.0 
+  
+    **New Features**
+     - Added a new **cmd-factory** node, that allows to construct commands with little to no knowledge in the required format
+     - Added power source icon and battery level in the UI node list
+     - Added **powerSource** property to the **NODE_LIST** response.
+     - Device-Nodes now have the ability to receive isolated responses to **getValue**
+
+    **Changes**
+     - Bump serialport package.
+     - Bump zwave-js.
+     - The node status on the UI, has been updated to make use of icons, as opposed to text
+     - A Complete overhaul on Help/guide material for each node
+     - **Data Mode** has been renamed to **Network Mode** on the device node
+
+    **Internal Changes**
+     - Improvements to driver event sanitization routines
+     - Security enhancements to the HTTP API
+     - Moved all HTTP API endpoints to the ui/server.js module
+     - The **serialport** package is no longer forcibly compiled, and is now left for serialport to decide  
+       if compilation is necessary.
+
+    **Fixes**
+     - Fixed a potential issuse, if the node-red admin ui path is set to a custom value.
+
+
   - 6.1.1 
   
     **Fixes**

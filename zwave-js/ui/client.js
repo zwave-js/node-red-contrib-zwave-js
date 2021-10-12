@@ -70,10 +70,6 @@ const ZwaveJsUI = (function () {
 				selectedNode
 			]).then(() => {
 				FirmwareForm.dialog('destroy');
-				const nodeRow = $('#zwave-js-node-list').find(
-					`[data-nodeid='${selectedNode}']`
-				);
-				nodeRow.find('.zwave-js-node-row-status').html('UPDATE ABORTED');
 			});
 		} else {
 			FirmwareForm.dialog('destroy');
@@ -109,7 +105,7 @@ const ZwaveJsUI = (function () {
 					$(":button:contains('Begin Update')")
 						.prop('disabled', true)
 						.addClass('ui-state-disabled');
-					$('#FWForm').append('<div id="progressbar"><div></div></div>');
+					$('#progressbar').css({ display: 'block' });
 				})
 				.catch((err) => {
 					modalAlert(err.responseText, 'Firmware Rejected');
@@ -139,12 +135,13 @@ const ZwaveJsUI = (function () {
 		FirmwareForm = $('<div>').css({ padding: 10 }).html('Please wait...');
 		FirmwareForm.dialog(Options);
 
-		$.getJSON('zwjsgetnodelist', (data) => {
+		$.getJSON('zwave-js/cfg-nodelist', (data) => {
 			FirmwareForm.html('');
 			const Template = $('#TPL_Firmware').html();
 			const templateScript = Handlebars.compile(Template);
 			const HTML = templateScript({ nodes: data });
 			FirmwareForm.append(HTML);
+			$('#progressbar').css({ display: 'none' });
 		});
 	}
 
@@ -1364,7 +1361,7 @@ const ZwaveJsUI = (function () {
 				} else {
 					nodeRow
 						.find('.zwave-js-node-row-status')
-						.html(data.status.toUpperCase());
+						.html(renderStatusIcon(data.status.toUpperCase()));
 				}
 				break;
 		}
@@ -1409,20 +1406,84 @@ const ZwaveJsUI = (function () {
 		}, 1000);
 	}
 
-	function renderNode(node) {
-		let SM = '';
+	function renderBattery(node) {
+		const i = $('<i>');
+		let Class;
+		switch (node.powerSource.type) {
+			case 'mains':
+				i.addClass('fa fa-plug');
+				RED.popover.tooltip(i, 'Mains Powered');
+				break;
+			default:
+				node.powerSource.level > 90
+					? (Class = 'fa fa-battery-full')
+					: node.powerSource.level > 65
+					? (Class = 'fa fa-battery-three-quarters')
+					: node.powerSource.level > 35
+					? (Class = 'fa fa-battery-half')
+					: node.powerSource.level > 10
+					? (Class = 'fa fa-battery-quarter')
+					: (Class = 'fa fa-battery-empty');
+
+				if (node.powerSource.isLow) {
+					i.css({ color: 'red' });
+				}
+				RED.popover.tooltip(i, 'Level: ' + node.powerSource.level);
+		}
+
+		i.addClass(Class);
+		return i;
+	}
+
+	function renderLock(node) {
+		const L = $('<span>');
+		L.addClass('fa-stack');
 		if (node.highestSecurityClass !== undefined) {
 			switch (node.highestSecurityClass) {
 				case 0:
-				case 1:
-				case 2:
-					SM = 'S2';
+					L.append('<span class="fa fa-lock fa-stack-2x"></span>');
+					L.append(
+						'<strong class="fa-stack-1x" style="font-size:80%; color:white; margin-top:4px">S2</strong>'
+					);
+					RED.popover.tooltip(L, 'S2 | Unauthenticated');
 					break;
+				case 1:
+					L.append('<span class="fa fa-lock fa-stack-2x"></span>');
+					L.append(
+						'<strong class="fa-stack-1x" style="font-size:80%; color:white; margin-top:4px">S2</strong>'
+					);
+					RED.popover.tooltip(L, 'S2 | Authenticated');
+					break;
+				case 2:
+					L.append('<span class="fa fa-lock fa-stack-2x"></span>');
+					L.append(
+						'<strong class="fa-stack-1x" style="font-size:80%; color:white; margin-top:4px">S2</strong>'
+					);
+					RED.popover.tooltip(L, 'S2 | Access Control');
+					break;
+
 				case 7:
-					SM = 'S0';
+					L.append('<span class="fa fa-lock fa-stack-2x"></span>');
+					L.append(
+						'<strong class="fa-stack-1x" style="font-size:80%; color:white; margin-top:4px">S0</strong>'
+					);
+					RED.popover.tooltip(L, 'S0 | Legacy');
+					break;
+
+				default:
+					L.append('<span class="fa fa-unlock-alt fa-stack-2x"></span>');
+					RED.popover.tooltip(L, 'No Security!');
 					break;
 			}
+		} else {
+			L.append('<span class="fa fa-unlock-alt fa-stack-2x"></span>');
+			RED.popover.tooltip(L, 'No Security!');
 		}
+
+		return L;
+	}
+
+	function renderNode(node) {
 		return $('<div>')
 			.addClass('red-ui-treeList-label zwave-js-node-row')
 			.attr('data-nodeid', node.nodeId)
@@ -1432,12 +1493,15 @@ const ZwaveJsUI = (function () {
 				$('<div>').html(node.nodeId).addClass('zwave-js-node-row-id'),
 				$('<div>').html(node.name).addClass('zwave-js-node-row-name'),
 				$('<div>')
-					.html(node.status.toUpperCase())
+					.html(renderStatusIcon(node.status.toUpperCase()))
 					.addClass('zwave-js-node-row-status'),
 				$('<div>')
 					.html(renderReadyIcon(node.ready))
 					.addClass('zwave-js-node-row-ready'),
-				$('<div>').html(SM).addClass('zwave-js-node-row-security')
+				$('<div>')
+					.html(renderBattery(node))
+					.addClass('zwave-js-node-row-battery'),
+				$('<div>').html(renderLock(node)).addClass('zwave-js-node-row-security')
 			);
 	}
 
@@ -1447,6 +1511,29 @@ const ZwaveJsUI = (function () {
 		if (isReady) {
 			i.addClass('fa fa-thumbs-up');
 			RED.popover.tooltip(i, 'Ready');
+		}
+
+		return i;
+	}
+
+	function renderStatusIcon(status) {
+		const i = $('<i>');
+
+		switch (status) {
+			case 'ASLEEP':
+				i.addClass('fa fa-moon-o fa-2x');
+				RED.popover.tooltip(i, 'Asleep');
+				break;
+			case 'AWAKE':
+			case 'ALIVE':
+				i.addClass('fa fa-sun-o fa-2x');
+				RED.popover.tooltip(i, 'Alive and/or Awake');
+				break;
+			case 'DEAD':
+				i.addClass('fa fa-exclamation-triangle fa-2x');
+				i.css({ color: 'red' });
+				RED.popover.tooltip(i, 'Failed');
+				break;
 		}
 
 		return i;
@@ -1541,38 +1628,30 @@ const ZwaveJsUI = (function () {
 				FWRunning = false;
 				FirmwareForm.dialog('destroy');
 
-				const nodeRow = $('#zwave-js-node-list').find(
-					`[data-nodeid='${nodeId}']`
-				);
-
 				switch (data.payload.status) {
 					case 253:
 						modalAlert(
 							`The firmware for node ${nodeId}  has been updated. Activation is pending.`,
 							'ZWave Device Firmware Update'
 						);
-						nodeRow.find('.zwave-js-node-row-status').html('FIRMWARE UPDATED');
 						break;
 					case 254:
 						modalAlert(
 							`The firmware for node ${nodeId} has been updated.`,
 							'ZWave Device Firmware Update'
 						);
-						nodeRow.find('.zwave-js-node-row-status').html('FIRMWARE UPDATED');
 						break;
 					case 255:
 						modalAlert(
 							`The firmware for node ${nodeId} has been updated. A restart is required (which may happen automatically)`,
 							'ZWave Device Firmware Update'
 						);
-						nodeRow.find('.zwave-js-node-row-status').html('FIRMWARE UPDATED');
 						break;
 					default:
 						modalAlert(
 							`The firmware for node ${nodeId} failed to get updated. Error Code: ${data.payload.status}`,
 							'ZWave Device Firmware Update'
 						);
-						nodeRow.find('.zwave-js-node-row-status').html('UPDATE FAILED');
 				}
 				break;
 		}

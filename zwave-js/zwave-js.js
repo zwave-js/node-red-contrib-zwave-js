@@ -1,5 +1,4 @@
 module.exports = function (RED) {
-	const SP = require('serialport');
 	const Path = require('path');
 	const ModulePackage = require('../package.json');
 	const ZWaveJS = require('zwave-js');
@@ -11,48 +10,51 @@ module.exports = function (RED) {
 	const Winston = require('winston');
 	const { Pin2LogTransport } = require('./Pin2LogTransport');
 
-	function sanitizeEventName(event) {
-		return {
-			zwaveName: event,
-			redName: event.replace(/ /g, '_').toUpperCase(),
-			statusName:
-				event.charAt(0).toUpperCase() + event.substr(1).toLowerCase() + '.',
-			statusNameWithNode: (event, Node) => {
-				return 'Node: ' + Node.id + ' ' + event.statusName;
-			}
-		};
+	class SanitizedEventName {
+		constructor(event) {
+			this.zwaveName = event;
+			this.redName = event.replace(/ /g, '_').toUpperCase();
+			this.statusName =
+				event.charAt(0).toUpperCase() + event.substr(1).toLowerCase() + '.';
+			this.statusNameWithNode = (Node) => {
+				return 'Node: ' + Node.id + ' ' + this.statusName;
+			};
+		}
 	}
 
-	const event_DriverReady = sanitizeEventName('driver ready');
-	const event_AllNodesReady = sanitizeEventName('all nodes ready');
-	const event_NodeAdded = sanitizeEventName('node added');
-	const event_NodeRemoved = sanitizeEventName('node removed');
-	const event_StatisticsUpdated = sanitizeEventName('statistics updated');
-	const event_InclusionStarted = sanitizeEventName('inclusion started');
-	const event_InclusionFailed = sanitizeEventName('inclusion failed');
-	const event_InclusionStopped = sanitizeEventName('inclusion stopped');
-	const event_ExclusionStarted = sanitizeEventName('exclusion started');
-	const event_ExclusionFailed = sanitizeEventName('exclusion failed');
-	const event_ExclusionStopped = sanitizeEventName('exclusion stopped');
-	const event_NetworkHealDone = sanitizeEventName('heal network done');
-	const event_FirmwareUpdateFinished = sanitizeEventName(
+	const event_DriverReady = new SanitizedEventName('driver ready');
+	const event_AllNodesReady = new SanitizedEventName('all nodes ready');
+	const event_NodeAdded = new SanitizedEventName('node added');
+	const event_NodeRemoved = new SanitizedEventName('node removed');
+	const event_StatisticsUpdated = new SanitizedEventName('statistics updated');
+	const event_InclusionStarted = new SanitizedEventName('inclusion started');
+	const event_InclusionFailed = new SanitizedEventName('inclusion failed');
+	const event_InclusionStopped = new SanitizedEventName('inclusion stopped');
+	const event_ExclusionStarted = new SanitizedEventName('exclusion started');
+	const event_ExclusionFailed = new SanitizedEventName('exclusion failed');
+	const event_ExclusionStopped = new SanitizedEventName('exclusion stopped');
+	const event_NetworkHealDone = new SanitizedEventName('heal network done');
+	const event_FirmwareUpdateFinished = new SanitizedEventName(
 		'firmware update finished'
 	);
-	const event_ValueNotification = sanitizeEventName('value notification');
-	const event_Notification = sanitizeEventName('notification');
-	const event_ValueUpdated = sanitizeEventName('value updated');
-	const event_ValueAdded = sanitizeEventName('value added');
-	const event_Wake = sanitizeEventName('wake up');
-	const event_Sleep = sanitizeEventName('sleep');
-	const event_InterviewStarted = sanitizeEventName('interview started');
-	const event_InterviewFailed = sanitizeEventName('interview failed');
-	const event_InterviewCompleted = sanitizeEventName('interview completed');
-	const event_Ready = sanitizeEventName('ready');
-	const event_HealNetworkProgress = sanitizeEventName('heal network progress');
+	const event_ValueNotification = new SanitizedEventName('value notification');
+	const event_Notification = new SanitizedEventName('notification');
+	const event_ValueUpdated = new SanitizedEventName('value updated');
+	const event_ValueAdded = new SanitizedEventName('value added');
+	const event_Wake = new SanitizedEventName('wake up');
+	const event_Sleep = new SanitizedEventName('sleep');
+	const event_InterviewStarted = new SanitizedEventName('interview started');
+	const event_InterviewFailed = new SanitizedEventName('interview failed');
+	const event_InterviewCompleted = new SanitizedEventName(
+		'interview completed'
+	);
+	const event_Ready = new SanitizedEventName('ready');
+	const event_HealNetworkProgress = new SanitizedEventName(
+		'heal network progress'
+	);
 
 	const UI = require('./ui/server.js');
 	UI.init(RED);
-	const NodeList = {};
 
 	function Init(config) {
 		RED.nodes.createNode(this, config);
@@ -320,7 +322,7 @@ module.exports = function (RED) {
 		GetKey('encryptionKeyS2AC', 'S2_AccessControl');
 
 		function ShareNodeList() {
-			for (const Location in NodeList) delete NodeList[Location];
+			const NodeList = {};
 
 			NodeList['No location'] = [];
 			Driver.controller.nodes.forEach((ZWN) => {
@@ -337,6 +339,8 @@ module.exports = function (RED) {
 				}
 				NodeList[Node.location].push(Node);
 			});
+
+			UI.upateNodeList(NodeList);
 		}
 
 		function NodeCheck(ID, SkipReady) {
@@ -371,7 +375,7 @@ module.exports = function (RED) {
 			);
 			UI.unregister();
 			Driver.destroy();
-			RED.events.off('zwjs:node:command', processMessageEvent);
+			RED.events.removeListener('zwjs:node:command', processMessageEvent);
 			if (Logger !== undefined) {
 				Logger.clear();
 				Logger = undefined;
@@ -642,7 +646,22 @@ module.exports = function (RED) {
 							deviceConfig: N.deviceConfig,
 							isControllerNode: N.isControllerNode(),
 							supportsBeaming: N.supportsBeaming,
-							keepAwake: N.keepAwake
+							keepAwake: N.keepAwake,
+							powerSource: {
+								type: N.supportsCC(CommandClasses.Battery)
+									? 'battery'
+									: 'mains',
+								level: N.getValue({
+									commandClass: 128,
+									endpoint: 0,
+									property: 'level'
+								}),
+								isLow: N.getValue({
+									commandClass: 128,
+									endpoint: 0,
+									property: 'isLow'
+								})
+							}
 						});
 					});
 					Send(undefined, 'NODE_LIST', Nodes, send);
@@ -849,6 +868,10 @@ module.exports = function (RED) {
 						response: V,
 						valueId: Params[0]
 					};
+					if (msg.isolatedNodeId !== undefined) {
+						ReturnNode.targetFlowNode = msg.isolatedNodeId;
+						delete msg['isolatedNodeId'];
+					}
 					Send(ReturnNode, 'GET_VALUE_RESPONSE', ReturnObject, send);
 					break;
 
@@ -1234,8 +1257,11 @@ module.exports = function (RED) {
 		function Send(Node, Subject, Value, send) {
 			const PL = {};
 
+			let IsolatedNodeId;
+
 			if (Node !== undefined) {
 				PL.node = Node.id;
+				IsolatedNodeId = Node.targetFlowNode || undefined;
 			}
 
 			if (Node !== undefined) {
@@ -1248,7 +1274,8 @@ module.exports = function (RED) {
 					PL.nodeLocation = L;
 				}
 			}
-			(PL.event = Subject), (PL.timestamp = new Date().toJSON());
+			PL.event = Subject;
+			PL.timestamp = new Date().toJSON();
 			if (Value !== undefined) {
 				PL.object = Value;
 			}
@@ -1260,8 +1287,7 @@ module.exports = function (RED) {
 				_Subject = '[' + Subject + ']';
 			}
 
-			Log('debug', 'NDERED', 'OUT', _Subject, 'Forwarding payload...');
-
+			Log('debug', 'NDERED', 'OUT', _Subject, '[DIRECT] Forwarding payload...');
 			if (send) {
 				send({ payload: PL });
 			} else {
@@ -1280,8 +1306,28 @@ module.exports = function (RED) {
 			];
 
 			if (AllowedSubjectsForDNs.includes(Subject)) {
-				RED.events.emit('zwjs:node:event:all', { payload: PL });
-				RED.events.emit('zwjs:node:event:' + Node.id, { payload: PL });
+				if (IsolatedNodeId !== undefined) {
+					Log(
+						'debug',
+						'NDERED',
+						'OUT',
+						_Subject,
+						'[ISOLATED] [' + IsolatedNodeId + '] Forwarding payload...'
+					);
+					RED.events.emit(`zwjs:node:event:isloated:${IsolatedNodeId}`, {
+						payload: PL
+					});
+				} else {
+					Log(
+						'debug',
+						'NDERED',
+						'OUT',
+						_Subject,
+						'[EVENT] Forwarding payload...'
+					);
+					RED.events.emit('zwjs:node:event:all', { payload: PL });
+					RED.events.emit('zwjs:node:event:' + Node.id, { payload: PL });
+				}
 			}
 		}
 
@@ -1388,14 +1434,9 @@ module.exports = function (RED) {
 					RedNode.status({
 						fill: 'yellow',
 						shape: 'dot',
-						text: event_InterviewStarted.statusNameWithNode(
-							event_InterviewStarted,
-							N
-						)
+						text: event_InterviewStarted.statusNameWithNode(N)
 					});
-					UI.status(
-						event_InterviewStarted.statusNameWithNode(event_InterviewStarted, N)
-					);
+					UI.status(event_InterviewStarted.statusNameWithNode(N));
 				});
 
 				Driver.controller.on(event_NodeRemoved.zwaveName, (N) => {
@@ -1601,14 +1642,9 @@ module.exports = function (RED) {
 				RedNode.status({
 					fill: 'yellow',
 					shape: 'dot',
-					text: event_InterviewStarted.statusNameWithNode(
-						event_InterviewStarted,
-						N
-					)
+					text: event_InterviewStarted.statusNameWithNode(N)
 				});
-				UI.status(
-					event_InterviewStarted.statusNameWithNode(event_InterviewStarted, N)
-				);
+				UI.status(event_InterviewStarted.statusNameWithNode(N));
 			});
 
 			Node.on(event_InterviewFailed.zwaveName, (N, Er) => {
@@ -1617,14 +1653,9 @@ module.exports = function (RED) {
 					RedNode.status({
 						fill: 'red',
 						shape: 'dot',
-						text: event_InterviewFailed.statusNameWithNode(
-							event_InterviewFailed,
-							N
-						)
+						text: event_InterviewFailed.statusNameWithNode(N)
 					});
-					UI.status(
-						event_InterviewFailed.statusNameWithNode(event_InterviewFailed, N)
-					);
+					UI.status(event_InterviewFailed.statusNameWithNode(N));
 					RestoreReadyStatus();
 				}
 			});
@@ -1634,17 +1665,9 @@ module.exports = function (RED) {
 				RedNode.status({
 					fill: 'green',
 					shape: 'dot',
-					text: event_InterviewCompleted.statusNameWithNode(
-						event_InterviewCompleted,
-						N
-					)
+					text: event_InterviewCompleted.statusNameWithNode(N)
 				});
-				UI.status(
-					event_InterviewCompleted.statusNameWithNode(
-						event_InterviewCompleted,
-						N
-					)
-				);
+				UI.status(event_InterviewCompleted.statusNameWithNode(N));
 				RestoreReadyStatus();
 			});
 		}
@@ -1696,34 +1719,4 @@ module.exports = function (RED) {
 	}
 
 	RED.nodes.registerType('zwave-js', Init);
-
-	RED.httpAdmin.get('/zwjsgetnodelist', function (req, res) {
-		res.json(NodeList);
-	});
-
-	RED.httpAdmin.get('/zwjsgetversion', function (req, res) {
-		delete require.cache[require.resolve('zwave-js/package.json')];
-		const ZWaveJSPackage = require('zwave-js/package.json');
-		res.json({
-			zwjsversion: ZWaveJSPackage.version,
-			zwjscfgversion: ZWaveJSPackage.dependencies['@zwave-js/config'],
-			moduleversion: ModulePackage.version
-		});
-	});
-
-	RED.httpAdmin.get(
-		'/zwjsgetports',
-		RED.auth.needsPermission('serial.read'),
-		function (req, res) {
-			SP.list()
-				.then((ports) => {
-					const a = ports.map((p) => p.path);
-					res.json(a);
-				})
-				.catch((err) => {
-					RED.log.error('Error listing serial ports', err);
-					res.json([]);
-				});
-		}
-	);
 };

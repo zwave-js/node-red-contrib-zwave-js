@@ -527,6 +527,7 @@
 				</tr>
 			</tbody>
 		</table>
+		<div id='progressbar'><div></div></div>
 	</div>
 </script>
 
@@ -680,7 +681,7 @@
 			$('#node-input-valueCacheDiskThrottle').val('normal');
 		}
 
-		$.getJSON('zwjsgetports', (data) => {
+		$.getJSON('zwave-js/cfg-serialports', (data) => {
 			$('#node-input-serialPort').empty();
 			$('#node-input-serialPort').append(
 				new Option('Select Port', 'Select Port')
@@ -721,7 +722,7 @@
 			});
 		});
 
-		$.getJSON('zwjsgetversion', function (data) {
+		$.getJSON('zwave-js/cfg-version', (data) => {
 			$('#MOD_Version').val(data.moduleversion);
 			$('#ZWJS_Version').val(data.zwjsversion);
 			$('#ZWJS_CFGVersion').val(data.zwjscfgversion);
@@ -731,20 +732,19 @@
 
 <script type="text/x-red" data-template-name="zwave-js">
 
-	<p>
-	    <strong>Z-Wave JS Analytics Reporting.</strong><br />
-	    Sending Analytics, helps the Z-Wave JS project focus on areas that are most prevalent.<br />
-	    No personal or personally identifiable information is collected, this includes internet addressable values.<br /><br />
-	    To read about the information collected, click <a target="_blank" href="https://zwave-js.github.io/node-zwave-js/#/data-collection/user-disclosure">HERE</a>.
+	<p><strong>Z-Wave JS Analytics Reporting</strong></p>
 
-	</p>
+	<div class="form-tips" id="node-tip" style="margin-bottom: 10px; padding: 0px; background: none; border:none;min-width:480px">
+	Please allow the Z-Wave JS project to collect some anonymized data regarding the devices you own so that we can generate statistics that allow us to better focus our development efforts. This information is not tracked to any identifiable user or IP address and <strong>cannot be used to identify you</strong><br /><br />For more specifics about the data collected, click <a target="_blank" style="text-decoration:underline;color:blue" href="https://zwave-js.github.io/node-zwave-js/#/data-collection/user-disclosure">here</a>.
+	</div>
+
 	<div class="form-row">
 	    <label  for="node-input-sendUsageStatistics" style="width:130px"><i class="fa fa-pencil"></i> Send Analytics</label>
 	    <input type="checkbox" id="node-input-sendUsageStatistics">
 	</div>
 
 	<p>
-	    <strong>Basic settings.</strong>
+	    <strong>Basic settings</strong>
 	</p>
 	<div class="form-row">
 	    <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
@@ -781,7 +781,7 @@
 	</div>
 	<br />
 	<p>
-	    <strong>Timeouts (ms).</strong>
+	    <strong>Timeouts (ms)</strong>
 	</p>
 	<div class="form-row">
 	    <label  for="node-input-ackTimeout" style="width:130px"><i class="fa fa-pencil"></i> ACK</label>
@@ -833,7 +833,7 @@
 	</div>
 	<br />
 	<p>
-	    <strong>Advanced Driver Settings.</strong>
+	    <strong>Advanced Driver Settings</strong>
 	</p>
 	<div class="form-row">
 	    <label  for="node-input-customConfigPath" style="width:130px"><i class="fa fa-pencil"></i> Custom CFG Dir</label>
@@ -849,7 +849,7 @@
 	</div>
 	<br />
 	<p>
-	    <strong>Version Information.</strong>
+	    <strong>Version Information</strong>
 	</p>
 	<div class="form-row">
 	    <label  for="MOD_Version" style="width:130px"><i class="fa fa-info"></i> Module Version</label>
@@ -866,35 +866,44 @@
 	</div>
 </script>
 
-<script type="text/x-red" data-help-name="zwave-js">
-	    <p>A Z-Wave Controller for node red.</p>
+<!-- prettier-ignore -->
+<script type="text/markdown" data-help-name="zwave-js">
+<p>A Z-Wave controller for Node-RED.</p>
+ 
+Based on [Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/), this is the main node, it is responsible for everything and serves as the configuration for your USB Z-Wave radio.
 
-	    <p>
-	        <code>Input:</code><br />
-	        A <strong>payload</strong> object containing a command.<br />
-	        <strong>params</strong> will be dependant on the type of command you are sending.
-	<pre>
-	{
-	   node: 2,
-	   mode: "CCAPI",
-	   cc: "Configuration",
-	   method: "set",
-	   params: [0x18,0x03,1]
-	}
-	</pre>
-	    </p>
+### Setup 
 
-	    <p>
-	        <code>Output:</code><br />
-	        A <strong>payload</strong> containing an event that has occured within the zwave network.<br />
-	        The contents of <strong>object</strong> is dependant on the event.
-	<pre>
-	{
-	   node: 2,
-	   event: "VALUE_UPDATED",
-	   timestamp: "23-12-2020T12:23:23+000",
-	   object: ...
-	}
-	</pre>
-	    </p>
+The only **required** field is "Serial Port", where you must select the location of your USB Z-Wave radio (typically `/dev/ttyACM0` on most Linux setups).
+
+Encryption keys are required only if you are pairing devices in secure mode. They may be entered manually as hex strings or generated randomly using the "Generate" button on the right of each field. If these keys are lost, all devices paired in secure mode will need to be reset to factory and paired again as new devices.
+
+Other settings for logging and more advanced use are available. Please visit our [wiki page](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Controller-Node-Setup) for more information on the advanced settings.
+
+<div class="form-tips" id="node-tip">
+Once this node is properly linked to a USB controller, the Z-Wave network setup will be available in the UI panel on the right side of your Node-RED editor. Click <a href="https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/User-Interface">here</a> for more information about this user interface.
+</div>
+
+### Inputs
+
+The input to this node is expected to be a `msg.payload` object containing a Z-Wave command. The zwave-js node can receive commands for the **Controller** itself or for any of the **Devices** on your Z-Wave network.
+
+The format of each `msg.payload` object is dependant on which API is being used. The zwave-js node will accept any command from any of the APIs available. Follow the links below for more details on the proper formatting and message options for each API.
+
+**[Controller API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Controller-API)** is used for network wide operations such as healing your network, manual firmware updates, removing failed nodes, and more.
+
+**[Associations API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Associations-API)** is used to manage advanced associations between specific devices.
+
+**[Driver API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Driver-API)** is a small set of methods which can pull data from the Z-Wave JS library. It allows to get the full (locally stored) Value Database and some statistics.
+
+**[CC API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/CC-API)** is option 1 of 2 for communication to a single Z-Wave device (node) on your network. These messages can be formed using the **cmd-factory** node.
+
+**[Value API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Value-API)** is option 2 of 2 for communication to a single Z-Wave device (node) on your network. These messages can be formed using the **cmd-factory** node.
+
+### Outputs
+
+The first output from this node will consist of **all** messages. This includes messages related to the controller and any Z-Wave device on your network. There is no internal filter, all messages from the controller and all nodes will always be output from this node. Detailed information about the messages from Z-Wave into Node-RED is available [here](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Payload-Messaging-Format).
+
+A second output is provided when the **Z-Wave JS Logging** from Pin 2 is enabled. Select a log level in the "Level (Pin 2)" field to enable JSON logs being output into your Node-RED flows.
+
 </script>

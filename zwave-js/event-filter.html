@@ -258,30 +258,32 @@
 	      <input type="text" id="node-input-name" placeholder="Filter Name">
 	  </div>
 
-	  <p>
-	      Add your filter sets below.<br />
-	      each set of filters, becomes an output pin.<br /><br />
-	      A filter set can include the event(s) to be filtered, and optionally ValueID(s)
-	  </p>
-
 	  <div>
 	      <ol id="filtersets" style="min-height:450px;min-width:400px"> </ol>
 	  </div>
 </script>
 
-<script type="text/x-red" data-help-name="event-filter">
-	<p>A Z-Wave event filter.</p>
+<!-- prettier-ignore -->
+<script type="text/markdown" data-help-name="event-filter">
+<p>A Z-Wave event filter.</p>
+ 
+This node allows advanced filtration of the various value events that a node may send. It further allows filtering the type of data that was updated i.e. a Motion Event, Air Temp changes, Door Sensors, etc.
 
-	<p>
-	    <code>Input:</code><br />
-	    A <strong>payload</strong> object from the controller or device-node to be processed.<br />
+The UI panel on the right can be used to provide the filter values, removing the need to write them yourself, but of course you can use manual entries if you prefer. Please visit our [event filter](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Event-Filter-Node) wiki page for a detailed walkthrough on how to set up your filters.
 
-	</p>
+Essentially this node is a `switch` node with specific sorting for the values found in Z-Wave messages. The Input of this node should be from a `zwave-js` node or a `zwave-device` node.
 
-	<p>
-	    <code>Output:</code><br />
-	    A <strong>payload</strong> containing  the event if it had a matching rule.<br />
-	    A <strong>filter</strong> object will also be provided, that denotes the matched rule.
+### Message Handling
 
-	</p>
+Inputs are unfiltered Z-Wave messages. The filter settings are used to decide if the message will be output from the node. The message will be output on the pin corresponding to the matched filter set. If there is a match, the node will stop searching for additional matches. If there is no match, the input message will stop with this node and nothing will be output.
+
+### Filter Options
+
+**Name** - is a name for your filter. The output pin will match this name, and will be included in the output as `msg.filter.name`.
+
+**ValueIDs** - can include zero or more Value IDs for this filter set. Value IDs may be added using the UI or manually. See our [event filter](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Event-Filter-Node) wiki page for more details.
+
+**Strict** - if checked it will require the `Endpoint` property of the Input message to match the selected ValueIDs.
+
+**Events** - the four event types which may be output from a Z-Wave Device. At least one must be selected for any message to be output. See details about these events on [this](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Payload-Messaging-Format) wiki page.
 </script>
