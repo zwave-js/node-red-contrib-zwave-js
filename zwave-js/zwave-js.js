@@ -1595,7 +1595,7 @@ module.exports = function (RED) {
 		}
 
 		function WireNodeEvents(Node) {
-			Node.on(event_Ready.zwaveName, (N) => {
+			Node.once(event_Ready.zwaveName, (N) => {
 				if (N.isControllerNode()) {
 					return;
 				}
