@@ -62,6 +62,27 @@ const ZwaveJsUI = (function () {
 			.dialog(Options);
 	}
 
+	function ShowCommandViewer() {
+		$('<div>')
+			.css({ maxHeight: '80%' })
+			.html('')
+			.attr('id', 'CommndList')
+			.dialog({
+				draggable: true,
+				modal: false,
+				resizable: true,
+				width: '500',
+				height: '400',
+				title: 'UI Message/Command Log',
+				minHeight: 75,
+				buttons: {
+					Close: function () {
+						$(this).dialog('destroy');
+					}
+				}
+			});
+	}
+
 	let FirmwareForm;
 	let FWRunning = false;
 	function AbortUpdate() {
@@ -629,6 +650,29 @@ const ZwaveJsUI = (function () {
 			Payload.noTimeout = true;
 		}
 
+		if (mode !== 'IEAPI') {
+			let Copy = JSON.parse(JSON.stringify({ payload: Payload }));
+			delete Copy.payload.noTimeout;
+			delete Copy.payload.noWait;
+
+			let HTML = `${new Date().toString()}<hr /><pre>${JSON.stringify(
+				Copy,
+				null,
+				2
+			)}</pre><br />`;
+
+			try {
+				$('#CommndList').append(HTML);
+				$('#CommndList').scrollTop($('#CommndList')[0].scrollHeight);
+			} catch (err) {}
+		} else {
+			try {
+				let HTML = `${new Date().toString()}<hr /><pre>Include/Exclude Commands are for the UI only.</pre><br />`;
+				$('#CommndList').append(HTML);
+				$('#CommndList').scrollTop($('#CommndList')[0].scrollHeight);
+			} catch (err) {}
+		}
+
 		Options.data = JSON.stringify(Payload);
 		return $.ajax(Options);
 	}
@@ -1070,6 +1114,17 @@ const ZwaveJsUI = (function () {
 			.html('Include / Exclude')
 			.appendTo(optInclusion);
 
+		// Messsge Viewer
+		const optMessageViewer = $('<div>')
+			.css('text-align', 'center')
+			.appendTo(controllerOpts);
+		$('<button>')
+			.addClass('red-ui-button red-ui-button-small')
+			.css('min-width', '250px')
+			.click(ShowCommandViewer)
+			.html('UI Message/Command Log')
+			.appendTo(optMessageViewer);
+
 		// Heal
 		const optHeal = $('<div>')
 			.css('text-align', 'center')
@@ -1241,7 +1296,7 @@ const ZwaveJsUI = (function () {
 			.html('Refresh Property List')
 			.appendTo(set4);
 
-		// DB
+		// DB & Message Viewer
 		const DB = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')

@@ -20,6 +20,7 @@ The most powerful Z-Wave node for Node-RED based on Z-Wave JS. If you want a ful
  - 100% Javascript, so its blazing fast!
  - Does not require a build of any static library
  - Stable
+ - The Ability to capture commands for later use.
  - Full Z-Wave control inside Node-RED including:
    - Device inclusion/exclusion wizard
    - S0 and S2 security support
