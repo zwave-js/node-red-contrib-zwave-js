@@ -664,6 +664,7 @@ module.exports = function (RED) {
 							}
 						});
 					});
+					Nodes.sort((A,B) => A.nodeId - B.nodeId)
 					Send(undefined, 'NODE_LIST', Nodes, send);
 					break;
 
