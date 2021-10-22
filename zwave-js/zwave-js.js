@@ -186,6 +186,20 @@ module.exports = function (RED) {
 
 		DriverOptions = {};
 
+		// Code Interview
+		if (config.intvwUserCodes !== undefined && config.intvwUserCodes) {
+			DriverOptions.interview = {
+				queryAllUserCodes: true
+			};
+		}
+
+		// Soft Reset
+		if (config.softResetUSB !== undefined && config.softResetUSB) {
+			DriverOptions.enableSoftReset = true;
+		} else {
+			DriverOptions.enableSoftReset = false;
+		}
+
 		// Logging
 		DriverOptions.logConfig = {};
 		if (Logger !== undefined) {
@@ -664,7 +678,7 @@ module.exports = function (RED) {
 							}
 						});
 					});
-					Nodes.sort((A,B) => A.nodeId - B.nodeId)
+					Nodes.sort((A, B) => A.nodeId - B.nodeId);
 					Send(undefined, 'NODE_LIST', Nodes, send);
 					break;
 
