@@ -1,5 +1,21 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 6.3.0
+
+    **Fixes**
+     - Fixed duplicated event handlers, after a new interview.
+
+    **New Features**
+     - Lock User Codes can now be optionally interviewed.
+       Note: This will cause an increase in traffic - especially if your lock has many codes to query.
+     - Opt-in to Soft Reset USB device
+       This is needed for certain commands, like changing the RF.
+
+    **Changes**
+     - Changes to package content to reduce size (~9.0MB -> ~1.3MB)
+     - The node list is now sorted by Node ID
+     - Bump ZWJS to 8.5.1
+
   - 6.2.0 
   
     **New Features**
