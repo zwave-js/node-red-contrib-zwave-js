@@ -21,7 +21,7 @@ The most powerful/fully integrated Z-Wave node for Node-RED based on Z-Wave JS. 
  - Does not require a build of any static library
  - Stable
  - The Ability to capture commands for later use.
- - A deep integreated UI within in node red
+ - A deep integrated UI within in node red
  - Full Z-Wave control inside Node-RED including:
    - Device inclusion/exclusion wizard
    - S0 and S2 security support
