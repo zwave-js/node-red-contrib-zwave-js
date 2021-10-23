@@ -6,9 +6,9 @@
      - Fixed duplicated event handlers, after a new interview.
 
     **New Features**
-     - Lock User Codes can now be optionally interviewed.
+     - Lock User Codes can now be optionally interviewed.  
        Note: This will cause an increase in traffic - especially if your lock has many codes to query.
-     - Opt-in to Soft Reset USB device
+     - Opt-in to Soft Reset USB device.  
        This is needed for certain commands, like changing the RF.
      - A new "UI Monitor", allowing you to capture/use the commands that are sent to the controller
 
