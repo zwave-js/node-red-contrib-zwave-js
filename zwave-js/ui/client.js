@@ -24,6 +24,29 @@ const StepList = {
 	Aborted: 9
 };
 
+let JSONFormatter = {};
+
+JSONFormatter.json = {
+	replacer: function (match, pIndent, pKey, pVal, pEnd) {
+		var key = '<span class=json-key>';
+		var val = '<span class=json-value>';
+		var str = '<span class=json-string>';
+		var r = pIndent || '';
+		if (pKey) r = r + key + pKey.replace(/[": ]/g, '') + '</span>: ';
+		if (pVal) r = r + (pVal[0] == '"' ? str : val) + pVal + '</span>';
+		return r + (pEnd || '');
+	},
+	prettyPrint: function (obj) {
+		var jsonLine = /^( *)("[\w]+": )?("[^"]*"|[\w.+-]*)?([,[{])?$/gm;
+		return JSON.stringify(obj, null, 3)
+			.replace(/&/g, '&amp;')
+			.replace(/\\"/g, '&quot;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(jsonLine, JSONFormatter.json.replacer);
+	}
+};
+
 const ZwaveJsUI = (function () {
 	function modalAlert(message, title) {
 		const Buts = {
@@ -73,7 +96,7 @@ const ZwaveJsUI = (function () {
 				resizable: true,
 				width: '500',
 				height: '400',
-				title: 'UI Message/Command Log',
+				title: 'UI Monitor',
 				minHeight: 75,
 				buttons: {
 					Close: function () {
@@ -655,10 +678,8 @@ const ZwaveJsUI = (function () {
 			delete Copy.payload.noTimeout;
 			delete Copy.payload.noWait;
 
-			let HTML = `${new Date().toString()}<hr /><pre>${JSON.stringify(
-				Copy,
-				null,
-				2
+			let HTML = `${new Date().toString()}<hr /><pre class="MonitorEntry">${JSONFormatter.json.prettyPrint(
+				Copy
 			)}</pre><br />`;
 
 			try {
@@ -667,7 +688,7 @@ const ZwaveJsUI = (function () {
 			} catch (err) {}
 		} else {
 			try {
-				let HTML = `${new Date().toString()}<hr /><pre>Include/Exclude Commands are for the UI only.</pre><br />`;
+				let HTML = `${new Date().toString()}<hr /><pre class="MonitorEntry">Include/Exclude Commands are for the UI only.</pre><br />`;
 				$('#CommndList').append(HTML);
 				$('#CommndList').scrollTop($('#CommndList')[0].scrollHeight);
 			} catch (err) {}
@@ -1103,27 +1124,22 @@ const ZwaveJsUI = (function () {
 			.html('Waiting for driver...')
 			.appendTo(controllerOpts);
 
-		// Include Exclide
-		const optInclusion = $('<div>')
+		// Include Exclide, log
+		const optInclusionLog = $('<div>')
 			.css('text-align', 'center')
 			.appendTo(controllerOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '250px')
+			.css('min-width', '125px')
 			.click(ShowIncludeExcludePrompt)
 			.html('Include / Exclude')
-			.appendTo(optInclusion);
-
-		// Messsge Viewer
-		const optMessageViewer = $('<div>')
-			.css('text-align', 'center')
-			.appendTo(controllerOpts);
+			.appendTo(optInclusionLog);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '250px')
+			.css('min-width', '125px')
 			.click(ShowCommandViewer)
-			.html('UI Message/Command Log')
-			.appendTo(optMessageViewer);
+			.html('UI Monitor')
+			.appendTo(optInclusionLog);
 
 		// Heal
 		const optHeal = $('<div>')

@@ -10,7 +10,7 @@
        Note: This will cause an increase in traffic - especially if your lock has many codes to query.
      - Opt-in to Soft Reset USB device
        This is needed for certain commands, like changing the RF.
-     - A new UI message logger, allowing you to capture/use the commands that are sent to the controller
+     - A new "UI Monitor", allowing you to capture/use the commands that are sent to the controller
 
     **Changes**
      - Changes to package content to reduce size (~9.0MB -> ~1.3MB)

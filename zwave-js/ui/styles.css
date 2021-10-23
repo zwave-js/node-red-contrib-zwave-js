@@ -141,3 +141,23 @@ table#zwave-js-associations-table tr:first-of-type {
 .SecrutiyButton {
 	width: 130px;
 }
+
+.MonitorEntry{
+	background-color: rgb(230,230,230);
+	border-style: solid;
+	border-color: rgb(210,210,210);
+	padding: 5px;
+	-webkit-border-radius: 8px;
+	-moz-border-radius: 8px;
+	border-radius: 8px;
+}
+
+.json-key {
+	color: brown;
+}
+.json-value {
+	color: navy;
+}
+.json-string {
+	color: olive;
+}
