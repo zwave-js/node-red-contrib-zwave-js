@@ -89,21 +89,20 @@ const ZwaveJsUI = (function () {
 		$('<div>')
 			.css({ maxHeight: '80%' })
 			.html('')
-			.attr('id', 'CommndList')
+			.attr('id', 'CommandLog')
 			.dialog({
 				draggable: true,
 				modal: false,
 				resizable: true,
-				width: '500',
-				height: '400',
+				width: '725',
+				height: '600',
 				title: 'UI Monitor',
-				minHeight: 75,
 				buttons: {
 					Close: function () {
 						$(this).dialog('destroy');
 					},
 					'Clear Log': function () {
-						$('#CommndList').empty();
+						$('#CommandLog').empty();
 					}
 				}
 			});
@@ -686,14 +685,14 @@ const ZwaveJsUI = (function () {
 			)}</pre><br />`;
 
 			try {
-				$('#CommndList').append(HTML);
-				$('#CommndList').scrollTop($('#CommndList')[0].scrollHeight);
+				$('#CommandLog').append(HTML);
+				$('#CommandLog').scrollTop($('#CommandLog')[0].scrollHeight);
 			} catch (err) {}
 		} else {
 			try {
-				let HTML = `${new Date().toString()}<hr /><pre class="MonitorEntry">Include/Exclude Commands are for the UI only.</pre><br />`;
-				$('#CommndList').append(HTML);
-				$('#CommndList').scrollTop($('#CommndList')[0].scrollHeight);
+				let HTML = `${new Date().toString()}<hr /><pre class="MonitorEntry">Include/Exclude commands are for the UI only.</pre><br />`;
+				$('#CommandLog').append(HTML);
+				$('#CommandLog').scrollTop($('#CommandLog')[0].scrollHeight);
 			} catch (err) {}
 		}
 
