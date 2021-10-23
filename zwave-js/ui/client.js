@@ -24,7 +24,7 @@ const StepList = {
 	Aborted: 9
 };
 
-let JSONFormatter = {};
+const JSONFormatter = {};
 
 JSONFormatter.json = {
 	replacer: function (match, pIndent, pKey, pVal, pEnd) {
@@ -676,23 +676,25 @@ const ZwaveJsUI = (function () {
 		}
 
 		if (mode !== 'IEAPI') {
-			let Copy = JSON.parse(JSON.stringify({ payload: Payload }));
+			const Copy = JSON.parse(JSON.stringify({ payload: Payload }));
 			delete Copy.payload.noTimeout;
 			delete Copy.payload.noWait;
 
-			let HTML = `${new Date().toString()}<hr /><pre class="MonitorEntry">${JSONFormatter.json.prettyPrint(
+			const HTML = `${new Date().toString()}<hr /><pre class="MonitorEntry">${JSONFormatter.json.prettyPrint(
 				Copy
 			)}</pre><br />`;
 
 			try {
 				$('#CommandLog').append(HTML);
 				$('#CommandLog').scrollTop($('#CommandLog')[0].scrollHeight);
+				// eslint-disable-next-line no-empty
 			} catch (err) {}
 		} else {
 			try {
-				let HTML = `${new Date().toString()}<hr /><pre class="MonitorEntry">Include/Exclude commands are for the UI only.</pre><br />`;
+				const HTML = `${new Date().toString()}<hr /><pre class="MonitorEntry">Include/Exclude commands are for the UI only.</pre><br />`;
 				$('#CommandLog').append(HTML);
 				$('#CommandLog').scrollTop($('#CommandLog')[0].scrollHeight);
+				// eslint-disable-next-line no-empty
 			} catch (err) {}
 		}
 
