@@ -101,6 +101,9 @@ const ZwaveJsUI = (function () {
 				buttons: {
 					Close: function () {
 						$(this).dialog('destroy');
+					},
+					'Clear Log': function () {
+						$('#CommndList').empty();
 					}
 				}
 			});
