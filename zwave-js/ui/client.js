@@ -1865,7 +1865,12 @@ const ZwaveJsUI = (function () {
 			const valueData = $(this).find('.zwave-js-node-property-value').data();
 			$('<div>')
 				.css({ maxHeight: '80%' })
-				.html(`<pre>${JSON.stringify({ ...data, valueData }, null, 2)}</pre>`)
+				.html(
+					`<pre class="MonitorEntry">${JSONFormatter.json.prettyPrint({
+						...data,
+						valueData
+					})}</pre>`
+				)
 				.dialog({
 					draggable: true,
 					modal: true,
