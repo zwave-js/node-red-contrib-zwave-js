@@ -24,6 +24,29 @@ const StepList = {
 	Aborted: 9
 };
 
+const JSONFormatter = {};
+
+JSONFormatter.json = {
+	replacer: function (match, pIndent, pKey, pVal, pEnd) {
+		var key = '<span class=json-key>';
+		var val = '<span class=json-value>';
+		var str = '<span class=json-string>';
+		var r = pIndent || '';
+		if (pKey) r = r + key + pKey.replace(/[": ]/g, '') + '</span>: ';
+		if (pVal) r = r + (pVal[0] == '"' ? str : val) + pVal + '</span>';
+		return r + (pEnd || '');
+	},
+	prettyPrint: function (obj) {
+		var jsonLine = /^( *)("[\w]+": )?("[^"]*"|[\w.+-]*)?([,[{])?$/gm;
+		return JSON.stringify(obj, null, 3)
+			.replace(/&/g, '&amp;')
+			.replace(/\\"/g, '&quot;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(jsonLine, JSONFormatter.json.replacer);
+	}
+};
+
 const ZwaveJsUI = (function () {
 	function modalAlert(message, title) {
 		const Buts = {
@@ -60,6 +83,29 @@ const ZwaveJsUI = (function () {
 			.css({ padding: 10, maxWidth: 500, wordWrap: 'break-word' })
 			.html(message)
 			.dialog(Options);
+	}
+
+	function ShowCommandViewer() {
+		$('<div>')
+			.css({ maxHeight: '80%' })
+			.html('')
+			.attr('id', 'CommandLog')
+			.dialog({
+				draggable: true,
+				modal: false,
+				resizable: true,
+				width: '725',
+				height: '600',
+				title: 'UI Monitor',
+				buttons: {
+					Close: function () {
+						$(this).dialog('destroy');
+					},
+					'Clear Log': function () {
+						$('#CommandLog').empty();
+					}
+				}
+			});
 	}
 
 	let FirmwareForm;
@@ -629,6 +675,29 @@ const ZwaveJsUI = (function () {
 			Payload.noTimeout = true;
 		}
 
+		if (mode !== 'IEAPI') {
+			const Copy = JSON.parse(JSON.stringify({ payload: Payload }));
+			delete Copy.payload.noTimeout;
+			delete Copy.payload.noWait;
+
+			const HTML = `${new Date().toString()}<hr /><pre class="MonitorEntry">${JSONFormatter.json.prettyPrint(
+				Copy
+			)}</pre><br />`;
+
+			try {
+				$('#CommandLog').append(HTML);
+				$('#CommandLog').scrollTop($('#CommandLog')[0].scrollHeight);
+				// eslint-disable-next-line no-empty
+			} catch (err) {}
+		} else {
+			try {
+				const HTML = `${new Date().toString()}<hr /><pre class="MonitorEntry">Include/Exclude commands are for the UI only.</pre><br />`;
+				$('#CommandLog').append(HTML);
+				$('#CommandLog').scrollTop($('#CommandLog')[0].scrollHeight);
+				// eslint-disable-next-line no-empty
+			} catch (err) {}
+		}
+
 		Options.data = JSON.stringify(Payload);
 		return $.ajax(Options);
 	}
@@ -1059,16 +1128,22 @@ const ZwaveJsUI = (function () {
 			.html('Waiting for driver...')
 			.appendTo(controllerOpts);
 
-		// Include Exclide
-		const optInclusion = $('<div>')
+		// Include Exclide, log
+		const optInclusionLog = $('<div>')
 			.css('text-align', 'center')
 			.appendTo(controllerOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '250px')
+			.css('min-width', '125px')
 			.click(ShowIncludeExcludePrompt)
 			.html('Include / Exclude')
-			.appendTo(optInclusion);
+			.appendTo(optInclusionLog);
+		$('<button>')
+			.addClass('red-ui-button red-ui-button-small')
+			.css('min-width', '125px')
+			.click(ShowCommandViewer)
+			.html('UI Monitor')
+			.appendTo(optInclusionLog);
 
 		// Heal
 		const optHeal = $('<div>')
@@ -1241,7 +1316,7 @@ const ZwaveJsUI = (function () {
 			.html('Refresh Property List')
 			.appendTo(set4);
 
-		// DB
+		// DB & Message Viewer
 		const DB = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
@@ -1794,7 +1869,12 @@ const ZwaveJsUI = (function () {
 			const valueData = $(this).find('.zwave-js-node-property-value').data();
 			$('<div>')
 				.css({ maxHeight: '80%' })
-				.html(`<pre>${JSON.stringify({ ...data, valueData }, null, 2)}</pre>`)
+				.html(
+					`<pre class="MonitorEntry">${JSONFormatter.json.prettyPrint({
+						...data,
+						valueData
+					})}</pre>`
+				)
 				.dialog({
 					draggable: true,
 					modal: true,

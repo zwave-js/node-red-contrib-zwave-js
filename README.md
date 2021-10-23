@@ -9,7 +9,7 @@
 [![Maintenance](https://img.shields.io/npms-io/maintenance-score/node-red-contrib-zwave-js)](https://www.npmjs.com/package/node-red-contrib-zwave-js)
 [![Dependencies](https://img.shields.io/librariesio/release/npm/node-red-contrib-zwave-js/latest)](https://www.npmjs.com/package/node-red-contrib-zwave-js)  
 
-The most powerful Z-Wave node for Node-RED based on Z-Wave JS. If you want a fully featured Z-Wave framework in your Node-RED instance, look no further.
+The most powerful/fully integrated Z-Wave node for Node-RED based on Z-Wave JS. If you want a fully featured Z-Wave framework in your Node-RED instance, look no further.
 
 > ### ...node-red-contrib-zwave-js is _hands down the best Z-Wave to Node-RED option on the planet._  
 > [@CRXPorter](https://github.com/crxporter), July 2021.  
@@ -20,6 +20,8 @@ The most powerful Z-Wave node for Node-RED based on Z-Wave JS. If you want a ful
  - 100% Javascript, so its blazing fast!
  - Does not require a build of any static library
  - Stable
+ - The Ability to capture commands for later use.
+ - A deep integrated UI within in node red
  - Full Z-Wave control inside Node-RED including:
    - Device inclusion/exclusion wizard
    - S0 and S2 security support

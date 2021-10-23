@@ -6,3 +6,4 @@ package-lock.json
 .eslintrc.json
 .prettierrc.json
 gfxsources
+resources

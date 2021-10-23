@@ -212,6 +212,41 @@ module.exports = function (RED) {
 			DriverOptions.logConfig.enabled = false;
 		}
 
+		// Code Interview
+		if (config.intvwUserCodes !== undefined && config.intvwUserCodes) {
+			Log(
+				'debug',
+				'NDERED',
+				undefined,
+				'[options] [interview.queryAllUserCodes]',
+				'Enabled'
+			);
+			DriverOptions.interview = {
+				queryAllUserCodes: true
+			};
+		}
+
+		// Soft Reset
+		if (config.softResetUSB !== undefined && config.softResetUSB) {
+			Log(
+				'debug',
+				'NDERED',
+				undefined,
+				'[options] [enableSoftReset]',
+				'Enabled'
+			);
+			DriverOptions.enableSoftReset = true;
+		} else {
+			Log(
+				'debug',
+				'NDERED',
+				undefined,
+				'[options] [enableSoftReset]',
+				'Disabled'
+			);
+			DriverOptions.enableSoftReset = false;
+		}
+
 		DriverOptions.storage = {};
 
 		// Cache Dir
@@ -664,6 +699,7 @@ module.exports = function (RED) {
 							}
 						});
 					});
+					Nodes.sort((A, B) => A.nodeId - B.nodeId);
 					Send(undefined, 'NODE_LIST', Nodes, send);
 					break;
 
@@ -1595,7 +1631,7 @@ module.exports = function (RED) {
 		}
 
 		function WireNodeEvents(Node) {
-			Node.on(event_Ready.zwaveName, (N) => {
+			Node.once(event_Ready.zwaveName, (N) => {
 				if (N.isControllerNode()) {
 					return;
 				}

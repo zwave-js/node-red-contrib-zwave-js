@@ -649,6 +649,8 @@
 			sendUsageStatistics: { value: true },
 			valueCacheDiskThrottle: { value: 'normal' },
 			customConfigPath: { value: undefined },
+			intvwUserCodes: { value: false },
+			softResetUSB: { value: false },
 			outputs: { value: 1 }
 		},
 		inputs: 1,
@@ -846,6 +848,14 @@
 	        <option value="slow">Slow</option>
 	        <option value="fast">Fast</option>
 	    </select>
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-intvwUserCodes" style="width:130px"><i class="fa fa-pencil"></i> Lock Code Intvw</label>
+	    <input type="checkbox" id="node-input-intvwUserCodes">
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-softResetUSB" style="width:130px"><i class="fa fa-pencil"></i> Soft Reset USB</label>
+	    <input type="checkbox" id="node-input-softResetUSB">
 	</div>
 	<br />
 	<p>
