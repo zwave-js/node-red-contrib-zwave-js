@@ -2,6 +2,7 @@
 <script type="text/javascript" src="zwave-js/res/vis-network.min.js"></script>
 <script type="text/javascript" src="zwave-js/res/handlebars.min.js"></script>
 <script type="text/javascript" src="zwave-js/res/jquery-steps.min.js"></script>
+<script type="text/javascript" src="zwave-js/res/qrcode.min.js"></script>
 <link rel="stylesheet" href="zwave-js/res/styles.css" />
 <link rel="stylesheet" href="zwave-js/res/jquery-steps.css" />
 
@@ -21,6 +22,7 @@
 			<li data-step-target='RemoveDone'></li>
 			<li data-step-target='ReplaceSecurityMode'></li>
 			<li data-step-target='Aborted'></li>
+			<li data-step-target='SmartStart'></li>
 		</ul>
 		<div class='step-content' style='border: none;'>
 			<!-- Secuity Mode-->
@@ -41,16 +43,15 @@
 							<label for='S0'>Prefer S0 over no encryption</label>
 						</td>
 					</tr>
-					<tr style='opacity: 0.5;'>
+					<tr>
 						<td style='text-align: left;vertical-align: top; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('SmartStart')"
-								disabled
 							>Smart Start</button>
 						</td>
 						<td style='text-align: left;vertical-align: top; '>
-							S2 Smart Start is not yet supported.
+							Enroll devcies quickly using their QR code.
 						</td>
 					</tr>
 					<tr>
@@ -382,6 +383,27 @@
 							The device may or may not have been added to your network.</td>
 					</tr>
 				</table>
+			</div>
+			<!--Smart Start-->
+			<div class='step-tab-panel' data-step='SmartStart'>
+				<br />
+				Using your mobile phone, scan this QR code, it will start up a web
+				application hosted on your node-red server.
+				<br />
+				<br />
+				Note: This web application running on node-red, uses a self signed
+				certificate, therefore, you will get a warning.
+				<br />
+				<br />
+				It is safe to visit this web app (its local) and accept any secuity
+				warning presented.
+				<br />
+				<br />
+				<div
+					style='margin: auto; display: block; margin-top: 50px; width: 150px;'
+					id='SmartStartQR'
+				></div>
+
 			</div>
 		</div>
 	</div>

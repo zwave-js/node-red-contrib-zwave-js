@@ -3,6 +3,7 @@ const SP = require('serialport');
 const ModulePackage = require('../../package.json');
 const { CommandClasses } = require('@zwave-js/core');
 const ZWaveJS = require('zwave-js');
+const SmartStart = require('./smartstart/server');
 
 const _Context = {};
 let _NodeList;
@@ -178,6 +179,27 @@ module.exports = {
 					};
 					_Context.input({ payload: PL }, Success, Error);
 				});
+			}
+		);
+
+		// Smart Start
+		RED.httpAdmin.get(
+			'/zwave-js/smartstart/:Method',
+			RED.auth.needsPermission('flows.write'),
+			async (req, res) => {
+				switch (req.params.Method) {
+					case 'startserver':
+						SmartStart.Start().then((QRCode) => {
+							res.status(200);
+							res.end(QRCode);
+						});
+						break;
+					case 'stopserver':
+						SmartStart.Stop();
+						res.status(200);
+						res.end();
+						break;
+				}
 			}
 		);
 

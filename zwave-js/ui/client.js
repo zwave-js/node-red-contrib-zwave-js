@@ -21,7 +21,8 @@ const StepList = {
 	AddDoneInsecure: 6,
 	RemoveDone: 7,
 	ReplaceSecurityMode: 8,
-	Aborted: 9
+	Aborted: 9,
+	SmartStart: 10
 };
 
 const JSONFormatter = {};
@@ -817,9 +818,23 @@ const ZwaveJsUI = (function () {
 				break;
 
 			case 'SmartStart':
-				Request.strategy = 1;
-				Request.provisioningList = '';
-				break;
+				$.ajax({
+					url: `zwave-js/smartstart/startserver`,
+					method: 'GET',
+					success: function (QRData) {
+						StepsAPI.setStepIndex(StepList.SmartStart);
+						new QRCode($('#SmartStartQR')[0], {
+							text: QRData,
+							width: 150,
+							height: 150,
+							colorDark: '#000000',
+							colorLight: '#ffffff',
+							correctLevel: QRCode.CorrectLevel.L
+						});
+					}
+				});
+
+				return;
 
 			case 'None':
 				Request.strategy = 2;
