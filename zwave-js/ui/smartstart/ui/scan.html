@@ -1,0 +1,128 @@
+<script>
+	let Ratio = 0;
+</script>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="initial-scale=1, maximum-scale=1" />
+		<title>jsQR Demo</title>
+		<script src="jsQR.js"></script>
+		<style type="text/css">
+			body {
+				font-family: HelveticaNeue-Light, Roboto;
+				font-size: 18px;
+			}
+		</style>
+	</head>
+	<body>
+		<p>Node Red ZWave-JS Smart Start Scanner.</p>
+		<p>
+			With your camera, scan your devices QR Code, the code will be sent to
+			Node-Red, and will be confirmed, in second or 2.
+		</p>
+
+		<canvas
+			id="CameraView"
+			style="
+				width: 300;
+				margin: auto;
+				display: block;
+				-webkit-border-radius: 8px;
+				-moz-border-radius: 8px;
+				border-radius: 8px;
+				border-style: solid;
+				border-color: orangered;
+			"
+			hidden
+		></canvas>
+
+		<script>
+			const canvasElement = document.getElementById('CameraView');
+			const canvasCTX = canvasElement.getContext('2d');
+			const video = document.createElement('video');
+			function drawLine(begin, end, color) {
+				canvasCTX.beginPath();
+				canvasCTX.moveTo(begin.x + 140, begin.y + 140);
+				canvasCTX.lineTo(end.x + 140, end.y + 140);
+				canvasCTX.lineWidth = 4;
+				canvasCTX.strokeStyle = color;
+				canvasCTX.stroke();
+			}
+
+			navigator.mediaDevices
+				.getUserMedia({ video: { facingMode: 'environment' } })
+				.then(function (stream) {
+					video.srcObject = stream;
+					video.setAttribute('playsinline', true); // required to tell iOS safari we don't want fullscreen
+					video.play();
+					requestAnimationFrame(tick);
+				});
+
+			function tick() {
+				if (video.readyState === video.HAVE_ENOUGH_DATA) {
+					canvasElement.hidden = false;
+					canvasElement.height = video.videoHeight;
+					canvasElement.width = video.videoWidth;
+					canvasCTX.drawImage(
+						video,
+						0,
+						0,
+						canvasElement.width,
+						canvasElement.height
+					);
+
+					//
+					let detectionArea = 200;
+					const size = Math.min(video.videoWidth, video.videoHeight);
+
+					canvasCTX.beginPath();
+					canvasCTX.fillStyle = 'rgba(255,255,255,0.15)';
+					canvasCTX.rect(
+						(size - detectionArea) / 2,
+						(size - detectionArea) / 2,
+						detectionArea,
+						detectionArea
+					);
+					canvasCTX.lineWidth = 6;
+					canvasCTX.strokeStyle = '#FF3B58';
+					canvasCTX.stroke();
+					//
+
+					var imageData = canvasCTX.getImageData(
+						(size - detectionArea) / 2,
+						(size - detectionArea) / 2,
+						detectionArea,
+						detectionArea
+					);
+					var code = jsQR(imageData.data, imageData.width, imageData.height, {
+						inversionAttempts: 'dontInvert'
+					});
+					if (code) {
+						console.log(code);
+						drawLine(
+							code.location.topLeftCorner,
+							code.location.topRightCorner,
+							'#00FF00'
+						);
+						drawLine(
+							code.location.topRightCorner,
+							code.location.bottomRightCorner,
+							'#00FF00'
+						);
+						drawLine(
+							code.location.bottomRightCorner,
+							code.location.bottomLeftCorner,
+							'#00FF00'
+						);
+						drawLine(
+							code.location.bottomLeftCorner,
+							code.location.topLeftCorner,
+							'#00FF00'
+						);
+					}
+				}
+				requestAnimationFrame(tick);
+			}
+		</script>
+	</body>
+</html>
