@@ -33,6 +33,21 @@ const SendNodeEvent = (type, node, payload) => {
 	});
 };
 
+const SmartStartCallback = (Event, Code) => {
+
+	switch(Event){
+		case "Started":
+			return true;
+		case "Code":
+			let QRData = ZWaveJS.parseQRCodeString(Code);
+			console.log(QRData);
+			break;
+
+	}
+
+	
+}
+
 module.exports = {
 	status: (Message) => {
 		LatestStatus = Message;
@@ -189,7 +204,7 @@ module.exports = {
 			async (req, res) => {
 				switch (req.params.Method) {
 					case 'startserver':
-						SmartStart.Start().then((QRCode) => {
+						SmartStart.Start(SmartStartCallback).then((QRCode) => {
 							res.status(200);
 							res.end(QRCode);
 						});
