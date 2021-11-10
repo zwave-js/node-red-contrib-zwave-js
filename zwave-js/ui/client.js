@@ -22,7 +22,8 @@ const StepList = {
 	RemoveDone: 7,
 	ReplaceSecurityMode: 8,
 	Aborted: 9,
-	SmartStart: 10
+	SmartStart: 10,
+	SmartStartList: 11
 };
 
 const JSONFormatter = {};
@@ -818,6 +819,7 @@ const ZwaveJsUI = (function () {
 				break;
 
 			case 'SmartStart':
+				$('#SmartStartCommit').css({ display: 'inline' });
 				$.ajax({
 					url: `zwave-js/smartstart/startserver`,
 					method: 'GET',
@@ -883,6 +885,19 @@ const ZwaveJsUI = (function () {
 						ControllerCMD('IEAPI', 'stop', undefined, undefined, true);
 						$(this).dialog('destroy');
 					}
+				},
+				{
+					id: 'SmartStartCommit',
+					text: 'Commit Scans',
+					click: function () {
+						const SSEntries = $('.SmartStartEntry');
+						const Entries = [];
+						SSEntries.each(() => {
+							Entries.push($(this).data('inclusionPackage'));
+						});
+						ControllerCMD('IEAPI', 'commitScans', undefined, Entries, true);
+						$(this).dialog('destroy');
+					}
 				}
 			]
 		};
@@ -894,6 +909,8 @@ const ZwaveJsUI = (function () {
 		IncludeForm.append($('#TPL_Include').html());
 		const Steps = $('#IncludeWizard').steps({ showFooterButtons: false });
 		StepsAPI = Steps.data('plugin_Steps');
+
+		$('#SmartStartCommit').css({ display: 'none' });
 	}
 
 	function ShowReplacePrompt() {
@@ -1439,6 +1456,27 @@ const ZwaveJsUI = (function () {
 					StepsAPI.setStepIndex(StepList.Aborted);
 					ClearIETimer();
 					ClearSecurityCountDown();
+				}
+				if (data.event === 'smart start awaiting codes') {
+					// New List
+					StepsAPI.setStepIndex(StepList.SmartStartList);
+				}
+				if (data.event === 'smart start code received') {
+					// Append List
+					const Item = $('<tr class="SmartStartEntry">');
+					Item.data('inclusionPackage', data.data.inclusionPackage);
+					Item.append(`<td>${data.data.humaReadable.dsk}</td>`);
+					if (data.data.humaReadable.manufacturer === undefined) {
+						Item.append(`<td>Unknown Manufacturer</td>`);
+						Item.append(`<td>Unknown Product</td>`);
+					} else {
+						Item.append(`<td>${data.data.humaReadable.manufacturer}</td>`);
+						Item.append(
+							`<td>${data.data.humaReadable.label}<br /><span style="font-size:12px">${data.data.humaReadable.description}</span></td>`
+						);
+					}
+
+					$('#SmartStartScannedList').append(Item);
 				}
 				break;
 

@@ -40,7 +40,11 @@
 			style="margin: auto; display: none"
 		/>
 		<script>
-			Start();
+			SendActive()
+			.then(()=>{
+				Start();
+			})
+			
 		</script>
 	</body>
 </html>

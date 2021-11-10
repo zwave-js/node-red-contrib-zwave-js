@@ -23,6 +23,7 @@
 			<li data-step-target='ReplaceSecurityMode'></li>
 			<li data-step-target='Aborted'></li>
 			<li data-step-target='SmartStart'></li>
+			<li data-step-target='SmartStartList'></li>
 		</ul>
 		<div class='step-content' style='border: none;'>
 			<!-- Secuity Mode-->
@@ -404,6 +405,26 @@
 					id='SmartStartQR'
 				></div>
 
+			</div>
+			<!--Smart Start List-->
+			<div class='step-tab-panel' data-step='SmartStartList'>
+				<br />
+				Start scanning your device's, they will appear below.
+				<br />
+				<br />
+				<table style="width:100%" id="SmartStartScannedList" cellpadding="10">
+					<tr>
+						<td>
+							DSK Pin
+						</td>
+						<td>
+							Manufacturer
+						</td>
+						<td>
+							Product
+						</td>
+					</tr>
+				</table>
 			</div>
 		</div>
 	</div>

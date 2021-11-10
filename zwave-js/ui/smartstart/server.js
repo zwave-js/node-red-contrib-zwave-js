@@ -14,7 +14,6 @@ const Options = {
 };
 
 const Start = (Callback) => {
-
 	_Callback = Callback;
 	App = express();
 	App.use(express.static(path.join(__dirname, 'ui')));
@@ -32,16 +31,25 @@ const Start = (Callback) => {
 };
 
 function SendStarted(req, res) {
-	_Callback('Started');
-	res.status(200);
-	res.end();
+	const Result = _Callback('Started');
+	if (Result) {
+		res.status(200);
+		res.end();
+	} else {
+		res.status(500);
+		res.end();
+	}
 }
 
 function ParseCode(req, res) {
-	_Callback('Code',req.params.Code);
-	res.status(200);
-	res.end();
-	// pasre and pass back
+	const Result = _Callback('Code', req.params.Code);
+	if (Result) {
+		res.status(200);
+		res.end();
+	} else {
+		res.status(200);
+		res.end();
+	}
 }
 
 const Stop = () => {

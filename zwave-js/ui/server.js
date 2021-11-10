@@ -3,6 +3,7 @@ const SP = require('serialport');
 const ModulePackage = require('../../package.json');
 const { CommandClasses } = require('@zwave-js/core');
 const ZWaveJS = require('zwave-js');
+const ZWJSCFG = require('@zwave-js/config');
 const SmartStart = require('./smartstart/server');
 
 const _Context = {};
@@ -10,6 +11,9 @@ let _NodeList;
 let _RED;
 let _CCs;
 let _CCMethods;
+
+const CM = new ZWJSCFG.ConfigManager();
+CM.loadDeviceIndex();
 
 let LatestStatus;
 const _SendStatus = () => {
@@ -34,19 +38,56 @@ const SendNodeEvent = (type, node, payload) => {
 };
 
 const SmartStartCallback = (Event, Code) => {
-
-	switch(Event){
-		case "Started":
+	switch (Event) {
+		case 'Started':
+			_RED.comms.publish(`/zwave-js/cmd`, {
+				type: 'node-inclusion-step',
+				event: 'smart start awaiting codes'
+			});
 			return true;
-		case "Code":
-			let QRData = ZWaveJS.parseQRCodeString(Code);
-			console.log(QRData);
-			break;
 
+		case 'Code':
+			const inclusionPackage = ZWaveJS.parseQRCodeString(Code);
+			if (inclusionPackage.version === 1) {
+				CM.lookupDevice(
+					inclusionPackage.manufacturerId,
+					inclusionPackage.productType,
+					inclusionPackage.productId
+				).then((device) => {
+					if (device !== undefined) {
+						_RED.comms.publish(`/zwave-js/cmd`, {
+							type: 'node-inclusion-step',
+							event: 'smart start code received',
+							data: {
+								inclusionPackage: inclusionPackage,
+								humaReadable: {
+									manufacturer: device.manufacturer,
+									label: device.label,
+									description: device.description,
+									dsk: inclusionPackage.dsk.substring(0, 5)
+								}
+							}
+						});
+					} else {
+						_RED.comms.publish(`/zwave-js/cmd`, {
+							type: 'node-inclusion-step',
+							event: 'smart start code received',
+							data: {
+								inclusionPackage: inclusionPackage,
+								humaReadable: {
+									dsk: inclusionPackage.dsk.substring(0, 5)
+								}
+							}
+						});
+					}
+				});
+
+				return true;
+			} else {
+				return false;
+			}
 	}
-
-	
-}
+};
 
 module.exports = {
 	status: (Message) => {

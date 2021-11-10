@@ -4,7 +4,6 @@ let canvasCTX;
 let canvasElement;
 let videoElement;
 let offset;
-let SentActive = false;
 const ScannedCodes = [];
 
 function Start() {
@@ -104,17 +103,9 @@ function tick() {
 			inversionAttempts: 'dontInvert'
 		});
 		if (code) {
-			if (!SentActive) {
-				SendActive().then(() => {
-					SendCode(code).then(() => {
-						requestAnimationFrame(tick);
-					});
-				});
-			} else {
-				SendCode(code).then(() => {
-					requestAnimationFrame(tick);
-				});
-			}
+			SendCode(code).then(() => {
+				requestAnimationFrame(tick);
+			});
 		} else {
 			requestAnimationFrame(tick);
 		}
@@ -124,13 +115,9 @@ function tick() {
 }
 
 function SendActive() {
-	SentActive = true;
 	return new Promise((resolve) => {
-		$.ajax({
-			url: '/event.started',
-			method: 'get',
-			success: resolve
-		});
+		$.ajax({ url: '/event.started', method: 'get', async: false });
+		resolve();
 	});
 }
 
@@ -159,11 +146,8 @@ function SendCode(Code) {
 				Code.location.topLeftCorner,
 				'#00FF00'
 			);
-
-			let Data = $.ajax({url: '/event.code/' + Code.data,method: 'get',async : false});
-        
-            resolve();
-
+			$.ajax({ url: '/event.code/' + Code.data, method: 'get', async: false });
+			resolve();
 		} else {
 			resolve();
 		}
