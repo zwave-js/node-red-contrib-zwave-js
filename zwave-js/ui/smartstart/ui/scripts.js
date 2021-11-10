@@ -93,13 +93,13 @@ function tick() {
 		canvasCTX.fillStyle = 'rgba(0,0,0,0.0)';
 		canvasCTX.fillRect(offset, offset, detectionArea, detectionArea);
 
-		var imageData = canvasCTX.getImageData(
+		const imageData = canvasCTX.getImageData(
 			offset,
 			offset,
 			detectionArea,
 			detectionArea
 		);
-		var code = jsQR(imageData.data, imageData.width, imageData.height, {
+		const code = jsQR(imageData.data, imageData.width, imageData.height, {
 			inversionAttempts: 'dontInvert'
 		});
 		if (code) {
