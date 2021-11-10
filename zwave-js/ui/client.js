@@ -890,9 +890,11 @@ const ZwaveJsUI = (function () {
 					id: 'SmartStartCommit',
 					text: 'Commit Scans',
 					click: function () {
+						
 						const SSEntries = $('.SmartStartEntry');
 						const Entries = [];
 						SSEntries.each(() => {
+							console.log($(this).data('inclusionPackage'))
 							Entries.push($(this).data('inclusionPackage'));
 						});
 						ControllerCMD('IEAPI', 'commitScans', undefined, Entries, true);
@@ -1464,7 +1466,7 @@ const ZwaveJsUI = (function () {
 				if (data.event === 'smart start code received') {
 					// Append List
 					const Item = $('<tr class="SmartStartEntry">');
-					Item.data('inclusionPackage', data.data.inclusionPackage);
+					
 					Item.append(`<td>${data.data.humaReadable.dsk}</td>`);
 					if (data.data.humaReadable.manufacturer === undefined) {
 						Item.append(`<td>Unknown Manufacturer</td>`);
@@ -1475,8 +1477,8 @@ const ZwaveJsUI = (function () {
 							`<td>${data.data.humaReadable.label}<br /><span style="font-size:12px">${data.data.humaReadable.description}</span></td>`
 						);
 					}
-
 					$('#SmartStartScannedList').append(Item);
+					Item.data('inclusionPackage', data.data.inclusionPackage);
 				}
 				break;
 
