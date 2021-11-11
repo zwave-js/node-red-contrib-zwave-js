@@ -6,7 +6,7 @@
      - When a new node appears in the UI list after it gets added to the network, its battery is correctly reported.
 
     **New Features**
-     - Implemented Zwave S2 Security Smart Start.
+     - Implemented Zwave S2 Security Smart Start.  
        This includes a new mobile UI, allowing you to use it as a device inclusion tool.
     
     **Changes**
