@@ -840,6 +840,7 @@ const ZwaveJsUI = (function () {
 								);
 							}
 							const BTNTD = $('<td>');
+							BTNTD.css('text-align', 'right');
 							const BTN = $('<button>');
 							BTN.addClass('ui-button ui-corner-all ui-widget');
 							BTN.html('Remove');
@@ -1540,6 +1541,7 @@ const ZwaveJsUI = (function () {
 						);
 					}
 					const BTNTD = $('<td>');
+					BTNTD.css('text-align', 'right');
 					const BTN = $('<button>');
 					BTN.addClass('ui-button ui-corner-all ui-widget');
 					BTN.html('Remove');
