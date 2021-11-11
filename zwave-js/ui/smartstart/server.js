@@ -43,9 +43,11 @@ function ParseCode(req, res) {
 }
 
 const Stop = () => {
-	Server.close();
-	Server = undefined;
-	App = undefined;
+	if (Server !== undefined) {
+		Server.close();
+		Server = undefined;
+		App = undefined;
+	}
 };
 
 module.exports = {

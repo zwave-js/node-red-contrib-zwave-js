@@ -520,9 +520,9 @@ module.exports = function (RED) {
 
 			switch (Method) {
 				case 'commitScans':
-					Params.forEach((S) =>{
+					Params.forEach((S) => {
 						Driver.controller.provisionSmartStartNode(S);
-					})
+					});
 					break;
 				case 'beginInclusion':
 					CheckKey(Params[0].strategy);

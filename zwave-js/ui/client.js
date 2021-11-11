@@ -833,6 +833,8 @@ const ZwaveJsUI = (function () {
 							colorLight: '#ffffff',
 							correctLevel: QRCode.CorrectLevel.L
 						});
+
+						$('#SmartStartURL').html(QRData);
 					}
 				});
 
