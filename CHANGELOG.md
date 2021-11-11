@@ -1,5 +1,18 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 6.4.0
+
+    **Fixes**
+     - When a new node appears in the UI list after it gets added to the network, its battery is correctly reported.
+
+    **New Features**
+     - Implemented Zwave S2 Security Smart Start.
+       This includes a new mobile UI, allowing you to use it as a device inclusion tool.
+    
+    **Changes**
+     - The battery icon in the node list is now updated, whenever a device transmits an update.  
+     - Bump ZWJS to 8.7.5
+
   - 6.3.0
 
     **Fixes**

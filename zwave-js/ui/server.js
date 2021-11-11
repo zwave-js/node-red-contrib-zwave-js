@@ -37,6 +37,13 @@ const SendNodeEvent = (type, node, payload) => {
 	});
 };
 
+const SendBatteryUpdate = (node, payload) => {
+	_RED.comms.publish(`/zwave-js/battery`, {
+		node: node.id,
+		payload: payload
+	});
+};
+
 const SmartStartCallback = (Event, Code) => {
 	switch (Event) {
 		case 'Started':
@@ -366,9 +373,15 @@ module.exports = {
 				// Values
 				node.on('value added', (node, value) => {
 					SendNodeEvent('node-value', node, value);
+					if (value.commandClass === 128) {
+						SendBatteryUpdate(node, value);
+					}
 				});
 				node.on('value updated', (node, value) => {
 					SendNodeEvent('node-value', node, value);
+					if (value.commandClass === 128) {
+						SendBatteryUpdate(node, value);
+					}
 				});
 				node.on('value removed', (node, value) => {
 					SendNodeEvent('node-value', node, value);

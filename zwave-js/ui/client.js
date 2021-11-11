@@ -1396,6 +1396,7 @@ const ZwaveJsUI = (function () {
 			onchange: () => setTimeout(resizeStack, 0) // Only way I can figure out how to init the resize when tab becomes visible
 		});
 		RED.comms.subscribe(`/zwave-js/cmd`, handleControllerEvent);
+		RED.comms.subscribe(`/zwave-js/battery`, handleBattery);
 		RED.comms.subscribe(`/zwave-js/status`, handleStatusUpdate);
 
 		setTimeout(WaitLoad, 100);
@@ -1744,10 +1745,11 @@ const ZwaveJsUI = (function () {
 
 	function handleNodeEvent(topic, data) {
 		const nodeId = topic.split('/')[3];
+
 		if (nodeId != selectedNode) return;
 		switch (data.type) {
 			case 'node-value':
-				updateValue(data.payload);
+				updateValue(data.payload, nodeId);
 				break;
 
 			case 'node-meta':
@@ -1984,9 +1986,40 @@ const ZwaveJsUI = (function () {
 		);
 	}
 
+	function handleBattery(topic, data) {
+		const BatterySymbol = $(
+			`#zwave-js-node-list > div.red-ui-treeList-label.zwave-js-node-row[data-nodeid='${data.node}'] > div.zwave-js-node-row-battery > i`
+		);
+
+		switch (data.payload.property) {
+			case 'level':
+				let Class;
+				data.payload.newValue > 90
+					? (Class = 'fa fa-battery-full')
+					: data.payload.newValue > 65
+					? (Class = 'fa fa-battery-three-quarters')
+					: data.payload.newValue > 35
+					? (Class = 'fa fa-battery-half')
+					: data.payload.newValue > 10
+					? (Class = 'fa fa-battery-quarter')
+					: (Class = 'fa fa-battery-empty');
+				BatterySymbol.removeClass();
+				BatterySymbol.addClass(Class);
+				RED.popover.tooltip(BatterySymbol, 'Level: ' + data.payload.newValue);
+				break;
+
+			case 'isLow':
+				if (data.payload.newValue) {
+					BatterySymbol.css({ color: 'red' });
+				} else {
+					BatterySymbol.css({ color: '#555' });
+				}
+				break;
+		}
+	}
+
 	function updateValue(valueId) {
 		// Assumes you already checked if this applies to selectedNode
-
 		const propertyRow = getPropertyRow(valueId);
 
 		if (!propertyRow) {
