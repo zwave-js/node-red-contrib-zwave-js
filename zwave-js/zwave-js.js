@@ -519,11 +519,10 @@ module.exports = function (RED) {
 			};
 
 			switch (Method) {
-
 				case 'unprovisionSmartStartNode':
 					Driver.controller.unprovisionSmartStartNode(Params[0]);
 					break;
-					
+
 				case 'commitScans':
 					Params.forEach((S) => {
 						Driver.controller.provisionSmartStartNode(S);
