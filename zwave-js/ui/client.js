@@ -1811,7 +1811,7 @@ const ZwaveJsUI = (function () {
 		if (nodeId != selectedNode) return;
 		switch (data.type) {
 			case 'node-value':
-				updateValue(data.payload, nodeId);
+				updateValue(data.payload);
 				break;
 
 			case 'node-meta':
