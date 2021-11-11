@@ -86,7 +86,7 @@ function tick() {
 
 		// Border
 		canvasCTX.lineWidth = 6;
-		canvasCTX.strokeStyle = '#FF3B58';
+		canvasCTX.strokeStyle = 'blue';
 		canvasCTX.strokeRect(offset, offset, detectionArea, detectionArea);
 
 		// Slightly Darken Inner
