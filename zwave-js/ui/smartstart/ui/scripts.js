@@ -4,7 +4,7 @@ let canvasCTX;
 let canvasElement;
 let videoElement;
 let offset;
-const ScannedCodes = [];
+const ScannedCodes = {};
 
 function Start() {
 	canvasElement = $('#CameraView')[0];
@@ -43,7 +43,7 @@ function drawLine(begin, end, color) {
 	canvasCTX.beginPath();
 	canvasCTX.moveTo(begin.x + offset, begin.y + offset);
 	canvasCTX.lineTo(end.x + offset, end.y + offset);
-	canvasCTX.lineWidth = 6;
+	canvasCTX.lineWidth = 8;
 	canvasCTX.strokeStyle = color;
 	canvasCTX.stroke();
 }
@@ -63,7 +63,7 @@ function tick() {
 		);
 
 		// Size
-		const detectionArea = 200;
+		const detectionArea = 250;
 		const size = Math.min(videoElement.videoWidth, videoElement.videoHeight);
 		offset = (size - detectionArea) / 2;
 
@@ -121,35 +121,50 @@ function SendActive() {
 	});
 }
 
+function RenderOutline(Code, Color) {
+	drawLine(Code.location.topLeftCorner, Code.location.topRightCorner, Color);
+	drawLine(
+		Code.location.topRightCorner,
+		Code.location.bottomRightCorner,
+		Color
+	);
+	drawLine(
+		Code.location.bottomRightCorner,
+		Code.location.bottomLeftCorner,
+		Color
+	);
+	drawLine(Code.location.bottomLeftCorner, Code.location.topLeftCorner, Color);
+}
+
 function SendCode(Code) {
 	return new Promise((resolve) => {
-		if (!ScannedCodes.includes(Code.data)) {
-			ScannedCodes.push(Code.data);
-
-			drawLine(
-				Code.location.topLeftCorner,
-				Code.location.topRightCorner,
-				'#00FF00'
-			);
-			drawLine(
-				Code.location.topRightCorner,
-				Code.location.bottomRightCorner,
-				'#00FF00'
-			);
-			drawLine(
-				Code.location.bottomRightCorner,
-				Code.location.bottomLeftCorner,
-				'#00FF00'
-			);
-			drawLine(
-				Code.location.bottomLeftCorner,
-				Code.location.topLeftCorner,
-				'#00FF00'
-			);
-			$.ajax({ url: '/event.code/' + Code.data, method: 'get', async: false });
-			resolve();
+		let Color;
+		Color = '#ffbf00';
+		RenderOutline(Code, Color);
+		const Entry = ScannedCodes[Code.data];
+		if (Entry !== undefined) {
+			if (Entry.ok) {
+				Color = '#00FF00';
+				RenderOutline(Code, Color);
+				resolve();
+			} else {
+				Color = '#FF0000';
+				RenderOutline(Code, Color);
+				resolve();
+			}
 		} else {
-			resolve();
+			let Result;
+			$.ajax({
+				url: '/event.code/' + Code.data,
+				method: 'get',
+				success: (data) => {
+					Result = data;
+				},
+				async: false
+			});
+			ScannedCodes[Code.data] = {};
+			ScannedCodes[Code.data].ok = parseInt(Result) === 1 ? true : false;
+			setTimeout(resolve, 250);
 		}
 	});
 }

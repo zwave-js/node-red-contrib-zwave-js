@@ -880,6 +880,10 @@ const ZwaveJsUI = (function () {
 					id: 'IEButton',
 					text: 'Abort',
 					click: function () {
+						$.ajax({
+							url: `zwave-js/smartstart/stopserver`,
+							method: 'GET'
+						});
 						ClearIETimer();
 						ClearSecurityCountDown();
 						ControllerCMD('IEAPI', 'stop', undefined, undefined, true);
@@ -890,14 +894,16 @@ const ZwaveJsUI = (function () {
 					id: 'SmartStartCommit',
 					text: 'Commit Scans',
 					click: function () {
-						
 						const SSEntries = $('.SmartStartEntry');
 						const Entries = [];
-						SSEntries.each(() => {
-							console.log($(this).data('inclusionPackage'))
-							Entries.push($(this).data('inclusionPackage'));
+						SSEntries.each(function (i, e) {
+							Entries.push($(e).data('inclusionPackage'));
 						});
 						ControllerCMD('IEAPI', 'commitScans', undefined, Entries, true);
+						$.ajax({
+							url: `zwave-js/smartstart/stopserver`,
+							method: 'GET'
+						});
 						$(this).dialog('destroy');
 					}
 				}
@@ -1466,7 +1472,7 @@ const ZwaveJsUI = (function () {
 				if (data.event === 'smart start code received') {
 					// Append List
 					const Item = $('<tr class="SmartStartEntry">');
-					
+
 					Item.append(`<td>${data.data.humaReadable.dsk}</td>`);
 					if (data.data.humaReadable.manufacturer === undefined) {
 						Item.append(`<td>Unknown Manufacturer</td>`);

@@ -31,25 +31,15 @@ const Start = (Callback) => {
 };
 
 function SendStarted(req, res) {
-	const Result = _Callback('Started');
-	if (Result) {
-		res.status(200);
-		res.end();
-	} else {
-		res.status(500);
-		res.end();
-	}
+	_Callback('Started');
+	res.status(200);
+	res.end();
 }
 
 function ParseCode(req, res) {
 	const Result = _Callback('Code', req.params.Code);
-	if (Result) {
-		res.status(200);
-		res.end();
-	} else {
-		res.status(200);
-		res.end();
-	}
+	res.status(200);
+	res.end(Result.toString());
 }
 
 const Stop = () => {

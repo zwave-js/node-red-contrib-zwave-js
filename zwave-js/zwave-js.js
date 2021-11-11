@@ -519,6 +519,11 @@ module.exports = function (RED) {
 			};
 
 			switch (Method) {
+				case 'commitScans':
+					Params.forEach((S) =>{
+						Driver.controller.provisionSmartStartNode(S);
+					})
+					break;
 				case 'beginInclusion':
 					CheckKey(Params[0].strategy);
 					Params[0].userCallbacks = Callbacks;

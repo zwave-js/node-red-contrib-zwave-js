@@ -2,7 +2,7 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="initial-scale=1, maximum-scale=1" />
-		<title>jsQR Demo</title>
+		<title>Node Red ZWave-JS Smart Start Scanner</title>
 		<script src="jquery-3.6.0.min.js"></script>
 		<script src="jsQR.js"></script>
 		<script src="scripts.js"></script>
@@ -16,8 +16,8 @@
 	<body>
 		<p>Node Red ZWave-JS Smart Start Scanner.</p>
 		<p>
-			With your camera, scan your devices QR Code, the code will be sent to
-			Node-Red, and will be confirmed after a second.
+			With your camera, scan your device(s) QR Code, the code will be sent to
+			Node-Red. You will have a chance to review after.
 		</p>
 		<canvas
 			id="CameraView"
@@ -34,17 +34,50 @@
 			hidden
 		></canvas>
 		<br />
-		<input
-			id="VideoZOOM"
-			type="range"
-			style="margin: auto; display: none"
-		/>
+		<input id="VideoZOOM" type="range" style="margin: auto; display: none" />
+		<div style="margin: auto;text-align: center;">
+			<div
+				style="
+					display: inline-block;
+					margin: auto;
+					border-style: solid;
+					border-width: 4px;
+					border-color: #ffbf00;
+					padding: 3px;
+				"
+			>
+				Procesing
+			</div>
+			<div
+				style="
+					display: inline-block;
+					margin: auto;
+					border-style: solid;
+					border-width: 4px;
+					border-color: #00ff00;
+					padding: 3px;
+				"
+			>
+				Accepted
+			</div>
+			<div
+				style="
+					display: inline-block;
+					margin: auto;
+					border-style: solid;
+					border-width: 4px;
+					border-color: #ff0000;
+					padding: 3px;
+				"
+			>
+				Rejected
+			</div>
+		</div>
+
 		<script>
-			SendActive()
-			.then(()=>{
+			SendActive().then(() => {
 				Start();
-			})
-			
+			});
 		</script>
 	</body>
 </html>

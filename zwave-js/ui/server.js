@@ -82,9 +82,9 @@ const SmartStartCallback = (Event, Code) => {
 					}
 				});
 
-				return true;
+				return 1;
 			} else {
-				return false;
+				return 0;
 			}
 	}
 };
