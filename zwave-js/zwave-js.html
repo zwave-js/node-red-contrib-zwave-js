@@ -24,20 +24,25 @@
 			<li data-step-target='Aborted'></li>
 			<li data-step-target='SmartStart'></li>
 			<li data-step-target='SmartStartList'></li>
+			<li data-step-target='SmartStartListEdit'></li>
 		</ul>
 		<div class='step-content' style='border: none;'>
 			<!-- Secuity Mode-->
 			<div class='step-tab-panel' data-step='SecurityMode'>
 				<br />
-				<table style='width: 100%; height: 290px;'>
+				<table
+					style='width: 100%; height: 290px;'
+					cellpadding='5'
+					cellspacing='0'
+				>
 					<tr>
-						<td style='text-align: left;width: 200px;vertical-align: top; '>
+						<td style='text-align: left;width: 200px;vertical-align: middle; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('Default')"
 							>Default</button><br />
 						</td>
-						<td style='text-align: left; vertical-align: top; '>
+						<td style='text-align: left; vertical-align: middle; '>
 							S2 when supported, else S0 only when necessary, no encryption
 							otherwise (recommended).<br /><br />
 							<input type='checkbox' id='PS0' />
@@ -45,35 +50,35 @@
 						</td>
 					</tr>
 					<tr>
-						<td style='text-align: left;vertical-align: top; '>
+						<td style='text-align: left;vertical-align: middle; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('SmartStart')"
 							>Smart Start</button>
 						</td>
-						<td style='text-align: left;vertical-align: top; '>
+						<td style='text-align: left;vertical-align: middle; '>
 							Enroll devcies quickly using their QR code.
 						</td>
 					</tr>
 					<tr>
-						<td style='text-align: left; vertical-align: top; '>
+						<td style='text-align: left; vertical-align: middle; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('S0')"
 							>S0</button>
 						</td>
-						<td style='text-align: left; vertical-align: top; '>
+						<td style='text-align: left; vertical-align: middle; '>
 							Use S0 only, evan if S2 is supported (not recommended)
 						</td>
 					</tr>
 					<tr>
-						<td style='text-align: left; vertical-align: top; '>
+						<td style='text-align: left; vertical-align: middle; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('None')"
 							>No Encryption</button>
 						</td>
-						<td style='text-align: left; vertical-align: top; '>
+						<td style='text-align: left; vertical-align: middle; '>
 							Add a node which will not use security (not recommended)
 						</td>
 					</tr>
@@ -84,14 +89,25 @@
 
 					</tr>
 					<tr>
-						<td style='text-align: left; vertical-align: top; '>
+						<td style='text-align: left; vertical-align: middle; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('Remove')"
 							>Remove Node</button>
 						</td>
-						<td style='text-align: left; vertical-align: top; '>
+						<td style='text-align: left; vertical-align: middle; '>
 							Remove a node from your network
+						</td>
+					</tr>
+					<tr>
+						<td style='text-align: left; vertical-align: middle; '>
+							<button
+								class='ui-button ui-corner-all ui-widget SecrutiyButton'
+								onclick="StartInclusionExclusion('EditSmartStart')"
+							>Smart Start Provision List</button>
+						</td>
+						<td style='text-align: left; vertical-align: middle; '>
+							Remove Smart Start Entries
 						</td>
 					</tr>
 				</table>
@@ -439,6 +455,37 @@
 						</td>
 						<td>
 							Product
+						</td>
+						<td>
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+			</div>
+			<!--Smart Start List Edit-->
+			<div class='step-tab-panel' data-step='SmartStartListEdit'>
+				<br />
+				Below is the Smart Start Identifiers.
+				<br />
+				<br />
+				<table
+					style='width:100%'
+					id='SmartStartEditList'
+					cellpadding='5'
+					cellspacing='0'
+				>
+					<tr style='background-color:#eee;'>
+						<td>
+							DSK Pin
+						</td>
+						<td>
+							Manufacturer
+						</td>
+						<td>
+							Product
+						</td>
+						<td>
+							&nbsp;
 						</td>
 					</tr>
 				</table>

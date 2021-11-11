@@ -109,6 +109,32 @@ module.exports = {
 	init: (RED) => {
 		_RED = RED;
 
+		// Smart Start List
+		RED.httpAdmin.get(
+			'/zwave-js/smart-start-list',
+			RED.auth.needsPermission('flows.read'),
+			async function (req, res) {
+				const JSONEntries = [];
+				const Entries = _Context.controller.getProvisioningEntries();
+
+				for (let i = 0; i < Entries.length; i++) {
+					const Entry = Entries[i];
+					const Device = await CM.lookupDevice(
+						Entry.manufacturerId,
+						Entry.productType,
+						Entry.productId
+					);
+					JSONEntries.push({
+						label: Device.label,
+						manufacturer: Device.manufacturer,
+						description: Device.description,
+						dsk: Entry.dsk
+					});
+				}
+				res.json(JSONEntries);
+			}
+		);
+
 		// CC LIst
 		RED.httpAdmin.get(
 			'/zwave-js/cfg-cclist',

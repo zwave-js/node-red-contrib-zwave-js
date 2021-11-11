@@ -23,7 +23,8 @@ const StepList = {
 	ReplaceSecurityMode: 8,
 	Aborted: 9,
 	SmartStart: 10,
-	SmartStartList: 11
+	SmartStartList: 11,
+	SmartStartListEdit: 12
 };
 
 const JSONFormatter = {};
@@ -818,6 +819,58 @@ const ZwaveJsUI = (function () {
 				Request.forceSecurity = PreferS0;
 				break;
 
+			case 'EditSmartStart':
+				StepsAPI.setStepIndex(StepList.SmartStartListEdit);
+				$.ajax({
+					url: '/zwave-js/smart-start-list',
+					method: 'GET',
+					dataType: 'json',
+					success: function (List) {
+						List.forEach((Entry) => {
+							const Item = $('<tr class="SmartStartEntry">');
+
+							Item.append(`<td>${Entry.dsk.substring(0, 5)}</td>`);
+							if (Entry.manufacturer === undefined) {
+								Item.append(`<td>Unknown Manufacturer</td>`);
+								Item.append(`<td>Unknown Product</td>`);
+							} else {
+								Item.append(`<td>${Entry.manufacturer}</td>`);
+								Item.append(
+									`<td>${Entry.label}<br /><span style="font-size:12px">${Entry.description}</span></td>`
+								);
+							}
+							const BTNTD = $('<td>');
+							const BTN = $('<button>');
+							BTN.addClass('ui-button ui-corner-all ui-widget');
+							BTN.html('Remove');
+							BTN.click(() => {
+								const Buttons = {
+									Yes: function () {
+										ControllerCMD(
+											'IEAPI',
+											'unprovisionSmartStartNode',
+											undefined,
+											[Entry.dsk],
+											true
+										);
+										Item.remove();
+									}
+								};
+								modalPrompt(
+									'Are you sure you wish to remove this entry?',
+									'Remove Smart Start Entry',
+									Buttons,
+									true
+								);
+							});
+							BTN.appendTo(BTNTD);
+							Item.append(BTNTD);
+							$('#SmartStartEditList').append(Item);
+						});
+					}
+				});
+				return;
+
 			case 'SmartStart':
 				$('#SmartStartCommit').css({ display: 'inline' });
 				$.ajax({
@@ -1486,6 +1539,15 @@ const ZwaveJsUI = (function () {
 							`<td>${data.data.humaReadable.label}<br /><span style="font-size:12px">${data.data.humaReadable.description}</span></td>`
 						);
 					}
+					const BTNTD = $('<td>');
+					const BTN = $('<button>');
+					BTN.addClass('ui-button ui-corner-all ui-widget');
+					BTN.html('Remove');
+					BTN.click(() => {
+						Item.remove();
+					});
+					BTN.appendTo(BTNTD);
+					Item.append(BTNTD);
 					$('#SmartStartScannedList').append(Item);
 					Item.data('inclusionPackage', data.data.inclusionPackage);
 				}
