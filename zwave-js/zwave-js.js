@@ -491,8 +491,8 @@ module.exports = function (RED) {
 			};
 
 			const KeyRequirementsLable = {
-				0: ['S0', 'S2 Unauth ', 'S2 Auth ', 'S2 Access Ctrl'],
-				1: ['S0', 'S2 Unauth ', 'S2 Auth ', 'S2 Access Ctrl'],
+				0: ['S0 ', 'S2 Unauth ', 'S2 Auth ', 'S2 Access Ctrl'],
+				1: ['S0 ', 'S2 Unauth ', 'S2 Auth ', 'S2 Access Ctrl'],
 				3: ['S0'],
 				4: ['S2 Unauth ', 'S2 Auth ', 'S2 Access Ctrl']
 			};
