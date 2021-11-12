@@ -826,7 +826,7 @@ const ZwaveJsUI = (function () {
 			case 'EditSmartStart':
 				StepsAPI.setStepIndex(StepList.SmartStartListEdit);
 				$.ajax({
-					url: '/zwave-js/smart-start-list',
+					url: 'zwave-js/smart-start-list',
 					method: 'GET',
 					dataType: 'json',
 					success: function (List) {
