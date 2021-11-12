@@ -25,6 +25,7 @@ The most powerful/fully integrated Z-Wave node for Node-RED based on Z-Wave JS. 
  - Full Z-Wave control inside Node-RED including:
    - Device inclusion/exclusion wizard
    - S0 and S2 security support
+   - Supports Security S2 Smart Start (Mobile companion web application)
    - Network mesh graph
    - Firmware updates
    - Associations management
