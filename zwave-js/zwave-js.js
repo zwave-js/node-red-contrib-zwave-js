@@ -485,14 +485,14 @@ module.exports = function (RED) {
 					'S2_Authenticated',
 					'S2_AccessControl'
 				],
-				1: ['S2_Unauthenticated', 'S2_Authenticated', 'S2_AccessControl'],
+				1: ['S0_Legacy', 'S2_Unauthenticated', 'S2_Authenticated', 'S2_AccessControl'],
 				3: ['S0_Legacy'],
 				4: ['S2_Unauthenticated', 'S2_Authenticated', 'S2_AccessControl']
 			};
 
 			const KeyRequirementsLable = {
-				0: ['S0 ', 'S2 Unauth ', 'S2 Auth ', 'S2 Access Ctrl'],
-				1: ['S2 Unauth ', 'S2 Auth ', 'S2 Access Ctrl'],
+				0: ['S0', 'S2 Unauth ', 'S2 Auth ', 'S2 Access Ctrl'],
+				1: ['S0', 'S2 Unauth ', 'S2 Auth ', 'S2 Access Ctrl'],
 				3: ['S0'],
 				4: ['S2 Unauth ', 'S2 Auth ', 'S2 Access Ctrl']
 			};
