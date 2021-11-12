@@ -24,7 +24,8 @@ const StepList = {
 	Aborted: 9,
 	SmartStart: 10,
 	SmartStartList: 11,
-	SmartStartListEdit: 12
+	SmartStartListEdit: 12,
+	SmartStartDone: 13
 };
 
 const JSONFormatter = {};
@@ -642,15 +643,18 @@ const ZwaveJsUI = (function () {
 		return $.ajax(Options);
 	}
 
-	function ControllerCMD(mode, method, node, params, dontwait) {
+	function IsDriverReady() {
 		if (!DriverReady) {
 			modalAlert(
 				'The Controller has not yet been initialised.',
 				'Controller Not Ready'
 			);
-			return;
+			throw new Error('Driver Not Ready');
 		}
+	}
 
+	function ControllerCMD(mode, method, node, params, dontwait) {
+		IsDriverReady();
 		const NoTimeoutFor = ['installConfigUpdate'];
 
 		const Options = {
@@ -960,6 +964,16 @@ const ZwaveJsUI = (function () {
 							url: `zwave-js/smartstart/stopserver`,
 							method: 'GET'
 						});
+						StepsAPI.setStepIndex(StepList.SmartStartDone);
+						$('#SmartStartCommit').css({ display: 'none' });
+						$('#IEButton').css({ display: 'none' });
+						$('#IEClose').css({ display: 'inline-block' });
+					}
+				},
+				{
+					id: 'IEClose',
+					text: 'Ok',
+					click: function () {
 						$(this).dialog('destroy');
 					}
 				}
@@ -975,6 +989,7 @@ const ZwaveJsUI = (function () {
 		StepsAPI = Steps.data('plugin_Steps');
 
 		$('#SmartStartCommit').css({ display: 'none' });
+		$('#IEClose').css({ display: 'none' });
 	}
 
 	function ShowReplacePrompt() {
@@ -1007,8 +1022,6 @@ const ZwaveJsUI = (function () {
 		StepsAPI = Steps.data('plugin_Steps');
 		StepsAPI.setStepIndex(StepList.ReplaceSecurityMode);
 	}
-
-	// NVR Here
 
 	function StartNodeHeal() {
 		ControllerCMD('ControllerAPI', 'healNode', undefined, [selectedNode], true);
@@ -1231,7 +1244,10 @@ const ZwaveJsUI = (function () {
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(ShowIncludeExcludePrompt)
+			.click(() => {
+				IsDriverReady();
+				ShowIncludeExcludePrompt();
+			})
 			.html('Include / Exclude')
 			.appendTo(optInclusionLog);
 		$('<button>')
@@ -1248,13 +1264,19 @@ const ZwaveJsUI = (function () {
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(StartHeal)
+			.click(() => {
+				IsDriverReady();
+				StartHeal();
+			})
 			.html('Start Network Heal')
 			.appendTo(optHeal);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(StopHeal)
+			.click(() => {
+				IsDriverReady();
+				StopHeal();
+			})
 			.html('Stop Network Heal')
 			.appendTo(optHeal);
 
@@ -1265,13 +1287,19 @@ const ZwaveJsUI = (function () {
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(GetNodes)
+			.click(() => {
+				IsDriverReady();
+				GetNodes();
+			})
 			.html('Refresh Node List')
 			.appendTo(optRefreshReset);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(Reset)
+			.click(() => {
+				IsDriverReady();
+				Reset();
+			})
 			.html('Reset Controller')
 			.appendTo(optRefreshReset);
 
@@ -1282,13 +1310,19 @@ const ZwaveJsUI = (function () {
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(FirmwareUpdate)
+			.click(() => {
+				IsDriverReady();
+				FirmwareUpdate();
+			})
 			.html('Firmware Updater')
 			.appendTo(tools);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(NetworkMap)
+			.click(() => {
+				IsDriverReady();
+				NetworkMap();
+			})
 			.html('Network Map')
 			.appendTo(tools);
 
@@ -1344,7 +1378,10 @@ const ZwaveJsUI = (function () {
 		$('<button id="zwave-js-set-node-name">')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(RenameNode)
+			.click(() => {
+				IsDriverReady();
+				RenameNode();
+			})
 			.html('Set Name')
 			.appendTo(set1);
 		// Location
@@ -1356,7 +1393,10 @@ const ZwaveJsUI = (function () {
 		$('<button id="zwave-js-set-node-location">')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(SetNodeLocation)
+			.click(() => {
+				IsDriverReady();
+				SetNodeLocation();
+			})
 			.html('Set Location')
 			.appendTo(set1);
 
@@ -1366,7 +1406,10 @@ const ZwaveJsUI = (function () {
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(InterviewNode)
+			.click(() => {
+				IsDriverReady();
+				InterviewNode();
+			})
 			.html('Interview Node')
 			.appendTo(set2);
 
@@ -1374,7 +1417,10 @@ const ZwaveJsUI = (function () {
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(StartNodeHeal)
+			.click(() => {
+				IsDriverReady();
+				StartNodeHeal();
+			})
 			.html('Heal Node')
 			.appendTo(set2);
 
@@ -1384,14 +1430,20 @@ const ZwaveJsUI = (function () {
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(RemoveFailedNode)
+			.click(() => {
+				IsDriverReady();
+				RemoveFailedNode();
+			})
 			.html('Remove Failed Node')
 			.appendTo(set3);
 		// Replace
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(ShowReplacePrompt)
+			.click(() => {
+				IsDriverReady();
+				ShowReplacePrompt();
+			})
 			.html('Replace Failed Node')
 			.appendTo(set3);
 
@@ -1401,18 +1453,24 @@ const ZwaveJsUI = (function () {
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(AssociationMGMT)
+			.click(() => {
+				IsDriverReady();
+				AssociationMGMT();
+			})
 			.html('Association Management')
 			.appendTo(set4);
 		// Refres Properties
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(getProperties)
+			.click(() => {
+				IsDriverReady();
+				getProperties();
+			})
 			.html('Refresh Property List')
 			.appendTo(set4);
 
-		// DB & Message Viewer
+		// DB
 		const DB = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
