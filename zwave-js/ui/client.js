@@ -877,22 +877,30 @@ const ZwaveJsUI = (function () {
 				return;
 
 			case 'SmartStart':
-				$('#SmartStartCommit').css({ display: 'inline' });
-				$.ajax({
-					url: `zwave-js/smartstart/startserver`,
-					method: 'GET',
-					success: function (QRData) {
-						StepsAPI.setStepIndex(StepList.SmartStart);
-						new QRCode($('#SmartStartQR')[0], {
-							text: QRData,
-							width: 150,
-							height: 150,
-							colorDark: '#000000',
-							colorLight: '#ffffff',
-							correctLevel: QRCode.CorrectLevel.L
-						});
+				ControllerCMD('IEAPI', 'checkKeyReq', undefined, [1]).catch((err) => {
+					if (err.status !== 504) {
+						modalAlert(err.responseText, 'Could Not Start Inclusion');
+						$(B).html(OT);
+						$(B).prop('disabled', false);
+					} else {
+						$('#SmartStartCommit').css({ display: 'inline' });
+						$.ajax({
+							url: `zwave-js/smartstart/startserver`,
+							method: 'GET',
+							success: function (QRData) {
+								StepsAPI.setStepIndex(StepList.SmartStart);
+								new QRCode($('#SmartStartQR')[0], {
+									text: QRData,
+									width: 150,
+									height: 150,
+									colorDark: '#000000',
+									colorLight: '#ffffff',
+									correctLevel: QRCode.CorrectLevel.L
+								});
 
-						$('#SmartStartURL').html(QRData);
+								$('#SmartStartURL').html(QRData);
+							}
+						});
 					}
 				});
 
@@ -1077,6 +1085,7 @@ const ZwaveJsUI = (function () {
 	}
 
 	function RenameNode(KB, El) {
+		IsDriverReady();
 		let input;
 		let Button;
 		if (KB === true) {
@@ -1110,6 +1119,7 @@ const ZwaveJsUI = (function () {
 	}
 
 	function SetNodeLocation(KB, El) {
+		IsDriverReady();
 		let input;
 		let Button;
 		if (KB === true) {
@@ -1378,10 +1388,7 @@ const ZwaveJsUI = (function () {
 		$('<button id="zwave-js-set-node-name">')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(() => {
-				IsDriverReady();
-				RenameNode();
-			})
+			.click(RenameNode)
 			.html('Set Name')
 			.appendTo(set1);
 		// Location
@@ -1393,10 +1400,7 @@ const ZwaveJsUI = (function () {
 		$('<button id="zwave-js-set-node-location">')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(() => {
-				IsDriverReady();
-				SetNodeLocation();
-			})
+			.click(SetNodeLocation)
 			.html('Set Location')
 			.appendTo(set1);
 
