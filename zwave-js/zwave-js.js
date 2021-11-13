@@ -485,7 +485,12 @@ module.exports = function (RED) {
 					'S2_Authenticated',
 					'S2_AccessControl'
 				],
-				1: ['S0_Legacy', 'S2_Unauthenticated', 'S2_Authenticated', 'S2_AccessControl'],
+				1: [
+					'S0_Legacy',
+					'S2_Unauthenticated',
+					'S2_Authenticated',
+					'S2_AccessControl'
+				],
 				3: ['S0_Legacy'],
 				4: ['S2_Unauthenticated', 'S2_Authenticated', 'S2_AccessControl']
 			};
@@ -541,7 +546,7 @@ module.exports = function (RED) {
 					break;
 
 				case 'beginExclusion':
-					await Driver.controller.beginExclusion();
+					await Driver.controller.beginExclusion(Params[0]);
 					break;
 
 				case 'grantClasses':

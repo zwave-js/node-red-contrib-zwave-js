@@ -919,7 +919,13 @@ const ZwaveJsUI = (function () {
 				break;
 
 			case 'Remove':
-				ControllerCMD('IEAPI', 'beginExclusion', undefined, undefined, true);
+				ControllerCMD(
+					'IEAPI',
+					'beginExclusion',
+					undefined,
+					[$('#ERP').is(':checked')],
+					true
+				);
 				return;
 		}
 
@@ -1179,15 +1185,25 @@ const ZwaveJsUI = (function () {
 		window.open(`https://devices.zwave-js.io/?jumpTo=${id}`, '_blank');
 	}
 
+	let Removing = false;
 	function RemoveFailedNode() {
+		if (Removing) {
+			modalAlert(
+				'A node is already being removed, please allow a minute or 2.',
+				'Could Not Remove Node'
+			);
+			return;
+		}
 		const Buttons = {
 			'Yes - Remove': function () {
+				Removing = true;
 				ControllerCMD('ControllerAPI', 'removeFailedNode', undefined, [
 					selectedNode
 				]).catch((err) => {
 					if (err.status !== 504) {
 						modalAlert(err.responseText, 'Could Not Remove Node');
 					}
+					Removing = false;
 				});
 			}
 		};
