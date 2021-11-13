@@ -5,6 +5,7 @@
     **Fixes**
      - When a new node appears in the UI list, after it gets added to the network, its battery is correctly reported.
      - Fix potential crash, if **Remove Failed Node** is called twice for the same node.
+     - Account for 3 digit node ID's in UI
 
     **New Features**
      - Implemented Zwave S2 Security Smart Start.  
