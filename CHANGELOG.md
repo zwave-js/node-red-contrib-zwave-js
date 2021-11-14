@@ -16,6 +16,7 @@
     **Changes**
      - Controller ready checks are now made prior to showing any UI modal form, that may depend on the controller.  
      - The battery icon in the node list is now updated, whenever a device transmits an update.  
+     - JSON Keys are now quoted in the UI monitor.  
      - Bump ZWJS to 8.7.5
 
   - 6.3.0
