@@ -5,6 +5,8 @@
     **Fixes**
      - When a new node appears in the UI list, after it gets added to the network, its battery is correctly reported.
      - Fix potential crash, if **Remove Failed Node** is called twice for the same node.
+     - Device nodes now clone the received network message, removing a situation where filter node outputs,
+       are affected by other device nodes having the same interest in the object.
      - Account for 3 digit node ID's in UI
 
     **New Features**
