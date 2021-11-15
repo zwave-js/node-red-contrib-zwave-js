@@ -1331,7 +1331,7 @@ module.exports = function (RED) {
 				}
 			}
 			PL.event = Subject;
-			PL.timestamp = Math.round(new Date().getTime() / 1000);
+			PL.timestamp = new Date().getTime();
 			if (Value !== undefined) {
 				PL.object = Value;
 			}

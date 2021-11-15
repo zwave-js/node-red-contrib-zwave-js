@@ -17,7 +17,7 @@
      - Controller ready checks are now made prior to showing any UI modal form, that may depend on the controller.  
      - The battery icon in the node list is now updated, whenever a device transmits an update.  
      - JSON Keys are now quoted in the UI monitor.  
-     - The **timestamp** value in event messages, are now a Unix Timestemp.  
+     - The **timestamp** value in event messages are now the time in milliseconds from the unix epoch.  
      - Bump ZWJS to 8.7.5
 
   - 6.3.0
