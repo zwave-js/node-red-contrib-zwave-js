@@ -8,6 +8,7 @@
      - Device nodes now clone the received network message, removing a situation where filter node outputs,
        are affected by other device nodes having the same interest in the object.
      - Account for 3 digit node ID's in UI
+     - Fixed `event-filter` ignoring `strict `mode
 
     **New Features**
      - Implemented Zwave S2 Security Smart Start.  
