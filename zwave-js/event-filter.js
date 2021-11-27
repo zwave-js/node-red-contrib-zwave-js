@@ -36,7 +36,14 @@ module.exports = function (RED) {
 						if (Filter.events.includes(msg.payload.event)) {
 							if (Filter.valueIds.length > 0) {
 								for (const ValueID of Filter.valueIds) {
-									if (IsValueIDMatch(ValueID, msg, msg.payload.event, Filter.strict)) {
+									if (
+										IsValueIDMatch(
+											ValueID,
+											msg,
+											msg.payload.event,
+											Filter.strict
+										)
+									) {
 										msg.filter = Filter;
 										SendingArray[ArrayIndex] = msg;
 										node.status({
