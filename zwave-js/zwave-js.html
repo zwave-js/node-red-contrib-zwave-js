@@ -763,6 +763,8 @@
 			ackTimeout: { value: undefined },
 			controllerTimeout: { value: undefined },
 			sendResponseTimeout: { value: undefined },
+			sendDataCallback: { value: undefined },
+			serialAPIStarted: { value: undefined },
 			logLevelPin: { value: 'none' },
 			logLevel: { value: 'none' },
 			logFile: { value: undefined },
@@ -915,6 +917,10 @@
 	    <input type="text" id="node-input-controllerTimeout" placeholder="Use Default">
 	</div>
 	<div class="form-row">
+	    <label  for="node-input-sendDataCallback" style="width:130px"><i class="fa fa-pencil"></i> Callback</label>
+	    <input type="text" id="node-input-sendDataCallback" placeholder="Use Default">
+	</div>
+	<div class="form-row">
 	    <label  for="node-input-sendResponseTimeout" style="width:130px"><i class="fa fa-pencil"></i> Req -> Res</label>
 	    <input type="text" id="node-input-sendResponseTimeout" placeholder="Use Default">
 	</div>
@@ -977,6 +983,10 @@
 	<div class="form-row">
 	    <label  for="node-input-softResetUSB" style="width:130px"><i class="fa fa-pencil"></i> Soft Reset USB</label>
 	    <input type="checkbox" id="node-input-softResetUSB">
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-serialAPIStarted" style="width:130px"><i class="fa fa-pencil"></i> SR Timeout</label>
+	    <input type="text" id="node-input-serialAPIStarted" placeholder="Use Default">
 	</div>
 	<br />
 	<p>

@@ -13,6 +13,7 @@
     **New Features**
      - Implemented Zwave S2 Security Smart Start.  
        This includes a new mobile UI, allowing you to use it as a device inclusion tool.
+     - Expose further driver timeout options
     
     **Changes**
      - Controller ready checks are now made prior to showing any UI modal form, that may depend on the controller.  
