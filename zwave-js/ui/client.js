@@ -942,6 +942,7 @@ const ZwaveJsUI = (function () {
 	};
 
 	function ShowIncludeExcludePrompt() {
+		const ParentDialog = $('<div>').css({ padding: 10 }).html('Please wait...');
 		const Options = {
 			draggable: false,
 			modal: true,
@@ -964,7 +965,7 @@ const ZwaveJsUI = (function () {
 									undefined,
 									true
 								);
-								$('.ui-dialog-content').dialog('close');
+								ParentDialog.dialog('destroy');
 							}
 						};
 						modalPrompt(
@@ -986,7 +987,7 @@ const ZwaveJsUI = (function () {
 						ClearIETimer();
 						ClearSecurityCountDown();
 						ControllerCMD('IEAPI', 'stop', undefined, undefined, true);
-						$(this).dialog('destroy');
+						ParentDialog.dialog('destroy');
 					}
 				},
 				{
@@ -1013,17 +1014,16 @@ const ZwaveJsUI = (function () {
 					id: 'IEClose',
 					text: 'Ok',
 					click: function () {
-						$(this).dialog('destroy');
+						ParentDialog.dialog('destroy');
 					}
 				}
 			]
 		};
 
-		const IncludeForm = $('<div>').css({ padding: 10 }).html('Please wait...');
-		IncludeForm.dialog(Options);
-		IncludeForm.html('');
+		ParentDialog.dialog(Options);
+		ParentDialog.html('');
 
-		IncludeForm.append($('#TPL_Include').html());
+		ParentDialog.append($('#TPL_Include').html());
 		const Steps = $('#IncludeWizard').steps({ showFooterButtons: false });
 		StepsAPI = Steps.data('plugin_Steps');
 
