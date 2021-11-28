@@ -227,7 +227,6 @@ module.exports = function (RED) {
 		}
 
 		// Soft Reset
-		DriverOptions.timeouts = {}; // might be needed here
 		if (config.softResetUSB !== undefined && config.softResetUSB) {
 			Log(
 				'debug',
@@ -247,6 +246,10 @@ module.exports = function (RED) {
 					'NDERED',
 					undefined,
 					'[options] [timeouts.serialAPIStarted]',
+					config.serialAPIStarted
+				);
+				DriverOptions.timeouts = {};
+				DriverOptions.timeouts.serialAPIStarted = parseInt(
 					config.serialAPIStarted
 				);
 			}
@@ -307,7 +310,9 @@ module.exports = function (RED) {
 		}
 
 		// Timeout
-
+		if (!DriverOptions.hasOwnProperty('timeouts')) {
+			DriverOptions.timeouts = {};
+		}
 		if (config.ackTimeout !== undefined && config.ackTimeout.length > 0) {
 			Log(
 				'debug',
