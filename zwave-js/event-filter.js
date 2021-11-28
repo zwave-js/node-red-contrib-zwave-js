@@ -36,7 +36,14 @@ module.exports = function (RED) {
 						if (Filter.events.includes(msg.payload.event)) {
 							if (Filter.valueIds.length > 0) {
 								for (const ValueID of Filter.valueIds) {
-									if (IsValueIDMatch(ValueID, msg, msg.payload.event)) {
+									if (
+										IsValueIDMatch(
+											ValueID,
+											msg,
+											msg.payload.event,
+											Filter.strict
+										)
+									) {
 										msg.filter = Filter;
 										SendingArray[ArrayIndex] = msg;
 										node.status({
@@ -88,12 +95,12 @@ module.exports = function (RED) {
 			}
 		}
 
-		function IsValueIDMatch(ValueID, MSG, Event) {
+		function IsValueIDMatch(ValueID, MSG, Event, Strict) {
 			let Root = MSG.payload.object;
 
 			if (Event === 'GET_VALUE_RESPONSE') {
 				Root = Root.valueId;
-				if (!config.strict) {
+				if (!Strict) {
 					delete ValueID['endpoint'];
 				}
 				const Result = LD.isMatch(Root, ValueID);
@@ -101,7 +108,7 @@ module.exports = function (RED) {
 			}
 
 			if (Event === 'VALUE_UPDATED') {
-				if (!config.strict) {
+				if (!Strict) {
 					delete ValueID['endpoint'];
 				}
 				const Result = LD.isMatch(Root, ValueID);
@@ -114,7 +121,7 @@ module.exports = function (RED) {
 			}
 
 			if (Event === 'VALUE_NOTIFICATION') {
-				if (!config.strict) {
+				if (!Strict) {
 					delete ValueID['endpoint'];
 				}
 				const Result = LD.isMatch(Root, ValueID);

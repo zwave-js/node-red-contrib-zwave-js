@@ -2,6 +2,7 @@
 <script type="text/javascript" src="zwave-js/res/vis-network.min.js"></script>
 <script type="text/javascript" src="zwave-js/res/handlebars.min.js"></script>
 <script type="text/javascript" src="zwave-js/res/jquery-steps.min.js"></script>
+<script type="text/javascript" src="zwave-js/res/qrcode.min.js"></script>
 <link rel="stylesheet" href="zwave-js/res/styles.css" />
 <link rel="stylesheet" href="zwave-js/res/jquery-steps.css" />
 
@@ -21,57 +22,65 @@
 			<li data-step-target='RemoveDone'></li>
 			<li data-step-target='ReplaceSecurityMode'></li>
 			<li data-step-target='Aborted'></li>
+			<li data-step-target='SmartStart'></li>
+			<li data-step-target='SmartStartList'></li>
+			<li data-step-target='SmartStartListEdit'></li>
+			<li data-step-target='SmartStartDone'></li>
 		</ul>
 		<div class='step-content' style='border: none;'>
 			<!-- Secuity Mode-->
 			<div class='step-tab-panel' data-step='SecurityMode'>
 				<br />
-				<table style='width: 100%; height: 290px;'>
+				<table
+					style='width: 100%; height: 290px;'
+					cellpadding='5'
+					cellspacing='0'
+				>
 					<tr>
-						<td style='text-align: left;width: 200px;vertical-align: top; '>
+						<td style='text-align: left;width: 200px;vertical-align: middle; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('Default')"
 							>Default</button><br />
 						</td>
-						<td style='text-align: left; vertical-align: top; '>
+						<td style='text-align: left; vertical-align: middle; '>
 							S2 when supported, else S0 only when necessary, no encryption
-							otherwise (recommended).<br /><br />
+							otherwise (recommended).
+							<div style='height: 7px !important'></div>
 							<input type='checkbox' id='PS0' />
 							<label for='S0'>Prefer S0 over no encryption</label>
 						</td>
 					</tr>
-					<tr style='opacity: 0.5;'>
-						<td style='text-align: left;vertical-align: top; '>
+					<tr>
+						<td style='text-align: left;vertical-align: middle; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('SmartStart')"
-								disabled
 							>Smart Start</button>
 						</td>
-						<td style='text-align: left;vertical-align: top; '>
-							S2 Smart Start is not yet supported.
+						<td style='text-align: left;vertical-align: middle; '>
+							Enroll devices quickly using their QR code.
 						</td>
 					</tr>
 					<tr>
-						<td style='text-align: left; vertical-align: top; '>
+						<td style='text-align: left; vertical-align: middle; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('S0')"
 							>S0</button>
 						</td>
-						<td style='text-align: left; vertical-align: top; '>
+						<td style='text-align: left; vertical-align: middle; '>
 							Use S0 only, evan if S2 is supported (not recommended)
 						</td>
 					</tr>
 					<tr>
-						<td style='text-align: left; vertical-align: top; '>
+						<td style='text-align: left; vertical-align: middle; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('None')"
 							>No Encryption</button>
 						</td>
-						<td style='text-align: left; vertical-align: top; '>
+						<td style='text-align: left; vertical-align: middle; '>
 							Add a node which will not use security (not recommended)
 						</td>
 					</tr>
@@ -82,14 +91,28 @@
 
 					</tr>
 					<tr>
-						<td style='text-align: left; vertical-align: top; '>
+						<td style='text-align: left; vertical-align: middle; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('Remove')"
 							>Remove Node</button>
 						</td>
-						<td style='text-align: left; vertical-align: top; '>
-							Remove a node from your network
+						<td style='text-align: left; vertical-align: middle; '>
+							Remove a node from your Network
+							<div style='height: 7px !important'></div>
+							<input type='checkbox' id='ERP' />
+							<label for='ERP'>Remove from provisioning list also</label>
+						</td>
+					</tr>
+					<tr>
+						<td style='text-align: left; vertical-align: middle; '>
+							<button
+								class='ui-button ui-corner-all ui-widget SecrutiyButton'
+								onclick="StartInclusionExclusion('EditSmartStart')"
+							>Smart Start Provision List</button>
+						</td>
+						<td style='text-align: left; vertical-align: middle; '>
+							Remove Smart Start Entries
 						</td>
 					</tr>
 				</table>
@@ -383,6 +406,104 @@
 					</tr>
 				</table>
 			</div>
+			<!--Smart Start-->
+			<div class='step-tab-panel' data-step='SmartStart'>
+				<br />
+				<table style='width: 100%;'>
+					<tr>
+						<td style='width: 50%; vertical-align: top;'>
+							<p style='margin-top: 0px;'>Using your mobile phone, scan this QR
+								code, it will start up a web application hosted on your node-red
+								server.</p>
+							<p>Note: This web application running on node-red, uses a self
+								signed certificate, therefore, you will get a warning.</p>
+							<p>It is safe to visit this web application (its on your node red
+								server) so accept any secuity warning presented.</p>
+						</td>
+						<td style='vertical-align: top;'>
+							<div
+								style='margin: auto; display: block; width: 150px;'
+								id='SmartStartQR'
+							></div>
+						</td>
+					</tr>
+					<tr>
+						<td
+							colspan='2'
+							style='vertical-align: middle;height: 90px;text-align: center;'
+						>
+							<span id='SmartStartURL'></span>
+						</td>
+					</tr>
+
+				</table>
+
+			</div>
+			<!--Smart Start List-->
+			<div class='step-tab-panel' data-step='SmartStartList'>
+				<br />
+				Start scanning your device's, they will appear below.
+				<br />
+				<br />
+				<table
+					style='width:100%'
+					id='SmartStartScannedList'
+					cellpadding='5'
+					cellspacing='0'
+				>
+					<tr style='background-color:#eee;'>
+						<td>
+							DSK Pin
+						</td>
+						<td>
+							Manufacturer
+						</td>
+						<td>
+							Product
+						</td>
+						<td>
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+			</div>
+			<!--Smart Start List Edit-->
+			<div class='step-tab-panel' data-step='SmartStartListEdit'>
+				<br />
+				Below is the Smart Start Identifiers.
+				<br />
+				<br />
+				<table
+					style='width:100%'
+					id='SmartStartEditList'
+					cellpadding='5'
+					cellspacing='0'
+				>
+					<tr style='background-color:#eee;'>
+						<td>
+							DSK Pin
+						</td>
+						<td>
+							Manufacturer
+						</td>
+						<td>
+							Product
+						</td>
+						<td>
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+			</div>
+			<!--Smart Start Done-->
+			<div class='step-tab-panel' data-step='SmartStartDone'>
+				<p>The scanned devices have now been added to a provisioning list.</p>
+				<p>Once the devices have been powered up, they should broadcast a 'Here
+					I Am' type message.</p>
+				<p>The rate at which this happens, is down to the device, but once the
+					broadcast has been recieved, the device should get interviewed and
+					added to your network.</p>
+			</div>
 		</div>
 	</div>
 </script>
@@ -642,6 +763,8 @@
 			ackTimeout: { value: undefined },
 			controllerTimeout: { value: undefined },
 			sendResponseTimeout: { value: undefined },
+			sendDataCallback: { value: undefined },
+			serialAPIStarted: { value: undefined },
 			logLevelPin: { value: 'none' },
 			logLevel: { value: 'none' },
 			logFile: { value: undefined },
@@ -794,6 +917,10 @@
 	    <input type="text" id="node-input-controllerTimeout" placeholder="Use Default">
 	</div>
 	<div class="form-row">
+	    <label  for="node-input-sendDataCallback" style="width:130px"><i class="fa fa-pencil"></i> Callback</label>
+	    <input type="text" id="node-input-sendDataCallback" placeholder="Use Default">
+	</div>
+	<div class="form-row">
 	    <label  for="node-input-sendResponseTimeout" style="width:130px"><i class="fa fa-pencil"></i> Req -> Res</label>
 	    <input type="text" id="node-input-sendResponseTimeout" placeholder="Use Default">
 	</div>
@@ -856,6 +983,10 @@
 	<div class="form-row">
 	    <label  for="node-input-softResetUSB" style="width:130px"><i class="fa fa-pencil"></i> Soft Reset USB</label>
 	    <input type="checkbox" id="node-input-softResetUSB">
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-serialAPIStarted" style="width:130px"><i class="fa fa-pencil"></i> SR Timeout</label>
+	    <input type="text" id="node-input-serialAPIStarted" placeholder="Use Default">
 	</div>
 	<br />
 	<p>

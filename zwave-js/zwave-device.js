@@ -114,7 +114,7 @@ module.exports = function (RED) {
 		}
 
 		function processEventMessage(MSG) {
-			RedNode.send(MSG);
+			RedNode.send(RED.util.cloneMessage(MSG));
 		}
 
 		RedNode.on('input', Input);

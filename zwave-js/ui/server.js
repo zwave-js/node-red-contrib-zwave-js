@@ -3,12 +3,17 @@ const SP = require('serialport');
 const ModulePackage = require('../../package.json');
 const { CommandClasses } = require('@zwave-js/core');
 const ZWaveJS = require('zwave-js');
+const ZWJSCFG = require('@zwave-js/config');
+const SmartStart = require('./smartstart/server');
 
 const _Context = {};
 let _NodeList;
 let _RED;
 let _CCs;
 let _CCMethods;
+
+const CM = new ZWJSCFG.ConfigManager();
+CM.loadDeviceIndex();
 
 let LatestStatus;
 const _SendStatus = () => {
@@ -32,6 +37,65 @@ const SendNodeEvent = (type, node, payload) => {
 	});
 };
 
+const SendBatteryUpdate = (node, payload) => {
+	_RED.comms.publish(`/zwave-js/battery`, {
+		node: node.id,
+		payload: payload
+	});
+};
+
+const SmartStartCallback = (Event, Code) => {
+	switch (Event) {
+		case 'Started':
+			_RED.comms.publish(`/zwave-js/cmd`, {
+				type: 'node-inclusion-step',
+				event: 'smart start awaiting codes'
+			});
+			return true;
+
+		case 'Code':
+			const inclusionPackage = ZWaveJS.parseQRCodeString(Code);
+			if (inclusionPackage.version === 1) {
+				CM.lookupDevice(
+					inclusionPackage.manufacturerId,
+					inclusionPackage.productType,
+					inclusionPackage.productId
+				).then((device) => {
+					if (device !== undefined) {
+						_RED.comms.publish(`/zwave-js/cmd`, {
+							type: 'node-inclusion-step',
+							event: 'smart start code received',
+							data: {
+								inclusionPackage: inclusionPackage,
+								humaReadable: {
+									manufacturer: device.manufacturer,
+									label: device.label,
+									description: device.description,
+									dsk: inclusionPackage.dsk.substring(0, 5)
+								}
+							}
+						});
+					} else {
+						_RED.comms.publish(`/zwave-js/cmd`, {
+							type: 'node-inclusion-step',
+							event: 'smart start code received',
+							data: {
+								inclusionPackage: inclusionPackage,
+								humaReadable: {
+									dsk: inclusionPackage.dsk.substring(0, 5)
+								}
+							}
+						});
+					}
+				});
+
+				return 1;
+			} else {
+				return 0;
+			}
+	}
+};
+
 module.exports = {
 	status: (Message) => {
 		LatestStatus = Message;
@@ -44,6 +108,32 @@ module.exports = {
 
 	init: (RED) => {
 		_RED = RED;
+
+		// Smart Start List
+		RED.httpAdmin.get(
+			'/zwave-js/smart-start-list',
+			RED.auth.needsPermission('flows.read'),
+			async function (req, res) {
+				const JSONEntries = [];
+				const Entries = _Context.controller.getProvisioningEntries();
+
+				for (let i = 0; i < Entries.length; i++) {
+					const Entry = Entries[i];
+					const Device = await CM.lookupDevice(
+						Entry.manufacturerId,
+						Entry.productType,
+						Entry.productId
+					);
+					JSONEntries.push({
+						label: Device.label,
+						manufacturer: Device.manufacturer,
+						description: Device.description,
+						dsk: Entry.dsk
+					});
+				}
+				res.json(JSONEntries);
+			}
+		);
 
 		// CC LIst
 		RED.httpAdmin.get(
@@ -181,6 +271,27 @@ module.exports = {
 			}
 		);
 
+		// Smart Start
+		RED.httpAdmin.get(
+			'/zwave-js/smartstart/:Method',
+			RED.auth.needsPermission('flows.write'),
+			async (req, res) => {
+				switch (req.params.Method) {
+					case 'startserver':
+						SmartStart.Start(SmartStartCallback).then((QRCode) => {
+							res.status(200);
+							res.end(QRCode);
+						});
+						break;
+					case 'stopserver':
+						SmartStart.Stop();
+						res.status(200);
+						res.end();
+						break;
+				}
+			}
+		);
+
 		// Commands
 		RED.httpAdmin.post(
 			'/zwave-js/cmd',
@@ -288,9 +399,15 @@ module.exports = {
 				// Values
 				node.on('value added', (node, value) => {
 					SendNodeEvent('node-value', node, value);
+					if (value.commandClass === 128) {
+						SendBatteryUpdate(node, value);
+					}
 				});
 				node.on('value updated', (node, value) => {
 					SendNodeEvent('node-value', node, value);
+					if (value.commandClass === 128) {
+						SendBatteryUpdate(node, value);
+					}
 				});
 				node.on('value removed', (node, value) => {
 					SendNodeEvent('node-value', node, value);

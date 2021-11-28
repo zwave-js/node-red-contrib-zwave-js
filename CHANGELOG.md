@@ -1,5 +1,28 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 6.4.0
+
+    **Fixes**
+     - When a new node appears in the UI list, after it gets added to the network, its battery is correctly reported.
+     - Fix potential crash, if **Remove Failed Node** is called twice for the same node.
+     - Device nodes now clone the received network message, removing a situation where filter node outputs,
+       are affected by other device nodes having the same interest in the object.
+     - Account for 3 digit node ID's in UI
+     - Fixed `event-filter` ignoring `strict `mode
+
+    **New Features**
+     - Implemented Zwave S2 Security Smart Start.  
+       This includes a new mobile UI, allowing you to use it as a device inclusion tool.
+     - Expose further driver timeout options
+    
+    **Changes**
+     - Controller ready checks are now made prior to showing any UI modal form, that may depend on the controller.  
+     - The battery icon in the node list is now updated, whenever a device transmits an update.  
+     - JSON Keys are now quoted in the UI monitor.  
+     - The **timestamp** value in event messages are now the time in milliseconds from the unix epoch.  
+     - Bump ZWJS to 8.8.2
+     - Bump serial port to 9.2.8
+
   - 6.3.0
 
     **Fixes**

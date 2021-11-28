@@ -236,6 +236,23 @@ module.exports = function (RED) {
 				'Enabled'
 			);
 			DriverOptions.enableSoftReset = true;
+
+			if (
+				config.serialAPIStarted !== undefined &&
+				config.serialAPIStarted.length > 0
+			) {
+				Log(
+					'debug',
+					'NDERED',
+					undefined,
+					'[options] [timeouts.serialAPIStarted]',
+					config.serialAPIStarted
+				);
+				DriverOptions.timeouts = {};
+				DriverOptions.timeouts.serialAPIStarted = parseInt(
+					config.serialAPIStarted
+				);
+			}
 		} else {
 			Log(
 				'debug',
@@ -293,7 +310,9 @@ module.exports = function (RED) {
 		}
 
 		// Timeout
-		DriverOptions.timeouts = {};
+		if (!DriverOptions.hasOwnProperty('timeouts')) {
+			DriverOptions.timeouts = {};
+		}
 		if (config.ackTimeout !== undefined && config.ackTimeout.length > 0) {
 			Log(
 				'debug',
@@ -316,6 +335,21 @@ module.exports = function (RED) {
 				config.controllerTimeout
 			);
 			DriverOptions.timeouts.response = parseInt(config.controllerTimeout);
+		}
+		if (
+			config.sendDataCallback !== undefined &&
+			config.sendDataCallback.length > 0
+		) {
+			Log(
+				'debug',
+				'NDERED',
+				undefined,
+				'[options] [timeouts.sendDataCallback]',
+				config.sendDataCallback
+			);
+			DriverOptions.timeouts.sendDataCallback = parseInt(
+				config.sendDataCallback
+			);
 		}
 		if (
 			config.sendResponseTimeout !== undefined &&
@@ -485,12 +519,19 @@ module.exports = function (RED) {
 					'S2_Authenticated',
 					'S2_AccessControl'
 				],
+				1: [
+					'S0_Legacy',
+					'S2_Unauthenticated',
+					'S2_Authenticated',
+					'S2_AccessControl'
+				],
 				3: ['S0_Legacy'],
 				4: ['S2_Unauthenticated', 'S2_Authenticated', 'S2_AccessControl']
 			};
 
 			const KeyRequirementsLable = {
 				0: ['S0 ', 'S2 Unauth ', 'S2 Auth ', 'S2 Access Ctrl'],
+				1: ['S0 ', 'S2 Unauth ', 'S2 Auth ', 'S2 Access Ctrl'],
 				3: ['S0'],
 				4: ['S2 Unauth ', 'S2 Auth ', 'S2 Access Ctrl']
 			};
@@ -519,6 +560,27 @@ module.exports = function (RED) {
 			};
 
 			switch (Method) {
+				case 'checkKeyReq':
+					CheckKey(Params[0]);
+					break;
+
+				case 'unprovisionAllSmartStart':
+					const Entries = Driver.controller.getProvisioningEntries();
+					for (let i = 0; i < Entries.length; i++) {
+						const Entry = Entries[i];
+						Driver.controller.unprovisionSmartStartNode(Entry.dsk);
+					}
+					break;
+
+				case 'unprovisionSmartStartNode':
+					Driver.controller.unprovisionSmartStartNode(Params[0]);
+					break;
+
+				case 'commitScans':
+					Params.forEach((S) => {
+						Driver.controller.provisionSmartStartNode(S);
+					});
+					break;
 				case 'beginInclusion':
 					CheckKey(Params[0].strategy);
 					Params[0].userCallbacks = Callbacks;
@@ -526,7 +588,7 @@ module.exports = function (RED) {
 					break;
 
 				case 'beginExclusion':
-					await Driver.controller.beginExclusion();
+					await Driver.controller.beginExclusion(Params[0]);
 					break;
 
 				case 'grantClasses':
@@ -1311,7 +1373,7 @@ module.exports = function (RED) {
 				}
 			}
 			PL.event = Subject;
-			PL.timestamp = new Date().toJSON();
+			PL.timestamp = new Date().getTime();
 			if (Value !== undefined) {
 				PL.object = Value;
 			}

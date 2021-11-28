@@ -21,7 +21,11 @@ const StepList = {
 	AddDoneInsecure: 6,
 	RemoveDone: 7,
 	ReplaceSecurityMode: 8,
-	Aborted: 9
+	Aborted: 9,
+	SmartStart: 10,
+	SmartStartList: 11,
+	SmartStartListEdit: 12,
+	SmartStartDone: 13
 };
 
 const JSONFormatter = {};
@@ -32,7 +36,7 @@ JSONFormatter.json = {
 		var val = '<span class=json-value>';
 		var str = '<span class=json-string>';
 		var r = pIndent || '';
-		if (pKey) r = r + key + pKey.replace(/[": ]/g, '') + '</span>: ';
+		if (pKey) r = r + key + pKey + '</span>';
 		if (pVal) r = r + (pVal[0] == '"' ? str : val) + pVal + '</span>';
 		return r + (pEnd || '');
 	},
@@ -639,15 +643,18 @@ const ZwaveJsUI = (function () {
 		return $.ajax(Options);
 	}
 
-	function ControllerCMD(mode, method, node, params, dontwait) {
+	function IsDriverReady() {
 		if (!DriverReady) {
 			modalAlert(
 				'The Controller has not yet been initialised.',
 				'Controller Not Ready'
 			);
-			return;
+			throw new Error('Driver Not Ready');
 		}
+	}
 
+	function ControllerCMD(mode, method, node, params, dontwait) {
+		IsDriverReady();
 		const NoTimeoutFor = ['installConfigUpdate'];
 
 		const Options = {
@@ -816,10 +823,89 @@ const ZwaveJsUI = (function () {
 				Request.forceSecurity = PreferS0;
 				break;
 
+			case 'EditSmartStart':
+				StepsAPI.setStepIndex(StepList.SmartStartListEdit);
+				$('#SSPurgeButton').css({ display: 'inline-block' });
+				$.ajax({
+					url: 'zwave-js/smart-start-list',
+					method: 'GET',
+					dataType: 'json',
+					success: function (List) {
+						List.forEach((Entry) => {
+							const Item = $('<tr class="SmartStartEntry">');
+
+							Item.append(`<td>${Entry.dsk.substring(0, 5)}</td>`);
+							if (Entry.manufacturer === undefined) {
+								Item.append(`<td>Unknown Manufacturer</td>`);
+								Item.append(`<td>Unknown Product</td>`);
+							} else {
+								Item.append(`<td>${Entry.manufacturer}</td>`);
+								Item.append(
+									`<td>${Entry.label}<br /><span style="font-size:12px">${Entry.description}</span></td>`
+								);
+							}
+							const BTNTD = $('<td>');
+							BTNTD.css('text-align', 'right');
+							const BTN = $('<button>');
+							BTN.addClass('ui-button ui-corner-all ui-widget');
+							BTN.html('Remove');
+							BTN.click(() => {
+								const Buttons = {
+									Yes: function () {
+										ControllerCMD(
+											'IEAPI',
+											'unprovisionSmartStartNode',
+											undefined,
+											[Entry.dsk],
+											true
+										);
+										Item.remove();
+									}
+								};
+								modalPrompt(
+									'Are you sure you wish to remove this entry?',
+									'Remove Smart Start Entry',
+									Buttons,
+									true
+								);
+							});
+							BTN.appendTo(BTNTD);
+							Item.append(BTNTD);
+							$('#SmartStartEditList').append(Item);
+						});
+					}
+				});
+				return;
+
 			case 'SmartStart':
-				Request.strategy = 1;
-				Request.provisioningList = '';
-				break;
+				ControllerCMD('IEAPI', 'checkKeyReq', undefined, [1]).catch((err) => {
+					if (err.status !== 504) {
+						modalAlert(err.responseText, 'Could Not Start Inclusion');
+						$(B).html(OT);
+						$(B).prop('disabled', false);
+					} else {
+						$('#SmartStartCommit').css({ display: 'inline' });
+						$.ajax({
+							url: `zwave-js/smartstart/startserver`,
+							method: 'GET',
+							success: function (QRData) {
+								StepsAPI.setStepIndex(StepList.SmartStart);
+								new QRCode($('#SmartStartQR')[0], {
+									text: QRData,
+									width: 150,
+									height: 150,
+									colorDark: '#000000',
+									colorLight: '#ffffff',
+									correctLevel: QRCode.CorrectLevel.L
+								});
+
+								$('#SmartStartURL').html(QRData);
+							}
+						});
+					}
+				});
+
+				return;
 
 			case 'None':
 				Request.strategy = 2;
@@ -834,7 +920,13 @@ const ZwaveJsUI = (function () {
 				break;
 
 			case 'Remove':
-				ControllerCMD('IEAPI', 'beginExclusion', undefined, undefined, true);
+				ControllerCMD(
+					'IEAPI',
+					'beginExclusion',
+					undefined,
+					[$('#ERP').is(':checked')],
+					true
+				);
 				return;
 		}
 
@@ -850,6 +942,7 @@ const ZwaveJsUI = (function () {
 	};
 
 	function ShowIncludeExcludePrompt() {
+		const ParentDialog = $('<div>').css({ padding: 10 }).html('Please wait...');
 		const Options = {
 			draggable: false,
 			modal: true,
@@ -860,25 +953,83 @@ const ZwaveJsUI = (function () {
 			minHeight: 75,
 			buttons: [
 				{
+					id: 'SSPurgeButton',
+					text: 'Remove All',
+					click: function () {
+						const Buttons = {
+							'Yes - Remove': function () {
+								ControllerCMD(
+									'IEAPI',
+									'unprovisionAllSmartStart',
+									undefined,
+									undefined,
+									true
+								);
+								ParentDialog.dialog('destroy');
+							}
+						};
+						modalPrompt(
+							'Are you sure you wish to remove all pre-provisioned device entries (the devices them self wont be removed)',
+							'Purge Provisioning List',
+							Buttons,
+							true
+						);
+					}
+				},
+				{
 					id: 'IEButton',
 					text: 'Abort',
 					click: function () {
+						$.ajax({
+							url: `zwave-js/smartstart/stopserver`,
+							method: 'GET'
+						});
 						ClearIETimer();
 						ClearSecurityCountDown();
 						ControllerCMD('IEAPI', 'stop', undefined, undefined, true);
-						$(this).dialog('destroy');
+						ParentDialog.dialog('destroy');
+					}
+				},
+				{
+					id: 'SmartStartCommit',
+					text: 'Commit Scans',
+					click: function () {
+						const SSEntries = $('.SmartStartEntry');
+						const Entries = [];
+						SSEntries.each(function (i, e) {
+							Entries.push($(e).data('inclusionPackage'));
+						});
+						ControllerCMD('IEAPI', 'commitScans', undefined, Entries, true);
+						$.ajax({
+							url: `zwave-js/smartstart/stopserver`,
+							method: 'GET'
+						});
+						StepsAPI.setStepIndex(StepList.SmartStartDone);
+						$('#SmartStartCommit').css({ display: 'none' });
+						$('#IEButton').css({ display: 'none' });
+						$('#IEClose').css({ display: 'inline-block' });
+					}
+				},
+				{
+					id: 'IEClose',
+					text: 'Ok',
+					click: function () {
+						ParentDialog.dialog('destroy');
 					}
 				}
 			]
 		};
 
-		const IncludeForm = $('<div>').css({ padding: 10 }).html('Please wait...');
-		IncludeForm.dialog(Options);
-		IncludeForm.html('');
+		ParentDialog.dialog(Options);
+		ParentDialog.html('');
 
-		IncludeForm.append($('#TPL_Include').html());
+		ParentDialog.append($('#TPL_Include').html());
 		const Steps = $('#IncludeWizard').steps({ showFooterButtons: false });
 		StepsAPI = Steps.data('plugin_Steps');
+
+		$('#SmartStartCommit').css({ display: 'none' });
+		$('#IEClose').css({ display: 'none' });
+		$('#SSPurgeButton').css({ display: 'none' });
 	}
 
 	function ShowReplacePrompt() {
@@ -911,8 +1062,6 @@ const ZwaveJsUI = (function () {
 		StepsAPI = Steps.data('plugin_Steps');
 		StepsAPI.setStepIndex(StepList.ReplaceSecurityMode);
 	}
-
-	// NVR Here
 
 	function StartNodeHeal() {
 		ControllerCMD('ControllerAPI', 'healNode', undefined, [selectedNode], true);
@@ -968,6 +1117,7 @@ const ZwaveJsUI = (function () {
 	}
 
 	function RenameNode(KB, El) {
+		IsDriverReady();
 		let input;
 		let Button;
 		if (KB === true) {
@@ -1001,6 +1151,7 @@ const ZwaveJsUI = (function () {
 	}
 
 	function SetNodeLocation(KB, El) {
+		IsDriverReady();
 		let input;
 		let Button;
 		if (KB === true) {
@@ -1060,15 +1211,25 @@ const ZwaveJsUI = (function () {
 		window.open(`https://devices.zwave-js.io/?jumpTo=${id}`, '_blank');
 	}
 
+	let Removing = false;
 	function RemoveFailedNode() {
+		if (Removing) {
+			modalAlert(
+				'A node is already being removed, please allow a minute or 2.',
+				'Could Not Remove Node'
+			);
+			return;
+		}
 		const Buttons = {
 			'Yes - Remove': function () {
+				Removing = true;
 				ControllerCMD('ControllerAPI', 'removeFailedNode', undefined, [
 					selectedNode
 				]).catch((err) => {
 					if (err.status !== 504) {
 						modalAlert(err.responseText, 'Could Not Remove Node');
 					}
+					Removing = false;
 				});
 			}
 		};
@@ -1135,7 +1296,10 @@ const ZwaveJsUI = (function () {
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(ShowIncludeExcludePrompt)
+			.click(() => {
+				IsDriverReady();
+				ShowIncludeExcludePrompt();
+			})
 			.html('Include / Exclude')
 			.appendTo(optInclusionLog);
 		$('<button>')
@@ -1152,13 +1316,19 @@ const ZwaveJsUI = (function () {
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(StartHeal)
+			.click(() => {
+				IsDriverReady();
+				StartHeal();
+			})
 			.html('Start Network Heal')
 			.appendTo(optHeal);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(StopHeal)
+			.click(() => {
+				IsDriverReady();
+				StopHeal();
+			})
 			.html('Stop Network Heal')
 			.appendTo(optHeal);
 
@@ -1169,13 +1339,19 @@ const ZwaveJsUI = (function () {
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(GetNodes)
+			.click(() => {
+				IsDriverReady();
+				GetNodes();
+			})
 			.html('Refresh Node List')
 			.appendTo(optRefreshReset);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(Reset)
+			.click(() => {
+				IsDriverReady();
+				Reset();
+			})
 			.html('Reset Controller')
 			.appendTo(optRefreshReset);
 
@@ -1186,13 +1362,19 @@ const ZwaveJsUI = (function () {
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(FirmwareUpdate)
+			.click(() => {
+				IsDriverReady();
+				FirmwareUpdate();
+			})
 			.html('Firmware Updater')
 			.appendTo(tools);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(NetworkMap)
+			.click(() => {
+				IsDriverReady();
+				NetworkMap();
+			})
 			.html('Network Map')
 			.appendTo(tools);
 
@@ -1270,7 +1452,10 @@ const ZwaveJsUI = (function () {
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(InterviewNode)
+			.click(() => {
+				IsDriverReady();
+				InterviewNode();
+			})
 			.html('Interview Node')
 			.appendTo(set2);
 
@@ -1278,7 +1463,10 @@ const ZwaveJsUI = (function () {
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(StartNodeHeal)
+			.click(() => {
+				IsDriverReady();
+				StartNodeHeal();
+			})
 			.html('Heal Node')
 			.appendTo(set2);
 
@@ -1288,14 +1476,20 @@ const ZwaveJsUI = (function () {
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(RemoveFailedNode)
+			.click(() => {
+				IsDriverReady();
+				RemoveFailedNode();
+			})
 			.html('Remove Failed Node')
 			.appendTo(set3);
 		// Replace
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(ShowReplacePrompt)
+			.click(() => {
+				IsDriverReady();
+				ShowReplacePrompt();
+			})
 			.html('Replace Failed Node')
 			.appendTo(set3);
 
@@ -1305,18 +1499,24 @@ const ZwaveJsUI = (function () {
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(AssociationMGMT)
+			.click(() => {
+				IsDriverReady();
+				AssociationMGMT();
+			})
 			.html('Association Management')
 			.appendTo(set4);
 		// Refres Properties
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(getProperties)
+			.click(() => {
+				IsDriverReady();
+				getProperties();
+			})
 			.html('Refresh Property List')
 			.appendTo(set4);
 
-		// DB & Message Viewer
+		// DB
 		const DB = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
@@ -1354,6 +1554,7 @@ const ZwaveJsUI = (function () {
 			onchange: () => setTimeout(resizeStack, 0) // Only way I can figure out how to init the resize when tab becomes visible
 		});
 		RED.comms.subscribe(`/zwave-js/cmd`, handleControllerEvent);
+		RED.comms.subscribe(`/zwave-js/battery`, handleBattery);
 		RED.comms.subscribe(`/zwave-js/status`, handleStatusUpdate);
 
 		setTimeout(WaitLoad, 100);
@@ -1424,6 +1625,37 @@ const ZwaveJsUI = (function () {
 					StepsAPI.setStepIndex(StepList.Aborted);
 					ClearIETimer();
 					ClearSecurityCountDown();
+				}
+				if (data.event === 'smart start awaiting codes') {
+					// New List
+					StepsAPI.setStepIndex(StepList.SmartStartList);
+				}
+				if (data.event === 'smart start code received') {
+					// Append List
+					const Item = $('<tr class="SmartStartEntry">');
+
+					Item.append(`<td>${data.data.humaReadable.dsk}</td>`);
+					if (data.data.humaReadable.manufacturer === undefined) {
+						Item.append(`<td>Unknown Manufacturer</td>`);
+						Item.append(`<td>Unknown Product</td>`);
+					} else {
+						Item.append(`<td>${data.data.humaReadable.manufacturer}</td>`);
+						Item.append(
+							`<td>${data.data.humaReadable.label}<br /><span style="font-size:12px">${data.data.humaReadable.description}</span></td>`
+						);
+					}
+					const BTNTD = $('<td>');
+					BTNTD.css('text-align', 'right');
+					const BTN = $('<button>');
+					BTN.addClass('ui-button ui-corner-all ui-widget');
+					BTN.html('Remove');
+					BTN.click(() => {
+						Item.remove();
+					});
+					BTN.appendTo(BTNTD);
+					Item.append(BTNTD);
+					$('#SmartStartScannedList').append(Item);
+					Item.data('inclusionPackage', data.data.inclusionPackage);
 				}
 				break;
 
@@ -1681,6 +1913,7 @@ const ZwaveJsUI = (function () {
 
 	function handleNodeEvent(topic, data) {
 		const nodeId = topic.split('/')[3];
+
 		if (nodeId != selectedNode) return;
 		switch (data.type) {
 			case 'node-value':
@@ -1921,9 +2154,40 @@ const ZwaveJsUI = (function () {
 		);
 	}
 
+	function handleBattery(topic, data) {
+		const BatterySymbol = $(
+			`#zwave-js-node-list > div.red-ui-treeList-label.zwave-js-node-row[data-nodeid='${data.node}'] > div.zwave-js-node-row-battery > i`
+		);
+
+		switch (data.payload.property) {
+			case 'level':
+				let Class;
+				data.payload.newValue > 90
+					? (Class = 'fa fa-battery-full')
+					: data.payload.newValue > 65
+					? (Class = 'fa fa-battery-three-quarters')
+					: data.payload.newValue > 35
+					? (Class = 'fa fa-battery-half')
+					: data.payload.newValue > 10
+					? (Class = 'fa fa-battery-quarter')
+					: (Class = 'fa fa-battery-empty');
+				BatterySymbol.removeClass();
+				BatterySymbol.addClass(Class);
+				RED.popover.tooltip(BatterySymbol, 'Level: ' + data.payload.newValue);
+				break;
+
+			case 'isLow':
+				if (data.payload.newValue) {
+					BatterySymbol.css({ color: 'red' });
+				} else {
+					BatterySymbol.css({ color: '#555' });
+				}
+				break;
+		}
+	}
+
 	function updateValue(valueId) {
 		// Assumes you already checked if this applies to selectedNode
-
 		const propertyRow = getPropertyRow(valueId);
 
 		if (!propertyRow) {
