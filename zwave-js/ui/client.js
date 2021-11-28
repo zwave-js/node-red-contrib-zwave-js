@@ -825,6 +825,7 @@ const ZwaveJsUI = (function () {
 
 			case 'EditSmartStart':
 				StepsAPI.setStepIndex(StepList.SmartStartListEdit);
+				$('#SSPurgeButton').css({ display: 'inline-block' });
 				$.ajax({
 					url: 'zwave-js/smart-start-list',
 					method: 'GET',
@@ -951,6 +952,30 @@ const ZwaveJsUI = (function () {
 			minHeight: 75,
 			buttons: [
 				{
+					id: 'SSPurgeButton',
+					text: 'Remove All',
+					click: function () {
+						const Buttons = {
+							'Yes - Remove': function () {
+								ControllerCMD(
+									'IEAPI',
+									'unprovisionAllSmartStart',
+									undefined,
+									undefined,
+									true
+								);
+								$('.ui-dialog-content').dialog('close');
+							}
+						};
+						modalPrompt(
+							'Are you sure you wish to remove all pre-provisioned device entries (the devices them self wont be removed)',
+							'Purge Provisioning List',
+							Buttons,
+							true
+						);
+					}
+				},
+				{
 					id: 'IEButton',
 					text: 'Abort',
 					click: function () {
@@ -1004,6 +1029,7 @@ const ZwaveJsUI = (function () {
 
 		$('#SmartStartCommit').css({ display: 'none' });
 		$('#IEClose').css({ display: 'none' });
+		$('#SSPurgeButton').css({ display: 'none' });
 	}
 
 	function ShowReplacePrompt() {

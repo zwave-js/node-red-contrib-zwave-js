@@ -564,6 +564,14 @@ module.exports = function (RED) {
 					CheckKey(Params[0]);
 					break;
 
+				case 'unprovisionAllSmartStart':
+					const Entries = Driver.controller.getProvisioningEntries();
+					for (let i = 0; i < Entries.length; i++) {
+						const Entry = Entries[i];
+						Driver.controller.unprovisionSmartStartNode(Entry.dsk);
+					}
+					break;
+
 				case 'unprovisionSmartStartNode':
 					Driver.controller.unprovisionSmartStartNode(Params[0]);
 					break;
