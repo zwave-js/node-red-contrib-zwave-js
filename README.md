@@ -4,7 +4,7 @@
 
 ![NPM](https://img.shields.io/npm/l/node-red-contrib-zwave-js)
 ![npm](https://img.shields.io/npm/v/node-red-contrib-zwave-js)
-[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/zwave-js/node-red-contrib-zwave-js.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/marcus-j-davies/nvr-js/context:javascript)
+[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/zwave-js/node-red-contrib-zwave-js.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/zwave-js/node-red-contrib-zwave-js/context:javascript)
 ![npms.io (maintenance)](https://img.shields.io/npms-io/maintenance-score/node-red-contrib-zwave-js)
 ![Libraries.io dependency status for latest release](https://img.shields.io/librariesio/release/npm/node-red-contrib-zwave-js)
 
