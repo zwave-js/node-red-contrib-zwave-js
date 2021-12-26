@@ -2,12 +2,11 @@
 
 # node-red-contrib-zwave-js
 
-[![License](https://img.shields.io/npm/l/node-red-contrib-zwave-js)](https://github.com/zwave-js/node-red-contrib-zwave-js/blob/main/LICENSE)
-[![Version](https://img.shields.io/npm/v/node-red-contrib-zwave-js)](https://www.npmjs.com/package/node-red-contrib-zwave-js)
-[![Node Version](https://img.shields.io/node/v/node-red-contrib-zwave-js)](https://www.npmjs.com/package/node-red-contrib-zwave-js)
-[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/zwave-js/node-red-contrib-zwave-js.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/zwave-js/node-red-contrib-zwave-js/context:javascript)
-[![Maintenance](https://img.shields.io/npms-io/maintenance-score/node-red-contrib-zwave-js)](https://www.npmjs.com/package/node-red-contrib-zwave-js)
-[![Dependencies](https://img.shields.io/librariesio/release/npm/node-red-contrib-zwave-js/latest)](https://www.npmjs.com/package/node-red-contrib-zwave-js)  
+![NPM](https://img.shields.io/npm/l/node-red-contrib-zwave-js)
+![npm](https://img.shields.io/npm/v/node-red-contrib-zwave-js)
+[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/zwave-js/node-red-contrib-zwave-js.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/marcus-j-davies/nvr-js/context:javascript)
+![npms.io (maintenance)](https://img.shields.io/npms-io/maintenance-score/node-red-contrib-zwave-js)
+![Libraries.io dependency status for latest release](https://img.shields.io/librariesio/release/npm/node-red-contrib-zwave-js)
 
 The most powerful/fully integrated Z-Wave node for Node-RED based on Z-Wave JS. If you want a fully featured Z-Wave framework in your Node-RED instance, look no further.
 
