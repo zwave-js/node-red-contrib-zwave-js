@@ -1,5 +1,14 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 6.4.1
+
+    **Changes**
+     - Bump ZWJS to 8.9.2  
+     - Bump Express to 4.17.2  
+     - Bump Winston-Transports to 4.4.1  
+     - Bump ESLint to 8.5.0  
+
+
   - 6.4.0
 
     **Fixes**
