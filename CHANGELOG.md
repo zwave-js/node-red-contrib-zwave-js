@@ -1,5 +1,16 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 6.5.0
+
+    **New Features**
+     - Added the ability to keep a node awake via the UI
+     - Added a new method in the UI to report the health of a nodes conection to the controller.
+    
+    **Changes**
+     - Replace **EventEmitter** - to address a **MaxListenersExceeded** warning.
+     - Statistics on the map are now taken directly from the node/controller (previously taken from captured event data)
+     - Bump ZWJS to 8.10.0  
+ 
   - 6.4.1
 
     **Changes**
