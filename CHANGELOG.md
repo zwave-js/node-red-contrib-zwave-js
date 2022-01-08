@@ -8,8 +8,8 @@
     
     **Changes**
      - Replace **EventEmitter** - to address a **MaxListenersExceeded** warning.
-     - Statistics on the map are now taken directly from the node/controller (previously taken from captured event data)
-     - Bump ZWJS to 8.10.0  
+     - Statistics are now taken directly from the node/controller (previously taken from captured event data)
+     - Bump ZWJS to 8.10.1  
  
   - 6.4.1
 

@@ -1516,14 +1516,20 @@ const ZwaveJsUI = (function () {
 			.html('Refresh Property List')
 			.appendTo(set4);
 
-		// DB
-		const DB = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
+		// DB & KW
+		const DBKW = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
+		$('<button>')
+			.addClass('red-ui-button red-ui-button-small')
+			.css('min-width', '125px')
+			.click(OpenDB)
+			.html('Keep Awake')
+			.appendTo(DBKW);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
 			.click(OpenDB)
 			.html('View in Config Database')
-			.appendTo(DB);
+			.appendTo(DBKW);
 
 		// Endpoint Filter
 		$('<div id="zwave-js-node-endpoint-filter">').appendTo(nodeOpts);

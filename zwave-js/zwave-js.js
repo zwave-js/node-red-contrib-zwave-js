@@ -26,7 +26,6 @@ module.exports = function (RED) {
 	const event_AllNodesReady = new SanitizedEventName('all nodes ready');
 	const event_NodeAdded = new SanitizedEventName('node added');
 	const event_NodeRemoved = new SanitizedEventName('node removed');
-	const event_StatisticsUpdated = new SanitizedEventName('statistics updated');
 	const event_InclusionStarted = new SanitizedEventName('inclusion started');
 	const event_InclusionFailed = new SanitizedEventName('inclusion failed');
 	const event_InclusionStopped = new SanitizedEventName('inclusion stopped');
@@ -73,9 +72,6 @@ module.exports = function (RED) {
 		let DriverAttempts = 0;
 		const RetryTime = 5000;
 		let DriverOptions = {};
-
-		const NodeStats = {};
-		let ControllerStats;
 
 		// Log function
 		const Log = function (level, label, direction, tag1, msg, tag2) {
@@ -758,7 +754,8 @@ module.exports = function (RED) {
 									endpoint: 0,
 									property: 'isLow'
 								})
-							}
+							},
+							statistics: N.statistics
 						});
 					});
 					Nodes.sort((A, B) => A.nodeId - B.nodeId);
@@ -1092,30 +1089,27 @@ module.exports = function (RED) {
 					break;
 
 				case 'getNodeStatistics':
+					const NS = {};
 					if (Params.length < 1) {
-						Send(undefined, 'NODE_STATISTICS', NodeStats, send);
-					} else {
-						const Stats = {};
-						Params.forEach((NID) => {
-							if (NodeStats.hasOwnProperty(NID)) {
-								Stats[NID] = NodeStats[NID];
-							}
+						Driver.controller.nodes.forEach((N) => {
+							NS[N.id] = N.statistics;
 						});
-						Send(undefined, 'NODE_STATISTICS', Stats, send);
+					} else {
+						Params.forEach((NID) => {
+							const _N = Driver.controller.nodes.get(NID);
+							NS[_N.id] = _N.statistics;
+						});
 					}
+					Send(undefined, 'NODE_STATISTICS', NS, send);
 					break;
 
 				case 'getControllerStatistics':
-					if (ControllerStats === undefined) {
-						Send(
-							undefined,
-							'CONTROLER_STATISTICS',
-							'Statistics Are Pending',
-							send
-						);
-					} else {
-						Send(undefined, 'CONTROLER_STATISTICS', ControllerStats, send);
-					}
+					Send(
+						undefined,
+						'CONTROLER_STATISTICS',
+						Driver.controller.statistics,
+						send
+					);
 					break;
 
 				case 'getValueDB':
@@ -1542,11 +1536,6 @@ module.exports = function (RED) {
 					Send(N, event_NodeRemoved.redName);
 				});
 
-				// Stats
-				Driver.controller.on(event_StatisticsUpdated.zwaveName, (S) => {
-					ControllerStats = S;
-				});
-
 				// Include
 				Driver.controller.on(event_InclusionStarted.zwaveName, (Secure) => {
 					Send(undefined, event_InclusionStarted.redName, {
@@ -1697,10 +1686,6 @@ module.exports = function (RED) {
 				if (N.isControllerNode()) {
 					return;
 				}
-
-				Node.on(event_StatisticsUpdated.zwaveName, (N, S) => {
-					NodeStats[Node.id] = S;
-				});
 
 				Node.on(event_FirmwareUpdateFinished.zwaveName, (N, S) => {
 					Send(N, event_FirmwareUpdateFinished.redName, S);
