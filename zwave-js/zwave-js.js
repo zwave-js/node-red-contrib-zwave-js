@@ -1,6 +1,7 @@
 module.exports = function (RED) {
 	const Path = require('path');
 	const ModulePackage = require('../package.json');
+	const { NodeEventEmitter } = require('./events');
 	const ZWaveJS = require('zwave-js');
 	const {
 		createDefaultTransportFormat,
@@ -175,7 +176,7 @@ module.exports = function (RED) {
 		});
 		UI.status('Starting Z-Wave driver...');
 
-		RED.events.on('zwjs:node:command', processMessageEvent);
+		NodeEventEmitter.on('zwjs:node:command', processMessageEvent);
 		async function processMessageEvent(MSG) {
 			await Input(MSG, undefined, undefined, true);
 		}
@@ -440,7 +441,7 @@ module.exports = function (RED) {
 			);
 			UI.unregister();
 			Driver.destroy();
-			RED.events.removeListener('zwjs:node:command', processMessageEvent);
+			NodeEventEmitter.removeListener('zwjs:node:command', processMessageEvent);
 			if (Logger !== undefined) {
 				Logger.clear();
 				Logger = undefined;
@@ -1406,7 +1407,7 @@ module.exports = function (RED) {
 						_Subject,
 						'[ISOLATED] [' + IsolatedNodeId + '] Forwarding payload...'
 					);
-					RED.events.emit(`zwjs:node:event:isloated:${IsolatedNodeId}`, {
+					NodeEventEmitter.emit(`zwjs:node:event:isloated:${IsolatedNodeId}`, {
 						payload: PL
 					});
 				} else {
@@ -1417,8 +1418,8 @@ module.exports = function (RED) {
 						_Subject,
 						'[EVENT] Forwarding payload...'
 					);
-					RED.events.emit('zwjs:node:event:all', { payload: PL });
-					RED.events.emit('zwjs:node:event:' + Node.id, { payload: PL });
+					NodeEventEmitter.emit('zwjs:node:event:all', { payload: PL });
+					NodeEventEmitter.emit('zwjs:node:event:' + Node.id, { payload: PL });
 				}
 			}
 		}

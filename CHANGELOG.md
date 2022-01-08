@@ -7,7 +7,7 @@
      - Added a new method in the UI to report the health of a nodes conection to the controller.
     
     **Changes**
-     - Replace **EventEmitter** - to address a **MaxListenersExceeded** warning.
+     - Replace **EventEmitter** with an internal instance - to address a **MaxListenersExceeded** warning.
      - Statistics are now taken directly from the node/controller (previously taken from captured event data)
      - Bump ZWJS to 8.10.1  
  
