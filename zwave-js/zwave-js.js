@@ -1075,6 +1075,21 @@ module.exports = function (RED) {
 			);
 
 			switch (Method) {
+				case 'checkLifelineHealth':
+					const NID = Params[0];
+					const Rounds = Params[1] || undefined;
+					NodeCheck(NID);
+					const HCResult = await Driver.controller.nodes
+						.get(NID)
+						.checkLifelineHealth(Rounds);
+					Send(
+						undefined,
+						'HEALTH_CHECK_RESULT',
+						{ node: NID, health: HCResult },
+						send
+					);
+					break;
+
 				case 'installConfigUpdate':
 					let Success = false;
 					const Version = await Driver.checkForConfigUpdates();
