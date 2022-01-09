@@ -52,6 +52,10 @@ JSONFormatter.json = {
 };
 
 const ZwaveJsUI = (function () {
+	Handlebars.registerHelper('inc', function (value, options) {
+		return parseInt(value) + 1;
+	});
+
 	function modalAlert(message, title) {
 		const Buts = {
 			Ok: function () {}
@@ -111,6 +115,93 @@ const ZwaveJsUI = (function () {
 				}
 			});
 	}
+
+	function RenderHealthCheck() {
+		const Options = {
+			draggable: false,
+			modal: true,
+			resizable: false,
+			width: '800',
+			height: '600',
+			title: 'Node Health Check : Node ' + selectedNode,
+			minHeight: 75,
+			buttons: {
+				Abort: function () {
+					$(this).dialog('destroy');
+				}
+			}
+		};
+
+		const HCForm = $('<div>')
+			.css({ padding: 10 })
+			.html(
+				'Running Health Check. This may take upto 1 minute, please wait...'
+			);
+
+		HCForm.dialog(Options);
+		ControllerCMD(
+			'DriverAPI',
+			'checkLifelineHealth',
+			undefined,
+			[selectedNode],
+			false
+		).then(({ object }) => {
+			const RatingsArray = object.health.results.map((R) => R.rating);
+
+			const Min = Math.min(...RatingsArray);
+			const Max = Math.max(...RatingsArray);
+			const Average =
+				RatingsArray.reduce((a, b) => a + b, 0) / RatingsArray.length;
+
+			const MC = Min < 4 ? 'red' : Min < 6 ? 'orange' : 'green';
+			const AC = Average < 4 ? 'red' : Average < 6 ? 'orange' : 'green';
+			const MXC = Max < 4 ? 'red' : Max < 6 ? 'orange' : 'green';
+
+			const Data = {
+				rounds: object.health.results,
+				Worst: Min,
+				Best: Max,
+				Average: Average,
+				MC: MC,
+				AC: AC,
+				MXC: MXC
+			};
+
+			ControllerCMD(
+				'DriverAPI',
+				'getNodeStatistics',
+				undefined,
+				[selectedNode],
+				false
+			).then(({ object }) => {
+				Data.TX = object[selectedNode.toString()].commandsTX;
+				Data.RX = object[selectedNode.toString()].commandsRX;
+				Data.TXD = object[selectedNode.toString()].commandsDroppedTX;
+				Data.RXD = object[selectedNode.toString()].commandsDroppedRX;
+				Data.TO = object[selectedNode.toString()].timeoutResponse;
+
+				HCForm.html('');
+				const Template = $('#TPL_HealthCheck').html();
+				const templateScript = Handlebars.compile(Template);
+				const HTML = templateScript(Data);
+				HCForm.append(HTML);
+			});
+		});
+	}
+
+	function HealthCheck() {
+		const Buttons = {
+			Yes: RenderHealthCheck
+		};
+		modalPrompt(
+			"A Node Health Check involves running diagnostics on a node and it's routing table, Care should be taken not to run this whilst large amounts of traffic is flowing though the network. Continue?",
+			'Run Diagnostics?',
+			Buttons,
+			true
+		);
+	}
+
+	function KeepAwake() {}
 
 	let FirmwareForm;
 	let FWRunning = false;
@@ -655,7 +746,7 @@ const ZwaveJsUI = (function () {
 
 	function ControllerCMD(mode, method, node, params, dontwait) {
 		IsDriverReady();
-		const NoTimeoutFor = ['installConfigUpdate'];
+		const NoTimeoutFor = ['installConfigUpdate', 'checkLifelineHealth'];
 
 		const Options = {
 			url: `zwave-js/cmd`,
@@ -1516,20 +1607,29 @@ const ZwaveJsUI = (function () {
 			.html('Refresh Property List')
 			.appendTo(set4);
 
-		// DB & KW
-		const DBKW = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
+		// KW HC
+		const KWHC = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
-			.click(OpenDB)
+			.click(KeepAwake)
 			.html('Keep Awake')
-			.appendTo(DBKW);
+			.appendTo(KWHC);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
+			.click(HealthCheck)
+			.html('Run Health Check')
+			.appendTo(KWHC);
+
+		// DB
+		const DB = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
+		$('<button>')
+			.addClass('red-ui-button red-ui-button-small')
+			.css('min-width', '250px')
 			.click(OpenDB)
 			.html('View in Config Database')
-			.appendTo(DBKW);
+			.appendTo(DB);
 
 		// Endpoint Filter
 		$('<div id="zwave-js-node-endpoint-filter">').appendTo(nodeOpts);

@@ -8,6 +8,77 @@
 
 <!-- templates used for modal dialogs *-->
 
+<!-- Health Check Result-->
+<script id="TPL_HealthCheck" type="text/x-handlebars-template">
+	<table
+		style='margin-bottom: 30px; width: 90%; margin: auto;'
+		cellpadding='5'
+		cellspacing='0'
+	>
+		<tr style='font-size: 20px;'>
+			<td>Worst</td>
+			<td
+				style='font-size: 30px; font-weight: bold; color:{{MC}};'
+			>{{Worst}}</td>
+			<td>Average</td>
+			<td
+				style='font-size: 30px; font-weight: bold; color:{{AC}};'
+			>{{Average}}</td>
+			<td>Best</td>
+			<td
+				style='font-size: 30px; font-weight: bold; color:{{MXC}}'
+			>{{Best}}</td>
+		</tr>
+	</table>
+
+	<div style='width: 90%; margin: auto;'>Health Check</div>
+	<table class='zwave-js-health-table' cellpadding='5' cellspacing='0'>
+		<tbody>
+			<tr style='background-color: lightgray;'>
+				<td>Round</td>
+				<td>Latency</td>
+				<td>Failed Pings</td>
+				<td>Neighbors</td>
+				<td>Route Changes</td>
+				<td>SNR Margin</td>
+				<td>Min Power level</td>
+				<td>Rating</td>
+			</tr>
+			{{#rounds}}
+				<tr>
+					<td>#{{inc @index}}</td>
+					<td>{{latency}} ms</td>
+					<td>{{failedPingsNode}}</td>
+					<td>{{numNeighbors}}</td>
+					<td>{{routeChanges}}</td>
+					<td>{{snrMargin}} dBm</td>
+					<td>-{{minPowerlevel}} dBm</td>
+					<td>{{rating}}</td>
+				</tr>
+			{{/rounds}}
+		</tbody>
+	</table>
+	<div style='width: 90%; margin: auto;'>Node Statistics</div>
+	<table class='zwave-js-health-table' cellpadding='5' cellspacing='0'>
+		<tbody>
+			<tr style='background-color: lightgray;'>
+				<td>Commands TX</td>
+				<td>Commands RX</td>
+				<td>Commands Dropped TX</td>
+				<td>Commands Dropped RX</td>
+				<td>Timeouts</td>
+			</tr>
+			<tr>
+				<td>{{TX}}</td>
+				<td>{{RX}}</td>
+				<td>{{TXD}}</td>
+				<td>{{RXD}}</td>
+				<td>{{TO}}</td>
+			</tr>
+		</tbody>
+	</table>
+</script>
+
 <!--Inclusion-->
 <script id="TPL_Include" type="text/x-handlebars-template">
 	<div class='step-app' id='IncludeWizard'>
