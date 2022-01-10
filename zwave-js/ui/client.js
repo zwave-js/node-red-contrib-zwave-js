@@ -131,7 +131,7 @@ const ZwaveJsUI = (function () {
 		const HCForm = $('<div>')
 			.css({ padding: 10 })
 			.html(
-				'Running Health Check. This may take upto 1 minute, please wait...'
+				'Running Health Check. This may take upto 1-2 minutes, please wait...'
 			);
 
 		HCForm.dialog(Options);
