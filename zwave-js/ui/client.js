@@ -190,7 +190,7 @@ const ZwaveJsUI = (function () {
 			Yes: RenderHealthCheck
 		};
 		modalPrompt(
-			"A Node Health Check involves running diagnostics on a node and it's routing table, Care should be taken not to run this whilst large amounts of traffic is flowing though the network. Continue?",
+			"A Node Health Check involves running diagnostics on a node and it's routing table, Care should be taken not to run this whilst large amounts of traffic is flowing through the network. Continue?",
 			'Run Diagnostics?',
 			Buttons,
 			true
