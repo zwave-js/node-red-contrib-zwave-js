@@ -52,10 +52,6 @@ JSONFormatter.json = {
 };
 
 const ZwaveJsUI = (function () {
-	Handlebars.registerHelper('inc', function (value, options) {
-		return parseInt(value) + 1;
-	});
-
 	function modalAlert(message, title) {
 		const Buts = {
 			Ok: function () {}
@@ -201,7 +197,35 @@ const ZwaveJsUI = (function () {
 		);
 	}
 
-	function KeepAwake() {}
+	function KeepAwake() {
+		const Node = $(
+			".red-ui-treeList-label.zwave-js-node-row[data-nodeid='" +
+				selectedNode +
+				"']"
+		).data('info');
+
+		Node.keepAwake = Node.keepAwake ? false : true;
+
+		ControllerCMD('ControllerAPI', 'keepNodeAwake', undefined, [
+			selectedNode,
+			Node.keepAwake
+		]);
+
+		MarkSleepButton();
+	}
+	function MarkSleepButton() {
+		const Current = $(
+			".red-ui-treeList-label.zwave-js-node-row[data-nodeid='" +
+				selectedNode +
+				"']"
+		).data('info').keepAwake;
+
+		if (Current) {
+			$('#zwave-js-keep-awake').html('[ Keep Awake ]');
+		} else {
+			$('#zwave-js-keep-awake').html('Keep Awake');
+		}
+	}
 
 	let FirmwareForm;
 	let FWRunning = false;
@@ -1609,7 +1633,7 @@ const ZwaveJsUI = (function () {
 
 		// KW HC
 		const KWHC = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
-		$('<button>')
+		$('<button id="zwave-js-keep-awake">')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
 			.click(KeepAwake)
@@ -1991,6 +2015,9 @@ const ZwaveJsUI = (function () {
 		deselectCurrentNode();
 
 		selectedNode = id;
+
+		MarkSleepButton();
+
 		const selectedEl = $(`#zwave-js-node-list [data-nodeid='${id}']`);
 		selectedEl.addClass('selected');
 		$('#zwave-js-selected-node-id').text(selectedNode);

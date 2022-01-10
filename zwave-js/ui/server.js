@@ -308,23 +308,27 @@ module.exports = {
 						res.status(202).end();
 					}
 
-					_Context.input(
-						{ payload: req.body },
-						(zwaveRes) => {
+					const ResponseProcessor = (Response) => {
+						clearTimeout(timeout);
+						if (!req.body.noWait) {
+							res.send(Response.payload);
+						}
+					};
+
+					const DoneHandler = (Err) => {
+						if (Err) {
 							clearTimeout(timeout);
 							if (!req.body.noWait) {
-								res.send(zwaveRes.payload);
-							}
-						},
-						(err) => {
-							if (err) {
-								clearTimeout(timeout);
-								if (!req.body.noWait) {
-									res.status(500).send(err.message);
-								}
+								res.status(500).send(Err.message);
 							}
 						}
-					);
+					};
+
+					const PL = {
+						payload: req.body
+					};
+
+					_Context.input(PL, ResponseProcessor, DoneHandler);
 				} catch (err) {
 					clearTimeout(timeout);
 					if (!req.body.noWait) {

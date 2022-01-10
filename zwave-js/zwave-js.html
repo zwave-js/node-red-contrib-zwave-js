@@ -1,6 +1,11 @@
-﻿<script type="text/javascript" src="zwave-js/res/client.js"></script>
+﻿<script type="text/javascript" src="zwave-js/res/handlebars.min.js"></script>
+<script>
+	Handlebars.registerHelper('inc', function (value, options) {
+		return parseInt(value) + 1;
+	});
+</script>
+<script type="text/javascript" src="zwave-js/res/client.js"></script>
 <script type="text/javascript" src="zwave-js/res/vis-network.min.js"></script>
-<script type="text/javascript" src="zwave-js/res/handlebars.min.js"></script>
 <script type="text/javascript" src="zwave-js/res/jquery-steps.min.js"></script>
 <script type="text/javascript" src="zwave-js/res/qrcode.min.js"></script>
 <link rel="stylesheet" href="zwave-js/res/styles.css" />

@@ -9,6 +9,7 @@
     **Changes**
      - Replace **EventEmitter** with an internal instance - to address a **MaxListenersExceeded** warning.
      - Statistics are now taken directly from the node/controller (previously taken from captured event data)
+     - Small improvements to UI server component structure.
      - Bump ZWJS to 8.10.1  
  
   - 6.4.1
