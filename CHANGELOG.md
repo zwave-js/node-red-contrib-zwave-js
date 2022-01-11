@@ -5,6 +5,7 @@
     **New Features**
      - Added the ability to keep a node awake via the UI
      - Added a new method in the UI to report the health of a nodes conection to the controller.
+     - Added native camera/image capture controls for Smart Start QR Scanning on the mobile client.
     
     **Changes**
      - Replace **EventEmitter** with an internal instance - to address a **MaxListenersExceeded** warning.
