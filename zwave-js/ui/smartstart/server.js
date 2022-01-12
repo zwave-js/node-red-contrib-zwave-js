@@ -24,7 +24,11 @@ const Start = (Callback) => {
 	return new Promise((resolve) => {
 		Server.listen(0, () => {
 			resolve(
-				'https://' + ip.address() + ':' + Server.address().port + '/scan.html'
+				'https://' +
+					ip.address() +
+					':' +
+					Server.address().port +
+					'/Scanchoice.html'
 			);
 		});
 	});

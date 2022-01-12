@@ -112,6 +112,154 @@ const ZwaveJsUI = (function () {
 			});
 	}
 
+	let HCForm;
+	let HCRounds;
+	function processHealthCheckProgress(topic, data) {
+		const P = Math.round((100 * data.payload) / HCRounds);
+		HCForm.html(
+			`<div style="width:430px; margin:auto;margin-top:40px;font-size:18px">Running Health Check. This may take a few minutes, please wait...${P}%</div>`
+		);
+	}
+	function processHealthResults(topic, data) {
+		const RatingsArray = data.payload.HealthCheck.results.map((R) => R.rating);
+
+		const Min = Math.min(...RatingsArray);
+		const Max = Math.max(...RatingsArray);
+		const Average = Math.round(
+			RatingsArray.reduce((a, b) => a + b, 0) / RatingsArray.length
+		);
+
+		const MC = Min < 4 ? 'red' : Min < 6 ? 'orange' : 'green';
+		const AC = Average < 4 ? 'red' : Average < 6 ? 'orange' : 'green';
+		const MXC = Max < 4 ? 'red' : Max < 6 ? 'orange' : 'green';
+
+		const Data = {
+			rounds: data.payload.HealthCheck.results,
+			Worst: Min,
+			Best: Max,
+			Average: Average,
+			MC: MC,
+			AC: AC,
+			MXC: MXC
+		};
+
+		Data.TX = data.payload.Statistics[selectedNode.toString()].commandsTX;
+		Data.RX = data.payload.Statistics[selectedNode.toString()].commandsRX;
+		Data.TXD =
+			data.payload.Statistics[selectedNode.toString()].commandsDroppedTX;
+		Data.RXD =
+			data.payload.Statistics[selectedNode.toString()].commandsDroppedRX;
+		Data.TO = data.payload.Statistics[selectedNode.toString()].timeoutResponse;
+
+		HCForm.html('');
+		const Template = $('#TPL_HealthCheck').html();
+		const templateScript = Handlebars.compile(Template);
+		const HTML = templateScript(Data);
+		HCForm.append(HTML);
+
+		RED.comms.unsubscribe('/zwave-js/healthcheck', processHealthResults);
+		RED.comms.unsubscribe(
+			'/zwave-js/healthcheckprogress',
+			processHealthCheckProgress
+		);
+	}
+
+	function RenderHealthCheck(Rounds) {
+		const Options = {
+			draggable: false,
+			modal: true,
+			resizable: false,
+			width: '800',
+			height: '600',
+			title: 'Node Health Check : Node ' + selectedNode,
+			minHeight: 75,
+			buttons: {
+				Abort: function () {
+					RED.comms.unsubscribe('/zwave-js/healthcheck', processHealthResults);
+					RED.comms.unsubscribe(
+						'/zwave-js/healthcheckprogress',
+						processHealthCheckProgress
+					);
+					$(this).dialog('destroy');
+				}
+			}
+		};
+
+		HCForm = $('<div>')
+			.css({ padding: 10 })
+			.html(
+				'<div style="width:430px; margin:auto;margin-top:40px;font-size:18px">Running Health Check. This may take a few minutes, please wait...0%</div>'
+			);
+
+		HCForm.dialog(Options);
+
+		RED.comms.subscribe('/zwave-js/healthcheck', processHealthResults);
+		RED.comms.subscribe(
+			'/zwave-js/healthcheckprogress',
+			processHealthCheckProgress
+		);
+
+		HCRounds = Rounds;
+
+		ControllerCMD(
+			'DriverAPI',
+			'checkLifelineHealth',
+			undefined,
+			[selectedNode, Rounds],
+			true
+		);
+	}
+
+	function HealthCheck() {
+		const Buttons = {
+			'Yes (1 Round)': () => {
+				RenderHealthCheck(1);
+			},
+			'Yes (3 Rounds)': () => {
+				RenderHealthCheck(3);
+			},
+			'Yes (5 Rounds)': () => {
+				RenderHealthCheck(5);
+			}
+		};
+		modalPrompt(
+			"A Node Health Check involves running diagnostics on a node and it's routing table, Care should be taken not to run this whilst large amounts of traffic is flowing through the network. Continue?",
+			'Run Diagnostics?',
+			Buttons,
+			true
+		);
+	}
+
+	function KeepAwake() {
+		const Node = $(
+			".red-ui-treeList-label.zwave-js-node-row[data-nodeid='" +
+				selectedNode +
+				"']"
+		).data('info');
+
+		Node.keepAwake = Node.keepAwake ? false : true;
+
+		ControllerCMD('ControllerAPI', 'keepNodeAwake', undefined, [
+			selectedNode,
+			Node.keepAwake
+		]);
+
+		MarkSleepButton();
+	}
+	function MarkSleepButton() {
+		const Current = $(
+			".red-ui-treeList-label.zwave-js-node-row[data-nodeid='" +
+				selectedNode +
+				"']"
+		).data('info').keepAwake;
+
+		if (Current) {
+			$('#zwave-js-keep-awake').html('[ Keep Awake ]');
+		} else {
+			$('#zwave-js-keep-awake').html('Keep Awake');
+		}
+	}
+
 	let FirmwareForm;
 	let FWRunning = false;
 	function AbortUpdate() {
@@ -1516,11 +1664,26 @@ const ZwaveJsUI = (function () {
 			.html('Refresh Property List')
 			.appendTo(set4);
 
+		// KW HC
+		const KWHC = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
+		$('<button id="zwave-js-keep-awake">')
+			.addClass('red-ui-button red-ui-button-small')
+			.css('min-width', '125px')
+			.click(KeepAwake)
+			.html('Keep Awake')
+			.appendTo(KWHC);
+		$('<button>')
+			.addClass('red-ui-button red-ui-button-small')
+			.css('min-width', '125px')
+			.click(HealthCheck)
+			.html('Run Health Check')
+			.appendTo(KWHC);
+
 		// DB
 		const DB = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
+			.css('min-width', '250px')
 			.click(OpenDB)
 			.html('View in Config Database')
 			.appendTo(DB);
@@ -1885,6 +2048,9 @@ const ZwaveJsUI = (function () {
 		deselectCurrentNode();
 
 		selectedNode = id;
+
+		MarkSleepButton();
+
 		const selectedEl = $(`#zwave-js-node-list [data-nodeid='${id}']`);
 		selectedEl.addClass('selected');
 		$('#zwave-js-selected-node-id').text(selectedNode);

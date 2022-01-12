@@ -1,0 +1,82 @@
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="initial-scale=1, maximum-scale=1" />
+		<title>Node Red ZWave-JS Smart Start Scanner</title>
+		<script src="jquery-3.6.0.min.js"></script>
+		<script src="jsQR.js"></script>
+		<script src="scripts.js"></script>
+		<style type="text/css">
+			body {
+				font-family: HelveticaNeue-Light, Roboto;
+				font-size: 18px;
+			}
+		</style>
+	</head>
+	<body>
+		<br />
+		<p style="text-align: center">
+			Node Red ZWave-JS Smart Start Scanner.<br />
+			Live Scanner
+		</p>
+		<canvas
+			id="CameraView"
+			style="
+				width: 300;
+				margin: auto;
+				display: block;
+				-webkit-border-radius: 8px;
+				-moz-border-radius: 8px;
+				border-radius: 8px;
+				border-style: solid;
+				border-color: blue;
+			"
+			hidden
+		></canvas>
+		<br />
+		<div style="margin: auto; text-align: center">
+			<div
+				style="
+					display: inline-block;
+					margin: auto;
+					border-style: solid;
+					border-width: 4px;
+					border-color: #ffbf00;
+					padding: 3px;
+				"
+			>
+				Processing
+			</div>
+			<div
+				style="
+					display: inline-block;
+					margin: auto;
+					border-style: solid;
+					border-width: 4px;
+					border-color: #00ff00;
+					padding: 3px;
+				"
+			>
+				Accepted
+			</div>
+			<div
+				style="
+					display: inline-block;
+					margin: auto;
+					border-style: solid;
+					border-width: 4px;
+					border-color: #ff0000;
+					padding: 3px;
+				"
+			>
+				Rejected
+			</div>
+		</div>
+
+		<script>
+			SendActive().then(() => {
+				Start();
+			});
+		</script>
+	</body>
+</html>

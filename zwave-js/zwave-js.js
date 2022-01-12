@@ -1,6 +1,7 @@
 module.exports = function (RED) {
 	const Path = require('path');
 	const ModulePackage = require('../package.json');
+	const { NodeEventEmitter } = require('./events');
 	const ZWaveJS = require('zwave-js');
 	const {
 		createDefaultTransportFormat,
@@ -26,7 +27,6 @@ module.exports = function (RED) {
 	const event_AllNodesReady = new SanitizedEventName('all nodes ready');
 	const event_NodeAdded = new SanitizedEventName('node added');
 	const event_NodeRemoved = new SanitizedEventName('node removed');
-	const event_StatisticsUpdated = new SanitizedEventName('statistics updated');
 	const event_InclusionStarted = new SanitizedEventName('inclusion started');
 	const event_InclusionFailed = new SanitizedEventName('inclusion failed');
 	const event_InclusionStopped = new SanitizedEventName('inclusion stopped');
@@ -73,9 +73,6 @@ module.exports = function (RED) {
 		let DriverAttempts = 0;
 		const RetryTime = 5000;
 		let DriverOptions = {};
-
-		const NodeStats = {};
-		let ControllerStats;
 
 		// Log function
 		const Log = function (level, label, direction, tag1, msg, tag2) {
@@ -179,7 +176,7 @@ module.exports = function (RED) {
 		});
 		UI.status('Starting Z-Wave driver...');
 
-		RED.events.on('zwjs:node:command', processMessageEvent);
+		NodeEventEmitter.on('zwjs:node:command', processMessageEvent);
 		async function processMessageEvent(MSG) {
 			await Input(MSG, undefined, undefined, true);
 		}
@@ -444,7 +441,7 @@ module.exports = function (RED) {
 			);
 			UI.unregister();
 			Driver.destroy();
-			RED.events.removeListener('zwjs:node:command', processMessageEvent);
+			NodeEventEmitter.removeListener('zwjs:node:command', processMessageEvent);
 			if (Logger !== undefined) {
 				Logger.clear();
 				Logger = undefined;
@@ -758,7 +755,8 @@ module.exports = function (RED) {
 									endpoint: 0,
 									property: 'isLow'
 								})
-							}
+							},
+							statistics: N.statistics
 						});
 					});
 					Nodes.sort((A, B) => A.nodeId - B.nodeId);
@@ -1077,6 +1075,22 @@ module.exports = function (RED) {
 			);
 
 			switch (Method) {
+				case 'checkLifelineHealth':
+					const NID = Params[0];
+					const Rounds = Params[1] || undefined;
+					const CallBack = Params[2] || undefined;
+					NodeCheck(NID);
+					const HCResult = await Driver.controller.nodes
+						.get(NID)
+						.checkLifelineHealth(Rounds, CallBack);
+					Send(
+						undefined,
+						'HEALTH_CHECK_RESULT',
+						{ node: NID, health: HCResult },
+						send
+					);
+					break;
+
 				case 'installConfigUpdate':
 					let Success = false;
 					const Version = await Driver.checkForConfigUpdates();
@@ -1092,30 +1106,27 @@ module.exports = function (RED) {
 					break;
 
 				case 'getNodeStatistics':
+					const NS = {};
 					if (Params.length < 1) {
-						Send(undefined, 'NODE_STATISTICS', NodeStats, send);
-					} else {
-						const Stats = {};
-						Params.forEach((NID) => {
-							if (NodeStats.hasOwnProperty(NID)) {
-								Stats[NID] = NodeStats[NID];
-							}
+						Driver.controller.nodes.forEach((N) => {
+							NS[N.id] = N.statistics;
 						});
-						Send(undefined, 'NODE_STATISTICS', Stats, send);
+					} else {
+						Params.forEach((NID) => {
+							const _N = Driver.controller.nodes.get(NID);
+							NS[_N.id] = _N.statistics;
+						});
 					}
+					Send(undefined, 'NODE_STATISTICS', NS, send);
 					break;
 
 				case 'getControllerStatistics':
-					if (ControllerStats === undefined) {
-						Send(
-							undefined,
-							'CONTROLER_STATISTICS',
-							'Statistics Are Pending',
-							send
-						);
-					} else {
-						Send(undefined, 'CONTROLER_STATISTICS', ControllerStats, send);
-					}
+					Send(
+						undefined,
+						'CONTROLER_STATISTICS',
+						Driver.controller.statistics,
+						send
+					);
 					break;
 
 				case 'getValueDB':
@@ -1412,7 +1423,7 @@ module.exports = function (RED) {
 						_Subject,
 						'[ISOLATED] [' + IsolatedNodeId + '] Forwarding payload...'
 					);
-					RED.events.emit(`zwjs:node:event:isloated:${IsolatedNodeId}`, {
+					NodeEventEmitter.emit(`zwjs:node:event:isloated:${IsolatedNodeId}`, {
 						payload: PL
 					});
 				} else {
@@ -1423,8 +1434,8 @@ module.exports = function (RED) {
 						_Subject,
 						'[EVENT] Forwarding payload...'
 					);
-					RED.events.emit('zwjs:node:event:all', { payload: PL });
-					RED.events.emit('zwjs:node:event:' + Node.id, { payload: PL });
+					NodeEventEmitter.emit('zwjs:node:event:all', { payload: PL });
+					NodeEventEmitter.emit('zwjs:node:event:' + Node.id, { payload: PL });
 				}
 			}
 		}
@@ -1540,11 +1551,6 @@ module.exports = function (RED) {
 				Driver.controller.on(event_NodeRemoved.zwaveName, (N) => {
 					ShareNodeList();
 					Send(N, event_NodeRemoved.redName);
-				});
-
-				// Stats
-				Driver.controller.on(event_StatisticsUpdated.zwaveName, (S) => {
-					ControllerStats = S;
 				});
 
 				// Include
@@ -1697,10 +1703,6 @@ module.exports = function (RED) {
 				if (N.isControllerNode()) {
 					return;
 				}
-
-				Node.on(event_StatisticsUpdated.zwaveName, (N, S) => {
-					NodeStats[Node.id] = S;
-				});
 
 				Node.on(event_FirmwareUpdateFinished.zwaveName, (N, S) => {
 					Send(N, event_FirmwareUpdateFinished.redName, S);

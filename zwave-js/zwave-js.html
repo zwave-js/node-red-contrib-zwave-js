@@ -1,12 +1,94 @@
-﻿<script type="text/javascript" src="zwave-js/res/client.js"></script>
+﻿<script type="text/javascript" src="zwave-js/res/handlebars.min.js"></script>
+<script>
+	Handlebars.registerHelper('inc', function (value, options) {
+		return parseInt(value) + 1;
+	});
+</script>
+<script type="text/javascript" src="zwave-js/res/client.js"></script>
 <script type="text/javascript" src="zwave-js/res/vis-network.min.js"></script>
-<script type="text/javascript" src="zwave-js/res/handlebars.min.js"></script>
 <script type="text/javascript" src="zwave-js/res/jquery-steps.min.js"></script>
 <script type="text/javascript" src="zwave-js/res/qrcode.min.js"></script>
 <link rel="stylesheet" href="zwave-js/res/styles.css" />
 <link rel="stylesheet" href="zwave-js/res/jquery-steps.css" />
 
 <!-- templates used for modal dialogs *-->
+
+<!-- Health Check Result-->
+<script id="TPL_HealthCheck" type="text/x-handlebars-template">
+	<table
+		style='width: 90%; margin: auto; margin-bottom: 40px;'
+		cellpadding='5'
+		cellspacing='0'
+	>
+		<tr style='font-size: 20px;'>
+			<td style='width: 16%; text-align: center;'>Worst</td>
+			<td
+				style='text-align: center;width: 16%;font-size: 38px; font-weight: bold; color:{{MC}};'
+			>{{Worst}}</td>
+			<td style='text-align: center;width: 16%;'>Average</td>
+			<td
+				style='text-align: center;width: 16%;font-size: 38px; font-weight: bold; color:{{AC}};'
+			>{{Average}}</td>
+			<td style='text-align: center;width: 16%;'>Best</td>
+			<td
+				style='text-align: center;width: 16%;font-size: 38px; font-weight: bold; color:{{MXC}}'
+			>{{Best}}</td>
+		</tr>
+	</table>
+
+	<div style='width: 90%; margin: auto;'>Health Check</div>
+	<table class='zwave-js-health-table' cellpadding='5' cellspacing='0'>
+		<tbody>
+			<tr style='background-color: lightgray;'>
+				<td>Round</td>
+				<td>Latency</td>
+				<td>Failed Pings</td>
+				<td>Neighbors</td>
+				<td>Route Changes</td>
+				<td>SNR Margin</td>
+				<td>Min Power level</td>
+				<td>Rating</td>
+			</tr>
+			{{#rounds}}
+				<tr>
+					<td>#{{inc @index}}</td>
+					<td>{{latency}} ms</td>
+					<td>{{failedPingsNode}}</td>
+					<td>{{numNeighbors}}</td>
+					<td>{{routeChanges}}</td>
+					<td>{{snrMargin}} dBm</td>
+					<td>-{{minPowerlevel}} dBm</td>
+					<td>{{rating}}</td>
+				</tr>
+			{{/rounds}}
+		</tbody>
+	</table>
+	<div style='width: 90%; margin: auto;'>Node Statistics</div>
+	<table class='zwave-js-health-table' cellpadding='5' cellspacing='0'>
+		<tbody>
+			<tr style='background-color: lightgray;'>
+				<td>Commands TX</td>
+				<td>Commands RX</td>
+				<td>Commands Dropped TX</td>
+				<td>Commands Dropped RX</td>
+				<td>Timeouts</td>
+			</tr>
+			<tr>
+				<td>{{TX}}</td>
+				<td>{{RX}}</td>
+				<td>{{TXD}}</td>
+				<td>{{RXD}}</td>
+				<td>{{TO}}</td>
+			</tr>
+		</tbody>
+	</table>
+	<div style='width: 90%; margin: auto;'>
+		<a
+			target='_blank'
+			href='https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Driver-API#checklifelinehealth'
+		>Please see the wiki for more information.</a>
+	</div>
+</script>
 
 <!--Inclusion-->
 <script id="TPL_Include" type="text/x-handlebars-template">

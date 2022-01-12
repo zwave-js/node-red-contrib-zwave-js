@@ -6,6 +6,67 @@ let videoElement;
 let offset;
 const ScannedCodes = {};
 
+function GrabImage() {
+	SendActive().then(() => {
+		const FI = document.createElement('input');
+		FI.hidden = true;
+		document.body.append(FI);
+		FI.addEventListener('change', SubmitPhoto, false);
+		FI.setAttribute('type', 'file');
+		FI.setAttribute('accept', 'image/*;capture=camera');
+		FI.click();
+	});
+}
+
+function SubmitPhoto(e) {
+	const File = e.target.files[0];
+	const _URL = URL.createObjectURL(File);
+	const IMG = new Image();
+	IMG.onload = function () {
+		const MAX_WIDTH = 500;
+		const MAX_HEIGHT = 500;
+
+		let width = IMG.width;
+		let height = IMG.height;
+
+		if (width > height) {
+			if (width > MAX_WIDTH) {
+				height = height * (MAX_WIDTH / width);
+				width = MAX_WIDTH;
+			}
+		} else {
+			if (height > MAX_HEIGHT) {
+				width = width * (MAX_HEIGHT / height);
+				height = MAX_HEIGHT;
+			}
+		}
+
+		const CV = document.createElement('canvas');
+		CV.width = width;
+		CV.height = height;
+		CV.getContext('2d').drawImage(this, 0, 0, width, height);
+		const ImageData = CV.getContext('2d').getImageData(0, 0, width, height);
+		const code = jsQR(ImageData.data, ImageData.width, ImageData.height, {
+			inversionAttempts: 'dontInvert'
+		});
+		if (code) {
+			SendCode(code, true).then(() => {
+				if (ScannedCodes[code.data].ok) {
+					alert('Device Accepted.');
+				} else {
+					alert('Not A Smart Start Device.');
+				}
+			});
+		} else {
+			alert('No QR Found.');
+		}
+		URL.revokeObjectURL(_URL);
+		e.target.remove();
+		CV.remove();
+	};
+	IMG.src = _URL;
+}
+
 function Start() {
 	canvasElement = $('#CameraView')[0];
 	canvasCTX = canvasElement.getContext('2d');
@@ -18,24 +79,6 @@ function Start() {
 			videoElement.setAttribute('playsinline', true); // required to tell iOS safari we don't want fullscreen
 			videoElement.play();
 			requestAnimationFrame(tick);
-
-			const [track] = stream.getVideoTracks();
-			const capabilities = track.getCapabilities();
-			const settings = track.getSettings();
-
-			if ('zoom' in settings) {
-				const Z = document.getElementById('VideoZOOM');
-				Z.min = capabilities.zoom.min;
-				Z.max = capabilities.zoom.max;
-				Z.step = capabilities.zoom.step;
-				Z.value = settings.zoom;
-				Z.oninput = function (event) {
-					track.applyConstraints({
-						advanced: [{ zoom: event.target.value }]
-					});
-				};
-				Z.style.display = 'block';
-			}
 		});
 }
 
@@ -136,20 +179,26 @@ function RenderOutline(Code, Color) {
 	drawLine(Code.location.bottomLeftCorner, Code.location.topLeftCorner, Color);
 }
 
-function SendCode(Code) {
+function SendCode(Code, skipRender) {
 	return new Promise((resolve) => {
 		let Color;
-		Color = '#ffbf00';
-		RenderOutline(Code, Color);
+		if (!skipRender) {
+			Color = '#ffbf00';
+			RenderOutline(Code, Color);
+		}
 		const Entry = ScannedCodes[Code.data];
 		if (Entry !== undefined) {
 			if (Entry.ok) {
-				Color = '#00FF00';
-				RenderOutline(Code, Color);
+				if (!skipRender) {
+					Color = '#00FF00';
+					RenderOutline(Code, Color);
+				}
 				resolve();
 			} else {
-				Color = '#FF0000';
-				RenderOutline(Code, Color);
+				if (!skipRender) {
+					Color = '#FF0000';
+					RenderOutline(Code, Color);
+				}
 				resolve();
 			}
 		} else {

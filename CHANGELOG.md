@@ -1,5 +1,21 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 6.5.0
+
+    **New Features**
+     - Added the ability to keep a node awake via the UI
+     - Added a new method in the UI to report the health of a nodes conection to the controller.
+     - Added native camera/image capture controls for Smart Start QR Scanning on the mobile client.
+    
+    **Changes**
+     - Replace **EventEmitter** with an internal instance - to address a **MaxListenersExceeded** warning.
+     - Statistics are now taken directly from the node/controller (previously taken from captured event data)
+     - Small improvements to UI server component structure.
+     - Bump ZWJS to 8.10.2  
+     - Bump Winston to 3.4.0  
+     - Bump Winston-Transports to 4.4.2  
+     - Bump ESLint to 8.6.0  
+ 
   - 6.4.1
 
     **Changes**
