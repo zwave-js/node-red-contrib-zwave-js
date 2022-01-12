@@ -1078,10 +1078,11 @@ module.exports = function (RED) {
 				case 'checkLifelineHealth':
 					const NID = Params[0];
 					const Rounds = Params[1] || undefined;
+					const CallBack = Params[2] || undefined;
 					NodeCheck(NID);
 					const HCResult = await Driver.controller.nodes
 						.get(NID)
-						.checkLifelineHealth(Rounds);
+						.checkLifelineHealth(Rounds, CallBack);
 					Send(
 						undefined,
 						'HEALTH_CHECK_RESULT',

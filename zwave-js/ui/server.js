@@ -30,6 +30,18 @@ const SendNodeStatus = (node, status) => {
 	});
 };
 
+const SendHealthCheck = (HealthCheck, Statistics) => {
+	_RED.comms.publish(`/zwave-js/healthcheck`, {
+		payload: { HealthCheck, Statistics }
+	});
+};
+
+const SendHealthCheckProgress = (Round) => {
+	_RED.comms.publish(`/zwave-js/healthcheckprogress`, {
+		payload: Round
+	});
+};
+
 const SendNodeEvent = (type, node, payload) => {
 	_RED.comms.publish(`/zwave-js/cmd/${node.id}`, {
 		type: type,
@@ -310,6 +322,32 @@ module.exports = {
 
 					const ResponseProcessor = (Response) => {
 						clearTimeout(timeout);
+
+						// Health Checks!
+						// These can take a few minutes, and UA timeouts cant be changed :(
+						// We therefore deliver HCs via the socket API - and dont wait for them on the client interface.
+
+						if (Response.payload.event === 'HEALTH_CHECK_RESULT') {
+							const Health = Response.payload.object.health;
+							const Node = Response.payload.object.node;
+							let Stats;
+
+							const StatReq = {
+								payload: {
+									mode: 'DriverAPI',
+									method: 'getNodeStatistics',
+									params: [Node]
+								}
+							};
+
+							_Context.input(StatReq, (Result) => {
+								Stats = Result.payload.object;
+								SendHealthCheck(Health, Stats);
+							});
+
+							return; // no need to do anything else here.
+						}
+
 						if (!req.body.noWait) {
 							res.send(Response.payload);
 						}
@@ -328,6 +366,15 @@ module.exports = {
 						payload: req.body
 					};
 
+					if (
+						PL.payload.mode === 'DriverAPI' &&
+						PL.payload.method === 'checkLifelineHealth'
+					) {
+						const HCProgress = (R) => {
+							SendHealthCheckProgress(R);
+						};
+						PL.payload.params.push(HCProgress);
+					}
 					_Context.input(PL, ResponseProcessor, DoneHandler);
 				} catch (err) {
 					clearTimeout(timeout);

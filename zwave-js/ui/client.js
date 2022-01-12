@@ -112,7 +112,59 @@ const ZwaveJsUI = (function () {
 			});
 	}
 
-	function RenderHealthCheck() {
+	let HCForm;
+	let HCRounds;
+	function processHealthCheckProgress(topic, data) {
+		const P = Math.round((100 * data.payload) / HCRounds);
+		HCForm.html(
+			`<div style="width:430px; margin:auto;margin-top:40px;font-size:18px">Running Health Check. This may take a few minutes, please wait...${P}%</div>`
+		);
+	}
+	function processHealthResults(topic, data) {
+		const RatingsArray = data.payload.HealthCheck.results.map((R) => R.rating);
+
+		const Min = Math.min(...RatingsArray);
+		const Max = Math.max(...RatingsArray);
+		const Average = Math.round(
+			RatingsArray.reduce((a, b) => a + b, 0) / RatingsArray.length
+		);
+
+		const MC = Min < 4 ? 'red' : Min < 6 ? 'orange' : 'green';
+		const AC = Average < 4 ? 'red' : Average < 6 ? 'orange' : 'green';
+		const MXC = Max < 4 ? 'red' : Max < 6 ? 'orange' : 'green';
+
+		const Data = {
+			rounds: data.payload.HealthCheck.results,
+			Worst: Min,
+			Best: Max,
+			Average: Average,
+			MC: MC,
+			AC: AC,
+			MXC: MXC
+		};
+
+		Data.TX = data.payload.Statistics[selectedNode.toString()].commandsTX;
+		Data.RX = data.payload.Statistics[selectedNode.toString()].commandsRX;
+		Data.TXD =
+			data.payload.Statistics[selectedNode.toString()].commandsDroppedTX;
+		Data.RXD =
+			data.payload.Statistics[selectedNode.toString()].commandsDroppedRX;
+		Data.TO = data.payload.Statistics[selectedNode.toString()].timeoutResponse;
+
+		HCForm.html('');
+		const Template = $('#TPL_HealthCheck').html();
+		const templateScript = Handlebars.compile(Template);
+		const HTML = templateScript(Data);
+		HCForm.append(HTML);
+
+		RED.comms.unsubscribe('/zwave-js/healthcheck', processHealthResults);
+		RED.comms.unsubscribe(
+			'/zwave-js/healthcheckprogress',
+			processHealthCheckProgress
+		);
+	}
+
+	function RenderHealthCheck(Rounds) {
 		const Options = {
 			draggable: false,
 			modal: true,
@@ -123,71 +175,52 @@ const ZwaveJsUI = (function () {
 			minHeight: 75,
 			buttons: {
 				Abort: function () {
+					RED.comms.unsubscribe('/zwave-js/healthcheck', processHealthResults);
+					RED.comms.unsubscribe(
+						'/zwave-js/healthcheckprogress',
+						processHealthCheckProgress
+					);
 					$(this).dialog('destroy');
 				}
 			}
 		};
 
-		const HCForm = $('<div>')
+		HCForm = $('<div>')
 			.css({ padding: 10 })
 			.html(
-				'Running Health Check. This may take upto 1-2 minutes, please wait...'
+				'<div style="width:430px; margin:auto;margin-top:40px;font-size:18px">Running Health Check. This may take a few minutes, please wait...0%</div>'
 			);
 
 		HCForm.dialog(Options);
+
+		RED.comms.subscribe('/zwave-js/healthcheck', processHealthResults);
+		RED.comms.subscribe(
+			'/zwave-js/healthcheckprogress',
+			processHealthCheckProgress
+		);
+
+		HCRounds = Rounds;
+
 		ControllerCMD(
 			'DriverAPI',
 			'checkLifelineHealth',
 			undefined,
-			[selectedNode],
-			false
-		).then(({ object }) => {
-			const RatingsArray = object.health.results.map((R) => R.rating);
-
-			const Min = Math.min(...RatingsArray);
-			const Max = Math.max(...RatingsArray);
-			const Average =
-				RatingsArray.reduce((a, b) => a + b, 0) / RatingsArray.length;
-
-			const MC = Min < 4 ? 'red' : Min < 6 ? 'orange' : 'green';
-			const AC = Average < 4 ? 'red' : Average < 6 ? 'orange' : 'green';
-			const MXC = Max < 4 ? 'red' : Max < 6 ? 'orange' : 'green';
-
-			const Data = {
-				rounds: object.health.results,
-				Worst: Min,
-				Best: Max,
-				Average: Average,
-				MC: MC,
-				AC: AC,
-				MXC: MXC
-			};
-
-			ControllerCMD(
-				'DriverAPI',
-				'getNodeStatistics',
-				undefined,
-				[selectedNode],
-				false
-			).then(({ object }) => {
-				Data.TX = object[selectedNode.toString()].commandsTX;
-				Data.RX = object[selectedNode.toString()].commandsRX;
-				Data.TXD = object[selectedNode.toString()].commandsDroppedTX;
-				Data.RXD = object[selectedNode.toString()].commandsDroppedRX;
-				Data.TO = object[selectedNode.toString()].timeoutResponse;
-
-				HCForm.html('');
-				const Template = $('#TPL_HealthCheck').html();
-				const templateScript = Handlebars.compile(Template);
-				const HTML = templateScript(Data);
-				HCForm.append(HTML);
-			});
-		});
+			[selectedNode, Rounds],
+			true
+		);
 	}
 
 	function HealthCheck() {
 		const Buttons = {
-			Yes: RenderHealthCheck
+			'Yes (1 Round)': () => {
+				RenderHealthCheck(1);
+			},
+			'Yes (3 Rounds)': () => {
+				RenderHealthCheck(3);
+			},
+			'Yes (5 Rounds)': () => {
+				RenderHealthCheck(5);
+			}
 		};
 		modalPrompt(
 			"A Node Health Check involves running diagnostics on a node and it's routing table, Care should be taken not to run this whilst large amounts of traffic is flowing through the network. Continue?",
@@ -770,7 +803,7 @@ const ZwaveJsUI = (function () {
 
 	function ControllerCMD(mode, method, node, params, dontwait) {
 		IsDriverReady();
-		const NoTimeoutFor = ['installConfigUpdate', 'checkLifelineHealth'];
+		const NoTimeoutFor = ['installConfigUpdate'];
 
 		const Options = {
 			url: `zwave-js/cmd`,
