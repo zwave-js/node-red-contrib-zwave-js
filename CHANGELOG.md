@@ -1,5 +1,16 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 6.5.1
+
+    **Fixes**
+     - Battery icon/popup text in the UI is now (finally) kept in sync.
+     - Driver readiness  for Health Checks and Keep Alive requests in the UI
+
+    **Changes**
+     - Improvements to node redynees in the UI
+     - Bump ZWJS to 8.11.0  
+
+
   - 6.5.0
 
     **New Features**
