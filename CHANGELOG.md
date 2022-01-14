@@ -7,7 +7,7 @@
      - Driver readiness  for Health Checks and Keep Alive requests in the UI
 
     **Changes**
-     - Improvements to node redynees in the UI
+     - Improvements to node readiness in the UI
      - Bump ZWJS to 8.11.0  
 
 
