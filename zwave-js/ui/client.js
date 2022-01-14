@@ -211,6 +211,7 @@ const ZwaveJsUI = (function () {
 	}
 
 	function HealthCheck() {
+		IsDriverReady();
 		const Buttons = {
 			'Yes (1 Round)': () => {
 				RenderHealthCheck(1);
@@ -231,6 +232,7 @@ const ZwaveJsUI = (function () {
 	}
 
 	function KeepAwake() {
+		IsDriverReady();
 		const Node = $(
 			".red-ui-treeList-label.zwave-js-node-row[data-nodeid='" +
 				selectedNode +
@@ -1827,7 +1829,9 @@ const ZwaveJsUI = (function () {
 					`[data-nodeid='${data.node}']`
 				);
 				if (data.status == 'READY') {
-					nodeRow.find('.zwave-js-node-row-ready').html(renderReadyIcon(true));
+					if (DriverReady) {
+						GetNodes();
+					}
 				} else {
 					nodeRow
 						.find('.zwave-js-node-row-status')
@@ -1876,32 +1880,48 @@ const ZwaveJsUI = (function () {
 		}, 1000);
 	}
 
+	const BatteryUIElements = {};
 	function renderBattery(node) {
 		const i = $('<i>');
-		let Class;
-		switch (node.powerSource.type) {
-			case 'mains':
-				i.addClass('fa fa-plug');
-				RED.popover.tooltip(i, 'Mains Powered');
-				break;
-			default:
-				node.powerSource.level > 90
-					? (Class = 'fa fa-battery-full')
-					: node.powerSource.level > 65
-					? (Class = 'fa fa-battery-three-quarters')
-					: node.powerSource.level > 35
-					? (Class = 'fa fa-battery-half')
-					: node.powerSource.level > 10
-					? (Class = 'fa fa-battery-quarter')
-					: (Class = 'fa fa-battery-empty');
 
-				if (node.powerSource.isLow) {
-					i.css({ color: 'red' });
-				}
-				RED.popover.tooltip(i, 'Level: ' + node.powerSource.level);
+		if (node.interviewStage === 'Complete') {
+			switch (node.powerSource.type) {
+				case 'mains':
+					i.addClass('fa fa-plug');
+					BatteryUIElements[node.nodeId] = RED.popover.tooltip(
+						i,
+						'Mains Powered'
+					);
+					break;
+
+				default:
+					let Class;
+					node.powerSource.level > 90
+						? (Class = 'fa fa-battery-full')
+						: node.powerSource.level > 65
+						? (Class = 'fa fa-battery-three-quarters')
+						: node.powerSource.level > 35
+						? (Class = 'fa fa-battery-half')
+						: node.powerSource.level > 10
+						? (Class = 'fa fa-battery-quarter')
+						: (Class = 'fa fa-battery-empty');
+
+					if (node.powerSource.isLow) {
+						i.css({ color: 'red' });
+					}
+					i.addClass(Class);
+					BatteryUIElements[node.nodeId] = RED.popover.tooltip(
+						i,
+						'Level: ' + node.powerSource.level
+					);
+			}
+		} else {
+			i.addClass('fa fa-hourglass');
+			BatteryUIElements[node.nodeId] = RED.popover.tooltip(
+				i,
+				'Power Source not yet known'
+			);
 		}
-
-		i.addClass(Class);
 		return i;
 	}
 
@@ -1958,7 +1978,11 @@ const ZwaveJsUI = (function () {
 			.addClass('red-ui-treeList-label zwave-js-node-row')
 			.attr('data-nodeid', node.nodeId)
 			.data('info', node)
-			.click(() => selectNode(node.nodeId))
+			.click(() => {
+				node.ready
+					? selectNode(node.nodeId)
+					: modalAlert('This node is not ready', 'Node Not Ready');
+			})
 			.append(
 				$('<div>').html(node.nodeId).addClass('zwave-js-node-row-id'),
 				$('<div>').html(node.name).addClass('zwave-js-node-row-name'),
@@ -1966,7 +1990,7 @@ const ZwaveJsUI = (function () {
 					.html(renderStatusIcon(node.status.toUpperCase()))
 					.addClass('zwave-js-node-row-status'),
 				$('<div>')
-					.html(renderReadyIcon(node.ready))
+					.html(renderReadyIcon(node))
 					.addClass('zwave-js-node-row-ready'),
 				$('<div>')
 					.html(renderBattery(node))
@@ -1975,12 +1999,17 @@ const ZwaveJsUI = (function () {
 			);
 	}
 
-	function renderReadyIcon(isReady) {
+	function renderReadyIcon(node) {
 		const i = $('<i>');
 
-		if (isReady) {
-			i.addClass('fa fa-thumbs-up');
-			RED.popover.tooltip(i, 'Ready');
+		if (node.interviewStage !== 'Complete') {
+			i.addClass('fa fa-hourglass');
+			RED.popover.tooltip(i, 'Pending Completed Interview');
+		} else {
+			if (node.ready) {
+				i.addClass('fa fa-thumbs-up');
+				RED.popover.tooltip(i, 'Ready');
+			}
 		}
 
 		return i;
@@ -2339,7 +2368,9 @@ const ZwaveJsUI = (function () {
 					: (Class = 'fa fa-battery-empty');
 				BatterySymbol.removeClass();
 				BatterySymbol.addClass(Class);
-				RED.popover.tooltip(BatterySymbol, 'Level: ' + data.payload.newValue);
+				BatteryUIElements[data.node].setContent(
+					'Level: ' + data.payload.newValue
+				);
 				break;
 
 			case 'isLow':
