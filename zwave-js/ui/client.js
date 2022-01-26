@@ -212,6 +212,7 @@ const ZwaveJsUI = (function () {
 
 	function HealthCheck() {
 		IsDriverReady();
+		IsNodeSelected();
 		const Buttons = {
 			'Yes (1 Round)': () => {
 				RenderHealthCheck(1);
@@ -233,6 +234,7 @@ const ZwaveJsUI = (function () {
 
 	function KeepAwake() {
 		IsDriverReady();
+		IsNodeSelected();
 		const Node = $(
 			".red-ui-treeList-label.zwave-js-node-row[data-nodeid='" +
 				selectedNode +
@@ -793,6 +795,13 @@ const ZwaveJsUI = (function () {
 		return $.ajax(Options);
 	}
 
+	function IsNodeSelected() {
+		if (selectedNode === undefined) {
+			modalAlert('Please select a Node.', 'No Node Selected');
+			throw new Error('No Node Selected');
+		}
+	}
+
 	function IsDriverReady() {
 		if (!DriverReady) {
 			modalAlert(
@@ -1268,6 +1277,7 @@ const ZwaveJsUI = (function () {
 
 	function RenameNode(KB, El) {
 		IsDriverReady();
+		IsNodeSelected();
 		let input;
 		let Button;
 		if (KB === true) {
@@ -1302,6 +1312,7 @@ const ZwaveJsUI = (function () {
 
 	function SetNodeLocation(KB, El) {
 		IsDriverReady();
+		IsNodeSelected();
 		let input;
 		let Button;
 		if (KB === true) {
@@ -1350,6 +1361,7 @@ const ZwaveJsUI = (function () {
 	}
 
 	function OpenDB() {
+		IsNodeSelected();
 		const info =
 			$(`.zwave-js-node-row.selected`).data('info')?.deviceConfig || {};
 		const id = [
@@ -1379,6 +1391,7 @@ const ZwaveJsUI = (function () {
 					if (err.status !== 504) {
 						modalAlert(err.responseText, 'Could Not Remove Node');
 					}
+
 					Removing = false;
 				});
 			}
@@ -1604,6 +1617,7 @@ const ZwaveJsUI = (function () {
 			.css('min-width', '125px')
 			.click(() => {
 				IsDriverReady();
+				IsNodeSelected();
 				InterviewNode();
 			})
 			.html('Interview Node')
@@ -1615,6 +1629,7 @@ const ZwaveJsUI = (function () {
 			.css('min-width', '125px')
 			.click(() => {
 				IsDriverReady();
+				IsNodeSelected();
 				StartNodeHeal();
 			})
 			.html('Heal Node')
@@ -1628,6 +1643,7 @@ const ZwaveJsUI = (function () {
 			.css('min-width', '125px')
 			.click(() => {
 				IsDriverReady();
+				IsNodeSelected();
 				RemoveFailedNode();
 			})
 			.html('Remove Failed Node')
@@ -1638,6 +1654,7 @@ const ZwaveJsUI = (function () {
 			.css('min-width', '125px')
 			.click(() => {
 				IsDriverReady();
+				IsNodeSelected();
 				ShowReplacePrompt();
 			})
 			.html('Replace Failed Node')
@@ -1651,6 +1668,7 @@ const ZwaveJsUI = (function () {
 			.css('min-width', '125px')
 			.click(() => {
 				IsDriverReady();
+				IsNodeSelected();
 				AssociationMGMT();
 			})
 			.html('Association Management')
@@ -1661,6 +1679,7 @@ const ZwaveJsUI = (function () {
 			.css('min-width', '125px')
 			.click(() => {
 				IsDriverReady();
+				IsNodeSelected();
 				getProperties();
 			})
 			.html('Refresh Property List')
@@ -1762,6 +1781,7 @@ const ZwaveJsUI = (function () {
 					ClearIETimer();
 					ClearSecurityCountDown();
 					GetNodes();
+					selectedNode = undefined;
 					StepsAPI.setStepIndex(StepList.RemoveDone);
 					$('#IEButton').text('Close');
 				}
