@@ -1790,11 +1790,13 @@ const ZwaveJsUI = (function () {
 
 			case 'node-inclusion-step':
 				if (data.event === 'grant security') {
+					$('#IEButton').text('Abort S2 Boostrap');
 					ListRequestedClass(data.classes);
 					ClearIETimer();
 					StartSecurityCountDown();
 				}
 				if (data.event === 'verify dsk') {
+					$('#IEButton').text('Abort S2 Boostrap');
 					DisplayDSK(data.dsk);
 					ClearIETimer();
 					StartSecurityCountDown();
