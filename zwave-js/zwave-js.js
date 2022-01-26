@@ -221,6 +221,41 @@ module.exports = function (RED) {
 			DriverOptions.interview = {
 				queryAllUserCodes: true
 			};
+		} else {
+			Log(
+				'debug',
+				'NDERED',
+				undefined,
+				'[options] [interview.queryAllUserCodes]',
+				'Disabled'
+			);
+			DriverOptions.interview = {
+				queryAllUserCodes: false
+			};
+		}
+
+		// Optimsitic Value Updates
+		if (
+			config.disableOptimisticValueUpdate !== undefined &&
+			config.disableOptimisticValueUpdate
+		) {
+			Log(
+				'debug',
+				'NDERED',
+				undefined,
+				'[options] [disableOptimisticValueUpdate]',
+				'Enabled'
+			);
+			DriverOptions.disableOptimisticValueUpdate = true;
+		} else {
+			Log(
+				'debug',
+				'NDERED',
+				undefined,
+				'[options] [disableOptimisticValueUpdate]',
+				'Disabled'
+			);
+			DriverOptions.disableOptimisticValueUpdate = false;
 		}
 
 		// Soft Reset

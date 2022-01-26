@@ -856,7 +856,8 @@
 			customConfigPath: { value: undefined },
 			intvwUserCodes: { value: false },
 			softResetUSB: { value: false },
-			outputs: { value: 1 }
+			outputs: { value: 1 },
+			disableOptimisticValueUpdate: { value: false }
 		},
 		inputs: 1,
 		outputs: 1,
@@ -1057,6 +1058,10 @@
 	        <option value="slow">Slow</option>
 	        <option value="fast">Fast</option>
 	    </select>
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-disableOptimisticValueUpdate" style="width:130px"><i class="fa fa-pencil"></i> Disbale Optimistic Updates</label>
+	    <input type="checkbox" id="node-input-disableOptimisticValueUpdate">
 	</div>
 	<div class="form-row">
 	    <label  for="node-input-intvwUserCodes" style="width:130px"><i class="fa fa-pencil"></i> Lock Code Intvw</label>
