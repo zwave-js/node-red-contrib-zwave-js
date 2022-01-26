@@ -413,6 +413,13 @@ module.exports = {
 				});
 			});
 
+			_Context.controller.on('exclusion stopped', () => {
+				_RED.comms.publish(`/zwave-js/cmd`, {
+					type: 'node-inclusion-step',
+					event: 'exclusion stopped'
+				});
+			});
+
 			_Context.controller.on('node added', (N, IR) => {
 				WireNodeEvents(N);
 				_RED.comms.publish(`/zwave-js/cmd`, {

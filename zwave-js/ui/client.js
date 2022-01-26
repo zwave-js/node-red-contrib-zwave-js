@@ -25,7 +25,8 @@ const StepList = {
 	SmartStart: 10,
 	SmartStartList: 11,
 	SmartStartListEdit: 12,
-	SmartStartDone: 13
+	SmartStartDone: 13,
+	RemoveDoneUnconfirmed: 14
 };
 
 const JSONFormatter = {};
@@ -1805,6 +1806,14 @@ const ZwaveJsUI = (function () {
 				if (data.event === 'exclusion started') {
 					StepsAPI.setStepIndex(StepList.Remove);
 					StartIECountDown();
+				}
+				if (data.event === 'exclusion stopped') {
+					ClearIETimer();
+					ClearSecurityCountDown();
+					//GetNodes();
+					//selectedNode = undefined;
+					StepsAPI.setStepIndex(StepList.RemoveDoneUnconfirmed);
+					$('#IEButton').text('Close');
 				}
 				if (data.event === 'aborted') {
 					StepsAPI.setStepIndex(StepList.Aborted);

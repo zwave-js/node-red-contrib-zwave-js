@@ -108,6 +108,7 @@
 			<li data-step-target='SmartStartList'></li>
 			<li data-step-target='SmartStartListEdit'></li>
 			<li data-step-target='SmartStartDone'></li>
+			<li data-step-target='RemoveDoneUnconfirmed'></li>
 		</ul>
 		<div class='step-content' style='border: none;'>
 			<!-- Secuity Mode-->
@@ -405,7 +406,7 @@
 				<table style='width: 100%; height: 290px;'>
 					<tr>
 						<td style='text-align: center;'>
-							<img src='zwave-js/res/NodeAddedInsecure.png' width='200px' />
+							<img src='zwave-js/res/NodeError.png' width='200px' />
 						</td>
 					</tr>
 					<tr>
@@ -478,7 +479,7 @@
 				<table style='width: 100%; height: 290px;'>
 					<tr>
 						<td style='text-align: center;'>
-							<img src='zwave-js/res/NodeAddedInsecure.png' width='200px' />
+							<img src='zwave-js/res/NodeError.png' width='200px' />
 						</td>
 					</tr>
 					<tr>
@@ -585,6 +586,21 @@
 				<p>The rate at which this happens, is down to the device, but once the
 					broadcast has been recieved, the device should get interviewed and
 					added to your network.</p>
+			</div>
+			<!--Remove Done Uncofirmed-->
+			<div class='step-tab-panel' data-step='RemoveDoneUnconfirmed'>
+				<br />
+				<table style='width: 100%; height: 290px;'>
+					<tr>
+						<td style='text-align: center;'>
+							<img src='zwave-js/res/NodeError.png' width='200px' />
+						</td>
+					</tr>
+					<tr>
+						<td style='text-align: center;'>Node exclusion has finished.<br />No
+							nodes were removed from this network.</td>
+					</tr>
+				</table>
 			</div>
 		</div>
 	</div>
