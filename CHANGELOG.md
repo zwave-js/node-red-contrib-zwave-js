@@ -1,5 +1,19 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 6.5.2
+
+    **Fixes**
+     - Dont soley depend on the **node removed** event to progress the exclusion Wizard.
+     - Check if a node is selected before opening up a dialog.
+
+    **New Features**
+     - Expose the Driver option to disable Optimistic Value Updates
+
+    **Changes**
+     - Renamed the **Abort** button during S2 inclusion to better identify its affect.
+     - Bump ZWJS to 8.11.2  
+     - Bump Winston to 3.5.0
+
   - 6.5.1
 
     **Fixes**
