@@ -8,7 +8,7 @@
 		"limiter": "^2.1.0",
 		"lodash": "^4.17.21",
 		"serialport": "9.2.8",
-		"winston": "^3.4.0",
+		"winston": "^3.5.0",
 		"winston-transport": "^4.4.2",
 		"zwave-js": "^8.11.2",
 		"ip": "^1.1.5"
