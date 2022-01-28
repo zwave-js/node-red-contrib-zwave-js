@@ -8,9 +8,10 @@
 
     **New Features**
      - Expose the Driver option to disable Optimistic Value Updates
+     - Added the ability to hide the status lable for device and event filter nodes.
 
     **Changes**
-     - Renamed the **Abort** button during S2 inclusion to better identify its affect.
+     - Renamed the **Abort** button during S2 inclusion to better identify its intention.
      - Bump ZWJS to 8.11.2  
      - Bump Winston to 3.5.0
 

@@ -11,7 +11,8 @@
 			messageInterval: { value: 250 },
 			isolated: { value: false },
 			outputs: { value: 1 },
-			inputs: { value: 1 }
+			inputs: { value: 1 },
+			showStatus: { value: true }
 		},
 		inputs: 1,
 		outputs: 1,
@@ -20,7 +21,8 @@
 			return this.name;
 		},
 		oneditprepare: SortUI,
-		oneditsave: SetIO
+		oneditsave: SetIO,
+		paletteLabel: "zwave-device"
 	});
 
 	function SetIO() {
@@ -286,6 +288,10 @@
 	    <label for="node-input-filteredNodeId" style="width:130px"><i class="fa fa-pencil"></i> Node ID(s)</label>
 	    <select id="node-input-filteredNodeId">
 	    </select>
+	</div>
+	<div class="form-row">
+	    <label for="node-input-showStatus" style="width:130px"><i class="fa fa-pencil"></i> Show Status</label>
+	    <input type="checkbox" id="node-input-showStatus" />
 	</div>
 	<div class="form-tips" id="node-tip">
 		    Note: This node works in conjunction with the main Z-Wave JS Controller node, therefore, ensure the controller node is in one of your flows and in a deployed state before using this node.

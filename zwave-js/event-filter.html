@@ -9,7 +9,8 @@
 			name: { value: 'ZWave Event Filter' },
 			filters: { value: [] },
 			outputs: { value: 0 },
-			changeDate: { value: undefined }
+			changeDate: { value: undefined },
+			showStatus: { value: true }
 		},
 		inputs: 1,
 		outputs: 0,
@@ -25,7 +26,8 @@
 		},
 		outputLabels: function (index) {
 			return this.filters[index].name;
-		}
+		},
+		paletteLabel: 'event-filter'
 	});
 
 	function compare(a, b) {
@@ -257,6 +259,10 @@
 	      <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
 	      <input type="text" id="node-input-name" placeholder="Filter Name">
 	  </div>
+	  <div class="form-row">
+	    <label for="node-input-showStatus" style="width:130px"><i class="fa fa-pencil"></i> Show Status</label>
+	    <input type="checkbox" id="node-input-showStatus" />
+	</div>
 
 	  <div>
 	      <ol id="filtersets" style="min-height:450px;min-width:400px"> </ol>
