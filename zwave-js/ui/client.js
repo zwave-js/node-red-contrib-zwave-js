@@ -1761,6 +1761,7 @@ const ZwaveJsUI = (function () {
 		$('#zwave-js-controller-status').html(data.status);
 	}
 
+	let RemovedShown = false;
 	function handleControllerEvent(topic, data) {
 		switch (data.type) {
 			case 'node-collection-change':
@@ -1779,6 +1780,7 @@ const ZwaveJsUI = (function () {
 					$('#IEButton').text('Close');
 				}
 				if (data.event === 'node removed') {
+					RemovedShown = true;
 					ClearIETimer();
 					ClearSecurityCountDown();
 					GetNodes();
@@ -1808,14 +1810,15 @@ const ZwaveJsUI = (function () {
 				if (data.event === 'exclusion started') {
 					StepsAPI.setStepIndex(StepList.Remove);
 					StartIECountDown();
+					RemovedShown = false;
 				}
 				if (data.event === 'exclusion stopped') {
-					ClearIETimer();
-					ClearSecurityCountDown();
-					//GetNodes();
-					//selectedNode = undefined;
-					StepsAPI.setStepIndex(StepList.RemoveDoneUnconfirmed);
-					$('#IEButton').text('Close');
+					if (!RemovedShown) {
+						ClearIETimer();
+						ClearSecurityCountDown();
+						StepsAPI.setStepIndex(StepList.RemoveDoneUnconfirmed);
+						$('#IEButton').text('Close');
+					}
 				}
 				if (data.event === 'aborted') {
 					StepsAPI.setStepIndex(StepList.Aborted);
