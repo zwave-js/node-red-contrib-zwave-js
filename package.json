@@ -1,6 +1,6 @@
 {
 	"name": "node-red-contrib-zwave-js",
-	"version": "6.5.1",
+	"version": "6.5.2",
 	"license": "MIT",
 	"description": "An extremely powerful, easy to use, and feature rich Z-Wave node for Node Red, based on Z-Wave JS.",
 	"dependencies": {
@@ -8,13 +8,13 @@
 		"limiter": "^2.1.0",
 		"lodash": "^4.17.21",
 		"serialport": "9.2.8",
-		"winston": "^3.4.0",
+		"winston": "^3.5.0",
 		"winston-transport": "^4.4.2",
-		"zwave-js": "^8.11.0",
+		"zwave-js": "^8.11.2",
 		"ip": "^1.1.5"
 	},
 	"devDependencies": {
-		"eslint": "^8.6.0",
+		"eslint": "^8.7.0",
 		"prettier": "^2.5.1"
 	},
 	"engines": {

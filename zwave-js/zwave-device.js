@@ -6,6 +6,18 @@ module.exports = function (RED) {
 		RED.nodes.createNode(this, config);
 		const RedNode = this;
 
+		function UpdateStatus(Color, Shape, Text) {
+			if (config.showStatus === undefined || config.showStatus) {
+				RedNode.status({
+					fill: Color,
+					shape: Shape,
+					text: Text
+				});
+			} else {
+				RedNode.status({});
+			}
+		}
+
 		const LimiterSettings = {
 			tokensPerInterval: 1,
 			interval: 250
@@ -73,18 +85,10 @@ module.exports = function (RED) {
 			}
 			if (config.multicast) {
 				DeviceMode = 'Multicast';
-				RedNode.status({
-					fill: 'green',
-					shape: 'dot',
-					text: 'Mode: Mulitcast'
-				});
+				UpdateStatus('green', 'dot', 'Mode: Multicast');
 			} else {
 				DeviceMode = 'Multiple';
-				RedNode.status({
-					fill: 'green',
-					shape: 'dot',
-					text: 'Mode: Multiple'
-				});
+				UpdateStatus('green', 'dot', 'Mode: Multiple');
 			}
 		} else if (!isNaN(config.filteredNodeId)) {
 			DeviceMode = 'Specific';
@@ -94,24 +98,20 @@ module.exports = function (RED) {
 					processEventMessage
 				);
 			}
-			RedNode.status({
-				fill: 'green',
-				shape: 'dot',
-				text: `Mode: Specific Node (${config.filteredNodeId})`
-			});
+			UpdateStatus(
+				'green',
+				'dot',
+				`Mode: Specific Node (${config.filteredNodeId})`
+			);
 		} else if (config.filteredNodeId === 'All') {
 			DeviceMode = 'All';
 			if (Out) {
 				NodeEventEmitter.on('zwjs:node:event:all', processEventMessage);
 			}
-			RedNode.status({ fill: 'green', shape: 'dot', text: 'Mode: All Nodes' });
+			UpdateStatus('green', 'dot', 'Mode: All Nodes');
 		} else if (config.filteredNodeId === 'AS') {
 			DeviceMode = 'AS';
-			RedNode.status({
-				fill: 'green',
-				shape: 'dot',
-				text: 'Mode: As Specifed (Waiting)'
-			});
+			UpdateStatus('yellow', 'dot', 'Mode: As Specified (Waiting)');
 		}
 
 		function processEventMessage(MSG) {
@@ -157,11 +157,7 @@ module.exports = function (RED) {
 								);
 							}
 							DynamicIDListener = Node;
-							RedNode.status({
-								fill: 'green',
-								shape: 'dot',
-								text: `Mode: As Specifed (${Node})`
-							});
+							UpdateStatus('green', 'dot', `Mode: As Specified (${Node})`);
 						}
 						break;
 
@@ -200,21 +196,14 @@ module.exports = function (RED) {
 
 				if (DeviceMode === 'Multiple' && msg.payload.node === undefined) {
 					for (let i = 0; i < config.filteredNodeId.length; i++) {
-						RedNode.status({
-							fill: 'yellow',
-							shape: 'dot',
-							text: 'Mode: Multiple (Throttling)'
-						});
+						UpdateStatus('yellow', 'dot', 'Mode: Multiple (Throttling)');
+
 						await RateLimiter.removeTokens(1);
 						const TR = LD.cloneDeep(msg);
 						TR.payload.node = parseInt(config.filteredNodeId[i]);
 						NodeEventEmitter.emit('zwjs:node:command', TR);
 					}
-					RedNode.status({
-						fill: 'green',
-						shape: 'dot',
-						text: 'Mode: Multiple'
-					});
+					UpdateStatus('green', 'dot', 'Mode: Multiple');
 				} else {
 					NodeEventEmitter.emit('zwjs:node:command', msg);
 				}

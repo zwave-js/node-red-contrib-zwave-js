@@ -5,6 +5,20 @@ module.exports = function (RED) {
 		RED.nodes.createNode(this, config);
 		const node = this;
 
+		function UpdateStatus(Color, Shape, Text) {
+			if (config.showStatus === undefined || config.showStatus) {
+				node.status({
+					fill: Color,
+					shape: Shape,
+					text: Text
+				});
+			} else {
+				node.status({});
+			}
+		}
+
+		node.status({});
+
 		node.on('input', Input);
 
 		function compare(a, b) {
@@ -46,11 +60,8 @@ module.exports = function (RED) {
 									) {
 										msg.filter = Filter;
 										SendingArray[ArrayIndex] = msg;
-										node.status({
-											fill: 'green',
-											shape: 'dot',
-											text: 'Last match: ' + Filter.name
-										});
+										UpdateStatus('green', 'dot', 'Last match: ' + Filter.name);
+
 										send(SendingArray);
 										Matched = true;
 										break;
@@ -62,11 +73,8 @@ module.exports = function (RED) {
 							} else {
 								msg.filter = Filter;
 								SendingArray[ArrayIndex] = msg;
-								node.status({
-									fill: 'green',
-									shape: 'dot',
-									text: 'Last match: ' + Filter.name
-								});
+								UpdateStatus('green', 'dot', 'Last match: ' + Filter.name);
+
 								Matched = true;
 								send(SendingArray);
 								break;
@@ -76,18 +84,10 @@ module.exports = function (RED) {
 				}
 
 				if (!Matched) {
-					node.status({
-						fill: 'yellow',
-						shape: 'dot',
-						text: 'No match'
-					});
+					UpdateStatus('yellow', 'dot', 'No match');
 				}
 			} else {
-				node.status({
-					fill: 'red',
-					shape: 'dot',
-					text: 'Not a ZWave message'
-				});
+				UpdateStatus('red', 'dot', 'Not a ZWave message');
 			}
 
 			if (done) {

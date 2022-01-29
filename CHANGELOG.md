@@ -1,10 +1,25 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 6.5.2
+
+    **Fixes**
+     - Don't soley depend on the **node removed** event to progress the exclusion Wizard
+     - Check if a node is selected before opening up a dialog
+
+    **New Features**
+     - Expose the Driver option to disable Optimistic Value Updates
+     - Added the ability to hide the status label for device and event filter nodes
+
+    **Changes**
+     - Renamed the **Abort** button during S2 inclusion to better identify its intention
+     - Bump ZWJS to 8.11.2  
+     - Bump Winston to 3.5.0
+
   - 6.5.1
 
     **Fixes**
-     - Battery icon/popup text in the UI is now (finally) kept in sync.
-     - Driver readiness  for Health Checks and Keep Alive requests in the UI
+     - Battery icon/popup text in the UI is now (finally) kept in sync
+     - Driver readiness for Health Checks and Keep Alive requests in the UI
 
     **Changes**
      - Improvements to node readiness in the UI
@@ -15,8 +30,8 @@
 
     **New Features**
      - Added the ability to keep a node awake via the UI
-     - Added a new method in the UI to report the health of a nodes conection to the controller.
-     - Added native camera/image capture controls for Smart Start QR Scanning on the mobile client.
+     - Added a new method in the UI to report the health of a nodes conection to the controller
+     - Added native camera/image capture controls for Smart Start QR Scanning on the mobile client
     
     **Changes**
      - Replace **EventEmitter** with an internal instance - to address a **MaxListenersExceeded** warning.
