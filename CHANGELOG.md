@@ -1,5 +1,10 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 6.5.3
+
+    **Fixes**
+     - Wait for driver unload.
+
   - 6.5.2
 
     **Fixes**

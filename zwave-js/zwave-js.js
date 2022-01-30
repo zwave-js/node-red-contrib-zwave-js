@@ -475,21 +475,25 @@ module.exports = function (RED) {
 				'Cleaning up...'
 			);
 			UI.unregister();
-			Driver.destroy();
-			NodeEventEmitter.removeListener('zwjs:node:command', processMessageEvent);
-			if (Logger !== undefined) {
-				Logger.clear();
-				Logger = undefined;
-			}
-			if (Pin2Transport !== undefined) {
-				Pin2Transport = undefined;
-			}
-			if (FileTransport !== undefined) {
-				FileTransport = undefined;
-			}
-			if (done) {
-				done();
-			}
+			Driver.destroy().then(() => {
+				NodeEventEmitter.removeListener(
+					'zwjs:node:command',
+					processMessageEvent
+				);
+				if (Logger !== undefined) {
+					Logger.clear();
+					Logger = undefined;
+				}
+				if (Pin2Transport !== undefined) {
+					Pin2Transport = undefined;
+				}
+				if (FileTransport !== undefined) {
+					FileTransport = undefined;
+				}
+				if (done) {
+					done();
+				}
+			});
 		});
 
 		RedNode.on('input', Input);
