@@ -1,36 +1,17 @@
-const express = require('express');
-const https = require('https');
-const fs = require('fs');
-const path = require('path');
-const ip = require('ip');
-
-let App;
-let Server;
 let _Callback;
+let _HTTPAdmin
 
-const Options = {
-	pfx: fs.readFileSync(path.join(__dirname, 'certificate.p12')),
-	passphrase: 'password1'
-};
-
-const Start = (Callback) => {
+const Start = (Callback,Req,HTTPAdmin) => {
 	_Callback = Callback;
-	App = express();
-	App.use(express.static(path.join(__dirname, 'ui')));
-	App.get('/event.started', SendStarted);
-	App.get('/event.code/:Code', ParseCode);
-	Server = https.createServer(Options, App);
+	_HTTPAdmin = HTTPAdmin;
 
+	HTTPAdmin.get('/zwave-js/smartstart-event/started',SendStarted)
+	HTTPAdmin.get('/zwave-js/smartstart-event/code/:Code',ParseCode)
+	
+	const Secure = Req.connection.encrypted !== undefined
+	const Prot = Secure ? 'https://' : 'http://';
 	return new Promise((resolve) => {
-		Server.listen(0, () => {
-			resolve(
-				'https://' +
-					ip.address() +
-					':' +
-					Server.address().port +
-					'/Scanchoice.html'
-			);
-		});
+		resolve(`${Prot}${Req.headers.host}/resources/node-red-contrib-zwave-js/SmartStart/Scanchoice.html`)
 	});
 };
 
@@ -47,11 +28,9 @@ function ParseCode(req, res) {
 }
 
 const Stop = () => {
-	if (Server !== undefined) {
-		Server.close();
-		Server = undefined;
-		App = undefined;
-	}
+
+	_HTTPAdmin.get('/zwave-js/smartstart-event/started',(req,res) => res.sendStatus(404).end())
+	_HTTPAdmin.get('/zwave-js/smartstart-event/code/:Code',(req,res) => res.sendStatus(404).end())
 };
 
 module.exports = {

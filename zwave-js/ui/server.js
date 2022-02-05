@@ -1,4 +1,3 @@
-const express = require('express');
 const SP = require('serialport');
 const ModulePackage = require('../../package.json');
 const { CommandClasses } = require('@zwave-js/core');
@@ -58,6 +57,7 @@ const SendBatteryUpdate = (node, payload) => {
 
 const SmartStartCallback = (Event, Code) => {
 	switch (Event) {
+
 		case 'Started':
 			_RED.comms.publish(`/zwave-js/cmd`, {
 				type: 'node-inclusion-step',
@@ -243,10 +243,7 @@ module.exports = {
 				res.send({ ready: Loaded });
 			}
 		);
-
-		/* Res */
-		RED.httpAdmin.use('/zwave-js/res', express.static(__dirname));
-
+		
 		// Frimware
 		RED.httpAdmin.post(
 			'/zwave-js/firmwareupdate/:code',
@@ -290,7 +287,7 @@ module.exports = {
 			async (req, res) => {
 				switch (req.params.Method) {
 					case 'startserver':
-						SmartStart.Start(SmartStartCallback).then((QRCode) => {
+						SmartStart.Start(SmartStartCallback, req,RED.httpAdmin).then((QRCode) => {
 							res.status(200);
 							res.end(QRCode);
 						});

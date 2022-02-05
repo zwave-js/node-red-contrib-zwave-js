@@ -159,7 +159,7 @@ function tick() {
 
 function SendActive() {
 	return new Promise((resolve) => {
-		$.ajax({ url: '/event.started', method: 'get', async: false });
+		$.ajax({ url: '../../../../zwave-js/smartstart-event/started', method: 'get', async: false });
 		resolve();
 	});
 }
@@ -204,7 +204,7 @@ function SendCode(Code, skipRender) {
 		} else {
 			let Result;
 			$.ajax({
-				url: '/event.code/' + Code.data,
+				url: '../../../../zwave-js/smartstart-event/code/' + Code.data,
 				method: 'get',
 				success: (data) => {
 					Result = data;
@@ -216,4 +216,10 @@ function SendCode(Code, skipRender) {
 			setTimeout(resolve, 250);
 		}
 	});
+}
+
+function EnableLive(){
+	if (location.protocol === 'https:') {
+		$("#LiveScanButton").css({filter:'',pointerEvents:'all'})
+	}
 }

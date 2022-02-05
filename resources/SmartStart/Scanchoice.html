@@ -18,9 +18,9 @@
 				font-size: 16px;
 			}
 		</style>
-		<script src="jquery-3.6.0.min.js"></script>
-		<script src="jsQR.js"></script>
-		<script src="scripts.js"></script>
+		<script src="./jquery-3.6.0.min.js"></script>
+		<script src="./jsQR.js"></script>
+		<script src="./scripts.js"></script>
 		<style type="text/css">
 			body {
 				font-family: HelveticaNeue-Light, Roboto;
@@ -37,13 +37,18 @@
 
 		<input
 			type="button"
-			value="Native (Slower, More Control)"
+			value="Native (More Control)"
 			onclick="GrabImage()"
 		/>
 		<input
+		    id="LiveScanButton"
 			type="button"
-			value="Live (Faster, Less Control)"
-			onclick="location.href='Livescan.html'"
+			value="Live (Less Control, Requires SSL)"
+			onclick="location.href='./Livescan.html'"
+			style="filter: grayscale(1); pointer-events: none;"
 		/>
+		<script>
+			EnableLive();
+		</script>
 	</body>
 </html>
