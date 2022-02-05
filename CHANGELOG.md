@@ -1,5 +1,10 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 6.5.5
+  
+    **Fixes**
+     - Fix NPM Ignore rules
+
   - 6.5.4
 
     **Changes**
