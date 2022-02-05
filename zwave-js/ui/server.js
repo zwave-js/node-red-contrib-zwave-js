@@ -1,4 +1,3 @@
-const express = require('express');
 const SP = require('serialport');
 const ModulePackage = require('../../package.json');
 const { CommandClasses } = require('@zwave-js/core');
@@ -244,9 +243,6 @@ module.exports = {
 			}
 		);
 
-		/* Res */
-		RED.httpAdmin.use('/zwave-js/res', express.static(__dirname));
-
 		// Frimware
 		RED.httpAdmin.post(
 			'/zwave-js/firmwareupdate/:code',
@@ -284,13 +280,14 @@ module.exports = {
 		);
 
 		// Smart Start
+		SmartStart.Prep(RED.httpAdmin);
 		RED.httpAdmin.get(
 			'/zwave-js/smartstart/:Method',
 			RED.auth.needsPermission('flows.write'),
 			async (req, res) => {
 				switch (req.params.Method) {
 					case 'startserver':
-						SmartStart.Start(SmartStartCallback).then((QRCode) => {
+						SmartStart.Start(SmartStartCallback, req).then((QRCode) => {
 							res.status(200);
 							res.end(QRCode);
 						});

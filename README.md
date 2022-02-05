@@ -1,4 +1,4 @@
-![Image](./resources/ReadMe.png)  
+![Image](./GHImages/ReadMe.png)  
 
 # node-red-contrib-zwave-js
 
@@ -37,13 +37,13 @@ Since `node-red-contrib-zwave-js` is based on [Z-Wave JS](https://zwave-js.githu
 
 ### The User Interface
 
-![Image](./resources/ZWUI.gif) 
+![Image](./GHImages/ZWUI.gif) 
 
 Included with the contrib is a [user interface](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/User-Interface) where Z-Wave network management is handled. The controller side of the UI is used to include/exclude devices, heal the network, update firmware, and view the network map for diagnosing problems. The device side of the UI is used to configure devices, manage associations, and provide setup help for the nodes which will be used in your flows.
 
 ### The Nodes
 
-![Image](./resources/Demo.png)
+![Image](./GHImages/Demo.png)
 
 There are 4 node types included with this contrib ([click here](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/node-types) for full details about these nodes)
  - `zwave-js`: this node is used to set up a connection to your USB Z-Wave controller, set security keys, and manage various advanced controller options

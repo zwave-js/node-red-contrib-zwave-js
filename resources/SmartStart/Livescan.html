@@ -74,9 +74,13 @@
 		</div>
 
 		<script>
-			SendActive().then(() => {
-				Start();
-			});
+			SendActive()
+				.then(() => {
+					Start();
+				})
+				.catch((Err) => {
+					alert(Err);
+				});
 		</script>
 	</body>
 </html>

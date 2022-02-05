@@ -7,15 +7,19 @@ let offset;
 const ScannedCodes = {};
 
 function GrabImage() {
-	SendActive().then(() => {
-		const FI = document.createElement('input');
-		FI.hidden = true;
-		document.body.append(FI);
-		FI.addEventListener('change', SubmitPhoto, false);
-		FI.setAttribute('type', 'file');
-		FI.setAttribute('accept', 'image/*;capture=camera');
-		FI.click();
-	});
+	SendActive()
+		.then(() => {
+			const FI = document.createElement('input');
+			FI.hidden = true;
+			document.body.append(FI);
+			FI.addEventListener('change', SubmitPhoto, false);
+			FI.setAttribute('type', 'file');
+			FI.setAttribute('accept', 'image/*;capture=camera');
+			FI.click();
+		})
+		.catch((Err) => {
+			alert(Err);
+		});
 }
 
 function SubmitPhoto(e) {
@@ -157,10 +161,18 @@ function tick() {
 	}
 }
 
-function SendActive() {
-	return new Promise((resolve) => {
-		$.ajax({ url: '/event.started', method: 'get', async: false });
-		resolve();
+async function SendActive() {
+	return new Promise((resolve, reject) => {
+		const Res = $.ajax({
+			url: '../../../../zwave-js/smartstart-event/started',
+			method: 'get',
+			async: false
+		});
+		if (Res.status === 200) {
+			resolve();
+		} else {
+			reject('Smart start is not ready.');
+		}
 	});
 }
 
@@ -204,7 +216,7 @@ function SendCode(Code, skipRender) {
 		} else {
 			let Result;
 			$.ajax({
-				url: '/event.code/' + Code.data,
+				url: '../../../../zwave-js/smartstart-event/code/' + Code.data,
 				method: 'get',
 				success: (data) => {
 					Result = data;
@@ -216,4 +228,10 @@ function SendCode(Code, skipRender) {
 			setTimeout(resolve, 250);
 		}
 	});
+}
+
+function EnableLive() {
+	if (location.protocol === 'https:') {
+		$('#LiveScanButton').css({ filter: '', pointerEvents: 'all' });
+	}
 }

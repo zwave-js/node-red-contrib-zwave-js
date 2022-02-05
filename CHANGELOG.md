@@ -1,5 +1,16 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 6.5.4
+
+    **Changes**
+     - Smart Start Web Application, has been moved to use the express instance provided by Node RED
+       - Live QR Scanning now requires Node RED to be SSL Enabled - basic QR capture can still be used without SSL.
+     - Added Min Node RED Version to package.json
+     - Switched static resources to use /resources/ endpoint provided by Node RED
+     - Added node examples
+     - Bump Zwave JS to 8.11.3  
+     - Bump ESLint to 8.8.0
+
   - 6.5.3
 
     **Fixes**
