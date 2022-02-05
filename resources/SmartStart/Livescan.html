@@ -76,6 +76,9 @@
 		<script>
 			SendActive().then(() => {
 				Start();
+			})
+			.catch((Err) =>{
+				alert(Err);
 			});
 		</script>
 	</body>

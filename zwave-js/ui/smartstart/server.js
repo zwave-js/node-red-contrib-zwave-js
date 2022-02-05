@@ -1,12 +1,29 @@
 let _Callback;
 let _HTTPAdmin
+let _Enabled = false;
 
-const Start = (Callback,Req,HTTPAdmin) => {
-	_Callback = Callback;
-	_HTTPAdmin = HTTPAdmin;
+const Prep = (HTTPAdmin) =>{
 
 	HTTPAdmin.get('/zwave-js/smartstart-event/started',SendStarted)
 	HTTPAdmin.get('/zwave-js/smartstart-event/code/:Code',ParseCode)
+
+	_HTTPAdmin
+}
+
+const CheckStatus = (res) => {
+	if(_Enabled){
+		return true;
+	}
+	else{
+		res.sendStatus(503).end();
+		return false;
+	}
+}
+
+const Start = (Callback,Req) => {
+
+	_Callback = Callback;
+	_Enabled = true;
 	
 	const Secure = Req.connection.encrypted !== undefined
 	const Prot = Secure ? 'https://' : 'http://';
@@ -16,24 +33,27 @@ const Start = (Callback,Req,HTTPAdmin) => {
 };
 
 function SendStarted(req, res) {
-	_Callback('Started');
-	res.status(200);
-	res.end();
+	if(CheckStatus(res)){
+		_Callback('Started');
+		res.status(200);
+		res.end();
+	}
 }
 
 function ParseCode(req, res) {
-	const Result = _Callback('Code', req.params.Code);
-	res.status(200);
-	res.end(Result.toString());
+	if(CheckStatus(res)){
+		const Result = _Callback('Code', req.params.Code);
+		res.status(200);
+		res.end(Result.toString());
+	}
 }
 
 const Stop = () => {
-
-	_HTTPAdmin.get('/zwave-js/smartstart-event/started',(req,res) => res.sendStatus(404).end())
-	_HTTPAdmin.get('/zwave-js/smartstart-event/code/:Code',(req,res) => res.sendStatus(404).end())
+	_Enabled = false;
 };
 
 module.exports = {
 	Start: Start,
-	Stop: Stop
+	Stop: Stop,
+	Prep: Prep
 };

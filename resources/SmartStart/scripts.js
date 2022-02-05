@@ -15,6 +15,9 @@ function GrabImage() {
 		FI.setAttribute('type', 'file');
 		FI.setAttribute('accept', 'image/*;capture=camera');
 		FI.click();
+	})
+	.catch((Err) =>{
+		alert(Err);
 	});
 }
 
@@ -157,10 +160,20 @@ function tick() {
 	}
 }
 
-function SendActive() {
-	return new Promise((resolve) => {
-		$.ajax({ url: '../../../../zwave-js/smartstart-event/started', method: 'get', async: false });
-		resolve();
+async function  SendActive() {
+
+	return new Promise((resolve, reject) => {
+		
+		
+			const Res = $.ajax({ url: '../../../../zwave-js/smartstart-event/started', method: 'get', async: false });
+			if(Res.status === 200){
+				resolve();
+			}
+			else{
+				reject('Smart start is not ready.')
+			}
+			
+		
 	});
 }
 
