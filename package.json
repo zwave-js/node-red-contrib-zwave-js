@@ -16,7 +16,7 @@
 		"prettier": "^2.5.1"
 	},
 	"scripts": {
-		"validate": "node-red-dev validate -o standards.json"
+		"validate": "node-red-dev validate -o validation_result.json"
 	},
 	"engines": {
 		"node": ">=12.22.2"

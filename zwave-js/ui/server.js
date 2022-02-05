@@ -57,7 +57,6 @@ const SendBatteryUpdate = (node, payload) => {
 
 const SmartStartCallback = (Event, Code) => {
 	switch (Event) {
-
 		case 'Started':
 			_RED.comms.publish(`/zwave-js/cmd`, {
 				type: 'node-inclusion-step',
@@ -243,7 +242,7 @@ module.exports = {
 				res.send({ ready: Loaded });
 			}
 		);
-		
+
 		// Frimware
 		RED.httpAdmin.post(
 			'/zwave-js/firmwareupdate/:code',
@@ -288,7 +287,7 @@ module.exports = {
 			async (req, res) => {
 				switch (req.params.Method) {
 					case 'startserver':
-						SmartStart.Start(SmartStartCallback,req).then((QRCode) => {
+						SmartStart.Start(SmartStartCallback, req).then((QRCode) => {
 							res.status(200);
 							res.end(QRCode);
 						});

@@ -35,17 +35,13 @@
 			Select the Camera Source Mode
 		</p>
 
+		<input type="button" value="Native (More Control)" onclick="GrabImage()" />
 		<input
-			type="button"
-			value="Native (More Control)"
-			onclick="GrabImage()"
-		/>
-		<input
-		    id="LiveScanButton"
+			id="LiveScanButton"
 			type="button"
 			value="Live (Less Control, Requires SSL)"
 			onclick="location.href='./Livescan.html'"
-			style="filter: grayscale(1); pointer-events: none;"
+			style="filter: grayscale(1); pointer-events: none"
 		/>
 		<script>
 			EnableLive();
