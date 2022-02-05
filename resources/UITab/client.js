@@ -2007,17 +2007,96 @@ const ZwaveJsUI = (function () {
 		return L;
 	}
 
+	function showMessageMenu(button) {
+        
+        const menuOptionMenu = RED.menu.init({id:"debug-message-option-menu",
+                options: [
+					{
+						id:"debug-message-menu-item-collapse",
+						label:"Remove Failed Node",
+						onselect:function(){
+                          activeMenuMessage.collapse();
+                        }
+					},
+					{
+						id:"debug-message-menu-item-erwrrw",
+						label:"Replace Failed Node",
+						onselect:function(){
+                          activeMenuMessage.collapse();
+                        }
+					},
+					{
+						id:"debug-message-menu-item-erwrrrrrrrw",
+						label:"Run Health Check",
+						onselect:function(){
+                          activeMenuMessage.collapse();
+                        }
+					},
+					{
+						id:"debug-message-menu-item-ereerwrwrrw",
+						label:"View In Device Browser",
+						onselect:function(){
+                          activeMenuMessage.collapse();
+                        }
+					}
+                ]
+            });
+            menuOptionMenu.css({
+                position: "absolute"
+            })
+            menuOptionMenu.on('mouseleave', function(){ $(this).hide() });
+            menuOptionMenu.on('mouseup', function() { $(this).hide() });
+            menuOptionMenu.appendTo("body");
+        
+
+
+
+        const elementPos = button.offset();
+        menuOptionMenu.css({
+            top: elementPos.top+"px",
+            left: (elementPos.left - menuOptionMenu.width() + 20)+"px"
+        })
+        menuOptionMenu.show();
+    }
+
+	function AddOverlayNodeButtons(node){
+		
+		const BA = $('<div id="node-options-'+node.nodeId+'">');
+		BA.css({position:'absolute',width:'200px',left:'50px',display:'none',backgroundColor:'#e6e6e6'});
+		BA.append('<button class="red-ui-button red-ui-button-small" style="width: 30px;height: 30px;margin-right: 1px;px;"><i class="fa fa-pencil fa-lg"></i></button>');
+		BA.append('<button class="red-ui-button red-ui-button-small" style="width: 30px;height: 30px;margin-right: 1px;px;"><i class="fa fa-handshake-o fa-lg"></i></button>');
+		BA.append('<button class="red-ui-button red-ui-button-small" style="width: 30px;height: 30px;margin-right: 1px;px;"><i class="fa fa-medkit fa-lg"></i></button>');
+		BA.append('<button class="red-ui-button red-ui-button-small" style="width: 30px;height: 30px;margin-right: 1px;px;"><i class="fa fa-code-fork fa-lg"></i></button>');
+		//BA.append('<button class="red-ui-button red-ui-button-small" style="width: 30px;height: 30px;margin-right: 1px;px;"><i class="fa fa-external-link fa-lg"></i></button>');
+
+		const OtherBTN = $("<button>");
+		OtherBTN.click(()=>{showMessageMenu(OtherBTN)});
+		OtherBTN.addClass('red-ui-button red-ui-button-small');
+		OtherBTN.css({width:'30px', height:'30px', marginRight:'1px'});
+		OtherBTN.append('<i class="fa fa-caret-down fa-lg"></i>');
+
+
+
+		BA.append(OtherBTN);
+		
+		//<div style="/* float: right; */position: absolute;left: 50px;/* width: 50px; *//* height: 50px; */width: 100px;"><button class="red-ui-button red-ui-button-small" style="width: 30px;height: 30px;margin-right: 1px;px;"><i class="fa fa-refresh"></i></button><button class="red-ui-button red-ui-button-small" style="width: 30px;height: 30px;margin-right: 1px;px;"><i class="fa fa-edit"></i></button><button class="red-ui-button red-ui-button-small" style="width: 30px;height: 30px;margin-right: 3px;px;"><i class="fa fa-plus"></i></button></div>
+
+		return BA;
+	}
+
 	function renderNode(node) {
 		return $('<div>')
 			.addClass('red-ui-treeList-label zwave-js-node-row')
 			.attr('data-nodeid', node.nodeId)
 			.data('info', node)
+			.hover(()=>{$("#node-options-"+node.nodeId).css({display:'block'})},()=>{$("#node-options-"+node.nodeId).css({display:'none'})})
 			.click(() => {
 				node.ready
 					? selectNode(node.nodeId)
 					: modalAlert('This node is not ready', 'Node Not Ready');
 			})
 			.append(
+				AddOverlayNodeButtons(node),
 				$('<div>').html(node.nodeId).addClass('zwave-js-node-row-id'),
 				$('<div>').html(node.name).addClass('zwave-js-node-row-name'),
 				$('<div>')
