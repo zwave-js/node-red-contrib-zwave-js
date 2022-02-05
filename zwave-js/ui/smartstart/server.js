@@ -1,12 +1,9 @@
 let _Callback;
-let _HTTPAdmin;
 let _Enabled = false;
 
 const Prep = (HTTPAdmin) => {
 	HTTPAdmin.get('/zwave-js/smartstart-event/started', SendStarted);
 	HTTPAdmin.get('/zwave-js/smartstart-event/code/:Code', ParseCode);
-
-	_HTTPAdmin;
 };
 
 const CheckStatus = (res) => {
