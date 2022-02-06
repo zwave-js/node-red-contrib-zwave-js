@@ -53,6 +53,24 @@ JSONFormatter.json = {
 };
 
 const ZwaveJsUI = (function () {
+
+	let HCForm; // Health Check Form
+	let HCRounds; // Health Check Rounds
+	let FirmwareForm; // FrimwareForm
+	let FWRunning = false; // Firmware Updare Running
+	const Groups = {}; // Association Groups
+	let Removing = false; // Removing Failed Node
+	let ExpandCC = false; // Expand CC's
+	let Timer; // Timers
+	let IETime; // IE Time
+	let SecurityTime; // Security Time
+	const BatteryUIElements = {}; // Battery Icon Elements
+	let BA = undefined; // Node Button Array
+	let HoveredNode = undefined; // Hovered Node
+	let selectedNode; // Selected Node
+
+
+
 	function modalAlert(message, title) {
 		const Buts = {
 			Ok: function () {}
@@ -113,8 +131,7 @@ const ZwaveJsUI = (function () {
 			});
 	}
 
-	let HCForm;
-	let HCRounds;
+
 	function processHealthCheckProgress(topic, data) {
 		const P = Math.round((100 * data.payload) / HCRounds);
 		HCForm.html(
@@ -265,8 +282,7 @@ const ZwaveJsUI = (function () {
 		}
 	}
 
-	let FirmwareForm;
-	let FWRunning = false;
+
 	function AbortUpdate() {
 		if (FWRunning) {
 			ControllerCMD('ControllerAPI', 'abortFirmwareUpdate', undefined, [
@@ -348,7 +364,7 @@ const ZwaveJsUI = (function () {
 		});
 	}
 
-	const Groups = {};
+
 
 	function AddAssociation() {
 		const NI = $('<input>')
@@ -363,7 +379,7 @@ const ZwaveJsUI = (function () {
 		const Buttons = {
 			Add: function () {
 				const PL = [
-					{ nodeId: selectedNode, endpoint: parseInt($('#NODE_EP').val()) },
+					{ nodeId: HoveredNode.nodeId, endpoint: parseInt($('#NODE_EP').val()) },
 					parseInt($('#NODE_G').val()),
 					[{ nodeId: parseInt(NI.val()) }]
 				];
@@ -394,7 +410,7 @@ const ZwaveJsUI = (function () {
 		const Association = JSON.parse($(this).attr('data-address'));
 
 		const PL = [
-			{ nodeId: selectedNode, endpoint: parseInt($('#NODE_EP').val()) },
+			{ nodeId: HoveredNode.nodeId, endpoint: parseInt($('#NODE_EP').val()) },
 			parseInt($('#NODE_G').val()),
 			[Association]
 		];
@@ -440,7 +456,7 @@ const ZwaveJsUI = (function () {
 		const Group = parseInt($('#NODE_G').val());
 
 		const AA = {
-			nodeId: parseInt(selectedNode),
+			nodeId: parseInt(HoveredNode.nodeId),
 			endpoint: Endpoint
 		};
 
@@ -481,7 +497,7 @@ const ZwaveJsUI = (function () {
 			resizable: false,
 			width: '800',
 			height: '600',
-			title: `ZWave Association Management: Node ${selectedNode}`,
+			title: `ZWave Association Management: Node ${HoveredNode.nodeId}`,
 			minHeight: 75,
 			buttons: {
 				Close: function () {
@@ -496,7 +512,7 @@ const ZwaveJsUI = (function () {
 		Form.dialog(Options);
 
 		ControllerCMD('AssociationsAPI', 'getAllAssociationGroups', undefined, [
-			selectedNode
+			HoveredNode.nodeId
 		]).then(({ object }) => {
 			const Template = $('#TPL_Associations').html();
 			const templateScript = Handlebars.compile(Template);
@@ -1224,7 +1240,8 @@ const ZwaveJsUI = (function () {
 	}
 
 	function StartNodeHeal() {
-		ControllerCMD('ControllerAPI', 'healNode', undefined, [selectedNode], true);
+		ControllerCMD('ControllerAPI', 'healNode', undefined, [HoveredNode.nodeId], true);
+
 	}
 
 	function StartHeal() {
@@ -1374,7 +1391,7 @@ const ZwaveJsUI = (function () {
 		window.open(`https://devices.zwave-js.io/?jumpTo=${id}`, '_blank');
 	}
 
-	let Removing = false;
+
 	function RemoveFailedNode() {
 		if (Removing) {
 			modalAlert(
@@ -1405,6 +1422,8 @@ const ZwaveJsUI = (function () {
 		);
 	}
 
+
+
 	function init() {
 		// Container(s)
 		const content = $('<div>').addClass('red-ui-sidebar-info').css({
@@ -1430,19 +1449,19 @@ const ZwaveJsUI = (function () {
 			.addClass('red-ui-sidebar-header')
 			.css({ flex: '0 0 auto', textAlign: 'left', padding: 5 })
 			.appendTo(mainPanel);
-		$('<input type="checkbox" id="node-properties-auto-expand">')
-			.css({ margin: '0 2px' })
-			.appendTo(controllerHeader);
-		$('<span>').html("Expand CC's").appendTo(controllerHeader);
-		$('<button>')
-			.addClass('red-ui-button red-ui-button-small')
-			.css({ float: 'right' })
-			.html('Show Controller Options')
-			.click(ShowHideController)
-			.appendTo(controllerHeader);
-
+	//	$('<input type="checkbox" id="node-properties-auto-expand">')
+	//		.css({ margin: '0 2px' })
+	//		.appendTo(controllerHeader);
+	//	$('<span>').html("Expand CC's").appendTo(controllerHeader);
+	//	$('<button>')
+	//		.addClass('red-ui-button red-ui-button-small')
+	//		.css({ float: 'right' })
+	//		.html('Show Controller Options')
+	//		.click(ShowHideController)
+	//		.appendTo(controllerHeader);
+    //
 		// Controller Options
-		controllerOpts = $('<div>').appendTo(controllerHeader).hide();
+		controllerOpts = $('<div>').appendTo(controllerHeader);//.hide();
 
 		// Info
 		$('<div id="zwave-js-controller-info">')
@@ -1453,10 +1472,74 @@ const ZwaveJsUI = (function () {
 			.html('Waiting for driver...')
 			.appendTo(controllerOpts);
 
+			const BA = $('<div>');
+			BA.css({width:'200px',marginLeft:'6px',bbackgroundColor:'inherit'});
+
+			const Expand = $("<button>");
+			Expand.click(()=>{
+				if(ExpandCC){
+					ExpandCC = false;
+					Expand.find('i').removeClass('fa-check-square-o')
+					Expand.find('i').addClass('fa-square-o')
+				}
+				else{
+					ExpandCC = true;
+					Expand.find('i').addClass('fa-check-square-o')
+					Expand.find('i').removeClass('fa-square-o')
+				}
+
+			});
+			Expand.addClass('red-ui-button red-ui-button-small');
+			Expand.css({width:'30px', height:'30px', marginRight:'5px'});
+			Expand.append('<i class="fa fa-square-o fa-lg"></i>');
+			RED.popover.tooltip(Expand,'Expand CC\'s');
+			BA.append(Expand);
+			BA.appendTo(controllerOpts);
+
+			const IE = $("<button>");
+			IE.click(()=>{});
+			IE.addClass('red-ui-button red-ui-button-small');
+			IE.css({width:'30px', height:'30px', marginRight:'1px'});
+			IE.append('<i class="fa fa-wifi fa-lg"></i>');
+			RED.popover.tooltip(IE,'Include/Exclude');
+			BA.append(IE);
+			BA.appendTo(controllerOpts);
+
+			const Heal = $("<button>");
+			Heal.click(()=>{});
+			Heal.addClass('red-ui-button red-ui-button-small');
+			Heal.css({width:'30px', height:'30px', marginRight:'1px'});
+			Heal.append('<i class="fa fa-medkit fa-lg"></i>');
+			RED.popover.tooltip(Heal,'Heal Network');
+			BA.append(Heal);
+			BA.appendTo(controllerOpts)
+
+			const Monitor = $("<button>");
+			Monitor.click(()=>{
+				ShowCommandViewer();
+			});
+			Monitor.addClass('red-ui-button red-ui-button-small');
+			Monitor.css({width:'30px', height:'30px', marginRight:'1px'});
+			Monitor.append('<i class="fa fa-code fa-lg"></i>');
+			RED.popover.tooltip(Monitor,'UI Command Monitor');
+			BA.append(Monitor);
+			BA.appendTo(controllerOpts)
+
+			const RefreshNodes = $("<button>");
+			RefreshNodes.click(()=>{
+				GetNodes();
+			});
+			RefreshNodes.addClass('red-ui-button red-ui-button-small');
+			RefreshNodes.css({width:'30px', height:'30px', marginRight:'1px'});
+			RefreshNodes.append('<i class="fa fa-refresh fa-lg"></i>');
+			RED.popover.tooltip(RefreshNodes,'Refresh Node List');
+			BA.append(RefreshNodes);
+			BA.appendTo(controllerOpts)
+
 		// Include Exclide, log
 		const optInclusionLog = $('<div>')
 			.css('text-align', 'center')
-			.appendTo(controllerOpts);
+		//	.appendTo(controllerOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
@@ -1476,7 +1559,7 @@ const ZwaveJsUI = (function () {
 		// Heal
 		const optHeal = $('<div>')
 			.css('text-align', 'center')
-			.appendTo(controllerOpts);
+		//	.appendTo(controllerOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
@@ -1499,7 +1582,7 @@ const ZwaveJsUI = (function () {
 		// Refresh, Reset
 		const optRefreshReset = $('<div>')
 			.css('text-align', 'center')
-			.appendTo(controllerOpts);
+		//	.appendTo(controllerOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
@@ -1522,7 +1605,7 @@ const ZwaveJsUI = (function () {
 		// Tools
 		const tools = $('<div>')
 			.css('text-align', 'center')
-			.appendTo(controllerOpts);
+		//	.appendTo(controllerOpts);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
@@ -1568,15 +1651,15 @@ const ZwaveJsUI = (function () {
 		$('<span id="zwave-js-selected-node-id">').appendTo(nodeHeader);
 		$('<span id="zwave-js-selected-node-name">').appendTo(nodeHeader);
 		$('<span id="zwave-js-selected-node-location">').appendTo(nodeHeader);
-		$('<button>')
-			.addClass('red-ui-button red-ui-button-small')
-			.css({ float: 'right' })
-			.click(ShowHideNodeOptions)
-			.html('Show Node Options')
-			.appendTo(nodeHeader);
+		//$('<button>')
+		//	.addClass('red-ui-button red-ui-button-small')
+		//	.css({ float: 'right' })
+		//	.click(ShowHideNodeOptions)
+		//	.html('Show Node Options')
+		//	.appendTo(nodeHeader);
 
 		// node Options
-		nodeOpts = $('<div>').appendTo(nodeHeader).hide();
+		nodeOpts = $('<div>').appendTo(nodeHeader);//.hide();
 
 		// Info
 		$('<div id="zwave-js-selected-node-info">')
@@ -1590,25 +1673,25 @@ const ZwaveJsUI = (function () {
 			.addClass('red-ui-searchBox-input')
 			.hide()
 			.keyup(RenameNodeKU)
-			.appendTo(set1);
+			//.appendTo(set1);
 		$('<button id="zwave-js-set-node-name">')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
 			.click(RenameNode)
 			.html('Set Name')
-			.appendTo(set1);
+			//.appendTo(set1);
 		// Location
 		$('<input>')
 			.addClass('red-ui-searchBox-input')
 			.hide()
 			.keyup(SetNodeLocationKU)
-			.appendTo(set1);
+			//.appendTo(set1);
 		$('<button id="zwave-js-set-node-location">')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
 			.click(SetNodeLocation)
 			.html('Set Location')
-			.appendTo(set1);
+			//.appendTo(set1);
 
 		// Set 2
 		const set2 = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
@@ -1622,7 +1705,7 @@ const ZwaveJsUI = (function () {
 				InterviewNode();
 			})
 			.html('Interview Node')
-			.appendTo(set2);
+			//.appendTo(set2);
 
 		// Node Heal
 		$('<button>')
@@ -1634,7 +1717,7 @@ const ZwaveJsUI = (function () {
 				StartNodeHeal();
 			})
 			.html('Heal Node')
-			.appendTo(set2);
+			//.appendTo(set2);
 
 		// Set 3
 		const set3 = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
@@ -1648,7 +1731,7 @@ const ZwaveJsUI = (function () {
 				RemoveFailedNode();
 			})
 			.html('Remove Failed Node')
-			.appendTo(set3);
+			//.appendTo(set3);
 		// Replace
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
@@ -1659,7 +1742,7 @@ const ZwaveJsUI = (function () {
 				ShowReplacePrompt();
 			})
 			.html('Replace Failed Node')
-			.appendTo(set3);
+			//.appendTo(set3);
 
 		// Set 4
 		const set4 = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
@@ -1673,7 +1756,7 @@ const ZwaveJsUI = (function () {
 				AssociationMGMT();
 			})
 			.html('Association Management')
-			.appendTo(set4);
+			//.appendTo(set4);
 		// Refres Properties
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
@@ -1684,7 +1767,7 @@ const ZwaveJsUI = (function () {
 				getProperties();
 			})
 			.html('Refresh Property List')
-			.appendTo(set4);
+			//.appendTo(set4);
 
 		// KW HC
 		const KWHC = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
@@ -1693,13 +1776,13 @@ const ZwaveJsUI = (function () {
 			.css('min-width', '125px')
 			.click(KeepAwake)
 			.html('Keep Awake')
-			.appendTo(KWHC);
+			//.appendTo(KWHC);
 		$('<button>')
 			.addClass('red-ui-button red-ui-button-small')
 			.css('min-width', '125px')
 			.click(HealthCheck)
 			.html('Run Health Check')
-			.appendTo(KWHC);
+			//.appendTo(KWHC);
 
 		// DB
 		const DB = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
@@ -1708,7 +1791,7 @@ const ZwaveJsUI = (function () {
 			.css('min-width', '250px')
 			.click(OpenDB)
 			.html('View in Config Database')
-			.appendTo(DB);
+			//.appendTo(DB);
 
 		// Endpoint Filter
 		$('<div id="zwave-js-node-endpoint-filter">').appendTo(nodeOpts);
@@ -1750,6 +1833,7 @@ const ZwaveJsUI = (function () {
 		CheckDriverReady().then(({ ready }) => {
 			if (ready) {
 				DriverReady = true;
+			    getLatestStatus();
 				GetNodes();
 			} else {
 				setTimeout(WaitLoad, 5000);
@@ -1875,9 +1959,7 @@ const ZwaveJsUI = (function () {
 		}
 	}
 
-	let Timer;
-	let IETime;
-	let SecurityTime;
+
 	function ClearIETimer() {
 		if (Timer !== undefined) {
 			clearInterval(Timer);
@@ -1914,7 +1996,7 @@ const ZwaveJsUI = (function () {
 		}, 1000);
 	}
 
-	const BatteryUIElements = {};
+
 	function renderBattery(node) {
 		const i = $('<i>');
 
@@ -2007,10 +2089,17 @@ const ZwaveJsUI = (function () {
 		return L;
 	}
 
-	function showMessageMenu(button) {
+	function ShowOtherNodeMenu(button) {
         
         const menuOptionMenu = RED.menu.init({id:"debug-message-option-menu",
                 options: [
+					{
+						id:"debug-message-menu-item-collapse",
+						label:"Reinterview Node",
+						onselect:function(){
+                          activeMenuMessage.collapse();
+                        }
+					},
 					{
 						id:"debug-message-menu-item-collapse",
 						label:"Remove Failed Node",
@@ -2059,29 +2148,87 @@ const ZwaveJsUI = (function () {
         menuOptionMenu.show();
     }
 
-	function AddOverlayNodeButtons(node){
+
+
+	function AddOverlayNodeButtons(Node, Row){
 		
-		const BA = $('<div id="node-options-'+node.nodeId+'">');
-		BA.css({position:'absolute',width:'200px',left:'50px',display:'none',backgroundColor:'#e6e6e6'});
-		BA.append('<button class="red-ui-button red-ui-button-small" style="width: 30px;height: 30px;margin-right: 1px;px;"><i class="fa fa-pencil fa-lg"></i></button>');
-		BA.append('<button class="red-ui-button red-ui-button-small" style="width: 30px;height: 30px;margin-right: 1px;px;"><i class="fa fa-handshake-o fa-lg"></i></button>');
-		BA.append('<button class="red-ui-button red-ui-button-small" style="width: 30px;height: 30px;margin-right: 1px;px;"><i class="fa fa-medkit fa-lg"></i></button>');
-		BA.append('<button class="red-ui-button red-ui-button-small" style="width: 30px;height: 30px;margin-right: 1px;px;"><i class="fa fa-code-fork fa-lg"></i></button>');
-		//BA.append('<button class="red-ui-button red-ui-button-small" style="width: 30px;height: 30px;margin-right: 1px;px;"><i class="fa fa-external-link fa-lg"></i></button>');
+		if(Node !== undefined){
+			HoveredNode = Node
+		}
 
-		const OtherBTN = $("<button>");
-		OtherBTN.click(()=>{showMessageMenu(OtherBTN)});
-		OtherBTN.addClass('red-ui-button red-ui-button-small');
-		OtherBTN.css({width:'30px', height:'30px', marginRight:'1px'});
-		OtherBTN.append('<i class="fa fa-caret-down fa-lg"></i>');
+		if(BA === undefined){
+			
+			BA = $('<div>');
+			BA.css({position:'absolute',width:'200px',left:'10px',backgroundColor:'inherit'});
+
+			const Select = $("<button>");
+			Select.click(()=>{
+				HoveredNode.ready
+					? selectNode(HoveredNode.nodeId)
+					: modalAlert('This node is not ready', 'Node Not Ready');
+			});
+			Select.addClass('red-ui-button red-ui-button-small');
+			Select.css({width:'30px', height:'30px', marginRight:'5px'});
+			Select.append('<i class="fa fa-info fa-lg"></i>');
+			RED.popover.tooltip(Select,'Node Details');
+			BA.append(Select);
+
+			const NameLocation = $("<button>");
+			NameLocation.click(()=>{});
+			NameLocation.addClass('red-ui-button red-ui-button-small');
+			NameLocation.css({width:'30px', height:'30px', marginRight:'1px'});
+			NameLocation.append('<i class="fa fa-pencil fa-lg"></i>');
+			RED.popover.tooltip(NameLocation,'Edit Name / Location');
+			BA.append(NameLocation);
+			
+			const Heal = $("<button>");
+			Heal.click(()=>{
+				HoveredNode.ready
+				? StartNodeHeal()
+				: modalAlert('This node is not ready', 'Node Not Ready');
+			});
+			Heal.addClass('red-ui-button red-ui-button-small');
+			Heal.css({width:'30px', height:'30px', marginRight:'1px'});
+			Heal.append('<i class="fa fa-medkit fa-lg"></i>');
+			RED.popover.tooltip(Heal,'Heal Node');
+			BA.append(Heal);
+	
+			const Associations = $("<button>");
+			Associations.click(()=>{
+				HoveredNode.ready
+				? AssociationMGMT()
+				: modalAlert('This node is not ready', 'Node Not Ready');
+				
+			});
+			Associations.addClass('red-ui-button red-ui-button-small');
+			Associations.css({width:'30px', height:'30px', marginRight:'1px'});
+			Associations.append('<i class="fa fa-code-fork fa-lg"></i>');
+			RED.popover.tooltip(Associations,'Association Management');
+			BA.append(Associations);
+	
+			const OtherBTN = $("<button>");
+			OtherBTN.click(()=>{ShowOtherNodeMenu(OtherBTN)});
+			OtherBTN.addClass('red-ui-button red-ui-button-small');
+			OtherBTN.css({width:'30px', height:'30px', marginRight:'1px'});
+			OtherBTN.append('<i class="fa fa-caret-down fa-lg"></i>');
+			RED.popover.tooltip(OtherBTN,'Other Actions');
+			BA.append(OtherBTN);
+			
+			Row.append(BA)
+		}
+		else{
+
+			if(Node === undefined && Row === undefined){
+				BA.css({position:'absolute',width:'200px',left:'10px',display:'none',backgroundColor:'inherit'});
+				return;
+			}
+
+			BA.css({position:'absolute',width:'200px',left:'10px',display:'block',backgroundColor:'inherit'});
+			Row.append(BA)
+		}
 
 
-
-		BA.append(OtherBTN);
 		
-		//<div style="/* float: right; */position: absolute;left: 50px;/* width: 50px; *//* height: 50px; */width: 100px;"><button class="red-ui-button red-ui-button-small" style="width: 30px;height: 30px;margin-right: 1px;px;"><i class="fa fa-refresh"></i></button><button class="red-ui-button red-ui-button-small" style="width: 30px;height: 30px;margin-right: 1px;px;"><i class="fa fa-edit"></i></button><button class="red-ui-button red-ui-button-small" style="width: 30px;height: 30px;margin-right: 3px;px;"><i class="fa fa-plus"></i></button></div>
-
-		return BA;
 	}
 
 	function renderNode(node) {
@@ -2089,14 +2236,8 @@ const ZwaveJsUI = (function () {
 			.addClass('red-ui-treeList-label zwave-js-node-row')
 			.attr('data-nodeid', node.nodeId)
 			.data('info', node)
-			.hover(()=>{$("#node-options-"+node.nodeId).css({display:'block'})},()=>{$("#node-options-"+node.nodeId).css({display:'none'})})
-			.click(() => {
-				node.ready
-					? selectNode(node.nodeId)
-					: modalAlert('This node is not ready', 'Node Not Ready');
-			})
+			.hover(function(){AddOverlayNodeButtons(node,$(this));},function(){AddOverlayNodeButtons();})
 			.append(
-				AddOverlayNodeButtons(node),
 				$('<div>').html(node.nodeId).addClass('zwave-js-node-row-id'),
 				$('<div>').html(node.name).addClass('zwave-js-node-row-name'),
 				$('<div>')
@@ -2167,7 +2308,7 @@ const ZwaveJsUI = (function () {
 			setNameButton.html('Set Name').prev().hide();
 	}
 
-	let selectedNode;
+
 
 	function deselectCurrentNode() {
 		// "Disconnect" from previously selected node
@@ -2317,7 +2458,7 @@ const ZwaveJsUI = (function () {
 
 				return {
 					element: renderCommandClassElement(commandClass, commandClassName),
-					expanded: $('#node-properties-auto-expand').is(':checked'),
+					expanded: ExpandCC,
 					children: propsInCC.map((valueId) => {
 						return { element: renderPropertyElement(valueId) };
 					})
