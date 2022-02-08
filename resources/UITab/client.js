@@ -886,6 +886,7 @@ const ZwaveJsUI = (function () {
 	}
 
 	function GetNodes() {
+		BA = undefined;
 		ControllerCMD('ControllerAPI', 'getNodes')
 			.then(({ object }) => {
 				const controllerNode = object.filter((N) => N.isControllerNode);
@@ -1466,6 +1467,7 @@ const ZwaveJsUI = (function () {
 		// Info
 		$('<div id="zwave-js-controller-info">')
 			.addClass('zwave-js-info-box')
+			.css({fontWeight:'bold'})
 			.appendTo(controllerOpts);
 		$('<div id="zwave-js-controller-status">')
 			.addClass('zwave-js-info-box')
@@ -1474,7 +1476,9 @@ const ZwaveJsUI = (function () {
 
 			const BA = $('<div>');
 			BA.css({width:'200px',marginLeft:'6px',bbackgroundColor:'inherit'});
+			BA.appendTo(controllerOpts);
 
+			// Expand
 			const Expand = $("<button>");
 			Expand.click(()=>{
 				if(ExpandCC){
@@ -1494,17 +1498,21 @@ const ZwaveJsUI = (function () {
 			Expand.append('<i class="fa fa-square-o fa-lg"></i>');
 			RED.popover.tooltip(Expand,'Expand CC\'s');
 			BA.append(Expand);
-			BA.appendTo(controllerOpts);
+			
 
+			// Include Exclude
 			const IE = $("<button>");
-			IE.click(()=>{});
+			IE.click(()=>{
+				IsDriverReady();
+				ShowIncludeExcludePrompt();
+			});
 			IE.addClass('red-ui-button red-ui-button-small');
 			IE.css({width:'30px', height:'30px', marginRight:'1px'});
 			IE.append('<i class="fa fa-wifi fa-lg"></i>');
 			RED.popover.tooltip(IE,'Include/Exclude');
 			BA.append(IE);
-			BA.appendTo(controllerOpts);
 
+			// Heal
 			const Heal = $("<button>");
 			Heal.click(()=>{});
 			Heal.addClass('red-ui-button red-ui-button-small');
@@ -1512,8 +1520,8 @@ const ZwaveJsUI = (function () {
 			Heal.append('<i class="fa fa-medkit fa-lg"></i>');
 			RED.popover.tooltip(Heal,'Heal Network');
 			BA.append(Heal);
-			BA.appendTo(controllerOpts)
 
+			// Monitor
 			const Monitor = $("<button>");
 			Monitor.click(()=>{
 				ShowCommandViewer();
@@ -1523,10 +1531,11 @@ const ZwaveJsUI = (function () {
 			Monitor.append('<i class="fa fa-code fa-lg"></i>');
 			RED.popover.tooltip(Monitor,'UI Command Monitor');
 			BA.append(Monitor);
-			BA.appendTo(controllerOpts)
 
+			// Refresh Nodes
 			const RefreshNodes = $("<button>");
 			RefreshNodes.click(()=>{
+				IsDriverReady();
 				GetNodes();
 			});
 			RefreshNodes.addClass('red-ui-button red-ui-button-small');
@@ -1534,7 +1543,29 @@ const ZwaveJsUI = (function () {
 			RefreshNodes.append('<i class="fa fa-refresh fa-lg"></i>');
 			RED.popover.tooltip(RefreshNodes,'Refresh Node List');
 			BA.append(RefreshNodes);
-			BA.appendTo(controllerOpts)
+
+			// Reset
+			const _Reset = $("<button>");
+			_Reset.click(()=>{
+				Reset();
+			});
+			_Reset.addClass('red-ui-button red-ui-button-small');
+			_Reset.css({width:'30px', height:'30px', marginRight:'1px'});
+			_Reset.append('<i class="fa fa-eraser fa-lg"></i>');
+			RED.popover.tooltip(_Reset,'Reset Controller');
+			BA.append(_Reset);
+
+			// Firmware
+			const Firmware = $("<button>");
+			Firmware.click(()=>{
+				IsDriverReady();
+				FirmwareUpdate();
+			});
+			Firmware.addClass('red-ui-button red-ui-button-small');
+			Firmware.css({width:'30px', height:'30px', marginRight:'1px'});
+			Firmware.append('<i class="fa fa-microchip fa-lg"></i>');
+			RED.popover.tooltip(Firmware,'Firmware Update');
+			BA.append(Firmware);
 
 		// Include Exclide, log
 		const optInclusionLog = $('<div>')
@@ -1648,9 +1679,9 @@ const ZwaveJsUI = (function () {
 		})
 			.css({ flex: '0 0 auto' })
 			.appendTo(nodePanel);
-		$('<span id="zwave-js-selected-node-id">').appendTo(nodeHeader);
-		$('<span id="zwave-js-selected-node-name">').appendTo(nodeHeader);
-		$('<span id="zwave-js-selected-node-location">').appendTo(nodeHeader);
+		//$('<span id="zwave-js-selected-node-id">').appendTo(nodeHeader);
+		//$('<span id="zwave-js-selected-node-name">').appendTo(nodeHeader);
+		//$('<span id="zwave-js-selected-node-location">').appendTo(nodeHeader);
 		//$('<button>')
 		//	.addClass('red-ui-button red-ui-button-small')
 		//	.css({ float: 'right' })
@@ -1663,6 +1694,10 @@ const ZwaveJsUI = (function () {
 
 		// Info
 		$('<div id="zwave-js-selected-node-info">')
+			.addClass('zwave-js-info-box')
+			.css({fontWeight:'bold'})
+			.appendTo(nodeOpts);
+		$('<div id="zwave-js-selected-node-name">')
 			.addClass('zwave-js-info-box')
 			.appendTo(nodeOpts);
 
@@ -2232,6 +2267,7 @@ const ZwaveJsUI = (function () {
 	}
 
 	function renderNode(node) {
+		
 		return $('<div>')
 			.addClass('red-ui-treeList-label zwave-js-node-row')
 			.attr('data-nodeid', node.nodeId)
@@ -2336,26 +2372,21 @@ const ZwaveJsUI = (function () {
 
 		const selectedEl = $(`#zwave-js-node-list [data-nodeid='${id}']`);
 		selectedEl.addClass('selected');
-		$('#zwave-js-selected-node-id').text(selectedNode);
+		//$('#zwave-js-selected-node-id').text(selectedNode);
 		const info = selectedEl.data('info');
-
-		if (info.name !== undefined && info.name.length > 0) {
-			$('#zwave-js-selected-node-name').text(info.name);
-		} else {
-			$('#zwave-js-selected-node-name').text('');
-		}
-
-		if (info.location !== undefined && info.location.length > 0) {
-			$('#zwave-js-selected-node-location').text(`(${info.location})`);
-		} else {
-			$('#zwave-js-selected-node-location').text('');
-		}
 
 		makeInfo(
 			'#zwave-js-selected-node-info',
 			info.deviceConfig,
 			info.firmwareVersion
 		);
+
+		const Name = `${selectedNode} - ${(info.name !== undefined && info.name.length > 0 ? info.name : 'No Name' )}`
+		$('#zwave-js-selected-node-name').text(Name);
+
+		
+
+		
 		getProperties();
 		RED.comms.subscribe(`/zwave-js/cmd/${selectedNode}`, handleNodeEvent);
 	}
