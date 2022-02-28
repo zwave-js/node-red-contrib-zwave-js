@@ -189,7 +189,7 @@ const ZwaveJsUI = (function () {
 			resizable: false,
 			width: '800',
 			height: '600',
-			title: 'Node Health Check : Node ' + selectedNode,
+			title: 'Node Health Check : Node ' + HoveredNode.nodeId,
 			minHeight: 75,
 			buttons: {
 				Abort: function () {
@@ -223,7 +223,7 @@ const ZwaveJsUI = (function () {
 			'DriverAPI',
 			'checkLifelineHealth',
 			undefined,
-			[selectedNode, Rounds],
+			[HoveredNode.nodeId, Rounds],
 			true
 		);
 	}
@@ -974,7 +974,7 @@ const ZwaveJsUI = (function () {
 		}
 
 		ControllerCMD('IEAPI', 'replaceNode', undefined, [
-			parseInt(selectedNode),
+			parseInt(HoveredNode.nodeId),
 			Request
 		]).catch((err) => {
 			if (err.status !== 504) {
@@ -1371,7 +1371,7 @@ const ZwaveJsUI = (function () {
 
 	function InterviewNode() {
 		ControllerCMD('ControllerAPI', 'refreshInfo', undefined, [
-			selectedNode
+			HoveredNode.nodeId
 		]).catch((err) => {
 			if (err.status !== 504) {
 				modalAlert(err.responseText, 'Interview Error');
@@ -1405,7 +1405,7 @@ const ZwaveJsUI = (function () {
 			'Yes - Remove': function () {
 				Removing = true;
 				ControllerCMD('ControllerAPI', 'removeFailedNode', undefined, [
-					selectedNode
+					HoveredNode.nodeId
 				]).catch((err) => {
 					if (err.status !== 504) {
 						modalAlert(err.responseText, 'Could Not Remove Node');
@@ -1424,6 +1424,73 @@ const ZwaveJsUI = (function () {
 	}
 
 
+	function ShowOtherControllolerMenu(button) {
+        
+        const menuOptionMenu = RED.menu.init({id:"controller-option-menu",
+                options: [
+					{
+						id: "controller-option-menu-refresh",
+						label:"Refresh Node List",
+						onselect:function(){
+							IsDriverReady()
+							GetNodes()
+                            //menuOptionMenu.collapse();
+                        }
+					},
+					{
+						id: "controller-option-menu-start-heal",
+						label:"Begin Network Heal",
+						onselect:function(){
+							IsDriverReady()
+							StartHeal();
+                           // menuOptionMenu.collapse();
+                        }
+					},
+					{
+						id: "controller-option-menu-stop-heal",
+						label:"Stop Network Heal",
+						onselect:function(){
+							IsDriverReady()
+							StopHeal();
+                           // menuOptionMenu.collapse();
+                        }
+					},
+					{
+						id: "controller-option-menu-firmware",
+						label:"Node Firmware Updater",
+						onselect:function(){
+							IsDriverReady()
+							FirmwareUpdate();
+						//	menuOptionMenu.collapse();
+                        }
+					},
+					{
+						id: "controller-option-menu-reset",
+						label:"Reset Controller",
+						onselect:function(){
+							Reset();
+						//	menuOptionMenu.collapse();
+                        }
+					}
+                ]
+            });
+            menuOptionMenu.css({
+                position: "absolute"
+            })
+            menuOptionMenu.on('mouseleave', function(){ $(this).hide() });
+            menuOptionMenu.on('mouseup', function() { $(this).hide() });
+            menuOptionMenu.appendTo("body");
+        
+
+
+
+        const elementPos = button.offset();
+        menuOptionMenu.css({
+            top: elementPos.top+"px",
+            left: (elementPos.left - menuOptionMenu.width() + 20)+"px"
+        })
+        menuOptionMenu.show();
+    }
 
 	function init() {
 		// Container(s)
@@ -1512,13 +1579,16 @@ const ZwaveJsUI = (function () {
 			RED.popover.tooltip(IE,'Include/Exclude');
 			BA.append(IE);
 
-			// Heal
+			// Map
 			const Heal = $("<button>");
-			Heal.click(()=>{});
+			Heal.click(()=>{
+				IsDriverReady();
+				NetworkMap();
+			});
 			Heal.addClass('red-ui-button red-ui-button-small');
 			Heal.css({width:'30px', height:'30px', marginRight:'1px'});
-			Heal.append('<i class="fa fa-medkit fa-lg"></i>');
-			RED.popover.tooltip(Heal,'Heal Network');
+			Heal.append('<i class="fa fa-globe fa-lg"></i>');
+			RED.popover.tooltip(Heal,'Network Map');
 			BA.append(Heal);
 
 			// Monitor
@@ -1532,17 +1602,16 @@ const ZwaveJsUI = (function () {
 			RED.popover.tooltip(Monitor,'UI Command Monitor');
 			BA.append(Monitor);
 
-			// Refresh Nodes
-			const RefreshNodes = $("<button>");
-			RefreshNodes.click(()=>{
-				IsDriverReady();
-				GetNodes();
-			});
-			RefreshNodes.addClass('red-ui-button red-ui-button-small');
-			RefreshNodes.css({width:'30px', height:'30px', marginRight:'1px'});
-			RefreshNodes.append('<i class="fa fa-refresh fa-lg"></i>');
-			RED.popover.tooltip(RefreshNodes,'Refresh Node List');
-			BA.append(RefreshNodes);
+			// Other
+			const OtherBTN = $("<button>");
+			OtherBTN.click(()=>{ShowOtherControllolerMenu(OtherBTN)});
+			OtherBTN.addClass('red-ui-button red-ui-button-small');
+			OtherBTN.css({width:'30px', height:'30px', marginRight:'1px'});
+			OtherBTN.append('<i class="fa fa-caret-down fa-lg"></i>');
+			RED.popover.tooltip(OtherBTN,'Other Actions');
+			BA.append(OtherBTN);
+			
+			/*
 
 			// Reset
 			const _Reset = $("<button>");
@@ -1566,6 +1635,7 @@ const ZwaveJsUI = (function () {
 			Firmware.append('<i class="fa fa-microchip fa-lg"></i>');
 			RED.popover.tooltip(Firmware,'Firmware Update');
 			BA.append(Firmware);
+			*/
 
 		// Include Exclide, log
 		const optInclusionLog = $('<div>')
@@ -2126,41 +2196,52 @@ const ZwaveJsUI = (function () {
 
 	function ShowOtherNodeMenu(button) {
         
-        const menuOptionMenu = RED.menu.init({id:"debug-message-option-menu",
+        const menuOptionMenu = RED.menu.init({id:"node-option-menu",
                 options: [
 					{
-						id:"debug-message-menu-item-collapse",
+						id:"node-option-menu-interview",
 						label:"Reinterview Node",
 						onselect:function(){
-                          activeMenuMessage.collapse();
+							IsDriverReady();
+							HoveredNode.ready ? InterviewNode() : modalAlert('This node is not ready', 'Node Not Ready');
+							
+							//menuOptionMenu.collapse();
                         }
 					},
 					{
-						id:"debug-message-menu-item-collapse",
+						id:"node-option-menu-remove",
 						label:"Remove Failed Node",
 						onselect:function(){
-                          activeMenuMessage.collapse();
+							IsDriverReady();
+							RemoveFailedNode() 
+							//menuOptionMenu.collapse();
                         }
 					},
 					{
-						id:"debug-message-menu-item-erwrrw",
+						id:"node-option-menu-replace",
 						label:"Replace Failed Node",
 						onselect:function(){
-                          activeMenuMessage.collapse();
+							IsDriverReady();
+							ShowReplacePrompt() 
+						//	menuOptionMenu.collapse();
                         }
 					},
 					{
-						id:"debug-message-menu-item-erwrrrrrrrw",
+						id:"node-option-menu-healt",
 						label:"Run Health Check",
 						onselect:function(){
-                          activeMenuMessage.collapse();
+							IsDriverReady();
+							HoveredNode.ready ?  HealthCheck() : modalAlert('This node is not ready', 'Node Not Ready');
+						//	menuOptionMenu.collapse();
                         }
 					},
 					{
-						id:"debug-message-menu-item-ereerwrwrrw",
+						id:"node-option-menu-db",
 						label:"View In Device Browser",
 						onselect:function(){
-                          activeMenuMessage.collapse();
+							IsDriverReady();
+							HoveredNode.ready  ? OpenDB() : modalAlert('This node is not ready', 'Node Not Ready');
+						//	menuOptionMenu.collapse();
                         }
 					}
                 ]
