@@ -53,7 +53,6 @@ JSONFormatter.json = {
 };
 
 const ZwaveJsUI = (function () {
-
 	let HCForm; // Health Check Form
 	let HCRounds; // Health Check Rounds
 	let FirmwareForm; // FrimwareForm
@@ -68,8 +67,6 @@ const ZwaveJsUI = (function () {
 	let BA = undefined; // Node Button Array
 	let HoveredNode = undefined; // Hovered Node
 	let selectedNode; // Selected Node
-
-
 
 	function modalAlert(message, title) {
 		const Buts = {
@@ -131,7 +128,6 @@ const ZwaveJsUI = (function () {
 			});
 	}
 
-
 	function processHealthCheckProgress(topic, data) {
 		const P = Math.round((100 * data.payload) / HCRounds);
 		HCForm.html(
@@ -161,13 +157,13 @@ const ZwaveJsUI = (function () {
 			MXC: MXC
 		};
 
-		Data.TX = data.payload.Statistics[selectedNode.toString()].commandsTX;
-		Data.RX = data.payload.Statistics[selectedNode.toString()].commandsRX;
+		Data.TX = data.payload.Statistics[HoveredNode.nodeId.toString()].commandsTX;
+		Data.RX = data.payload.Statistics[HoveredNode.nodeId.toString()].commandsRX;
 		Data.TXD =
-			data.payload.Statistics[selectedNode.toString()].commandsDroppedTX;
+			data.payload.Statistics[HoveredNode.nodeId.toString()].commandsDroppedTX;
 		Data.RXD =
-			data.payload.Statistics[selectedNode.toString()].commandsDroppedRX;
-		Data.TO = data.payload.Statistics[selectedNode.toString()].timeoutResponse;
+			data.payload.Statistics[HoveredNode.nodeId.toString()].commandsDroppedRX;
+		Data.TO = data.payload.Statistics[HoveredNode.nodeId.toString()].timeoutResponse;
 
 		HCForm.html('');
 		const Template = $('#TPL_HealthCheck').html();
@@ -230,7 +226,6 @@ const ZwaveJsUI = (function () {
 
 	function HealthCheck() {
 		IsDriverReady();
-		IsNodeSelected();
 		const Buttons = {
 			'Yes (1 Round)': () => {
 				RenderHealthCheck(1);
@@ -250,43 +245,10 @@ const ZwaveJsUI = (function () {
 		);
 	}
 
-	function KeepAwake() {
-		IsDriverReady();
-		IsNodeSelected();
-		const Node = $(
-			".red-ui-treeList-label.zwave-js-node-row[data-nodeid='" +
-				selectedNode +
-				"']"
-		).data('info');
-
-		Node.keepAwake = Node.keepAwake ? false : true;
-
-		ControllerCMD('ControllerAPI', 'keepNodeAwake', undefined, [
-			selectedNode,
-			Node.keepAwake
-		]);
-
-		MarkSleepButton();
-	}
-	function MarkSleepButton() {
-		const Current = $(
-			".red-ui-treeList-label.zwave-js-node-row[data-nodeid='" +
-				selectedNode +
-				"']"
-		).data('info').keepAwake;
-
-		if (Current) {
-			$('#zwave-js-keep-awake').html('[ Keep Awake ]');
-		} else {
-			$('#zwave-js-keep-awake').html('Keep Awake');
-		}
-	}
-
-
 	function AbortUpdate() {
 		if (FWRunning) {
 			ControllerCMD('ControllerAPI', 'abortFirmwareUpdate', undefined, [
-				selectedNode
+				HoveredNode.nodeId
 			]).then(() => {
 				FirmwareForm.dialog('destroy');
 			});
@@ -364,8 +326,6 @@ const ZwaveJsUI = (function () {
 		});
 	}
 
-
-
 	function AddAssociation() {
 		const NI = $('<input>')
 			.attr('type', 'number')
@@ -379,7 +339,10 @@ const ZwaveJsUI = (function () {
 		const Buttons = {
 			Add: function () {
 				const PL = [
-					{ nodeId: HoveredNode.nodeId, endpoint: parseInt($('#NODE_EP').val()) },
+					{
+						nodeId: HoveredNode.nodeId,
+						endpoint: parseInt($('#NODE_EP').val())
+					},
 					parseInt($('#NODE_G').val()),
 					[{ nodeId: parseInt(NI.val()) }]
 				];
@@ -781,28 +744,6 @@ const ZwaveJsUI = (function () {
 	let controllerOpts;
 	let nodeOpts;
 
-	function ShowHideNodeOptions() {
-		if (nodeOpts.is(':visible')) {
-			cancelSetName();
-			$(this).html('Show Node Options');
-			nodeOpts.hide();
-		} else {
-			$(this).html('Hide Node Options');
-			nodeOpts.show();
-		}
-	}
-
-	function ShowHideController() {
-		if (controllerOpts.is(':visible')) {
-			$(this).html('Show Controller Options');
-			controllerOpts.hide();
-		} else {
-			$(this).html('Hide Controller Options');
-			controllerOpts.show();
-			getLatestStatus();
-		}
-	}
-
 	function CheckDriverReady() {
 		const Options = {
 			url: `zwave-js/driverready`,
@@ -810,13 +751,6 @@ const ZwaveJsUI = (function () {
 		};
 
 		return $.ajax(Options);
-	}
-
-	function IsNodeSelected() {
-		if (selectedNode === undefined) {
-			modalAlert('Please select a Node.', 'No Node Selected');
-			throw new Error('No Node Selected');
-		}
 	}
 
 	function IsDriverReady() {
@@ -908,6 +842,8 @@ const ZwaveJsUI = (function () {
 			.catch((err) => {
 				console.error(err);
 			});
+
+			$('#zwave-js-node-properties > div > div > div > ol').empty();
 	}
 
 	function ListRequestedClass(Classes) {
@@ -1241,8 +1177,13 @@ const ZwaveJsUI = (function () {
 	}
 
 	function StartNodeHeal() {
-		ControllerCMD('ControllerAPI', 'healNode', undefined, [HoveredNode.nodeId], true);
-
+		ControllerCMD(
+			'ControllerAPI',
+			'healNode',
+			undefined,
+			[HoveredNode.nodeId],
+			true
+		);
 	}
 
 	function StartHeal() {
@@ -1296,7 +1237,6 @@ const ZwaveJsUI = (function () {
 
 	function RenameNode(KB, El) {
 		IsDriverReady();
-		IsNodeSelected();
 		let input;
 		let Button;
 		if (KB === true) {
@@ -1331,7 +1271,6 @@ const ZwaveJsUI = (function () {
 
 	function SetNodeLocation(KB, El) {
 		IsDriverReady();
-		IsNodeSelected();
 		let input;
 		let Button;
 		if (KB === true) {
@@ -1380,9 +1319,8 @@ const ZwaveJsUI = (function () {
 	}
 
 	function OpenDB() {
-		IsNodeSelected();
-		const info =
-			$(`.zwave-js-node-row.selected`).data('info')?.deviceConfig || {};
+		const info = HoveredNode.deviceConfig;
+
 		const id = [
 			'0x' + info.manufacturerId.toString(16).padStart(4, '0'),
 			'0x' + info.devices[0].productType.toString(16).padStart(4, '0'),
@@ -1391,7 +1329,6 @@ const ZwaveJsUI = (function () {
 		].join(':');
 		window.open(`https://devices.zwave-js.io/?jumpTo=${id}`, '_blank');
 	}
-
 
 	function RemoveFailedNode() {
 		if (Removing) {
@@ -1423,74 +1360,74 @@ const ZwaveJsUI = (function () {
 		);
 	}
 
-
 	function ShowOtherControllolerMenu(button) {
-        
-        const menuOptionMenu = RED.menu.init({id:"controller-option-menu",
-                options: [
-					{
-						id: "controller-option-menu-refresh",
-						label:"Refresh Node List",
-						onselect:function(){
-							IsDriverReady()
-							GetNodes()
-                            //menuOptionMenu.collapse();
-                        }
-					},
-					{
-						id: "controller-option-menu-start-heal",
-						label:"Begin Network Heal",
-						onselect:function(){
-							IsDriverReady()
-							StartHeal();
-                           // menuOptionMenu.collapse();
-                        }
-					},
-					{
-						id: "controller-option-menu-stop-heal",
-						label:"Stop Network Heal",
-						onselect:function(){
-							IsDriverReady()
-							StopHeal();
-                           // menuOptionMenu.collapse();
-                        }
-					},
-					{
-						id: "controller-option-menu-firmware",
-						label:"Node Firmware Updater",
-						onselect:function(){
-							IsDriverReady()
-							FirmwareUpdate();
-						//	menuOptionMenu.collapse();
-                        }
-					},
-					{
-						id: "controller-option-menu-reset",
-						label:"Reset Controller",
-						onselect:function(){
-							Reset();
-						//	menuOptionMenu.collapse();
-                        }
+		const menuOptionMenu = RED.menu.init({
+			id: 'controller-option-menu',
+			options: [
+				{
+					id: 'controller-option-menu-refresh',
+					label: 'Refresh Node List',
+					onselect: function () {
+						IsDriverReady();
+						GetNodes();
+						//menuOptionMenu.collapse();
 					}
-                ]
-            });
-            menuOptionMenu.css({
-                position: "absolute"
-            })
-            menuOptionMenu.on('mouseleave', function(){ $(this).hide() });
-            menuOptionMenu.on('mouseup', function() { $(this).hide() });
-            menuOptionMenu.appendTo("body");
-        
+				},
+				{
+					id: 'controller-option-menu-start-heal',
+					label: 'Begin Network Heal',
+					onselect: function () {
+						IsDriverReady();
+						StartHeal();
+						// menuOptionMenu.collapse();
+					}
+				},
+				{
+					id: 'controller-option-menu-stop-heal',
+					label: 'Stop Network Heal',
+					onselect: function () {
+						IsDriverReady();
+						StopHeal();
+						// menuOptionMenu.collapse();
+					}
+				},
+				{
+					id: 'controller-option-menu-firmware',
+					label: 'Node Firmware Updater',
+					onselect: function () {
+						IsDriverReady();
+						FirmwareUpdate();
+						//	menuOptionMenu.collapse();
+					}
+				},
+				{
+					id: 'controller-option-menu-reset',
+					label: 'Reset Controller',
+					onselect: function () {
+						Reset();
+						//	menuOptionMenu.collapse();
+					}
+				}
+			]
+		});
+		menuOptionMenu.css({
+			position: 'absolute'
+		});
+		menuOptionMenu.on('mouseleave', function () {
+			$(this).hide();
+		});
+		menuOptionMenu.on('mouseup', function () {
+			$(this).hide();
+		});
+		menuOptionMenu.appendTo('body');
 
-
-
-        const elementPos = button.offset();
-        menuOptionMenu.css({
-            top: elementPos.top+"px",
-            left: (elementPos.left - menuOptionMenu.width() + 20)+"px"
-        })
-        menuOptionMenu.show();
-    }
+		const elementPos = button.offset();
+		menuOptionMenu.css({
+			top: elementPos.top + 'px',
+			left: elementPos.left - menuOptionMenu.width() + 20 + 'px'
+		});
+		menuOptionMenu.show();
+	}
 
 	function init() {
 		// Container(s)
@@ -1517,214 +1454,88 @@ const ZwaveJsUI = (function () {
 			.addClass('red-ui-sidebar-header')
 			.css({ flex: '0 0 auto', textAlign: 'left', padding: 5 })
 			.appendTo(mainPanel);
-	//	$('<input type="checkbox" id="node-properties-auto-expand">')
-	//		.css({ margin: '0 2px' })
-	//		.appendTo(controllerHeader);
-	//	$('<span>').html("Expand CC's").appendTo(controllerHeader);
-	//	$('<button>')
-	//		.addClass('red-ui-button red-ui-button-small')
-	//		.css({ float: 'right' })
-	//		.html('Show Controller Options')
-	//		.click(ShowHideController)
-	//		.appendTo(controllerHeader);
-    //
+
 		// Controller Options
-		controllerOpts = $('<div>').appendTo(controllerHeader);//.hide();
+		controllerOpts = $('<div>').appendTo(controllerHeader);
 
 		// Info
 		$('<div id="zwave-js-controller-info">')
 			.addClass('zwave-js-info-box')
-			.css({fontWeight:'bold'})
+			.css({ fontWeight: 'bold' })
 			.appendTo(controllerOpts);
 		$('<div id="zwave-js-controller-status">')
 			.addClass('zwave-js-info-box')
 			.html('Waiting for driver...')
 			.appendTo(controllerOpts);
 
-			const BA = $('<div>');
-			BA.css({width:'200px',marginLeft:'6px',bbackgroundColor:'inherit'});
-			BA.appendTo(controllerOpts);
+		const BA = $('<div>');
+		BA.css({ width: '200px', marginLeft: '6px', bbackgroundColor: 'inherit' });
+		BA.appendTo(controllerOpts);
 
-			// Expand
-			const Expand = $("<button>");
-			Expand.click(()=>{
-				if(ExpandCC){
-					ExpandCC = false;
-					Expand.find('i').removeClass('fa-check-square-o')
-					Expand.find('i').addClass('fa-square-o')
-				}
-				else{
-					ExpandCC = true;
-					Expand.find('i').addClass('fa-check-square-o')
-					Expand.find('i').removeClass('fa-square-o')
-				}
+		// Expand
+		const Expand = $('<button>');
+		Expand.click(() => {
+			if (ExpandCC) {
+				ExpandCC = false;
+				Expand.find('i').removeClass('fa-check-square-o');
+				Expand.find('i').addClass('fa-square-o');
+			} else {
+				ExpandCC = true;
+				Expand.find('i').addClass('fa-check-square-o');
+				Expand.find('i').removeClass('fa-square-o');
+			}
+		});
+		Expand.addClass('red-ui-button red-ui-button-small');
+		Expand.css({ width: '30px', height: '30px', marginRight: '5px' });
+		Expand.append('<i class="fa fa-square-o fa-lg"></i>');
+		RED.popover.tooltip(Expand, "Expand CC's");
+		BA.append(Expand);
 
-			});
-			Expand.addClass('red-ui-button red-ui-button-small');
-			Expand.css({width:'30px', height:'30px', marginRight:'5px'});
-			Expand.append('<i class="fa fa-square-o fa-lg"></i>');
-			RED.popover.tooltip(Expand,'Expand CC\'s');
-			BA.append(Expand);
-			
+		// Include Exclude
+		const IE = $('<button>');
+		IE.click(() => {
+			IsDriverReady();
+			ShowIncludeExcludePrompt();
+		});
+		IE.addClass('red-ui-button red-ui-button-small');
+		IE.css({ width: '30px', height: '30px', marginRight: '1px' });
+		IE.append('<i class="fa fa-wifi fa-lg"></i>');
+		RED.popover.tooltip(IE, 'Include/Exclude');
+		BA.append(IE);
 
-			// Include Exclude
-			const IE = $("<button>");
-			IE.click(()=>{
-				IsDriverReady();
-				ShowIncludeExcludePrompt();
-			});
-			IE.addClass('red-ui-button red-ui-button-small');
-			IE.css({width:'30px', height:'30px', marginRight:'1px'});
-			IE.append('<i class="fa fa-wifi fa-lg"></i>');
-			RED.popover.tooltip(IE,'Include/Exclude');
-			BA.append(IE);
+		// Map
+		const Heal = $('<button>');
+		Heal.click(() => {
+			IsDriverReady();
+			NetworkMap();
+		});
+		Heal.addClass('red-ui-button red-ui-button-small');
+		Heal.css({ width: '30px', height: '30px', marginRight: '1px' });
+		Heal.append('<i class="fa fa-globe fa-lg"></i>');
+		RED.popover.tooltip(Heal, 'Network Map');
+		BA.append(Heal);
 
-			// Map
-			const Heal = $("<button>");
-			Heal.click(()=>{
-				IsDriverReady();
-				NetworkMap();
-			});
-			Heal.addClass('red-ui-button red-ui-button-small');
-			Heal.css({width:'30px', height:'30px', marginRight:'1px'});
-			Heal.append('<i class="fa fa-globe fa-lg"></i>');
-			RED.popover.tooltip(Heal,'Network Map');
-			BA.append(Heal);
+		// Monitor
+		const Monitor = $('<button>');
+		Monitor.click(() => {
+			ShowCommandViewer();
+		});
+		Monitor.addClass('red-ui-button red-ui-button-small');
+		Monitor.css({ width: '30px', height: '30px', marginRight: '1px' });
+		Monitor.append('<i class="fa fa-code fa-lg"></i>');
+		RED.popover.tooltip(Monitor, 'UI Command Monitor');
+		BA.append(Monitor);
 
-			// Monitor
-			const Monitor = $("<button>");
-			Monitor.click(()=>{
-				ShowCommandViewer();
-			});
-			Monitor.addClass('red-ui-button red-ui-button-small');
-			Monitor.css({width:'30px', height:'30px', marginRight:'1px'});
-			Monitor.append('<i class="fa fa-code fa-lg"></i>');
-			RED.popover.tooltip(Monitor,'UI Command Monitor');
-			BA.append(Monitor);
-
-			// Other
-			const OtherBTN = $("<button>");
-			OtherBTN.click(()=>{ShowOtherControllolerMenu(OtherBTN)});
-			OtherBTN.addClass('red-ui-button red-ui-button-small');
-			OtherBTN.css({width:'30px', height:'30px', marginRight:'1px'});
-			OtherBTN.append('<i class="fa fa-caret-down fa-lg"></i>');
-			RED.popover.tooltip(OtherBTN,'Other Actions');
-			BA.append(OtherBTN);
-			
-			/*
-
-			// Reset
-			const _Reset = $("<button>");
-			_Reset.click(()=>{
-				Reset();
-			});
-			_Reset.addClass('red-ui-button red-ui-button-small');
-			_Reset.css({width:'30px', height:'30px', marginRight:'1px'});
-			_Reset.append('<i class="fa fa-eraser fa-lg"></i>');
-			RED.popover.tooltip(_Reset,'Reset Controller');
-			BA.append(_Reset);
-
-			// Firmware
-			const Firmware = $("<button>");
-			Firmware.click(()=>{
-				IsDriverReady();
-				FirmwareUpdate();
-			});
-			Firmware.addClass('red-ui-button red-ui-button-small');
-			Firmware.css({width:'30px', height:'30px', marginRight:'1px'});
-			Firmware.append('<i class="fa fa-microchip fa-lg"></i>');
-			RED.popover.tooltip(Firmware,'Firmware Update');
-			BA.append(Firmware);
-			*/
-
-		// Include Exclide, log
-		const optInclusionLog = $('<div>')
-			.css('text-align', 'center')
-		//	.appendTo(controllerOpts);
-		$('<button>')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
-			.click(() => {
-				IsDriverReady();
-				ShowIncludeExcludePrompt();
-			})
-			.html('Include / Exclude')
-			.appendTo(optInclusionLog);
-		$('<button>')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
-			.click(ShowCommandViewer)
-			.html('UI Monitor')
-			.appendTo(optInclusionLog);
-
-		// Heal
-		const optHeal = $('<div>')
-			.css('text-align', 'center')
-		//	.appendTo(controllerOpts);
-		$('<button>')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
-			.click(() => {
-				IsDriverReady();
-				StartHeal();
-			})
-			.html('Start Network Heal')
-			.appendTo(optHeal);
-		$('<button>')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
-			.click(() => {
-				IsDriverReady();
-				StopHeal();
-			})
-			.html('Stop Network Heal')
-			.appendTo(optHeal);
-
-		// Refresh, Reset
-		const optRefreshReset = $('<div>')
-			.css('text-align', 'center')
-		//	.appendTo(controllerOpts);
-		$('<button>')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
-			.click(() => {
-				IsDriverReady();
-				GetNodes();
-			})
-			.html('Refresh Node List')
-			.appendTo(optRefreshReset);
-		$('<button>')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
-			.click(() => {
-				IsDriverReady();
-				Reset();
-			})
-			.html('Reset Controller')
-			.appendTo(optRefreshReset);
-
-		// Tools
-		const tools = $('<div>')
-			.css('text-align', 'center')
-		//	.appendTo(controllerOpts);
-		$('<button>')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
-			.click(() => {
-				IsDriverReady();
-				FirmwareUpdate();
-			})
-			.html('Firmware Updater')
-			.appendTo(tools);
-		$('<button>')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
-			.click(() => {
-				IsDriverReady();
-				NetworkMap();
-			})
-			.html('Network Map')
-			.appendTo(tools);
+		// Other
+		const OtherBTN = $('<button>');
+		OtherBTN.click(() => {
+			ShowOtherControllolerMenu(OtherBTN);
+		});
+		OtherBTN.addClass('red-ui-button red-ui-button-small');
+		OtherBTN.css({ width: '30px', height: '30px', marginRight: '1px' });
+		OtherBTN.append('<i class="fa fa-caret-down fa-lg"></i>');
+		RED.popover.tooltip(OtherBTN, 'Other Actions');
+		BA.append(OtherBTN);
 
 		// Node List
 		$('<div id="zwave-js-node-list">')
@@ -1749,154 +1560,17 @@ const ZwaveJsUI = (function () {
 		})
 			.css({ flex: '0 0 auto' })
 			.appendTo(nodePanel);
-		//$('<span id="zwave-js-selected-node-id">').appendTo(nodeHeader);
-		//$('<span id="zwave-js-selected-node-name">').appendTo(nodeHeader);
-		//$('<span id="zwave-js-selected-node-location">').appendTo(nodeHeader);
-		//$('<button>')
-		//	.addClass('red-ui-button red-ui-button-small')
-		//	.css({ float: 'right' })
-		//	.click(ShowHideNodeOptions)
-		//	.html('Show Node Options')
-		//	.appendTo(nodeHeader);
 
-		// node Options
-		nodeOpts = $('<div>').appendTo(nodeHeader);//.hide();
+		nodeOpts = $('<div>').appendTo(nodeHeader); //.hide();
 
 		// Info
 		$('<div id="zwave-js-selected-node-info">')
 			.addClass('zwave-js-info-box')
-			.css({fontWeight:'bold'})
+			.css({ fontWeight: 'bold' })
 			.appendTo(nodeOpts);
 		$('<div id="zwave-js-selected-node-name">')
 			.addClass('zwave-js-info-box')
 			.appendTo(nodeOpts);
-
-		// Set 1
-		const set1 = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
-		// Name
-		$('<input>')
-			.addClass('red-ui-searchBox-input')
-			.hide()
-			.keyup(RenameNodeKU)
-			//.appendTo(set1);
-		$('<button id="zwave-js-set-node-name">')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
-			.click(RenameNode)
-			.html('Set Name')
-			//.appendTo(set1);
-		// Location
-		$('<input>')
-			.addClass('red-ui-searchBox-input')
-			.hide()
-			.keyup(SetNodeLocationKU)
-			//.appendTo(set1);
-		$('<button id="zwave-js-set-node-location">')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
-			.click(SetNodeLocation)
-			.html('Set Location')
-			//.appendTo(set1);
-
-		// Set 2
-		const set2 = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
-		// Interview
-		$('<button>')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
-			.click(() => {
-				IsDriverReady();
-				IsNodeSelected();
-				InterviewNode();
-			})
-			.html('Interview Node')
-			//.appendTo(set2);
-
-		// Node Heal
-		$('<button>')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
-			.click(() => {
-				IsDriverReady();
-				IsNodeSelected();
-				StartNodeHeal();
-			})
-			.html('Heal Node')
-			//.appendTo(set2);
-
-		// Set 3
-		const set3 = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
-		// Remove
-		$('<button>')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
-			.click(() => {
-				IsDriverReady();
-				IsNodeSelected();
-				RemoveFailedNode();
-			})
-			.html('Remove Failed Node')
-			//.appendTo(set3);
-		// Replace
-		$('<button>')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
-			.click(() => {
-				IsDriverReady();
-				IsNodeSelected();
-				ShowReplacePrompt();
-			})
-			.html('Replace Failed Node')
-			//.appendTo(set3);
-
-		// Set 4
-		const set4 = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
-		// Association
-		$('<button>')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
-			.click(() => {
-				IsDriverReady();
-				IsNodeSelected();
-				AssociationMGMT();
-			})
-			.html('Association Management')
-			//.appendTo(set4);
-		// Refres Properties
-		$('<button>')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
-			.click(() => {
-				IsDriverReady();
-				IsNodeSelected();
-				getProperties();
-			})
-			.html('Refresh Property List')
-			//.appendTo(set4);
-
-		// KW HC
-		const KWHC = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
-		$('<button id="zwave-js-keep-awake">')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
-			.click(KeepAwake)
-			.html('Keep Awake')
-			//.appendTo(KWHC);
-		$('<button>')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '125px')
-			.click(HealthCheck)
-			.html('Run Health Check')
-			//.appendTo(KWHC);
-
-		// DB
-		const DB = $('<div>').css('text-align', 'center').appendTo(nodeOpts);
-		$('<button>')
-			.addClass('red-ui-button red-ui-button-small')
-			.css('min-width', '250px')
-			.click(OpenDB)
-			.html('View in Config Database')
-			//.appendTo(DB);
 
 		// Endpoint Filter
 		$('<div id="zwave-js-node-endpoint-filter">').appendTo(nodeOpts);
@@ -1930,7 +1604,14 @@ const ZwaveJsUI = (function () {
 		RED.comms.subscribe(`/zwave-js/battery`, handleBattery);
 		RED.comms.subscribe(`/zwave-js/status`, handleStatusUpdate);
 
+		$('#zwave-js-selected-node-info').text('No Node Selected');
+		$('#zwave-js-selected-node-name').text('No Node Selected');
+
 		setTimeout(WaitLoad, 100);
+
+	
+		
+
 	}
 	// Init done
 
@@ -1938,7 +1619,7 @@ const ZwaveJsUI = (function () {
 		CheckDriverReady().then(({ ready }) => {
 			if (ready) {
 				DriverReady = true;
-			    getLatestStatus();
+				getLatestStatus();
 				GetNodes();
 			} else {
 				setTimeout(WaitLoad, 5000);
@@ -2064,7 +1745,6 @@ const ZwaveJsUI = (function () {
 		}
 	}
 
-
 	function ClearIETimer() {
 		if (Timer !== undefined) {
 			clearInterval(Timer);
@@ -2100,7 +1780,6 @@ const ZwaveJsUI = (function () {
 			}
 		}, 1000);
 	}
-
 
 	function renderBattery(node) {
 		const i = $('<i>');
@@ -2195,165 +1874,191 @@ const ZwaveJsUI = (function () {
 	}
 
 	function ShowOtherNodeMenu(button) {
-        
-        const menuOptionMenu = RED.menu.init({id:"node-option-menu",
-                options: [
-					{
-						id:"node-option-menu-interview",
-						label:"Reinterview Node",
-						onselect:function(){
-							IsDriverReady();
-							HoveredNode.ready ? InterviewNode() : modalAlert('This node is not ready', 'Node Not Ready');
-							
-							//menuOptionMenu.collapse();
-                        }
-					},
-					{
-						id:"node-option-menu-remove",
-						label:"Remove Failed Node",
-						onselect:function(){
-							IsDriverReady();
-							RemoveFailedNode() 
-							//menuOptionMenu.collapse();
-                        }
-					},
-					{
-						id:"node-option-menu-replace",
-						label:"Replace Failed Node",
-						onselect:function(){
-							IsDriverReady();
-							ShowReplacePrompt() 
-						//	menuOptionMenu.collapse();
-                        }
-					},
-					{
-						id:"node-option-menu-healt",
-						label:"Run Health Check",
-						onselect:function(){
-							IsDriverReady();
-							HoveredNode.ready ?  HealthCheck() : modalAlert('This node is not ready', 'Node Not Ready');
-						//	menuOptionMenu.collapse();
-                        }
-					},
-					{
-						id:"node-option-menu-db",
-						label:"View In Device Browser",
-						onselect:function(){
-							IsDriverReady();
-							HoveredNode.ready  ? OpenDB() : modalAlert('This node is not ready', 'Node Not Ready');
-						//	menuOptionMenu.collapse();
-                        }
+		const menuOptionMenu = RED.menu.init({
+			id: 'node-option-menu',
+			options: [
+				{
+					id: 'node-option-menu-interview',
+					label: 'Reinterview Node',
+					onselect: function () {
+						IsDriverReady();
+						HoveredNode.ready
+							? InterviewNode()
+							: modalAlert('This node is not ready', 'Node Not Ready');
+
+						//menuOptionMenu.collapse();
 					}
-                ]
-            });
-            menuOptionMenu.css({
-                position: "absolute"
-            })
-            menuOptionMenu.on('mouseleave', function(){ $(this).hide() });
-            menuOptionMenu.on('mouseup', function() { $(this).hide() });
-            menuOptionMenu.appendTo("body");
-        
+				},
+				{
+					id: 'node-option-menu-remove',
+					label: 'Remove Failed Node',
+					onselect: function () {
+						IsDriverReady();
+						RemoveFailedNode();
+						//menuOptionMenu.collapse();
+					}
+				},
+				{
+					id: 'node-option-menu-replace',
+					label: 'Replace Failed Node',
+					onselect: function () {
+						IsDriverReady();
+						ShowReplacePrompt();
+						//	menuOptionMenu.collapse();
+					}
+				},
+				{
+					id: 'node-option-menu-healt',
+					label: 'Run Health Check',
+					onselect: function () {
+						IsDriverReady();
+						HoveredNode.ready
+							? HealthCheck()
+							: modalAlert('This node is not ready', 'Node Not Ready');
+						//	menuOptionMenu.collapse();
+					}
+				},
+				{
+					id: 'node-option-menu-db',
+					label: 'View In Device Browser',
+					onselect: function () {
+						IsDriverReady();
+						HoveredNode.ready
+							? OpenDB()
+							: modalAlert('This node is not ready', 'Node Not Ready');
+						//	menuOptionMenu.collapse();
+					}
+				}
+			]
+		});
+		menuOptionMenu.css({
+			position: 'absolute'
+		});
+		menuOptionMenu.on('mouseleave', function () {
+			$(this).hide();
+		});
+		menuOptionMenu.on('mouseup', function () {
+			$(this).hide();
+		});
+		menuOptionMenu.appendTo('body');
 
+		const elementPos = button.offset();
+		menuOptionMenu.css({
+			top: elementPos.top + 'px',
+			left: elementPos.left - menuOptionMenu.width() + 20 + 'px'
+		});
+		menuOptionMenu.show();
+	}
 
-
-        const elementPos = button.offset();
-        menuOptionMenu.css({
-            top: elementPos.top+"px",
-            left: (elementPos.left - menuOptionMenu.width() + 20)+"px"
-        })
-        menuOptionMenu.show();
-    }
-
-
-
-	function AddOverlayNodeButtons(Node, Row){
-		
-		if(Node !== undefined){
-			HoveredNode = Node
+	function AddOverlayNodeButtons(Node, Row) {
+		if (Node !== undefined) {
+			HoveredNode = Node;
 		}
 
-		if(BA === undefined){
-			
-			BA = $('<div>');
-			BA.css({position:'absolute',width:'200px',left:'10px',backgroundColor:'inherit'});
+		console.log(HoveredNode)
+		console.log(BA)
 
-			const Select = $("<button>");
-			Select.click(()=>{
+
+		if (BA === undefined) {
+			BA = $('<div>');
+			BA.css({
+				position: 'absolute',
+				width: '200px',
+				left: '10px',
+				backgroundColor: 'inherit'
+			});
+
+			const Select = $('<button>');
+			Select.click(() => {
 				HoveredNode.ready
 					? selectNode(HoveredNode.nodeId)
 					: modalAlert('This node is not ready', 'Node Not Ready');
 			});
 			Select.addClass('red-ui-button red-ui-button-small');
-			Select.css({width:'30px', height:'30px', marginRight:'5px'});
+			Select.css({ width: '30px', height: '30px', marginRight: '5px' });
 			Select.append('<i class="fa fa-info fa-lg"></i>');
-			RED.popover.tooltip(Select,'Node Details');
+			RED.popover.tooltip(Select, 'Node Details');
 			BA.append(Select);
 
-			const NameLocation = $("<button>");
-			NameLocation.click(()=>{});
+			const NameLocation = $('<button>');
+			NameLocation.click(() => {});
 			NameLocation.addClass('red-ui-button red-ui-button-small');
-			NameLocation.css({width:'30px', height:'30px', marginRight:'1px'});
+			NameLocation.css({ width: '30px', height: '30px', marginRight: '1px' });
 			NameLocation.append('<i class="fa fa-pencil fa-lg"></i>');
-			RED.popover.tooltip(NameLocation,'Edit Name / Location');
+			RED.popover.tooltip(NameLocation, 'Edit Name / Location');
 			BA.append(NameLocation);
-			
-			const Heal = $("<button>");
-			Heal.click(()=>{
+
+			const Heal = $('<button>');
+			Heal.click(() => {
 				HoveredNode.ready
-				? StartNodeHeal()
-				: modalAlert('This node is not ready', 'Node Not Ready');
+					? StartNodeHeal()
+					: modalAlert('This node is not ready', 'Node Not Ready');
 			});
 			Heal.addClass('red-ui-button red-ui-button-small');
-			Heal.css({width:'30px', height:'30px', marginRight:'1px'});
+			Heal.css({ width: '30px', height: '30px', marginRight: '1px' });
 			Heal.append('<i class="fa fa-medkit fa-lg"></i>');
-			RED.popover.tooltip(Heal,'Heal Node');
+			RED.popover.tooltip(Heal, 'Heal Node');
 			BA.append(Heal);
-	
-			const Associations = $("<button>");
-			Associations.click(()=>{
+
+			const Associations = $('<button>');
+			Associations.click(() => {
 				HoveredNode.ready
-				? AssociationMGMT()
-				: modalAlert('This node is not ready', 'Node Not Ready');
-				
+					? AssociationMGMT()
+					: modalAlert('This node is not ready', 'Node Not Ready');
 			});
 			Associations.addClass('red-ui-button red-ui-button-small');
-			Associations.css({width:'30px', height:'30px', marginRight:'1px'});
+			Associations.css({ width: '30px', height: '30px', marginRight: '1px' });
 			Associations.append('<i class="fa fa-code-fork fa-lg"></i>');
-			RED.popover.tooltip(Associations,'Association Management');
+			RED.popover.tooltip(Associations, 'Association Management');
 			BA.append(Associations);
-	
-			const OtherBTN = $("<button>");
-			OtherBTN.click(()=>{ShowOtherNodeMenu(OtherBTN)});
-			OtherBTN.addClass('red-ui-button red-ui-button-small');
-			OtherBTN.css({width:'30px', height:'30px', marginRight:'1px'});
-			OtherBTN.append('<i class="fa fa-caret-down fa-lg"></i>');
-			RED.popover.tooltip(OtherBTN,'Other Actions');
-			BA.append(OtherBTN);
-			
-			Row.append(BA)
-		}
-		else{
 
-			if(Node === undefined && Row === undefined){
-				BA.css({position:'absolute',width:'200px',left:'10px',display:'none',backgroundColor:'inherit'});
+			const OtherBTN = $('<button>');
+			OtherBTN.click(() => {
+				ShowOtherNodeMenu(OtherBTN);
+			});
+			OtherBTN.addClass('red-ui-button red-ui-button-small');
+			OtherBTN.css({ width: '30px', height: '30px', marginRight: '1px' });
+			OtherBTN.append('<i class="fa fa-caret-down fa-lg"></i>');
+			RED.popover.tooltip(OtherBTN, 'Other Actions');
+			BA.append(OtherBTN);
+
+			Row.append(BA);
+		} else {
+			if (Node === undefined && Row === undefined) {
+				BA.css({
+					position: 'absolute',
+					width: '200px',
+					left: '10px',
+					display: 'none',
+					backgroundColor: 'inherit'
+				});
 				return;
 			}
 
-			BA.css({position:'absolute',width:'200px',left:'10px',display:'block',backgroundColor:'inherit'});
-			Row.append(BA)
+			BA.css({
+				position: 'absolute',
+				width: '200px',
+				left: '10px',
+				display: 'block',
+				backgroundColor: 'inherit'
+			});
+			Row.append(BA);
 		}
-
-
-		
 	}
 
 	function renderNode(node) {
-		
 		return $('<div>')
 			.addClass('red-ui-treeList-label zwave-js-node-row')
 			.attr('data-nodeid', node.nodeId)
 			.data('info', node)
-			.hover(function(){AddOverlayNodeButtons(node,$(this));},function(){AddOverlayNodeButtons();})
+			.hover(
+				function () {
+					AddOverlayNodeButtons(node, $(this));
+				},
+				function () {
+					AddOverlayNodeButtons();
+				}
+			)
 			.append(
 				$('<div>').html(node.nodeId).addClass('zwave-js-node-row-id'),
 				$('<div>').html(node.name).addClass('zwave-js-node-row-name'),
@@ -2425,8 +2130,6 @@ const ZwaveJsUI = (function () {
 			setNameButton.html('Set Name').prev().hide();
 	}
 
-
-
 	function deselectCurrentNode() {
 		// "Disconnect" from previously selected node
 		if (selectedNode) {
@@ -2449,8 +2152,6 @@ const ZwaveJsUI = (function () {
 
 		selectedNode = id;
 
-		MarkSleepButton();
-
 		const selectedEl = $(`#zwave-js-node-list [data-nodeid='${id}']`);
 		selectedEl.addClass('selected');
 		//$('#zwave-js-selected-node-id').text(selectedNode);
@@ -2462,12 +2163,11 @@ const ZwaveJsUI = (function () {
 			info.firmwareVersion
 		);
 
-		const Name = `${selectedNode} - ${(info.name !== undefined && info.name.length > 0 ? info.name : 'No Name' )}`
+		const Name = `${selectedNode} - ${
+			info.name !== undefined && info.name.length > 0 ? info.name : 'No Name'
+		}`;
 		$('#zwave-js-selected-node-name').text(Name);
 
-		
-
-		
 		getProperties();
 		RED.comms.subscribe(`/zwave-js/cmd/${selectedNode}`, handleNodeEvent);
 	}
