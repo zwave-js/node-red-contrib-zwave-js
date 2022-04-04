@@ -990,8 +990,8 @@ module.exports = function (RED) {
 					if (Multicast) ThrowVirtualNodeLimit();
 					const M = ZWaveNode.getValueMetadata(Params[0]);
 					const ReturnObjectM = {
-						response: M,
-						valueId: Params[0]
+						...Params[0],
+						metadata: M
 					};
 					Send(ReturnNode, 'GET_VALUE_METADATA_RESPONSE', ReturnObjectM, send);
 					break;

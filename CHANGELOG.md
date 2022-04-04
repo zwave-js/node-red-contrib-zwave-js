@@ -1,18 +1,17 @@
   # node-red-contrib-zwave-js Change Log
 
   - 7.0.0
-  
+
     **Breaking Changes**
      - The **GET_VALUE_RESPONSE** object is no longer split with **response** and **valueId** properties.
-       Instead the returned object now represents a shape simular to **VALUE_UPDATED** events.
+       Instead, the returned object now represents a shape simular to **VALUE_UPDATED** events.
        The value will now be attached to the **currentValue** property, along with the Value ID on the same level.
-     - New UI Layout - not technically a breaking chnage, but one you will need to navigate
+     - Much like above, **GET_VALUE_METADATA_RESPONSE** has now been flattend to one object, where the result is attached to **metadata** 
+     - New UI Layout - not technically a breaking change, but one you will need to familiarise your self with.
 
     **New Features**
-     - **VALUE_UPDATED**, **VALUE_NOTIFICATION**, and **GET_VALUE_RESPONS**
-       now contain a **normalizedObject** property.
-
-       This propety aims to make it easy to deetct the value chnage, i nthat its summaries the evernt with easy to undertand propety names
+     - **VALUE_UPDATED**, **VALUE_NOTIFICATION**, and **GET_VALUE_RESPONS** now contain a **normalizedObject** property.
+       This property aims to make it easy to utilise the value change, in that it summarises the event with easy to understand propety names.
 
 
 
