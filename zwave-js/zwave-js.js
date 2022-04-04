@@ -777,7 +777,7 @@ module.exports = function (RED) {
 							productType: N.productType,
 							firmwareVersion: N.firmwareVersion,
 							deviceConfig: N.deviceConfig,
-							isControllerNode: N.isControllerNode(),
+							isControllerNode: N.isControllerNode,
 							supportsBeaming: N.supportsBeaming,
 							keepAwake: N.keepAwake,
 							powerSource: {
@@ -1000,8 +1000,8 @@ module.exports = function (RED) {
 					if (Multicast) ThrowVirtualNodeLimit();
 					const V = ZWaveNode.getValue(Params[0]);
 					const ReturnObject = {
-						response: V,
-						valueId: Params[0]
+						...Params[0],
+						currentValue: V
 					};
 					if (msg.isolatedNodeId !== undefined) {
 						ReturnNode.targetFlowNode = msg.isolatedNodeId;
@@ -1402,6 +1402,43 @@ module.exports = function (RED) {
 			}
 		}
 
+		function buildNormalized(Payload) {
+			try {
+				const VID = {
+					commandClass: Payload.object.commandClass,
+					endpoint: Payload.object.endpoint,
+					property: Payload.object.property,
+					propertyKey: Payload.object.propertyKey
+				};
+
+				const Meta = Driver.controller.nodes
+					.get(Payload.node)
+					.getValueMetadata(VID);
+
+				const SO = {};
+				SO.commandClass = Payload.object.commandClassName;
+				SO.type =
+					Meta.states?.[Payload.object.newValue] === undefined
+						? Meta.type
+						: typeof Meta.states[Payload.object.newValue];
+				SO.unit = Meta.unit;
+				SO.label = Meta.label;
+				SO.description = Meta.description;
+
+				SO.currentState =
+					Meta.states?.[Payload.object.currentValue] ??
+					Payload.object.currentValue;
+				SO.newState =
+					Meta.states?.[Payload.object.newValue] ?? Payload.object.newValue;
+				SO.previousState =
+					Meta.states?.[Payload.object.prevValue] ?? Payload.object.prevValue;
+
+				return SO;
+			} catch (Err) {
+				return undefined;
+			}
+		}
+
 		function Send(Node, Subject, Value, send) {
 			const PL = {};
 
@@ -1435,7 +1472,20 @@ module.exports = function (RED) {
 				_Subject = '[' + Subject + ']';
 			}
 
-			Log('debug', 'NDERED', 'OUT', _Subject, '[DIRECT] Forwarding payload...');
+			switch (PL.event) {
+				case 'VALUE_UPDATED':
+				case 'VALUE_NOTIFICATION':
+				case 'GET_VALUE_RESPONSE':
+					PL.normalizedObject = buildNormalized(PL);
+					break;
+			}
+			PL.simpleObject.Log(
+				'debug',
+				'NDERED',
+				'OUT',
+				_Subject,
+				'[DIRECT] Forwarding payload...'
+			);
 			if (send) {
 				send({ payload: PL });
 			} else {
