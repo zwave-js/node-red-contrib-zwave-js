@@ -163,7 +163,8 @@ const ZwaveJsUI = (function () {
 			data.payload.Statistics[HoveredNode.nodeId.toString()].commandsDroppedTX;
 		Data.RXD =
 			data.payload.Statistics[HoveredNode.nodeId.toString()].commandsDroppedRX;
-		Data.TO = data.payload.Statistics[HoveredNode.nodeId.toString()].timeoutResponse;
+		Data.TO =
+			data.payload.Statistics[HoveredNode.nodeId.toString()].timeoutResponse;
 
 		HCForm.html('');
 		const Template = $('#TPL_HealthCheck').html();
@@ -843,7 +844,7 @@ const ZwaveJsUI = (function () {
 				console.error(err);
 			});
 
-			$('#zwave-js-node-properties > div > div > div > ol').empty();
+		$('#zwave-js-node-properties > div > div > div > ol').empty();
 	}
 
 	function ListRequestedClass(Classes) {
@@ -1608,10 +1609,6 @@ const ZwaveJsUI = (function () {
 		$('#zwave-js-selected-node-name').text('No Node Selected');
 
 		setTimeout(WaitLoad, 100);
-
-	
-		
-
 	}
 	// Init done
 
@@ -1955,9 +1952,8 @@ const ZwaveJsUI = (function () {
 			HoveredNode = Node;
 		}
 
-		console.log(HoveredNode)
-		console.log(BA)
-
+		console.log(HoveredNode);
+		console.log(BA);
 
 		if (BA === undefined) {
 			BA = $('<div>');
@@ -2398,18 +2394,18 @@ const ZwaveJsUI = (function () {
 
 	function getValue(valueId) {
 		ControllerCMD('ValueAPI', 'getValue', selectedNode, [valueId]).then(
-			({ node, object: { valueId, response: value } }) => {
+			({ node, object }) => {
 				if (node != selectedNode) {
 					return;
 				}
-				updateValue({ ...valueId, value });
+				updateValue({ ...valueId, currentValue: object.currentValue });
 				ControllerCMD('ValueAPI', 'getValueMetadata', selectedNode, [
 					valueId
-				]).then(({ node, object: { valueId, response: meta } }) => {
-					if (!meta || node != selectedNode) {
+				]).then(({ node, object }) => {
+					if (!object.metadata || node != selectedNode) {
 						return;
 					}
-					updateMeta(valueId, meta);
+					updateMeta(valueId, object.metadata);
 				});
 			}
 		);
@@ -2476,7 +2472,10 @@ const ZwaveJsUI = (function () {
 
 		// If value is not provided in arguments or in the valueId, then use the stored raw value.
 		const value =
-			valueId?.newValue ?? valueId?.value ?? propertyValue.data('value') ?? '';
+			valueId?.newValue ??
+			valueId?.currentValue ??
+			propertyValue.data('value') ??
+			'';
 
 		if (meta?.states?.[value]) {
 			// If meta known, translate the value and add tooltip with raw value

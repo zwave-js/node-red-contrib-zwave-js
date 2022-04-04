@@ -7,11 +7,17 @@
        Instead, the returned object now represents a shape simular to **VALUE_UPDATED** events.
        The value will now be attached to the **currentValue** property, along with the Value ID on the same level.
      - Much like above, **GET_VALUE_METADATA_RESPONSE** has now been flattend to one object, where the result is attached to **metadata** 
-     - New UI Layout - not technically a breaking change, but one you will need to familiarise your self with.
 
     **New Features**
-     - **VALUE_UPDATED**, **VALUE_NOTIFICATION**, and **GET_VALUE_RESPONS** now contain a **normalizedObject** property.
+     - **VALUE_UPDATED**, **VALUE_NOTIFICATION**, and **GET_VALUE_RESPONSE** now contain a **normalizedObject** property.
        This property aims to make it easy to utilise the value change, in that it summarises the event with easy to understand property names.
+     - New UI Layout - We have overhauled the UI, and focussed on making it fit more into the node red style guide.
+     - New Map UI - The new map design aims to remove the previous dull flat/slapped look.
+
+    **Changes**
+     - Bump serialport to V10
+     - Bump ZWJS to V9
+     - New mapping algorithm - The new algorithm results in a much needed accuracy improvement
 
 
 
