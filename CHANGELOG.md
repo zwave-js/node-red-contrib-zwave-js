@@ -11,7 +11,7 @@
 
     **New Features**
      - **VALUE_UPDATED**, **VALUE_NOTIFICATION**, and **GET_VALUE_RESPONS** now contain a **normalizedObject** property.
-       This property aims to make it easy to utilise the value change, in that it summarises the event with easy to understand propety names.
+       This property aims to make it easy to utilise the value change, in that it summarises the event with easy to understand property names.
 
 
 
