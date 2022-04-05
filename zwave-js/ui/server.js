@@ -1,4 +1,4 @@
-const SP = require('serialport');
+const SP = require('serialport').SerialPort;
 const ModulePackage = require('../../package.json');
 const { CommandClasses } = require('@zwave-js/core');
 const ZWaveJS = require('zwave-js');

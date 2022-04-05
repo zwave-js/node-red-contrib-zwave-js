@@ -427,7 +427,7 @@ module.exports = function (RED) {
 
 			NodeList['No location'] = [];
 			Driver.controller.nodes.forEach((ZWN) => {
-				if (ZWN.isControllerNode()) {
+				if (ZWN.isControllerNode) {
 					return;
 				}
 				const Node = {
@@ -1415,25 +1415,38 @@ module.exports = function (RED) {
 					.get(Payload.node)
 					.getValueMetadata(VID);
 
-				const SO = {};
-				SO.commandClass = Payload.object.commandClassName;
-				SO.type =
-					Meta.states?.[Payload.object.newValue] === undefined
-						? Meta.type
-						: typeof Meta.states[Payload.object.newValue];
-				SO.unit = Meta.unit;
-				SO.label = Meta.label;
-				SO.description = Meta.description;
+				if (Meta === undefined) {
+					return undefined;
+				}
 
-				SO.currentState =
-					Meta.states?.[Payload.object.currentValue] ??
-					Payload.object.currentValue;
-				SO.newState =
-					Meta.states?.[Payload.object.newValue] ?? Payload.object.newValue;
-				SO.previousState =
-					Meta.states?.[Payload.object.prevValue] ?? Payload.object.prevValue;
+				const NO = {};
+				NO.commandClass = Payload.object.commandClassName;
 
-				return SO;
+				if (Payload.object.hasOwnProperty('currentValue')) {
+					NO.type =
+						Meta.states?.[Payload.object.currentValue] === undefined
+							? Meta.type
+							: typeof Meta.states[Payload.object.currentValue];
+					NO.currentValue =
+						Meta.states?.[Payload.object.currentValue] ??
+						Payload.object.currentValue;
+				} else {
+					NO.type =
+						Meta.states?.[Payload.object.newValue] === undefined
+							? Meta.type
+							: typeof Meta.states[Payload.object.newValue];
+					NO.newValue =
+						Meta.states?.[Payload.object.newValue] ?? Payload.object.newValue;
+					NO.prevValue =
+						Meta.states?.[Payload.object.prevValue] ?? Payload.object.prevValue;
+				}
+
+				NO.label = Meta.label;
+
+				if (Meta.unit !== undefined) NO.unit = Meta.unit;
+				if (Meta.description !== undefined) NO.description = Meta.description;
+
+				return NO;
 			} catch (Err) {
 				return undefined;
 			}
@@ -1479,13 +1492,7 @@ module.exports = function (RED) {
 					PL.normalizedObject = buildNormalized(PL);
 					break;
 			}
-			PL.simpleObject.Log(
-				'debug',
-				'NDERED',
-				'OUT',
-				_Subject,
-				'[DIRECT] Forwarding payload...'
-			);
+			Log('debug', 'NDERED', 'OUT', _Subject, '[DIRECT] Forwarding payload...');
 			if (send) {
 				send({ payload: PL });
 			} else {
@@ -1789,7 +1796,7 @@ module.exports = function (RED) {
 
 		function WireNodeEvents(Node) {
 			Node.once(event_Ready.zwaveName, (N) => {
-				if (N.isControllerNode()) {
+				if (N.isControllerNode) {
 					return;
 				}
 
