@@ -6,7 +6,8 @@ module.exports = function (RED) {
 	const {
 		createDefaultTransportFormat,
 		CommandClasses,
-		ZWaveErrorCodes
+		ZWaveErrorCodes,
+		getCCName
 	} = require('@zwave-js/core');
 	const Winston = require('winston');
 	const { Pin2LogTransport } = require('./Pin2LogTransport');
@@ -1411,6 +1412,8 @@ module.exports = function (RED) {
 					propertyKey: Payload.object.propertyKey
 				};
 
+				const CCName = getCCName(Payload.object.commandClass);
+
 				const Meta = Driver.controller.nodes
 					.get(Payload.node)
 					.getValueMetadata(VID);
@@ -1420,7 +1423,10 @@ module.exports = function (RED) {
 				}
 
 				const NO = {};
-				NO.commandClass = Payload.object.commandClassName;
+
+				NO.commandClass = `0x${VID.commandClass
+					.toString(16)
+					.padStart(2, '0')} - ${CCName}`;
 
 				if (Payload.object.hasOwnProperty('currentValue')) {
 					NO.type =
