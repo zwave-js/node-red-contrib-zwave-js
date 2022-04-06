@@ -503,93 +503,56 @@ const ZwaveJsUI = (function () {
 	}
 
 	async function GenerateMapJSON(Nodes) {
-		const _Promises = [];
-		const _Nodes = [];
-		const _Edges = [];
+		const _Elements = [];
 
-		Nodes.forEach((N) => {
-			const Label = N.isControllerNode
-				? 'Controller'
-				: `${N.nodeId} - (${N.name ?? 'No Name'})`;
-			const name = N.isControllerNode ? 'Controller' : N.name ?? 'No Name';
-			const location = N.location ?? '';
-			const Shape = N.isControllerNode ? 'box' : 'square';
-			let Color = N.isListening && N.isRouting ? 'limegreen' : 'orangered';
-
-			if (N.isControllerNode) {
-				Color = 'lightgray';
-			}
-			const ND = {
-				canRoute: N.isControllerNode || (N.isListening && N.isRouting),
-				isControllerNode: N.isControllerNode,
-				id: N.nodeId,
-				label: Label,
-				name: name,
-				location: location,
-				shape: Shape,
-				manufacturer: 'Unknown',
-				model: 'Unknown',
-				status: N.status,
-				color: {
-					background: Color,
-					borderColor: 'black',
-					highlight: Color
-				}
-			};
-			if (N.deviceConfig !== undefined) {
-				ND.manufacturer = N.deviceConfig.manufacturer;
-				ND.model = N.deviceConfig.label;
-			}
-			_Nodes.push(ND);
-		});
-
-		Nodes.forEach((N) => {
-			if (N.isControllerNode) {
-				return;
-			}
-
-			const P = new Promise((res) => {
-				ControllerCMD('ControllerAPI', 'getNodeNeighbors', undefined, [
-					N.nodeId
-				]).then(({ node, object }) => {
-					object.forEach((NodeNeighbor) => {
-						const Neighbor = _Nodes.filter(
-							(Node) => Node.id === NodeNeighbor
-						)[0];
-						if (Neighbor.canRoute) {
-							const AlreadyAttached = _Edges.filter(
-								(E) => E.from === NodeNeighbor && E.to === node
-							);
-							if (AlreadyAttached.length < 1) {
-								const Color = {
-									highlight: Neighbor.isControllerNode ? 'green' : '#000000',
-									color: '#d3d3d3'
-								};
-								_Edges.push({
-									color: Color,
-									from: node,
-									to: NodeNeighbor,
-									arrows: { to: { enabled: true, type: 'arrow' } }
-								});
-							} else {
-								_Edges.filter(
-									(E) => E.from === NodeNeighbor && E.to === node
-								)[0].arrows.from = { enabled: true, type: 'arrow' };
+		return new Promise(function (res, rej) {
+			ControllerCMD(
+				'DriverAPI',
+				'getNodeStatistics',
+				undefined,
+				undefined
+			).then(({ object }) => {
+				Nodes.forEach((N) => {
+					if (N.isControllerNode) {
+						const EL = {
+							data: { id: N.nodeId, type: 'controller', name: 'Controller' }
+						};
+						_Elements.push(EL);
+					} else {
+						const EL = {
+							data: {
+								id: N.nodeId,
+								type: 'node',
+								name: `${N.nodeId} - ${N.nodeName || 'No Name'}`
 							}
-						}
-					});
-					res();
-				});
-			});
-			_Promises.push(P);
-		});
-		await Promise.all(_Promises);
+						};
+						_Elements.push(EL);
 
-		return { _Nodes, _Edges };
+						if (object[N.nodeId].lwr !== undefined) {
+							const Stats = object[N.nodeId].lwr;
+							if (Stats.repeaters.length > 0) {
+								//
+							} else {
+								const EL = {
+									data: { id: `${N.nodeId}.1`, source: N.nodeId, target: 1 }
+								};
+								_Elements.push(EL);
+							}
+						} else {
+							const EL = {
+								data: { id: `${N.nodeId}.1`, source: N.nodeId, target: 1 }
+							};
+							_Elements.push(EL);
+						}
+					}
+				});
+				res(_Elements);
+			});
+		});
 	}
 
 	function NetworkMap() {
-		let Network;
+		let Mesh;
 
 		const Options = {
 			draggable: true,
@@ -597,12 +560,10 @@ const ZwaveJsUI = (function () {
 			resizable: true,
 			width: '1024',
 			height: '768',
-			title:
-				'ZWave Network Map. Routing is only an estimation, external influences can affect routing.',
+			title: 'ZWave Network Mesh',
 			minHeight: 75,
 			buttons: {
 				Close: function () {
-					Network.destroy();
 					$(this).dialog('destroy');
 				}
 			}
@@ -612,51 +573,10 @@ const ZwaveJsUI = (function () {
 			.css({ padding: 10 })
 			.html('Generating Network Topology Map...');
 		Window.dialog(Options);
-		Window.on('dialogclose', () => {
-			Network.destroy();
-		});
-
-		const GetSpread = (Number) => {
-			if (Number < 10) {
-				return 100;
-			}
-			const Spread = Number * 10 + 100;
-			return Spread;
-		};
+		Window.on('dialogclose', () => {});
 
 		ControllerCMD('ControllerAPI', 'getNodes').then(({ object }) => {
-			GenerateMapJSON(object).then(({ _Nodes, _Edges }) => {
-				const data = {
-					nodes: new vis.DataSet(_Nodes),
-					edges: new vis.DataSet(_Edges)
-				};
-				const options = {
-					nodes: {
-						size: 8,
-						font: {
-							size: 8
-						},
-						borderWidth: 1,
-						shadow: true
-					},
-					edges: {
-						shadow: false,
-						width: 0.15,
-						length: GetSpread(_Nodes.length),
-						smooth: {
-							type: 'discrete'
-						},
-						physics: true
-					},
-					physics: {
-						enabled: false,
-						solver: 'repulsion',
-						repulsion: {
-							nodeDistance: GetSpread(_Nodes.length)
-						}
-					}
-				};
-
+			GenerateMapJSON(object).then((Elements) => {
 				const Template = $('#TPL_Map').html();
 				const templateScript = Handlebars.compile(Template);
 				const HTML = templateScript({});
@@ -664,82 +584,36 @@ const ZwaveJsUI = (function () {
 				Window.html('');
 				Window.append(HTML);
 
-				Network = new vis.Network($('#Network')[0], data, options);
-				Network.on('click', (E) => {
-					if (E.nodes.length > 0) {
-						const SelectedNode = data.nodes.get(E.nodes[0]);
-
-						const RouteTargets = _Edges.filter(
-							(RT) => RT.from === SelectedNode.id
-						);
-						const RouteChildren = _Edges.filter(
-							(RT) => RT.to === SelectedNode.id
-						);
-
-						const Targets = [];
-						RouteTargets.forEach((T) => Targets.push(T.to));
-						const Children = [];
-						RouteChildren.forEach((T) => Children.push(T.from));
-
-						$('#NM_ID').html(SelectedNode.id);
-						$('#NM_Name').html(SelectedNode.name);
-						$('#NM_LOC').html(SelectedNode.location);
-						$('#NM_MOD').html(
-							`${SelectedNode.manufacturer} / ${SelectedNode.model}`
-						);
-						$('#NM_Status').html(SelectedNode.status);
-						$('#NM_Slaves').html(Targets.toString());
-						$('#NM_Clients').html(Children.toString());
-
-						if (SelectedNode.isControllerNode) {
-							GetControllerStats();
-						} else {
-							GetNodeStats(SelectedNode.id);
-						}
-					} else {
-						$('#zwave-js-selected-node-map-info-stats').html(
-							'RX:0, <span style="color: red;">RXD:0</span>, TX:0, <span style="color: red;">TXD:0</span>, <span style="color: red;">TO:0</span>'
-						);
-						$('#NM_ID').html('No Node Selected');
-						$('#NM_Name').html('&nbsp;');
-						$('#NM_LOC').html('&nbsp;');
-						$('#NM_MOD').html('&nbsp;');
-						$('#NM_Status').html('&nbsp;');
-						$('#NM_Slaves').html('&nbsp;');
-						$('#NM_Clients').html('&nbsp;');
-					}
+				const StyleSheet = cytoscape.stylesheet();
+				StyleSheet.selector("[type='controller']").css({
+					'font-size': '14px',
+					width: '50px',
+					height: '50px',
+					'background-image':
+						'resources/node-red-contrib-zwave-js/UITab/Stick.png',
+					'background-color': 'white',
+					'background-fit': 'cover cover',
+					label: 'data(name)'
+				});
+				StyleSheet.selector("[type='node']").css({
+					'font-size': '12px',
+					width: '30px',
+					height: '30px',
+					'background-image':
+						'resources/node-red-contrib-zwave-js/UITab/Device.png',
+					'background-color': 'white',
+					'background-fit': 'cover cover',
+					label: 'data(name)'
 				});
 
-				Network.stabilize();
+				const data = {
+					container: $('#NetworkMesh')[0],
+					style: StyleSheet,
+					elements: Elements
+				};
+				Mesh = cytoscape(data);
 			});
 		});
-	}
-
-	function GetControllerStats() {
-		ControllerCMD('DriverAPI', 'getControllerStatistics', undefined).then(
-			({ object }) => {
-				$('#zwave-js-selected-node-map-info-stats').html(
-					`RX:${object.messagesRX}, <span style="color: red;">RXD:${object.messagesDroppedRX}</span>, TX:${object.messagesTX}, <span style="color: red;">TXD:${object.messagesDroppedTX}</span>, <span style="color: red;">TO:${object.timeoutResponse}</span>`
-				);
-			}
-		);
-	}
-
-	function GetNodeStats(NodeID) {
-		ControllerCMD('DriverAPI', 'getNodeStatistics', undefined, [NodeID]).then(
-			({ object }) => {
-				if (object.hasOwnProperty(NodeID.toString())) {
-					const Stats = object[NodeID.toString()];
-					$('#zwave-js-selected-node-map-info-stats').html(
-						`RX:${Stats.commandsRX}, <span style="color: red;">RXD:${Stats.commandsDroppedRX}</span>, TX:${Stats.commandsTX}, <span style="color: red;">TXD:${Stats.commandsDroppedTX}</span>, <span style="color: red;">TO:${Stats.timeoutResponse}</span>`
-					);
-				} else {
-					$('#zwave-js-selected-node-map-info-stats').html(
-						'RX:0, <span style="color: red;">RXD:0</span>, TX:0, <span style="color: red;">TXD:0</span>, <span style="color: red;">TO:0</span>'
-					);
-				}
-			}
-		);
 	}
 
 	let controllerOpts;

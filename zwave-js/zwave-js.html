@@ -13,7 +13,7 @@
 ></script>
 <script
 	type="text/javascript"
-	src="resources/node-red-contrib-zwave-js/UITab/vis-network.min.js"
+	src="resources/node-red-contrib-zwave-js/UITab/cytoscape.min.js"
 ></script>
 <script
 	type="text/javascript"
@@ -695,49 +695,7 @@
 
 <!--Map-->
 <script id="TPL_Map" type="text/x-handlebars-template">
-	<div class='zwave-js-selected-node-map-info'>
-		<table style='width:100%'>
-			<tr>
-				<td style='width:120px; vertical-align:top'>Node ID</td>
-				<td id='NM_ID'>No Node Selected</td>
-			</tr>
-			<tr>
-				<td style='width:120px; vertical-align:top'>Name</td>
-				<td id='NM_Name'>&nbsp;</td>
-			</tr>
-			<tr>
-				<td style='width:120px; vertical-align:top'>Location</td>
-				<td id='NM_LOC'>&nbsp;</td>
-			</tr>
-			<tr>
-				<td style='width:120px; vertical-align:top'>Manufacturer/Model</td>
-				<td id='NM_MOD'>&nbsp;</td>
-			</tr>
-			<tr>
-				<td style='width:120px; vertical-align:top'>Status</td>
-				<td id='NM_Status'>&nbsp;</td>
-			</tr>
-			<tr style='word-break: break-all;'>
-				<td style='width:120px; vertical-align:top'>Route Slaves</td>
-				<td id='NM_Slaves'>&nbsp;</td>
-			</tr>
-			<tr style='word-break: break-all;'>
-				<td style='width:120px; vertical-align:top'>Route Clients</td>
-				<td id='NM_Clients'>&nbsp;</td>
-			</tr>
-
-		</table>
-		<div
-			id='zwave-js-selected-node-map-info-stats'
-			style='position: absolute;bottom: 5px;width:100%;text-align: center;'
-		>RX:0,
-			<span style='color: red;'>RXD:0</span>, TX:0,
-			<span style='color: red;'>TXD:0</span>,
-			<span style='color: red;'>TO:0</span></div>
-	</div>
-
-	<div id='Network' style='width: 100%; height: 100%;'>
-	</div>
+	<div id='NetworkMesh' style='width: 100%; height: 100%;'></div>
 </script>
 
 <!--Firmware-->
