@@ -506,6 +506,49 @@ const ZwaveJsUI = (function () {
 		const _Elements = [];
 
 		return new Promise(function (res, rej) {
+			/*
+			const EL = {
+				data: {
+					id: '1',
+					type: 'controller',
+					name: 'Controller',
+					location: 3
+				}
+			};
+			_Elements.push(EL);
+
+			for (let i = 2; i < 60; i++) {
+				let theRandomNumber = Math.floor(Math.random() * 2) + 1;
+				const EL = {
+					data: {
+						id: i.toString(),
+						type: 'node',
+						name: `${i} - No Name`,
+						location: theRandomNumber
+					}
+				};
+
+				_Elements.push(EL);
+			}
+
+			for (let i = 2; i < 60; i++) {
+				let theRandomNumber = Math.floor(Math.random() * 59) + 1;
+
+				const EL = {
+					data: {
+						id: i.toString() + 'Link',
+						source: i.toString(),
+						target: theRandomNumber.toString()
+					}
+				};
+
+				_Elements.push(EL);
+			}
+
+			res(_Elements);
+			return;
+			*/
+
 			ControllerCMD(
 				'DriverAPI',
 				'getNodeStatistics',
@@ -515,7 +558,11 @@ const ZwaveJsUI = (function () {
 				Nodes.forEach((N) => {
 					if (N.isControllerNode) {
 						const EL = {
-							data: { id: N.nodeId, type: 'controller', name: 'Controller' }
+							data: {
+								id: N.nodeId,
+								type: 'controller',
+								name: 'Controller'
+							}
 						};
 						_Elements.push(EL);
 					} else {
@@ -526,21 +573,59 @@ const ZwaveJsUI = (function () {
 								name: `${N.nodeId} - ${N.nodeName || 'No Name'}`
 							}
 						};
+
 						_Elements.push(EL);
 
-						if (object[N.nodeId].lwr !== undefined) {
+						if (object[N.nodeId.toString()].lwr !== undefined) {
 							const Stats = object[N.nodeId].lwr;
 							if (Stats.repeaters.length > 0) {
-								//
+								let First = true;
+								let Last = undefined;
+								Stats.repeaters.reverse().forEach((R) => {
+									if (First) {
+										const EL = {
+											data: {
+												id: `${N.nodeId}.${R}`,
+												source: N.nodeId,
+												target: R,
+												color: '#0000FF'
+											}
+										};
+										_Elements.push(EL);
+										First = false;
+										Last = R;
+									} else {
+										const EL = {
+											data: {
+												id: `${Last}.${R}`,
+												source: Last,
+												target: R,
+												color: '#0000FF'
+											}
+										};
+										_Elements.push(EL);
+										Last = R;
+									}
+								});
 							} else {
 								const EL = {
-									data: { id: `${N.nodeId}.1`, source: N.nodeId, target: 1 }
+									data: {
+										id: `${N.nodeId}.1`,
+										source: N.nodeId,
+										target: 1,
+										color: '#00FF00'
+									}
 								};
 								_Elements.push(EL);
 							}
 						} else {
 							const EL = {
-								data: { id: `${N.nodeId}.1`, source: N.nodeId, target: 1 }
+								data: {
+									id: `${N.nodeId}.1`,
+									source: N.nodeId,
+									target: 1,
+									color: '#FF0000'
+								}
 							};
 							_Elements.push(EL);
 						}
@@ -577,16 +662,11 @@ const ZwaveJsUI = (function () {
 
 		ControllerCMD('ControllerAPI', 'getNodes').then(({ object }) => {
 			GenerateMapJSON(object).then((Elements) => {
-				const Template = $('#TPL_Map').html();
-				const templateScript = Handlebars.compile(Template);
-				const HTML = templateScript({});
-
-				Window.html('');
-				Window.append(HTML);
-
 				const StyleSheet = cytoscape.stylesheet();
-				StyleSheet.selector("[type='controller']").css({
-					'font-size': '14px',
+
+				// COntroller Node
+				StyleSheet.selector("node[type='controller']").css({
+					'font-size': '12px',
 					width: '50px',
 					height: '50px',
 					'background-image':
@@ -595,8 +675,10 @@ const ZwaveJsUI = (function () {
 					'background-fit': 'cover cover',
 					label: 'data(name)'
 				});
-				StyleSheet.selector("[type='node']").css({
-					'font-size': '12px',
+
+				// Device Node
+				StyleSheet.selector("node[type='node']").css({
+					'font-size': '10px',
 					width: '30px',
 					height: '30px',
 					'background-image':
@@ -606,11 +688,34 @@ const ZwaveJsUI = (function () {
 					label: 'data(name)'
 				});
 
+				// Line
+
+				StyleSheet.selector('egde').css({
+					'curve-style': 'taxi',
+					'taxi-direction': 'auto',
+					'taxi-turn': 20,
+					'taxi-turn-min-distance': 5,
+					'target-arrow-shape': 'triangle',
+					'line-color': 'data(color)'
+				});
+
+				const Template = $('#TPL_Map').html();
+				const templateScript = Handlebars.compile(Template);
+				const HTML = templateScript({});
+
+				Window.html('');
+				Window.append(HTML);
+
 				const data = {
+					layout: {
+						name: 'cose',
+						animate: false
+					},
 					container: $('#NetworkMesh')[0],
 					style: StyleSheet,
 					elements: Elements
 				};
+				console.log(data);
 				Mesh = cytoscape(data);
 			});
 		});
