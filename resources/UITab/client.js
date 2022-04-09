@@ -1363,7 +1363,7 @@ const ZwaveJsUI = (function () {
 		});
 		Monitor.addClass('red-ui-button red-ui-button-small');
 		Monitor.css({ width: '30px', height: '30px', marginRight: '1px' });
-		Monitor.append('<i class="fa fa-code fa-lg"></i>');
+		Monitor.append('<i class="fa fa-bug fa-lg"></i>');
 		RED.popover.tooltip(Monitor, 'UI Command Monitor');
 		BA.append(Monitor);
 
@@ -1993,11 +1993,7 @@ const ZwaveJsUI = (function () {
 		);
 	}
 
-	function cancelSetName() {
-		const setNameButton = $('#zwave-js-set-node-name');
-		if (setNameButton.html() == 'Go')
-			setNameButton.html('Set Name').prev().hide();
-	}
+	
 
 	function deselectCurrentNode() {
 		// "Disconnect" from previously selected node
@@ -2005,9 +2001,7 @@ const ZwaveJsUI = (function () {
 			$(`#zwave-js-node-list [data-nodeid='${selectedNode}']`).removeClass(
 				'selected'
 			);
-
-			cancelSetName();
-
+			
 			$('#zwave-js-status-box-interview').text('');
 
 			$('#zwave-js-node-properties').treeList('empty');
