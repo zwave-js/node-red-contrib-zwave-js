@@ -9,6 +9,7 @@ let StartReplace;
 let GrantSelected;
 let ValidateDSK;
 let DriverReady = false;
+const WindowSize = { w: 600, h: 500 };
 
 let StepsAPI;
 const StepList = {
@@ -114,8 +115,8 @@ const ZwaveJsUI = (function () {
 				draggable: true,
 				modal: false,
 				resizable: true,
-				width: '725',
-				height: '600',
+				width: WindowSize.w,
+				height: WindowSize.h,
 				title: 'UI Monitor',
 				buttons: {
 					Close: function () {
@@ -184,8 +185,8 @@ const ZwaveJsUI = (function () {
 			draggable: false,
 			modal: true,
 			resizable: false,
-			width: '800',
-			height: '600',
+			width: WindowSize.w,
+			height: WindowSize.h,
 			title: 'Node Health Check : Node ' + HoveredNode.nodeId,
 			minHeight: 75,
 			buttons: {
@@ -301,8 +302,8 @@ const ZwaveJsUI = (function () {
 			draggable: false,
 			modal: true,
 			resizable: false,
-			width: '800',
-			height: '600',
+			width: WindowSize.w,
+			height: WindowSize.h,
 			title: 'ZWave Device Firmware Updater',
 			minHeight: 75,
 			buttons: {
@@ -459,8 +460,8 @@ const ZwaveJsUI = (function () {
 			draggable: false,
 			modal: true,
 			resizable: false,
-			width: '800',
-			height: '600',
+			width: WindowSize.w,
+			height: WindowSize.h,
 			title: `ZWave Association Management: Node ${HoveredNode.nodeId}`,
 			minHeight: 75,
 			buttons: {
@@ -506,49 +507,6 @@ const ZwaveJsUI = (function () {
 		const _Elements = [];
 
 		return new Promise(function (res, rej) {
-			/*
-			const EL = {
-				data: {
-					id: '1',
-					type: 'controller',
-					name: 'Controller',
-					location: 3
-				}
-			};
-			_Elements.push(EL);
-
-			for (let i = 2; i < 60; i++) {
-				let theRandomNumber = Math.floor(Math.random() * 2) + 1;
-				const EL = {
-					data: {
-						id: i.toString(),
-						type: 'node',
-						name: `${i} - No Name`,
-						location: theRandomNumber
-					}
-				};
-
-				_Elements.push(EL);
-			}
-
-			for (let i = 2; i < 60; i++) {
-				let theRandomNumber = Math.floor(Math.random() * 59) + 1;
-
-				const EL = {
-					data: {
-						id: i.toString() + 'Link',
-						source: i.toString(),
-						target: theRandomNumber.toString()
-					}
-				};
-
-				_Elements.push(EL);
-			}
-
-			res(_Elements);
-			return;
-			*/
-
 			ControllerCMD(
 				'DriverAPI',
 				'getNodeStatistics',
@@ -645,8 +603,8 @@ const ZwaveJsUI = (function () {
 			draggable: true,
 			modal: true,
 			resizable: true,
-			width: '1024',
-			height: '768',
+			width: WindowSize.w,
+			height: WindowSize.h,
 			title: 'ZWave Network Mesh',
 			minHeight: 75,
 			buttons: {
@@ -676,7 +634,7 @@ const ZwaveJsUI = (function () {
 					'background-fit': 'cover cover',
 					label: 'data(name)'
 				});
-				
+
 				// Edge
 				StyleSheet.selector('egde').css({
 					'curve-style': 'taxi',
@@ -1028,8 +986,8 @@ const ZwaveJsUI = (function () {
 			draggable: false,
 			modal: true,
 			resizable: false,
-			width: '600',
-			height: '500',
+			width: WindowSize.w,
+			height: WindowSize.h,
 			title: 'Node Inclusion/Exclusion',
 			minHeight: 75,
 			buttons: [
@@ -1118,8 +1076,8 @@ const ZwaveJsUI = (function () {
 			draggable: false,
 			modal: true,
 			resizable: false,
-			width: '600',
-			height: '500',
+			width: WindowSize.w,
+			height: WindowSize.h,
 			title: 'Replace Node',
 			minHeight: 75,
 			buttons: [
@@ -1189,91 +1147,6 @@ const ZwaveJsUI = (function () {
 			Buttons,
 			true
 		);
-	}
-
-	function RenameNodeKU() {
-		if (event.which === 13) {
-			RenameNode(true, $(this));
-		}
-	}
-
-	function SetNodeLocationKU() {
-		if (event.which === 13) {
-			SetNodeLocation(true, $(this));
-		}
-	}
-
-	function RenameNode(KB, El) {
-		IsDriverReady();
-		let input;
-		let Button;
-		if (KB === true) {
-			input = El;
-			Button = El.next();
-		} else {
-			input = $(this).prev();
-			Button = $(this);
-		}
-
-		if (input.is(':visible')) {
-			ControllerCMD('ControllerAPI', 'setNodeName', undefined, [
-				selectedNode,
-				input.val()
-			]).then(({ node, object }) => {
-				$('#zwave-js-node-list')
-					.find(`[data-nodeid='${node}'].zwave-js-node-row-name`)
-					.html(object);
-				if (node == selectedNode) {
-					$('#zwave-js-selected-node-name').text(object);
-				}
-				GetNodes();
-				input.hide();
-				Button.html('Set Name');
-			});
-		} else {
-			input.show();
-			input.val($('#zwave-js-selected-node-name').text());
-			Button.html('Go');
-		}
-	}
-
-	function SetNodeLocation(KB, El) {
-		IsDriverReady();
-		let input;
-		let Button;
-		if (KB === true) {
-			input = El;
-			Button = El.next();
-		} else {
-			input = $(this).prev();
-			Button = $(this);
-		}
-
-		if (input.is(':visible')) {
-			ControllerCMD('ControllerAPI', 'setNodeLocation', undefined, [
-				selectedNode,
-				input.val()
-			]).then(({ node, object }) => {
-				$('#zwave-js-node-list')
-					.find(`[data-nodeid='${node}'].zwave-js-node-row-location`)
-					.html(`(${object})`);
-				if (node == selectedNode) {
-					$('#zwave-js-selected-node-location').text(`(${object})`);
-				}
-				GetNodes();
-				input.hide();
-				Button.html('Set Location');
-			});
-		} else {
-			input.show();
-			let CurrentLocation = $('#zwave-js-selected-node-location').text();
-			CurrentLocation = CurrentLocation.substring(
-				1,
-				CurrentLocation.length - 1
-			);
-			input.val(CurrentLocation);
-			Button.html('Go');
-		}
 	}
 
 	function InterviewNode() {
@@ -1872,7 +1745,7 @@ const ZwaveJsUI = (function () {
 					}
 				},
 				{
-					id: 'node-option-menu-healt',
+					id: 'node-option-menu-heal',
 					label: 'Run Health Check',
 					onselect: function () {
 						IsDriverReady();
@@ -1914,6 +1787,35 @@ const ZwaveJsUI = (function () {
 		menuOptionMenu.show();
 	}
 
+	function NameNode() {
+		const Name = prompt('Please enter Node Name', HoveredNode.name);
+		if (!Name) {
+			return;
+		}
+		const Location = prompt('Please enter Node Location', HoveredNode.location);
+
+		ControllerCMD('ControllerAPI', 'setNodeName', undefined, [
+			HoveredNode.nodeId,
+			Name
+		]).then(() => {
+			ControllerCMD('ControllerAPI', 'setNodeLocation', undefined, [
+				HoveredNode.nodeId,
+				Location
+			]).then(() => {
+				$(`.zwave-js-node-row[data-nodeid='${HoveredNode.nodeId}']`)
+					.find('.zwave-js-node-row-name')
+					.html(Name);
+				if (HoveredNode.nodeId == selectedNode) {
+					let Lable = `${HoveredNode.nodeId} - ${Name}`;
+					if (Location.length > 0) Lable += ` (${Location})`;
+					$('#zwave-js-selected-node-name').html(Lable);
+				}
+				HoveredNode.name = Name;
+				HoveredNode.location = Location;
+			});
+		});
+	}
+
 	function AddOverlayNodeButtons(Node, Row) {
 		if (Node !== undefined) {
 			HoveredNode = Node;
@@ -1944,7 +1846,11 @@ const ZwaveJsUI = (function () {
 			BA.append(Select);
 
 			const NameLocation = $('<button>');
-			NameLocation.click(() => {});
+			NameLocation.click(() => {
+				HoveredNode.ready
+					? NameNode()
+					: modalAlert('This node is not ready', 'Node Not Ready');
+			});
 			NameLocation.addClass('red-ui-button red-ui-button-small');
 			NameLocation.css({ width: '30px', height: '30px', marginRight: '1px' });
 			NameLocation.append('<i class="fa fa-pencil fa-lg"></i>');
@@ -2126,9 +2032,13 @@ const ZwaveJsUI = (function () {
 			info.firmwareVersion
 		);
 
-		const Name = `${selectedNode} - ${
+		let Name = `${selectedNode} - ${
 			info.name !== undefined && info.name.length > 0 ? info.name : 'No Name'
 		}`;
+
+		if (info.location !== undefined && info.location.length > 0)
+			Name += ` (${info.location})`;
+
 		$('#zwave-js-selected-node-name').text(Name);
 
 		getProperties();
