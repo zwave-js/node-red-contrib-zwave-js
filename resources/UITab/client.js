@@ -560,8 +560,9 @@ const ZwaveJsUI = (function () {
 						const EL = {
 							data: {
 								id: N.nodeId,
-								type: 'controller',
-								name: 'Controller'
+								name: 'Controller',
+								fontSize: '12px',
+								icon: 'resources/node-red-contrib-zwave-js/UITab/Stick.png'
 							}
 						};
 						_Elements.push(EL);
@@ -569,8 +570,9 @@ const ZwaveJsUI = (function () {
 						const EL = {
 							data: {
 								id: N.nodeId,
-								type: 'node',
-								name: `${N.nodeId} - ${N.nodeName || 'No Name'}`
+								name: `${N.nodeId} - ${N.nodeName || 'No Name'}`,
+								fontSize: '10px',
+								icon: 'resources/node-red-contrib-zwave-js/UITab/Device.png'
 							}
 						};
 
@@ -664,32 +666,18 @@ const ZwaveJsUI = (function () {
 			GenerateMapJSON(object).then((Elements) => {
 				const StyleSheet = cytoscape.stylesheet();
 
-				// COntroller Node
-				StyleSheet.selector("node[type='controller']").css({
-					'font-size': '12px',
+				// Node
+				StyleSheet.selector('node').css({
+					'font-size': 'data(fontSize)',
 					width: '50px',
 					height: '50px',
-					'background-image':
-						'resources/node-red-contrib-zwave-js/UITab/Stick.png',
+					'background-image': 'data(icon)',
 					'background-color': 'white',
 					'background-fit': 'cover cover',
 					label: 'data(name)'
 				});
-
-				// Device Node
-				StyleSheet.selector("node[type='node']").css({
-					'font-size': '10px',
-					width: '30px',
-					height: '30px',
-					'background-image':
-						'resources/node-red-contrib-zwave-js/UITab/Device.png',
-					'background-color': 'white',
-					'background-fit': 'cover cover',
-					label: 'data(name)'
-				});
-
-				// Line
-
+				
+				// Edge
 				StyleSheet.selector('egde').css({
 					'curve-style': 'taxi',
 					'taxi-direction': 'auto',
