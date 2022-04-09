@@ -679,6 +679,13 @@ const ZwaveJsUI = (function () {
 		return $.ajax(Options);
 	}
 
+	function IsNodeReady(Node) {
+		if (!Node.ready) {
+			modalAlert('This node is not ready', 'Node Not Ready');
+			throw new Error('Node Not Ready');
+		}
+	}
+
 	function IsDriverReady() {
 		if (!DriverReady) {
 			modalAlert(
@@ -1719,11 +1726,8 @@ const ZwaveJsUI = (function () {
 					label: 'Reinterview Node',
 					onselect: function () {
 						IsDriverReady();
-						HoveredNode.ready
-							? InterviewNode()
-							: modalAlert('This node is not ready', 'Node Not Ready');
-
-						//menuOptionMenu.collapse();
+						IsNodeReady(HoveredNode);
+						InterviewNode();
 					}
 				},
 				{
@@ -1749,10 +1753,8 @@ const ZwaveJsUI = (function () {
 					label: 'Run Health Check',
 					onselect: function () {
 						IsDriverReady();
-						HoveredNode.ready
-							? HealthCheck()
-							: modalAlert('This node is not ready', 'Node Not Ready');
-						//	menuOptionMenu.collapse();
+						IsNodeReady(HoveredNode);
+						HealthCheck();
 					}
 				},
 				{
@@ -1760,10 +1762,8 @@ const ZwaveJsUI = (function () {
 					label: 'View In Device Browser',
 					onselect: function () {
 						IsDriverReady();
-						HoveredNode.ready
-							? OpenDB()
-							: modalAlert('This node is not ready', 'Node Not Ready');
-						//	menuOptionMenu.collapse();
+						IsNodeReady(HoveredNode);
+						OpenDB();
 					}
 				}
 			]
@@ -1835,9 +1835,8 @@ const ZwaveJsUI = (function () {
 
 			const Select = $('<button>');
 			Select.click(() => {
-				HoveredNode.ready
-					? selectNode(HoveredNode.nodeId)
-					: modalAlert('This node is not ready', 'Node Not Ready');
+				IsNodeReady(HoveredNode);
+				selectNode(HoveredNode.nodeId);
 			});
 			Select.addClass('red-ui-button red-ui-button-small');
 			Select.css({ width: '30px', height: '30px', marginRight: '5px' });
@@ -1847,9 +1846,8 @@ const ZwaveJsUI = (function () {
 
 			const NameLocation = $('<button>');
 			NameLocation.click(() => {
-				HoveredNode.ready
-					? NameNode()
-					: modalAlert('This node is not ready', 'Node Not Ready');
+				IsNodeReady(HoveredNode);
+				NameNode();
 			});
 			NameLocation.addClass('red-ui-button red-ui-button-small');
 			NameLocation.css({ width: '30px', height: '30px', marginRight: '1px' });
@@ -1859,9 +1857,8 @@ const ZwaveJsUI = (function () {
 
 			const Heal = $('<button>');
 			Heal.click(() => {
-				HoveredNode.ready
-					? StartNodeHeal()
-					: modalAlert('This node is not ready', 'Node Not Ready');
+				IsNodeReady(HoveredNode);
+				StartNodeHeal();
 			});
 			Heal.addClass('red-ui-button red-ui-button-small');
 			Heal.css({ width: '30px', height: '30px', marginRight: '1px' });
@@ -1871,9 +1868,9 @@ const ZwaveJsUI = (function () {
 
 			const Associations = $('<button>');
 			Associations.click(() => {
-				HoveredNode.ready
-					? AssociationMGMT()
-					: modalAlert('This node is not ready', 'Node Not Ready');
+				HoveredNode.ready;
+				IsNodeReady(HoveredNode);
+				AssociationMGMT();
 			});
 			Associations.addClass('red-ui-button red-ui-button-small');
 			Associations.css({ width: '30px', height: '30px', marginRight: '1px' });
@@ -1993,15 +1990,13 @@ const ZwaveJsUI = (function () {
 		);
 	}
 
-	
-
 	function deselectCurrentNode() {
 		// "Disconnect" from previously selected node
 		if (selectedNode) {
 			$(`#zwave-js-node-list [data-nodeid='${selectedNode}']`).removeClass(
 				'selected'
 			);
-			
+
 			$('#zwave-js-status-box-interview').text('');
 
 			$('#zwave-js-node-properties').treeList('empty');
