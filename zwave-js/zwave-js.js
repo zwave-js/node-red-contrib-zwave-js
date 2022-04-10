@@ -1428,27 +1428,31 @@ module.exports = function (RED) {
 					.toString(16)
 					.padStart(2, '0')} - ${CCName}`;
 
+				let Key = 'newValue';
+
 				if (Payload.object.hasOwnProperty('currentValue')) {
-					NO.type =
-						Meta.states?.[Payload.object.currentValue] === undefined
-							? Meta.type
-							: typeof Meta.states[Payload.object.currentValue];
-					NO.currentValue =
-						Meta.states?.[Payload.object.currentValue] ??
-						Payload.object.currentValue;
+					Key = 'currentValue';
+				}
+
+				if (
+					Meta.states !== undefined &&
+					Meta.states[Payload.object[Key]] !== undefined
+				) {
+					NO.type = typeof Meta.states[Payload.object[Key]];
+					NO[Key] = Meta.states[Payload.object[Key]];
+					if (Key === 'newValue') {
+						NO.prevValue =
+							Meta.states[Payload.object.prevValue] || Payload.object.prevValue;
+					}
 				} else {
-					NO.type =
-						Meta.states?.[Payload.object.newValue] === undefined
-							? Meta.type
-							: typeof Meta.states[Payload.object.newValue];
-					NO.newValue =
-						Meta.states?.[Payload.object.newValue] ?? Payload.object.newValue;
-					NO.prevValue =
-						Meta.states?.[Payload.object.prevValue] ?? Payload.object.prevValue;
+					NO.type = typeof Payload.object[Key];
+					NO[Key] = Payload.object[Key];
+					if (Key === 'newValue') {
+						NO.prevValue = Payload.object.prevValue;
+					}
 				}
 
 				NO.label = Meta.label;
-
 				if (Meta.unit !== undefined) NO.unit = Meta.unit;
 				if (Meta.description !== undefined) NO.description = Meta.description;
 
