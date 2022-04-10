@@ -645,7 +645,7 @@ const ZwaveJsUI = (function () {
 				console.log(Elements);
 
 				document.cookie = "ZWJSMapData="+JSON.stringify(Elements);
-				window.open('resources/node-red-contrib-zwave-js/MeshMap/map.html','_blank');
+				window.open('resources/node-red-contrib-zwave-js/MeshMap/Map.html','_blank');
 
 
 				/*
