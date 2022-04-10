@@ -504,8 +504,6 @@ const ZwaveJsUI = (function () {
 	}
 
 	async function GenerateMapJSON(Nodes) {
-		const _Elements = [];
-
 		return new Promise(function (res, rej) {
 			ControllerCMD(
 				'DriverAPI',
@@ -513,6 +511,24 @@ const ZwaveJsUI = (function () {
 				undefined,
 				undefined
 			).then(({ object }) => {
+				const _Nodes = [];
+
+				Nodes.forEach((N) => {
+					const _Node = {
+						controller: N.isControllerNode,
+						nodeId: N.nodeId,
+						name: N.name,
+						location: N.location,
+						powerSource: N.powerSource,
+						statistics: object[N.nodeId.toString()]
+					};
+					_Nodes.push(_Node);
+				});
+
+				res(_Nodes);
+
+				/*
+
 				Nodes.forEach((N) => {
 					if (N.isControllerNode) {
 						const EL = {
@@ -520,7 +536,8 @@ const ZwaveJsUI = (function () {
 								id: N.nodeId,
 								name: 'Controller',
 								fontSize: '12px',
-								icon: 'resources/node-red-contrib-zwave-js/UITab/Stick.png'
+								icon: 'resources/node-red-contrib-zwave-js/UITab/Stick.png',
+								nodeData:N
 							}
 						};
 						_Elements.push(EL);
@@ -530,7 +547,8 @@ const ZwaveJsUI = (function () {
 								id: N.nodeId,
 								name: `${N.nodeId} - ${N.name || 'No Name'}`,
 								fontSize: '10px',
-								icon: 'resources/node-red-contrib-zwave-js/UITab/Device.png'
+								icon: 'resources/node-red-contrib-zwave-js/UITab/Device.png',
+								nodeData:N
 							}
 						};
 
@@ -592,6 +610,7 @@ const ZwaveJsUI = (function () {
 					}
 				});
 				res(_Elements);
+				*/
 			});
 		});
 	}
@@ -622,6 +641,14 @@ const ZwaveJsUI = (function () {
 
 		ControllerCMD('ControllerAPI', 'getNodes').then(({ object }) => {
 			GenerateMapJSON(object).then((Elements) => {
+
+				console.log(Elements);
+
+				document.cookie = "ZWJSMapData="+JSON.stringify(Elements);
+				window.open('resources/node-red-contrib-zwave-js/MeshMap/map.html','_blank');
+
+
+				/*
 				const StyleSheet = cytoscape.stylesheet();
 
 				// Node
@@ -663,6 +690,7 @@ const ZwaveJsUI = (function () {
 				};
 				console.log(data);
 				Mesh = cytoscape(data);
+				*/
 			});
 		});
 	}

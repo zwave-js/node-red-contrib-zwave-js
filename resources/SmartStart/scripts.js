@@ -164,7 +164,7 @@ function tick() {
 async function SendActive() {
 	return new Promise((resolve, reject) => {
 		const Res = $.ajax({
-			url: '../../../../zwave-js/smartstart-event/started',
+			url: '../../../zwave-js/smartstart-event/started',
 			method: 'get',
 			async: false
 		});
@@ -216,7 +216,7 @@ function SendCode(Code, skipRender) {
 		} else {
 			let Result;
 			$.ajax({
-				url: '../../../../zwave-js/smartstart-event/code/' + Code.data,
+				url: '../../../zwave-js/smartstart-event/code/' + Code.data,
 				method: 'get',
 				success: (data) => {
 					Result = data;
