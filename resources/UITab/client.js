@@ -528,7 +528,7 @@ const ZwaveJsUI = (function () {
 						const EL = {
 							data: {
 								id: N.nodeId,
-								name: `${N.nodeId} - ${N.nodeName || 'No Name'}`,
+								name: `${N.nodeId} - ${N.name || 'No Name'}`,
 								fontSize: '10px',
 								icon: 'resources/node-red-contrib-zwave-js/UITab/Device.png'
 							}
