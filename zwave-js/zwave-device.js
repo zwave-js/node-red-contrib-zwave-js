@@ -6,7 +6,7 @@ module.exports = function (RED) {
 		RED.nodes.createNode(this, config);
 		const RedNode = this;
 
-		const NetworkIdentifier = (config.networkIdentifier || 1);
+		const NetworkIdentifier = config.networkIdentifier || 1;
 
 		function UpdateStatus(Color, Shape, Text) {
 			if (config.showStatus === undefined || config.showStatus) {
@@ -75,14 +75,20 @@ module.exports = function (RED) {
 			}
 			VarNode = VarValue;
 			if (Out) {
-				NodeEventEmitter.on(`zwjs:${NetworkIdentifier}:node:event:${VarNode}`, processEventMessage);
+				NodeEventEmitter.on(
+					`zwjs:${NetworkIdentifier}:node:event:${VarNode}`,
+					processEventMessage
+				);
 			}
 		}
 
 		if (Array.isArray(config.filteredNodeId)) {
 			if (Out) {
 				config.filteredNodeId.forEach((N) => {
-					NodeEventEmitter.on(`zwjs:${NetworkIdentifier}:node:event:${N}`, processEventMessage);
+					NodeEventEmitter.on(
+						`zwjs:${NetworkIdentifier}:node:event:${N}`,
+						processEventMessage
+					);
 				});
 			}
 			if (config.multicast) {
@@ -108,7 +114,10 @@ module.exports = function (RED) {
 		} else if (config.filteredNodeId === 'All') {
 			DeviceMode = 'All';
 			if (Out) {
-				NodeEventEmitter.on(`zwjs:${NetworkIdentifier}:node:event:all`, processEventMessage);
+				NodeEventEmitter.on(
+					`zwjs:${NetworkIdentifier}:node:event:all`,
+					processEventMessage
+				);
 			}
 			UpdateStatus('green', 'dot', 'Mode: All Nodes');
 		} else if (config.filteredNodeId === 'AS') {

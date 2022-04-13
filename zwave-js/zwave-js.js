@@ -72,9 +72,6 @@ module.exports = function (RED) {
 		let _DSKResolve = undefined;
 		let _ClientSideAuth = undefined;
 
-		const MaxDriverAttempts = 3;
-		let DriverAttempts = 0;
-		const RetryTime = 5000;
 		let DriverOptions = {};
 
 		// Log function
@@ -1469,6 +1466,7 @@ module.exports = function (RED) {
 
 		function Send(Node, Subject, Value, send) {
 			const PL = {};
+			PL.networkId = NetworkIdentifier;
 
 			let IsolatedNodeId;
 
@@ -1563,7 +1561,6 @@ module.exports = function (RED) {
 		StartDriver();
 
 		function InitDriver() {
-			DriverAttempts++;
 			try {
 				Log('info', 'NDERED', undefined, undefined, 'Initializing driver...');
 				Driver = new ZWaveJS.Driver(config.serialPort, DriverOptions);
@@ -1588,43 +1585,15 @@ module.exports = function (RED) {
 			}
 
 			WireDriverEvents();
-			//UI.Unregister();
 			UI.Register(Driver, Input);
 		}
 
 		function WireDriverEvents() {
 			Driver.on('error', (e) => {
 				if (e.code === ZWaveErrorCodes.Driver_Failed) {
-					if (DriverAttempts >= MaxDriverAttempts) {
-						Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
-						RedNode.error(e);
-					} else {
-						Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
-						Log(
-							'debug',
-							'NDERED',
-							undefined,
-							undefined,
-							'Will retry in ' +
-								RetryTime +
-								'ms. Attempted: ' +
-								DriverAttempts +
-								', Max: ' +
-								MaxDriverAttempts
-						);
-						RedNode.error(
-							new Error(
-								'Driver Failed: Will retry in ' +
-									RetryTime +
-									'ms. Attempted: ' +
-									DriverAttempts +
-									', Max: ' +
-									MaxDriverAttempts
-							)
-						);
-						InitDriver();
-						setTimeout(StartDriver, RetryTime);
-					}
+					Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
+					UI.Unregister();
+					RedNode.error(e);
 				} else {
 					Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
 					RedNode.error(e);
@@ -1644,8 +1613,6 @@ module.exports = function (RED) {
 
 			// driver ready
 			Driver.once(event_DriverReady.zwaveName, () => {
-				DriverAttempts = 0;
-
 				RedNode.status({
 					fill: 'yellow',
 					shape: 'dot',
@@ -1896,43 +1863,16 @@ module.exports = function (RED) {
 			Driver.start()
 				.catch((e) => {
 					if (e.code === ZWaveErrorCodes.Driver_Failed) {
-						if (DriverAttempts >= MaxDriverAttempts) {
-							Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
-							RedNode.error(e);
-						} else {
-							Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
-							Log(
-								'debug',
-								'NDERED',
-								undefined,
-								undefined,
-								'Will retry in ' +
-									RetryTime +
-									'ms. Attempted: ' +
-									DriverAttempts +
-									', Max: ' +
-									MaxDriverAttempts
-							);
-							RedNode.error(
-								new Error(
-									'Driver failed: Will retry in ' +
-										RetryTime +
-										'ms. Attempted: ' +
-										DriverAttempts +
-										', Max: ' +
-										MaxDriverAttempts
-								)
-							);
-							InitDriver();
-							setTimeout(StartDriver, RetryTime);
-						}
+						Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
+						UI.Unregister();
+						RedNode.error(e);
 					} else {
 						Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
 						RedNode.error(e);
 					}
 				})
 				.then(() => {
-					// now what - just sit and wait.
+					// we are live!
 				});
 		}
 	}

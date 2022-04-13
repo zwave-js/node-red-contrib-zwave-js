@@ -6,7 +6,10 @@
      - The **GET_VALUE_RESPONSE** object is no longer partitioned with **response** and **valueId** properties.
        Instead, the returned object now represents a shape simular to **VALUE_UPDATED** events.
        The value will now be attached to the **currentValue** property, along with the Value ID on the same level.
-     - Much like above, **GET_VALUE_METADATA_RESPONSE** has also been simplified, where the result is attached to **metadata**, with the Value ID ID on the same level.
+     - Much like above, **GET_VALUE_METADATA_RESPONSE** has also been simplified, where the result is attached to **metadata**, with the Value ID on the same level.
+     - The module no longer attempts a restart on a fatal error (i.e the stick is pulled from the socket as an example)
+       This caused more problems than what they resolved, so the descision is made to not attempt recovery.
+       Restarting the node is just as good as a recovery attempt.
 
     **New Features**
      - **VALUE_UPDATED**, **VALUE_NOTIFICATION**, and **GET_VALUE_RESPONSE** now contain a **normalizedObject** property.
@@ -16,6 +19,7 @@
      - Network statistics now include route information that is obtained during communication, and is used
        as the basis of the new map.
      - Multiple ZWave sticks/Networks are now supported (finally)
+       - all message will contain a property of **networkId** to indentify the source network.
 
     **Fixes**
      - Nodes that are not marked as ready can now be removed correctly.
