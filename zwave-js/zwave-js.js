@@ -1190,7 +1190,7 @@ module.exports = function (RED) {
 							const V = Driver.controller.nodes.get(NID).getValue(VID);
 							const VI = {
 								currentValue: V,
-								valueId: VID
+								...VID
 							};
 							G.values.push(VI);
 						});
