@@ -3,6 +3,7 @@
 		category: 'ZWave JS',
 		color: 'rgb(46,145,205)',
 		defaults: {
+			networkIdentifier: { value: 1 },
 			name: { value: 'Some Z-Wave Device' },
 			filteredNodeId: { value: 'All' },
 			multicast: { value: false },
@@ -18,7 +19,7 @@
 		outputs: 1,
 		icon: 'Node.svg',
 		label: function () {
-			return this.name;
+			return this.name + ' (Net: ' + (this.networkIdentifier || 1) + ')';
 		},
 		oneditprepare: SortUI,
 		oneditsave: SetIO,
@@ -47,6 +48,17 @@
 
 	function SortUI() {
 		let node = this;
+
+		// 6 -> 7
+		if (this.networkIdentifier === undefined) {
+			$('#node-input-networkIdentifier').val(1);
+			$('#Network1').css({ backgroundColor: 'lightgray' });
+			this.networkIdentifier = 1;
+		} else {
+			$('#Network' + this.networkIdentifier).css({
+				backgroundColor: 'lightgray'
+			});
+		}
 
 		let Rate = $('#drate');
 		let Mode = $('#node-input-filteredMode');
@@ -80,7 +92,7 @@
 			$('#node-input-messageInterval').val(250);
 		}
 
-		$.getJSON('zwave-js/cfg-nodelist', (data) => {
+		$.getJSON(`zwave-js/${this.networkIdentifier}/cfg-nodelist`, (data) => {
 			Filter.empty();
 
 			let Locations = Object.keys(data);
@@ -248,15 +260,56 @@
 			$('#IsolatedDiv').css({ display: 'none' });
 		}
 	}
+
+	function setID(ID) {
+		$('#Network1').css({ backgroundColor: '' });
+		$('#Network2').css({ backgroundColor: '' });
+		$('#Network3').css({ backgroundColor: '' });
+		$('#Network4').css({ backgroundColor: '' });
+
+		$('#node-input-networkIdentifier').val(ID);
+		$('#Network' + ID).css({
+			backgroundColor: 'lightgray'
+		});
+
+		$.getJSON(`zwave-js/${ID}/cfg-nodelist`, (data) => {
+			let Filter = $('#node-input-filteredNodeId');
+			Filter.empty();
+
+			let Locations = Object.keys(data);
+
+			Locations.forEach((L) => {
+				let Location = data[L];
+				if (Location.length > 0) {
+					let OG = $('<optgroup label=" --- ' + L + ' --- ">');
+					Location.forEach((node) => {
+						OG.append(
+							new Option(node.id + ' : ' + node.name, node.id.toString())
+						);
+					});
+					Filter.append(OG);
+				}
+			});
+		});
+	}
 </script>
 
 <script type="text/x-red" data-template-name="zwave-device">
 
 	<input type="checkbox" id="node-input-multicast" style="display: none">
+	<input type="hidden" id="node-input-networkIdentifier">
 
 	<div class="form-row">
 	    <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
 	    <input type="text" id="node-input-name" placeholder="My ZWave Node">
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-networkIdentifier" style="width:130px"><i class="fa fa-pencil"></i> Network ID</label>
+		<button class="red-ui-button red-ui-button-small" style="width: 30px; height: 30px; margin-right: 2px;" id="Network1" onclick="setID(1)">1</button>
+		<button class="red-ui-button red-ui-button-small" style="width: 30px; height: 30px; margin-right: 2px;" id="Network2" onclick="setID(2)">2</button>
+		<button class="red-ui-button red-ui-button-small" style="width: 30px; height: 30px; margin-right: 2px;" id="Network3" onclick="setID(3)">3</button>
+		<button class="red-ui-button red-ui-button-small" style="width: 30px; height: 30px; margin-right: 2px;" id="Network4" onclick="setID(4)">4</button>
+
 	</div>
 	<div class="form-row">
 	    <label for="node-input-filteredMode" style="width:130px"><i class="fa fa-pencil"></i> Mode</label>

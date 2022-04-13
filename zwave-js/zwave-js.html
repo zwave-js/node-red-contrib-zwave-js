@@ -848,6 +848,7 @@
 		category: 'ZWave JS',
 		color: 'rgb(46,145,205)',
 		defaults: {
+			networkIdentifier: { value: 1 },
 			serialPort: { value: undefined },
 			name: { value: 'Z-Wave JS Controller' },
 			encryptionKey: { value: undefined },
@@ -875,7 +876,7 @@
 		outputs: 1,
 		icon: 'ZWJS.svg',
 		label: function () {
-			return this.name;
+			return this.name + ' (Net: ' + (this.networkIdentifier || 1) + ')';
 		},
 		onpaletteadd: ZwaveJsUI.init,
 		oneditprepare: SortUI,
@@ -892,17 +893,17 @@
 	}
 
 	function SortUI() {
-		// 5.0 -> 5.1
-		if (this.logLevelPin === undefined) {
-			$('#node-input-logLevelPin').val('none');
+		// 6 -> 7
+		if (this.networkIdentifier === undefined) {
+			$('#node-input-networkIdentifier').val(1);
+			$('#Network1').css({ backgroundColor: 'lightgray' });
+		} else {
+			$('#Network' + this.networkIdentifier).css({
+				backgroundColor: 'lightgray'
+			});
 		}
 
-		// 3.3 -> 3.4
-		if (this.valueCacheDiskThrottle === undefined) {
-			$('#node-input-valueCacheDiskThrottle').val('normal');
-		}
-
-		$.getJSON('zwave-js/cfg-serialports', (data) => {
+		$.getJSON(`zwave-js/cfg-serialports`, (data) => {
 			$('#node-input-serialPort').empty();
 			$('#node-input-serialPort').append(
 				new Option('Select Port', 'Select Port')
@@ -943,15 +944,29 @@
 			});
 		});
 
-		$.getJSON('zwave-js/cfg-version', (data) => {
+		$.getJSON(`zwave-js/cfg-version`, (data) => {
 			$('#MOD_Version').val(data.moduleversion);
 			$('#ZWJS_Version').val(data.zwjsversion);
 			$('#ZWJS_CFGVersion').val(data.zwjscfgversion);
 		});
 	}
+
+	function setID(ID) {
+		$('#Network1').css({ backgroundColor: '' });
+		$('#Network2').css({ backgroundColor: '' });
+		$('#Network3').css({ backgroundColor: '' });
+		$('#Network4').css({ backgroundColor: '' });
+
+		$('#node-input-networkIdentifier').val(ID);
+		$('#Network' + ID).css({
+			backgroundColor: 'lightgray'
+		});
+	}
 </script>
 
 <script type="text/x-red" data-template-name="zwave-js">
+
+	<input type="hidden" id="node-input-networkIdentifier">
 
 	<p><strong>Z-Wave JS Analytics Reporting</strong></p>
 
@@ -970,6 +985,14 @@
 	<div class="form-row">
 	    <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
 	    <input type="text" id="node-input-name" placeholder="Zwave Controller">
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-networkIdentifier" style="width:130px"><i class="fa fa-pencil"></i> Network ID</label>
+		<button class="red-ui-button red-ui-button-small" style="width: 30px; height: 30px; margin-right: 2px;" id="Network1" onclick="setID(1)">1</button>
+		<button class="red-ui-button red-ui-button-small" style="width: 30px; height: 30px; margin-right: 2px;" id="Network2" onclick="setID(2)">2</button>
+		<button class="red-ui-button red-ui-button-small" style="width: 30px; height: 30px; margin-right: 2px;" id="Network3" onclick="setID(3)">3</button>
+		<button class="red-ui-button red-ui-button-small" style="width: 30px; height: 30px; margin-right: 2px;" id="Network4" onclick="setID(4)">4</button>
+
 	</div>
 	<div class="form-row">
 	    <label for="node-input-serialPort" style="width:130px"><i class="fa fa-pencil"></i> Serial Port</label>

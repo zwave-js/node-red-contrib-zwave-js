@@ -3,6 +3,7 @@ module.exports = function (RED) {
 	const ModulePackage = require('../package.json');
 	const { NodeEventEmitter } = require('./events');
 	const ZWaveJS = require('zwave-js');
+	const { UIServer, SetupGlobals } = require('./ui/server.js');
 	const {
 		createDefaultTransportFormat,
 		CommandClasses,
@@ -54,13 +55,14 @@ module.exports = function (RED) {
 		'heal network progress'
 	);
 
-	const UI = require('./ui/server.js');
-	UI.init(RED);
+	SetupGlobals(RED);
 
 	function Init(config) {
 		RED.nodes.createNode(this, config);
 		const RedNode = this;
 
+		const NetworkIdentifier = config.networkIdentifier || 1;
+		const UI = new UIServer(RED, NetworkIdentifier);
 		let Driver;
 		let Logger;
 		let FileTransport;
@@ -127,14 +129,14 @@ module.exports = function (RED) {
 						shape: 'dot',
 						text: event_AllNodesReady.statusName
 					});
-					UI.status(event_AllNodesReady.statusName);
+					UI.Status(event_AllNodesReady.statusName);
 				} else {
 					RedNode.status({
 						fill: 'yellow',
 						shape: 'dot',
 						text: 'Nodes : ' + NotReady.toString() + ' Not ready.'
 					});
-					UI.status('Nodes : ' + NotReady.toString() + ' Not ready.');
+					UI.Status('Nodes : ' + NotReady.toString() + ' Not ready.');
 				}
 			}, 5000);
 		}
@@ -175,9 +177,12 @@ module.exports = function (RED) {
 			shape: 'dot',
 			text: 'Starting Z-Wave driver...'
 		});
-		UI.status('Starting Z-Wave driver...');
+		UI.Status('Starting Z-Wave driver...');
 
-		NodeEventEmitter.on('zwjs:node:command', processMessageEvent);
+		NodeEventEmitter.on(
+			`zwjs:${NetworkIdentifier}:node:command`,
+			processMessageEvent
+		);
 		async function processMessageEvent(MSG) {
 			await Input(MSG, undefined, undefined, true);
 		}
@@ -442,7 +447,7 @@ module.exports = function (RED) {
 				NodeList[Node.location].push(Node);
 			});
 
-			UI.upateNodeList(NodeList);
+			UI.UpateNodeList(NodeList);
 		}
 
 		function NodeCheck(ID, SkipReady) {
@@ -475,10 +480,10 @@ module.exports = function (RED) {
 				'[SHUTDOWN] [' + Type + ']',
 				'Cleaning up...'
 			);
-			UI.unregister();
+			UI.Unregister();
 			Driver.destroy().then(() => {
 				NodeEventEmitter.removeListener(
-					'zwjs:node:command',
+					`zwjs:${NetworkIdentifier}:node:command`,
 					processMessageEvent
 				);
 				if (Logger !== undefined) {
@@ -663,7 +668,7 @@ module.exports = function (RED) {
 
 		function GrantSecurityClasses(_Request) {
 			_ClientSideAuth = _Request.clientSideAuth;
-			UI.sendEvent('node-inclusion-step', 'grant security', {
+			UI.SendEvent('node-inclusion-step', 'grant security', {
 				classes: _Request.securityClasses
 			});
 			return new Promise((res) => {
@@ -680,7 +685,7 @@ module.exports = function (RED) {
 		}
 
 		function ValidateDSK(DSK) {
-			UI.sendEvent('node-inclusion-step', 'verify dsk', { dsk: DSK });
+			UI.SendEvent('node-inclusion-step', 'verify dsk', { dsk: DSK });
 			return new Promise((res) => {
 				_DSKResolve = res;
 			});
@@ -698,7 +703,7 @@ module.exports = function (RED) {
 			if (_DSKResolve !== undefined) {
 				_DSKResolve = undefined;
 			}
-			UI.sendEvent('node-inclusion-step', 'aborted');
+			UI.SendEvent('node-inclusion-step', 'aborted');
 		}
 
 		async function ControllerAPI(msg, send) {
@@ -884,7 +889,7 @@ module.exports = function (RED) {
 						shape: 'dot',
 						text: 'Node Heal Started: ' + Params[0]
 					});
-					UI.status('Node Heal Started: ' + Params[0]);
+					UI.Status('Node Heal Started: ' + Params[0]);
 					const HealResponse = await Driver.controller.healNode(Params[0]);
 					if (HealResponse) {
 						RedNode.status({
@@ -892,14 +897,14 @@ module.exports = function (RED) {
 							shape: 'dot',
 							text: 'Node Heal Successful: ' + Params[0]
 						});
-						UI.status('Node Heal Successful: ' + Params[0]);
+						UI.Status('Node Heal Successful: ' + Params[0]);
 					} else {
 						RedNode.status({
 							fill: 'red',
 							shape: 'dot',
 							text: 'Node Heal Unsuccessful: ' + Params[0]
 						});
-						UI.status('Node Heal Unsuccessful: ' + Params[0]);
+						UI.Status('Node Heal Unsuccessful: ' + Params[0]);
 					}
 					Send(
 						ReturnNode,
@@ -918,7 +923,7 @@ module.exports = function (RED) {
 						shape: 'dot',
 						text: 'Network Heal Started.'
 					});
-					UI.status('Network Heal Started.');
+					UI.Status('Network Heal Started.');
 					break;
 
 				case 'stopHealingNetwork':
@@ -929,7 +934,7 @@ module.exports = function (RED) {
 						shape: 'dot',
 						text: 'Network Heal Stopped.'
 					});
-					UI.status('Network Heal Stopped.');
+					UI.Status('Network Heal Stopped.');
 					RestoreReadyStatus();
 					break;
 
@@ -1529,9 +1534,12 @@ module.exports = function (RED) {
 						_Subject,
 						'[ISOLATED] [' + IsolatedNodeId + '] Forwarding payload...'
 					);
-					NodeEventEmitter.emit(`zwjs:node:event:isloated:${IsolatedNodeId}`, {
-						payload: PL
-					});
+					NodeEventEmitter.emit(
+						`zwjs:${NetworkIdentifier}:node:event:isloated:${IsolatedNodeId}`,
+						{
+							payload: PL
+						}
+					);
 				} else {
 					Log(
 						'debug',
@@ -1540,8 +1548,13 @@ module.exports = function (RED) {
 						_Subject,
 						'[EVENT] Forwarding payload...'
 					);
-					NodeEventEmitter.emit('zwjs:node:event:all', { payload: PL });
-					NodeEventEmitter.emit('zwjs:node:event:' + Node.id, { payload: PL });
+					NodeEventEmitter.emit(`zwjs:${NetworkIdentifier}:node:event:all`, {
+						payload: PL
+					});
+					NodeEventEmitter.emit(
+						`zwjs:${NetworkIdentifier}:node:event:${Node.id}`,
+						{ payload: PL }
+					);
 				}
 			}
 		}
@@ -1575,8 +1588,8 @@ module.exports = function (RED) {
 			}
 
 			WireDriverEvents();
-			UI.unregister();
-			UI.register(Driver, Input);
+			//UI.Unregister();
+			UI.Register(Driver, Input);
 		}
 
 		function WireDriverEvents() {
@@ -1625,7 +1638,7 @@ module.exports = function (RED) {
 					shape: 'dot',
 					text: event_AllNodesReady.statusName
 				});
-				UI.status(event_AllNodesReady.statusName);
+				UI.Status(event_AllNodesReady.statusName);
 				Send(undefined, event_AllNodesReady.redName);
 			});
 
@@ -1638,7 +1651,7 @@ module.exports = function (RED) {
 					shape: 'dot',
 					text: 'Initializing network...'
 				});
-				UI.status('Initializing network...');
+				UI.Status('Initializing network...');
 
 				// Add, Remove
 				Driver.controller.on(event_NodeAdded.zwaveName, (N) => {
@@ -1651,7 +1664,7 @@ module.exports = function (RED) {
 						shape: 'dot',
 						text: event_InterviewStarted.statusNameWithNode(N)
 					});
-					UI.status(event_InterviewStarted.statusNameWithNode(N));
+					UI.Status(event_InterviewStarted.statusNameWithNode(N));
 				});
 
 				Driver.controller.on(event_NodeRemoved.zwaveName, (N) => {
@@ -1669,7 +1682,7 @@ module.exports = function (RED) {
 						shape: 'dot',
 						text: event_InclusionStarted.statusName
 					});
-					UI.status(event_InclusionStarted.statusName);
+					UI.Status(event_InclusionStarted.statusName);
 				});
 				Driver.controller.on(event_InclusionFailed.zwaveName, () => {
 					Send(undefined, event_InclusionFailed.redName);
@@ -1678,7 +1691,7 @@ module.exports = function (RED) {
 						shape: 'dot',
 						text: event_InclusionFailed.statusName
 					});
-					UI.status(event_InclusionFailed.statusName);
+					UI.Status(event_InclusionFailed.statusName);
 					RestoreReadyStatus();
 				});
 				Driver.controller.on(event_InclusionStopped.zwaveName, () => {
@@ -1688,7 +1701,7 @@ module.exports = function (RED) {
 						shape: 'dot',
 						text: event_InclusionStopped.statusName
 					});
-					UI.status(event_InclusionStopped.statusName);
+					UI.Status(event_InclusionStopped.statusName);
 				});
 
 				// Exclusion
@@ -1699,7 +1712,7 @@ module.exports = function (RED) {
 						shape: 'dot',
 						text: event_ExclusionStarted.statusName
 					});
-					UI.status(event_ExclusionStarted.statusName);
+					UI.Status(event_ExclusionStarted.statusName);
 				});
 				Driver.controller.on(event_ExclusionFailed.zwaveName, () => {
 					Send(undefined, event_ExclusionFailed.redName);
@@ -1708,7 +1721,7 @@ module.exports = function (RED) {
 						shape: 'dot',
 						text: event_ExclusionFailed.statusName
 					});
-					UI.status(event_ExclusionFailed.statusName);
+					UI.Status(event_ExclusionFailed.statusName);
 					RestoreReadyStatus();
 				});
 				Driver.controller.on(event_ExclusionStopped.zwaveName, () => {
@@ -1718,7 +1731,7 @@ module.exports = function (RED) {
 						shape: 'dot',
 						text: event_ExclusionStopped.statusName
 					});
-					UI.status(event_ExclusionStopped.statusName);
+					UI.Status(event_ExclusionStopped.statusName);
 					RestoreReadyStatus();
 				});
 
@@ -1734,7 +1747,7 @@ module.exports = function (RED) {
 						shape: 'dot',
 						text: event_NetworkHealDone.statusName
 					});
-					UI.status(event_NetworkHealDone.statusName);
+					UI.Status(event_NetworkHealDone.statusName);
 					RestoreReadyStatus();
 				});
 
@@ -1785,7 +1798,7 @@ module.exports = function (RED) {
 							']'
 					});
 
-					UI.status(
+					UI.Status(
 						'Healing network ' +
 							Math.round(Completed) +
 							'%, Skipped:[' +
@@ -1850,7 +1863,7 @@ module.exports = function (RED) {
 					shape: 'dot',
 					text: event_InterviewStarted.statusNameWithNode(N)
 				});
-				UI.status(event_InterviewStarted.statusNameWithNode(N));
+				UI.Status(event_InterviewStarted.statusNameWithNode(N));
 			});
 
 			Node.on(event_InterviewFailed.zwaveName, (N, Er) => {
@@ -1861,7 +1874,7 @@ module.exports = function (RED) {
 						shape: 'dot',
 						text: event_InterviewFailed.statusNameWithNode(N)
 					});
-					UI.status(event_InterviewFailed.statusNameWithNode(N));
+					UI.Status(event_InterviewFailed.statusNameWithNode(N));
 					RestoreReadyStatus();
 				}
 			});
@@ -1873,7 +1886,7 @@ module.exports = function (RED) {
 					shape: 'dot',
 					text: event_InterviewCompleted.statusNameWithNode(N)
 				});
-				UI.status(event_InterviewCompleted.statusNameWithNode(N));
+				UI.Status(event_InterviewCompleted.statusNameWithNode(N));
 				RestoreReadyStatus();
 			});
 		}

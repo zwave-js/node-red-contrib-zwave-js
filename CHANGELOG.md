@@ -15,6 +15,7 @@
      - An entierly new User Interface to render a Network Mesh Map.
      - Network statistics now include route information that is obtained during communication, and is used
        as the basis of the new map.
+     - Multiple ZWave sticks/Networks are now supported (finally)
 
     **Fixes**
      - Nodes that are not marked as ready can now be removed correctly.

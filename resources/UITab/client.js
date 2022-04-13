@@ -8,8 +8,11 @@ let StartInclusionExclusion;
 let StartReplace;
 let GrantSelected;
 let ValidateDSK;
+
+/* Just stuff */
 let DriverReady = false;
 const WindowSize = { w: 600, h: 500 };
+let NetworkIdentifier = 1;
 
 let StepsAPI;
 const StepList = {
@@ -173,9 +176,12 @@ const ZwaveJsUI = (function () {
 		const HTML = templateScript(Data);
 		HCForm.append(HTML);
 
-		RED.comms.unsubscribe('/zwave-js/healthcheck', processHealthResults);
 		RED.comms.unsubscribe(
-			'/zwave-js/healthcheckprogress',
+			`/zwave-js/${NetworkIdentifier}/healthcheck`,
+			processHealthResults
+		);
+		RED.comms.unsubscribe(
+			`/zwave-js/${NetworkIdentifier}/healthcheckprogress`,
 			processHealthCheckProgress
 		);
 	}
@@ -191,9 +197,12 @@ const ZwaveJsUI = (function () {
 			minHeight: 75,
 			buttons: {
 				Abort: function () {
-					RED.comms.unsubscribe('/zwave-js/healthcheck', processHealthResults);
 					RED.comms.unsubscribe(
-						'/zwave-js/healthcheckprogress',
+						`/zwave-js/${NetworkIdentifier}/healthcheck`,
+						processHealthResults
+					);
+					RED.comms.unsubscribe(
+						`/zwave-js/${NetworkIdentifier}/healthcheckprogress`,
 						processHealthCheckProgress
 					);
 					$(this).dialog('destroy');
@@ -209,9 +218,12 @@ const ZwaveJsUI = (function () {
 
 		HCForm.dialog(Options);
 
-		RED.comms.subscribe('/zwave-js/healthcheck', processHealthResults);
 		RED.comms.subscribe(
-			'/zwave-js/healthcheckprogress',
+			`/zwave-js/${NetworkIdentifier}/healthcheck`,
+			processHealthResults
+		);
+		RED.comms.subscribe(
+			`/zwave-js/${NetworkIdentifier}/healthcheckprogress`,
 			processHealthCheckProgress
 		);
 
@@ -272,7 +284,7 @@ const ZwaveJsUI = (function () {
 			const arrayBuffer = this.result;
 			const array = new Uint8Array(arrayBuffer);
 			const Options = {
-				url: `zwave-js/firmwareupdate/${btoa(Code)}`,
+				url: `zwave-js/${NetworkIdentifier}/firmwareupdate/${btoa(Code)}`,
 				method: 'POST',
 				contentType: 'application/octect-stream',
 				data: array,
@@ -318,7 +330,7 @@ const ZwaveJsUI = (function () {
 		FirmwareForm = $('<div>').css({ padding: 10 }).html('Please wait...');
 		FirmwareForm.dialog(Options);
 
-		$.getJSON('zwave-js/cfg-nodelist', (data) => {
+		$.getJSON(`zwave-js/${NetworkIdentifier}/cfg-nodelist`, (data) => {
 			FirmwareForm.html('');
 			const Template = $('#TPL_Firmware').html();
 			const templateScript = Handlebars.compile(Template);
@@ -641,12 +653,13 @@ const ZwaveJsUI = (function () {
 
 		ControllerCMD('ControllerAPI', 'getNodes').then(({ object }) => {
 			GenerateMapJSON(object).then((Elements) => {
-
 				console.log(Elements);
 
-				document.cookie = "ZWJSMapData="+JSON.stringify(Elements);
-				window.open('resources/node-red-contrib-zwave-js/MeshMap/Map.html','_blank');
-
+				document.cookie = 'ZWJSMapData=' + JSON.stringify(Elements);
+				window.open(
+					'resources/node-red-contrib-zwave-js/MeshMap/Map.html',
+					'_blank'
+				);
 
 				/*
 				const StyleSheet = cytoscape.stylesheet();
@@ -700,7 +713,7 @@ const ZwaveJsUI = (function () {
 
 	function CheckDriverReady() {
 		const Options = {
-			url: `zwave-js/driverready`,
+			url: `zwave-js/${NetworkIdentifier}/driverready`,
 			method: 'GET'
 		};
 
@@ -729,7 +742,7 @@ const ZwaveJsUI = (function () {
 		const NoTimeoutFor = ['installConfigUpdate'];
 
 		const Options = {
-			url: `zwave-js/cmd`,
+			url: `zwave-js/${NetworkIdentifier}/cmd`,
 			method: 'POST',
 			contentType: 'application/json'
 		};
@@ -901,7 +914,7 @@ const ZwaveJsUI = (function () {
 				StepsAPI.setStepIndex(StepList.SmartStartListEdit);
 				$('#SSPurgeButton').css({ display: 'inline-block' });
 				$.ajax({
-					url: 'zwave-js/smart-start-list',
+					url: `zwave-js/${NetworkIdentifier}/smart-start-list`,
 					method: 'GET',
 					dataType: 'json',
 					success: function (List) {
@@ -960,7 +973,7 @@ const ZwaveJsUI = (function () {
 					} else {
 						$('#SmartStartCommit').css({ display: 'inline' });
 						$.ajax({
-							url: `zwave-js/smartstart/startserver`,
+							url: `zwave-js/${NetworkIdentifier}/smartstart/startserver`,
 							method: 'GET',
 							success: function (QRData) {
 								StepsAPI.setStepIndex(StepList.SmartStart);
@@ -1055,7 +1068,7 @@ const ZwaveJsUI = (function () {
 					text: 'Abort',
 					click: function () {
 						$.ajax({
-							url: `zwave-js/smartstart/stopserver`,
+							url: `zwave-js/${NetworkIdentifier}/smartstart/stopserver`,
 							method: 'GET'
 						});
 						ClearIETimer();
@@ -1075,7 +1088,7 @@ const ZwaveJsUI = (function () {
 						});
 						ControllerCMD('IEAPI', 'commitScans', undefined, Entries, true);
 						$.ajax({
-							url: `zwave-js/smartstart/stopserver`,
+							url: `zwave-js/${NetworkIdentifier}/smartstart/stopserver`,
 							method: 'GET'
 						});
 						StepsAPI.setStepIndex(StepList.SmartStartDone);
@@ -1345,7 +1358,13 @@ const ZwaveJsUI = (function () {
 			.appendTo(controllerOpts);
 
 		const BA = $('<div>');
-		BA.css({ width: '200px', marginLeft: '6px', bbackgroundColor: 'inherit' });
+		BA.css({
+			width: '100%',
+			paddingLeft: '6px',
+			paddingRight: '6px',
+			boxSizing: 'border-box',
+			bbackgroundColor: 'inherit'
+		});
 		BA.appendTo(controllerOpts);
 
 		// Expand
@@ -1413,6 +1432,67 @@ const ZwaveJsUI = (function () {
 		RED.popover.tooltip(OtherBTN, 'Other Actions');
 		BA.append(OtherBTN);
 
+		// Network IDs
+		for (let i = 1; i < 5; i++) {
+			const BTN = $('<button>');
+			BTN.click(() => {
+				$.ajax({
+					url: `zwave-js/${i}/ping`,
+					method: 'GET',
+					success: function (Data) {
+						RED.comms.unsubscribe(
+							`/zwave-js/${NetworkIdentifier}/cmd`,
+							handleControllerEvent
+						);
+						RED.comms.unsubscribe(
+							`/zwave-js/${NetworkIdentifier}/battery`,
+							handleBattery
+						);
+						RED.comms.unsubscribe(
+							`/zwave-js/${NetworkIdentifier}/status`,
+							handleStatusUpdate
+						);
+
+						DriverReady = false;
+						deselectCurrentNode();
+						NetworkIdentifier = i;
+						$('#zwave-js-controller-status').html('Waiting for driver...');
+						$('#zwave-js-node-properties').treeList('empty');
+						$('#zwave-js-selected-node-info').text('No Node Selected');
+						$('#zwave-js-selected-node-name').text('No Node Selected');
+
+						RED.comms.subscribe(
+							`/zwave-js/${NetworkIdentifier}/cmd`,
+							handleControllerEvent
+						);
+						RED.comms.subscribe(
+							`/zwave-js/${NetworkIdentifier}/battery`,
+							handleBattery
+						);
+						RED.comms.subscribe(
+							`/zwave-js/${NetworkIdentifier}/status`,
+							handleStatusUpdate
+						);
+
+						setTimeout(WaitLoad, 100);
+					},
+					error: function () {
+						modalAlert('No Network is assigned to this ID', 'No Network');
+					}
+				});
+			});
+			BTN.addClass('red-ui-button red-ui-button-small');
+			BTN.css({
+				width: '30px',
+				height: '30px',
+				marginRight: '1px',
+				float: 'right'
+			});
+			BTN.html(i);
+			RED.popover.tooltip(BTN, 'Load Network #' + i);
+			BA.append(BTN);
+		}
+
 		// Node List
 		$('<div id="zwave-js-node-list">')
 			.css({
@@ -1476,9 +1556,19 @@ const ZwaveJsUI = (function () {
 			iconClass: 'fa fa-feed',
 			onchange: () => setTimeout(resizeStack, 0) // Only way I can figure out how to init the resize when tab becomes visible
 		});
-		RED.comms.subscribe(`/zwave-js/cmd`, handleControllerEvent);
-		RED.comms.subscribe(`/zwave-js/battery`, handleBattery);
-		RED.comms.subscribe(`/zwave-js/status`, handleStatusUpdate);
+
+		RED.comms.subscribe(
+			`/zwave-js/${NetworkIdentifier}/cmd`,
+			handleControllerEvent
+		);
+		RED.comms.subscribe(
+			`/zwave-js/${NetworkIdentifier}/battery`,
+			handleBattery
+		);
+		RED.comms.subscribe(
+			`/zwave-js/${NetworkIdentifier}/status`,
+			handleStatusUpdate
+		);
 
 		$('#zwave-js-selected-node-info').text('No Node Selected');
 		$('#zwave-js-selected-node-name').text('No Node Selected');
@@ -2028,7 +2118,10 @@ const ZwaveJsUI = (function () {
 			$('#zwave-js-status-box-interview').text('');
 
 			$('#zwave-js-node-properties').treeList('empty');
-			RED.comms.unsubscribe(`/zwave-js/cmd/${selectedNode}`, handleNodeEvent);
+			RED.comms.unsubscribe(
+				`/zwave-js/${NetworkIdentifier}/cmd/${selectedNode}`,
+				handleNodeEvent
+			);
 		}
 	}
 
@@ -2059,7 +2152,10 @@ const ZwaveJsUI = (function () {
 		$('#zwave-js-selected-node-name').text(Name);
 
 		getProperties();
-		RED.comms.subscribe(`/zwave-js/cmd/${selectedNode}`, handleNodeEvent);
+		RED.comms.subscribe(
+			`/zwave-js/${NetworkIdentifier}/cmd/${selectedNode}`,
+			handleNodeEvent
+		);
 	}
 
 	function handleNodeEvent(topic, data) {
@@ -2594,7 +2690,7 @@ const ZwaveJsUI = (function () {
 
 	function getLatestStatus() {
 		$.ajax({
-			url: `zwave-js/fetch-driver-status`,
+			url: `zwave-js/${NetworkIdentifier}/fetch-driver-status`,
 			method: 'GET'
 		});
 	}
