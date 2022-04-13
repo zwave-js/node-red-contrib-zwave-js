@@ -14,7 +14,7 @@
        Restarting the node is just as good as a recovery attempt.
 
     **New Features**
-     - **VALUE_UPDATED**, **VALUE_NOTIFICATION**, and **GET_VALUE_RESPONSE** now contain a **normalizedObject** property.
+     - **VALUE_UPDATED**, **VALUE_NOTIFICATION**, **GET_VALUE_RESPONSE** and **VALUE_DB** now contain a **normalizedObject** property.
        This property aims to make it easy to utilise the value change, in that it summarises the event with easy to understand property names.
      - New UI Layout - We have overhauled the UI, and focused on making it fit more into the node red style guide.
      - An entierly new User Interface to render a Network Mesh Map.

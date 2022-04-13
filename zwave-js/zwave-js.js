@@ -1006,6 +1006,11 @@ module.exports = function (RED) {
 						...Params[0],
 						currentValue: V
 					};
+					ReturnObject.normalizedObject = buildNormalized(
+						ReturnObject,
+						ReturnNode.id
+					);
+
 					if (msg.isolatedNodeId !== undefined) {
 						ReturnNode.targetFlowNode = msg.isolatedNodeId;
 						delete msg['isolatedNodeId'];
@@ -1189,9 +1194,10 @@ module.exports = function (RED) {
 						VIDs.forEach((VID) => {
 							const V = Driver.controller.nodes.get(NID).getValue(VID);
 							const VI = {
-								currentValue: V,
-								...VID
+								...VID,
+								currentValue: V
 							};
+							VI.normalizedObject = buildNormalized(VI, NID);
 							G.values.push(VI);
 						});
 						Result.push(G);
@@ -1405,20 +1411,18 @@ module.exports = function (RED) {
 			}
 		}
 
-		function buildNormalized(Payload) {
+		function buildNormalized(Payload, Node) {
 			try {
 				const VID = {
-					commandClass: Payload.object.commandClass,
-					endpoint: Payload.object.endpoint,
-					property: Payload.object.property,
-					propertyKey: Payload.object.propertyKey
+					commandClass: Payload.commandClass,
+					endpoint: Payload.endpoint,
+					property: Payload.property,
+					propertyKey: Payload.propertyKey
 				};
 
-				const CCName = getCCName(Payload.object.commandClass);
+				const CCName = getCCName(Payload.commandClass);
 
-				const Meta = Driver.controller.nodes
-					.get(Payload.node)
-					.getValueMetadata(VID);
+				const Meta = Driver.controller.nodes.get(Node).getValueMetadata(VID);
 
 				if (Meta === undefined) {
 					return undefined;
@@ -1426,31 +1430,28 @@ module.exports = function (RED) {
 
 				const NO = {};
 
-				NO.commandClass = `0x${VID.commandClass
-					.toString(16)
-					.padStart(2, '0')} - ${CCName}`;
+				NO.commandClass = `${VID.commandClass} - ${CCName}`;
 
 				let Key = 'newValue';
 
-				if (Payload.object.hasOwnProperty('currentValue')) {
+				if (Payload.hasOwnProperty('currentValue')) {
 					Key = 'currentValue';
 				}
 
 				if (
 					Meta.states !== undefined &&
-					Meta.states[Payload.object[Key]] !== undefined
+					Meta.states[Payload[Key]] !== undefined
 				) {
-					NO.type = typeof Meta.states[Payload.object[Key]];
-					NO[Key] = Meta.states[Payload.object[Key]];
+					NO.type = typeof Meta.states[Payload[Key]];
+					NO[Key] = Meta.states[Payload[Key]];
 					if (Key === 'newValue') {
-						NO.prevValue =
-							Meta.states[Payload.object.prevValue] || Payload.object.prevValue;
+						NO.prevValue = Meta.states[Payload.prevValue] || Payload.prevValue;
 					}
 				} else {
-					NO.type = typeof Payload.object[Key];
-					NO[Key] = Payload.object[Key];
+					NO.type = typeof Payload[Key];
+					NO[Key] = Payload[Key];
 					if (Key === 'newValue') {
-						NO.prevValue = Payload.object.prevValue;
+						NO.prevValue = Payload.prevValue;
 					}
 				}
 
@@ -1498,13 +1499,6 @@ module.exports = function (RED) {
 				_Subject = '[' + Subject + ']';
 			}
 
-			switch (PL.event) {
-				case 'VALUE_UPDATED':
-				case 'VALUE_NOTIFICATION':
-				case 'GET_VALUE_RESPONSE':
-					PL.normalizedObject = buildNormalized(PL);
-					break;
-			}
 			Log('debug', 'NDERED', 'OUT', _Subject, '[DIRECT] Forwarding payload...');
 			if (send) {
 				send({ payload: PL });
@@ -1795,6 +1789,7 @@ module.exports = function (RED) {
 				});
 
 				Node.on(event_ValueNotification.zwaveName, (N, VL) => {
+					VL.normalizedObject = buildNormalized(VL, N.id);
 					Send(N, event_ValueNotification.redName, VL);
 				});
 
@@ -1807,10 +1802,12 @@ module.exports = function (RED) {
 				});
 
 				Node.on(event_ValueUpdated.zwaveName, (N, VL) => {
+					VL.normalizedObject = buildNormalized(VL, N.id);
 					Send(N, event_ValueUpdated.redName, VL);
 				});
 
 				Node.on(event_ValueAdded.zwaveName, (N, VL) => {
+					VL.normalizedObject = buildNormalized(VL, N.id);
 					Send(N, 'VALUE_UPDATED', VL); // we dont differentiate between added, update - cant see the need.
 				});
 
