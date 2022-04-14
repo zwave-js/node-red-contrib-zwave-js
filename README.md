@@ -8,7 +8,7 @@
 ![npms.io (maintenance)](https://img.shields.io/npms-io/maintenance-score/node-red-contrib-zwave-js)
 ![Libraries.io dependency status for latest release](https://img.shields.io/librariesio/release/npm/node-red-contrib-zwave-js)
 
-The most powerful, high performing, highly polished and fully integrated Z-Wave node for Node-RED based on Z-Wave JS. If you want a fully featured Z-Wave framework in your Node-RED instance, you have found it.
+The most powerful, high performing and highly polished Z-Wave node for Node-RED based on Z-Wave JS. If you want a fully featured Z-Wave framework in your Node-RED instance, you have found it.
 
 > ### ...node-red-contrib-zwave-js is _hands down the best Z-Wave to Node-RED option on the planet._  
 > [@CRXPorter](https://github.com/crxporter), July 2021.  
