@@ -848,9 +848,9 @@
 		category: 'ZWave JS',
 		color: 'rgb(46,145,205)',
 		defaults: {
-			networkIdentifier: { value: 1 },
+			networkIdentifier: { value: undefined },
 			serialPort: { value: undefined },
-			name: { value: 'Z-Wave JS Controller' },
+			name: { value: 'ZWave Controller' },
 			encryptionKey: { value: undefined },
 			encryptionKeyS2U: { value: undefined },
 			encryptionKeyS2A: { value: undefined },
@@ -876,12 +876,12 @@
 		outputs: 1,
 		icon: 'ZWJS.svg',
 		label: function () {
-			return this.name + ' (Net: ' + (this.networkIdentifier || 1) + ')';
+			return this.name + ' (Net: ' + (this.networkIdentifier || '--') + ')';
 		},
 		onpaletteadd: ZwaveJsUI.init,
 		oneditprepare: SortUI,
 		oneditsave: SortIO,
-		paletteLabel: 'zwave-js'
+		paletteLabel: 'ZWave Controller'
 	});
 
 	function SortIO() {
@@ -893,61 +893,70 @@
 	}
 
 	function SortUI() {
-		// 6 -> 7
-		if (this.networkIdentifier === undefined) {
-			$('#node-input-networkIdentifier').val(1);
-			$('#Network1').css({ backgroundColor: 'lightgray' });
-		} else {
-			$('#Network' + this.networkIdentifier).css({
-				backgroundColor: 'lightgray'
+		$.getJSON(`zwave-js/cfg-getids`, (data) => {
+			data.UsedNIDs.forEach((ID) => {
+				$(`#Network${ID}`).css({ opacity: 0.5 });
+				$(`#Network${ID}`).prop('disabled', true);
 			});
-		}
 
-		$.getJSON(`zwave-js/cfg-serialports`, (data) => {
-			$('#node-input-serialPort').empty();
-			$('#node-input-serialPort').append(
-				new Option('Select Port', 'Select Port')
-			);
-			$('#node-input-serialPort').append(
-				new Option('Custom Path...', 'Custom Path...')
-			);
-
-			$('#node-input-serialPort').append(
-				data.map(function (option) {
-					return new Option(option, option);
-				})
-			);
-
-			if (this.serialPort !== undefined) {
-				if (data.indexOf(this.serialPort) < 0) {
-					$('#node-input-serialPort').append(
-						new Option(this.serialPort, this.serialPort)
-					);
-				}
-
-				$('#node-input-serialPort').val(this.serialPort);
+			if (this.networkIdentifier === undefined) {
+				$('#node-input-networkIdentifier').val(data.AvailableNIDs[0]);
+				$('#Network' + data.AvailableNIDs[0]).css({
+					backgroundColor: 'lightgray'
+				});
 			} else {
-				$('#node-input-serialPort').val('Select Port');
+				$(`#Network${this.networkIdentifier}`).css({ opacity: 1.0 });
+				$(`#Network${this.networkIdentifier}`).prop('disabled', false);
+				$(`#Network${this.networkIdentifier}`).css({
+					backgroundColor: 'lightgray'
+				});
 			}
 
-			$('#node-input-serialPort').change(function (event) {
-				var Value = event.target.value;
+			$.getJSON(`zwave-js/cfg-serialports`, (data) => {
+				$('#node-input-serialPort').empty();
+				$('#node-input-serialPort').append(
+					new Option('Select Port', 'Select Port')
+				);
+				$('#node-input-serialPort').append(
+					new Option('Custom Path...', 'Custom Path...')
+				);
 
-				if (Value === 'Custom Path...') {
-					Value = prompt('Enter custom serial path.');
-					if (Value !== null) {
-						Value = Value.trim();
-						$('#node-input-serialPort').append(new Option(Value, Value));
-						$('#node-input-serialPort').val(Value);
+				$('#node-input-serialPort').append(
+					data.map(function (option) {
+						return new Option(option, option);
+					})
+				);
+
+				if (this.serialPort !== undefined) {
+					if (data.indexOf(this.serialPort) < 0) {
+						$('#node-input-serialPort').append(
+							new Option(this.serialPort, this.serialPort)
+						);
 					}
-				}
-			});
-		});
 
-		$.getJSON(`zwave-js/cfg-version`, (data) => {
-			$('#MOD_Version').val(data.moduleversion);
-			$('#ZWJS_Version').val(data.zwjsversion);
-			$('#ZWJS_CFGVersion').val(data.zwjscfgversion);
+					$('#node-input-serialPort').val(this.serialPort);
+				} else {
+					$('#node-input-serialPort').val('Select Port');
+				}
+
+				$('#node-input-serialPort').change(function (event) {
+					var Value = event.target.value;
+
+					if (Value === 'Custom Path...') {
+						Value = prompt('Enter custom serial path.');
+						if (Value !== null) {
+							Value = Value.trim();
+							$('#node-input-serialPort').append(new Option(Value, Value));
+							$('#node-input-serialPort').val(Value);
+						}
+					}
+				});
+				$.getJSON(`zwave-js/cfg-version`, (data) => {
+					$('#MOD_Version').val(data.moduleversion);
+					$('#ZWJS_Version').val(data.zwjsversion);
+					$('#ZWJS_CFGVersion').val(data.zwjscfgversion);
+				});
+			});
 		});
 	}
 
@@ -987,8 +996,8 @@
 	    <input type="text" id="node-input-name" placeholder="Zwave Controller">
 	</div>
 	<div class="form-row">
-	    <label  for="node-input-networkIdentifier" style="width:130px"><i class="fa fa-pencil"></i> Network ID</label>
-		<button class="red-ui-button red-ui-button-small" style="width: 30px; height: 30px; margin-right: 2px;" id="Network1" onclick="setID(1)">1</button>
+	    <label for="node-input-networkIdentifier" style="width:130px"><i class="fa fa-pencil"></i> Network ID</label>
+	    <button class="red-ui-button red-ui-button-small" style="width: 30px; height: 30px; margin-right: 2px;" id="Network1" onclick="setID(1)">1</button>
 		<button class="red-ui-button red-ui-button-small" style="width: 30px; height: 30px; margin-right: 2px;" id="Network2" onclick="setID(2)">2</button>
 		<button class="red-ui-button red-ui-button-small" style="width: 30px; height: 30px; margin-right: 2px;" id="Network3" onclick="setID(3)">3</button>
 		<button class="red-ui-button red-ui-button-small" style="width: 30px; height: 30px; margin-right: 2px;" id="Network4" onclick="setID(4)">4</button>

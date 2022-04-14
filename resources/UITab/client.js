@@ -12,7 +12,7 @@ let ValidateDSK;
 /* Just stuff */
 let DriverReady = false;
 const WindowSize = { w: 600, h: 500 };
-let NetworkIdentifier = 1;
+let NetworkIdentifier = 0;
 
 let StepsAPI;
 const StepList = {
@@ -1433,65 +1433,83 @@ const ZwaveJsUI = (function () {
 		BA.append(OtherBTN);
 
 		// Network IDs
-		for (let i = 1; i < 5; i++) {
+		for (let i = 0; i < 4; i++) {
 			const BTN = $('<button>');
 			BTN.click(() => {
-				$.ajax({
-					url: `zwave-js/${i}/ping`,
-					method: 'GET',
-					success: function (Data) {
-						RED.comms.unsubscribe(
-							`/zwave-js/${NetworkIdentifier}/cmd`,
-							handleControllerEvent
-						);
-						RED.comms.unsubscribe(
-							`/zwave-js/${NetworkIdentifier}/battery`,
-							handleBattery
-						);
-						RED.comms.unsubscribe(
-							`/zwave-js/${NetworkIdentifier}/status`,
-							handleStatusUpdate
-						);
-
-						DriverReady = false;
-						deselectCurrentNode();
-						NetworkIdentifier = i;
-						$('#zwave-js-controller-status').html('Waiting for driver...');
-						$('#zwave-js-node-properties').treeList('empty');
-						$('#zwave-js-selected-node-info').text('No Node Selected');
-						$('#zwave-js-selected-node-name').text('No Node Selected');
-
-						RED.comms.subscribe(
-							`/zwave-js/${NetworkIdentifier}/cmd`,
-							handleControllerEvent
-						);
-						RED.comms.subscribe(
-							`/zwave-js/${NetworkIdentifier}/battery`,
-							handleBattery
-						);
-						RED.comms.subscribe(
-							`/zwave-js/${NetworkIdentifier}/status`,
-							handleStatusUpdate
-						);
-
-						setTimeout(WaitLoad, 100);
-					},
-					error: function () {
-						modalAlert('No Network is assigned to this ID', 'No Network');
-					}
+				for (let i = 0; i < 4; i++) {
+					$(`#NetworkSelect${(i + 1)}`).css({
+						backgroundColor: ''
+					});
+				}
+				$(`#NetworkSelect${(i + 1)}`).css({
+					backgroundColor: 'lightgray'
 				});
+
+				RED.comms.unsubscribe(
+					`/zwave-js/${NetworkIdentifier}/cmd`,
+					handleControllerEvent
+				);
+				RED.comms.unsubscribe(
+					`/zwave-js/${NetworkIdentifier}/battery`,
+					handleBattery
+				);
+				RED.comms.unsubscribe(
+					`/zwave-js/${NetworkIdentifier}/status`,
+					handleStatusUpdate
+				);
+
+				DriverReady = false;
+				deselectCurrentNode();
+				NetworkIdentifier = (i + 1)
+
+				$('#zwave-js-controller-status').html('Waiting for driver...');
+				$('#zwave-js-node-properties').treeList('empty');
+				$('#zwave-js-selected-node-info').text('No Node Selected');
+				$('#zwave-js-selected-node-name').text('No Node Selected');
+
+				RED.comms.subscribe(
+					`/zwave-js/${NetworkIdentifier}/cmd`,
+					handleControllerEvent
+				);
+				RED.comms.subscribe(
+					`/zwave-js/${NetworkIdentifier}/battery`,
+					handleBattery
+				);
+				RED.comms.subscribe(
+					`/zwave-js/${NetworkIdentifier}/status`,
+					handleStatusUpdate
+				);
+
+				setTimeout(WaitLoad, 100);
 			});
 			BTN.addClass('red-ui-button red-ui-button-small');
+			BTN.attr('id', `NetworkSelect${(i + 1)}`);
 			BTN.css({
 				width: '30px',
 				height: '30px',
 				marginRight: '1px',
 				float: 'right'
 			});
-			BTN.html(i);
-			RED.popover.tooltip(BTN, 'Load Network #' + i);
+			BTN.html((i + 1));
+			RED.popover.tooltip(BTN, 'Load Network #' + (i + 1));
 			BA.append(BTN);
 		}
+
+		// Select first network
+		$.ajaxSetup({ async: false });
+		$.getJSON(`zwave-js/cfg-getids`, (data) => {
+			data.AvailableNIDs.forEach((ID) => {
+				console.log(data);
+				BA.find(`#NetworkSelect${ID}`).css({ opacity: 0.5 });
+				BA.find(`#NetworkSelect${ID}`).prop('disabled', true);
+			});
+
+			BA.find(`#NetworkSelect${data.UsedNIDs[0]}`).css({
+				backgroundColor: 'lightgray'
+			});
+			NetworkIdentifier = data.UsedNIDs[0];
+		});
+		$.ajaxSetup({ async: true });
 
 		// Node List
 		$('<div id="zwave-js-node-list">')

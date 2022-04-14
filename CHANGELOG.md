@@ -31,6 +31,7 @@
      - Bump serialport to V10
      - Bump ZWJS to V9
      - New mapping algorithm - The new algorithm results in a much needed accuracy improvement, and is far superior to previous methods.
+     - Nodes have now been named more clearly
 
 
   - 6.5.5

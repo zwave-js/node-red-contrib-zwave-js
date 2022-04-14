@@ -23,11 +23,26 @@ const _Check = (CC) => {
 	return API;
 };
 
+
+let AvailableNIDs = [1,2,3,4];
+let UsedNIDs = [];
+
+
 const SetupGlobals = function (RED) {
 	if (_GlobalInit) return;
 
 	_CCs = Object.keys(CommandClasses).filter(
 		(K) => isNaN(K) && _Check(K) !== undefined
+	);
+
+	RED.httpAdmin.get(
+		`/zwave-js/cfg-getids`,
+		RED.auth.needsPermission('flows.read'),
+		function (req, res) {
+			AvailableNIDs.sort();
+			UsedNIDs.sort();
+			res.json({ AvailableNIDs, UsedNIDs });
+		}
 	);
 
 	RED.httpAdmin.get(
@@ -87,7 +102,13 @@ class UIServer {
 		this._NodeList;
 		this._RED = RED;
 
-		this._NetworkIdentifier = ID;
+		this._NetworkIdentifier = parseInt(ID);
+
+		AvailableNIDs = AvailableNIDs.filter(
+			(_ID) => _ID !== this._NetworkIdentifier
+		);
+		UsedNIDs.push(this._NetworkIdentifier);
+
 		this._LatestStatus;
 		this._CM = new ZWJSCFG.ConfigManager();
 		this._CM.loadDeviceIndex();
@@ -415,6 +436,9 @@ UIServer.prototype.Unregister = function () {
 
 	delete this._Context.controller;
 	delete this._Context.input;
+
+	AvailableNIDs.push(this._NetworkIdentifier);
+	UsedNIDs = UsedNIDs.filter((_ID) => _ID !== this._NetworkIdentifier);
 };
 
 UIServer.prototype._SendStatus = function () {
