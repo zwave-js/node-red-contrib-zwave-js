@@ -905,11 +905,11 @@
 					backgroundColor: 'lightgray'
 				});
 			} else {
-				$(`#Network${this.networkIdentifier}`).css({ opacity: 1.0 });
-				$(`#Network${this.networkIdentifier}`).prop('disabled', false);
 				$(`#Network${this.networkIdentifier}`).css({
+					opacity: 1.0,
 					backgroundColor: 'lightgray'
 				});
+				$(`#Network${this.networkIdentifier}`).prop('disabled', false);
 			}
 
 			$.getJSON(`zwave-js/cfg-serialports`, (data) => {
@@ -1145,7 +1145,7 @@
  
 Based on [Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/), this is the main node, it is responsible for everything and serves as the configuration for your USB Z-Wave radio.
 
-### Setup 
+### Setup
 
 The only **required** field is "Serial Port", where you must select the location of your USB Z-Wave radio (typically `/dev/ttyACM0` on most Linux setups).
 
@@ -1159,9 +1159,9 @@ Once this node is properly linked to a USB controller, the Z-Wave network setup 
 
 ### Inputs
 
-The input to this node is expected to be a `msg.payload` object containing a Z-Wave command. The zwave-js node can receive commands for the **Controller** itself or for any of the **Devices** on your Z-Wave network.
+The input to this node is expected to be a `msg.payload` object containing a Z-Wave command. The **ZWave Controller** node can receive commands for the **Controller** itself or for any of the **Devices** on your Z-Wave network.
 
-The format of each `msg.payload` object is dependant on which API is being used. The zwave-js node will accept any command from any of the APIs available. Follow the links below for more details on the proper formatting and message options for each API.
+The format of each `msg.payload` object is dependant on which API is being used. The **ZWave Controller** node will accept any command from any of the APIs available. Follow the links below for more details on the proper formatting and message options for each API.
 
 **[Controller API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Controller-API)** is used for network wide operations such as healing your network, manual firmware updates, removing failed nodes, and more.
 
@@ -1169,14 +1169,13 @@ The format of each `msg.payload` object is dependant on which API is being used.
 
 **[Driver API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Driver-API)** is a small set of methods which can pull data from the Z-Wave JS library. It allows to get the full (locally stored) Value Database and some statistics.
 
-**[CC API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/CC-API)** is option 1 of 2 for communication to a single Z-Wave device (node) on your network. These messages can be formed using the **cmd-factory** node.
+**[CC API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/CC-API)** is option 1 of 2 for communication to a single Z-Wave device (node) on your network. These messages can be formed using the **CMD Factory** node.
 
-**[Value API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Value-API)** is option 2 of 2 for communication to a single Z-Wave device (node) on your network. These messages can be formed using the **cmd-factory** node.
+**[Value API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Value-API)** is option 2 of 2 for communication to a single Z-Wave device (node) on your network. These messages can be formed using the **CMD Factory** node.
 
 ### Outputs
 
 The first output from this node will consist of **all** messages. This includes messages related to the controller and any Z-Wave device on your network. There is no internal filter, all messages from the controller and all nodes will always be output from this node. Detailed information about the messages from Z-Wave into Node-RED is available [here](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Payload-Messaging-Format).
 
 A second output is provided when the **Z-Wave JS Logging** from Pin 2 is enabled. Select a log level in the "Level (Pin 2)" field to enable JSON logs being output into your Node-RED flows.
-
 </script>

@@ -207,8 +207,8 @@
 <!-- prettier-ignore -->
 <script type="text/markdown" data-help-name="cmd-factory">
 <p>A Z-Wave command generator node.</p>
- 
-The `cmd-factory` node is used to formulate messages which are ready to be sent to your Z-Wave device nodes. Messages output from this node should be passed directly to the Input of a `zwave-device` or `zwave-js` node. Details and examples are available on [this](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Command-Factory) wiki page.
+
+The `CMD Factory` node is used to formulate messages which are ready to be sent to your ZWave Device nodes. Messages output from this node should be passed directly to the Input of a `ZWave Device` or `ZWave Controller` node. Details and examples are available on [this](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Command-Factory) wiki page.
 
 <div class="form-tips" id="node-tip">
     Fields labeled with the symbol <img src="red/images/typedInput/expr.svg" style="margin-right: 4px;height: 18px;"> must be either valid  <a href="http://jsonata.org/" target="_blank">JSONata</a> expressions or left empty if not used.
@@ -218,7 +218,7 @@ The `cmd-factory` node is used to formulate messages which are ready to be sent 
 
 The node can formulate messages to a Z-Wave device using either [Value API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Value-API) or [CC API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/CC-API). Little to no knowledge of the inner workings of Z-Wave JS are needed in order to use this node.
 
-Generally it is recommended to use the `CCAPI` option, as it is simpler to put together the commands.
+Generally it is recommended to use the `ValueAPI` option, as it is simpler to put together the commands.
 
 
 ### Command Class (CCAPI)
@@ -239,7 +239,7 @@ Please choose the `Method` which you would like to use, either setting a value o
 
 `Node` - this field should evaluate to an integer which will determine to which node the output message is sent. This may evaluate to `undefined` if you are sending to a device node set to `Specific Node`, `Multicast`, or `Multiple Nodes`.
 
-`Endpoint` - this field should evaluate to an integer which matches your device endpoint.
+`Endpoint` - this field should evaluate to an integer which matches your device endpoint, if using `ValueAPI`, this will take priority of the `endpoint` contained in said `ValueID`
 
 `Params` (CCAPI) - this field should evaluate to an array containing the parameters for your selected `Method` under **Command Class**. Click the link "View Parameter Definition" for details on how the specific Params array should be formatted for this message.
 

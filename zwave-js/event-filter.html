@@ -272,12 +272,12 @@
 <!-- prettier-ignore -->
 <script type="text/markdown" data-help-name="event-filter">
 <p>A Z-Wave event filter.</p>
- 
+
 This node allows advanced filtration of the various value events that a node may send. It further allows filtering the type of data that was updated i.e. a Motion Event, Air Temp changes, Door Sensors, etc.
 
 The UI panel on the right can be used to provide the filter values, removing the need to write them yourself, but of course you can use manual entries if you prefer. Please visit our [event filter](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Event-Filter-Node) wiki page for a detailed walkthrough on how to set up your filters.
 
-Essentially this node is a `switch` node with specific sorting for the values found in Z-Wave messages. The Input of this node should be from a `zwave-js` node or a `zwave-device` node.
+Essentially this node is a `switch` node with specific sorting for the values found in Z-Wave messages. The Input of this node should be from a `ZWave Controller` node or a `ZWave Device` node.
 
 ### Message Handling
 

@@ -347,8 +347,8 @@
 <!-- prettier-ignore -->
 <script type="text/markdown" data-help-name="zwave-device">
 <p>A Z-Wave device node.</p>
- 
-This node works in conjuction with the main Z-Wave JS Controller node. It is used to send and/or receive messages to a single or multiple Z-Wave devices. Full details for the `zwave-device` node are available [here](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Z-Wave-Device-Node). 
+
+This node works in conjuction with the main **ZWave Controller** node. It is used to send and/or receive messages to a single or multiple Z-Wave devices. Full details for the `ZWave Device` node are available [here](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Z-Wave-Device-Node). 
 
 ### Setup
 
@@ -356,10 +356,8 @@ The **Mode** will determine which Z-Wave device(s) this node will communicate wi
 
 The **Network Mode** will determine if the node will send, receive, or both. 
 
-`Send` mode will send messages *from* Node-RED *to* the Z-Wave device(s).
-
-`Receive` mode means it will receive messages *from* the Z-Wave device(s) *to* your Node-RED flows.
-
+`Send` mode will send messages *from* Node-RED *to* the Z-Wave device(s).  
+`Receive` mode means it will receive messages *from* the Z-Wave device(s) *to* your Node-RED flows.  
 `Send/Receive` will of course do both sending and receiving.
 
 ### Mode Option Details
@@ -393,7 +391,7 @@ The **Network Mode** will determine if the node will send, receive, or both.
 
 ### Input Messages
 
-It is *highly recommended* to form Input messages using the **cmd-factory** node.
+It is *highly recommended* to form Input messages using the **CMD Factory** node.
 
 The input to this node is expected to be a `msg.payload` object containing a Z-Wave command. The device node can receive commands for the configured device(s) **Devices** on your Z-Wave network, as determined by the **Node ID(s)** field.
 
@@ -403,5 +401,5 @@ The format of each `msg.payload` object is dependant on which API is being used.
 
 Messages will be Output from this node according to the **Mode** chosen. See above for details on each mode option.
 
-It is recommended to use the `event-filter` node immediately following the `zwave-device` node in order to filter and sort the messages coming from your devices.
+It is recommended to use the `Event Filter` node immediately after the `ZWave Device` node in order to filter and sort the messages coming from your devices.
 </script>
