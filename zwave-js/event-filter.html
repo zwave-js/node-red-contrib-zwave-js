@@ -1,6 +1,7 @@
 ﻿<script type="text/javascript">
 	let Changed = false;
 	let ActiveFilter = undefined;
+	let IndexMap = undefined;
 
 	RED.nodes.registerType('event-filter', {
 		category: 'ZWave JS',
@@ -41,9 +42,7 @@
 	}
 
 	function SortUI() {
-		$('#node-input-outputs').val('{}');
-		const OPs = JSON.parse($('#node-input-outputs').val());
-
+		IndexMap = {};
 		$('#filtersets').editableList({
 			header: $('<div>').append(
 				'<div>Filter Sets - order defines outputs</div>'
@@ -56,41 +55,25 @@
 			removeItem: RemoveItem
 		});
 
-		let I = 0;
 		this.filters.sort(compare).forEach((Item) => {
-			Item._id = I;
 			$('#filtersets').editableList('addItem', Item);
-			OPs[Item._id] = I;
-			I++;
 		});
-		$('#node-input-outputs').val(JSON.stringify(OPs));
 	}
 
 	function SortItems(Items) {
-		const OPs = JSON.parse($('#node-input-outputs').val() || '{}');
-
 		for (let i = 0; i < Items.length; i++) {
+			IndexMap[Items[i].data('data').index] = i;
 			Items[i].data('data').index = i;
-			OPs[Items[i].data('data')._id ?? Items[i].data('data').id] = i;
 		}
-		$('#node-input-outputs').val(JSON.stringify(OPs));
 	}
 
 	function RemoveItem(Item) {
-		const OPs = JSON.parse($('#node-input-outputs').val() || '{}');
-		if (Item.hasOwnProperty('_id')) {
-			OPs[Item._id] = -1;
-		} else {
-			delete OPs[Item.id];
-		}
-
+		IndexMap[Item.index] = -1;
 		const Items = $('#filtersets').editableList('items');
 		for (let i = 0; i < Items.length; i++) {
+			IndexMap[Items[i].data('data').index] = i;
 			Items[i].data('data').index = i;
-			OPs[Items[i].data('data')._id ?? Items[i].data('data').id] = i;
 		}
-
-		$('#node-input-outputs').val(JSON.stringify(OPs));
 	}
 
 	function AddItem(container, index, data) {
@@ -101,11 +84,10 @@
 			data.events = ['VALUE_UPDATED'];
 			data.strict = false;
 			data.id = Math.floor((0x99999 - 0x10000) * Math.random()).toString();
-
-			const OPs = JSON.parse($('#node-input-outputs').val() || '{}');
-			OPs[data.id] = index;
-			$('#node-input-outputs').val(JSON.stringify(OPs));
 		}
+
+		IndexMap[index] = index;
+
 		$(container).data('data', data);
 		$(container).click(SetActiveFilter);
 		$(container).css({ minWidth: '400px' });
@@ -220,13 +202,14 @@
 				}
 			});
 
-			delete ItemData._id;
 			ItemData.name = El.find('.data-name').val();
 			ItemData.strict = El.find('.data-event-Endpoint').prop('checked');
 			this.filters.push(ItemData);
 		}
 
 		ActiveFilter = undefined;
+
+		$('#node-input-outputs').val(JSON.stringify(IndexMap));
 	}
 
 	function AddValueIDToFilter(ValueID) {
