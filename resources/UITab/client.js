@@ -279,6 +279,8 @@ const ZwaveJsUI = (function () {
 		const Filename = FE.name;
 		const Code = `${NID}:${Target}:${Filename}`;
 
+		selectNode(NID);
+
 		const reader = new FileReader();
 		reader.onload = function () {
 			const arrayBuffer = this.result;
@@ -538,172 +540,18 @@ const ZwaveJsUI = (function () {
 				});
 
 				res(_Nodes);
-
-				/*
-
-				Nodes.forEach((N) => {
-					if (N.isControllerNode) {
-						const EL = {
-							data: {
-								id: N.nodeId,
-								name: 'Controller',
-								fontSize: '12px',
-								icon: 'resources/node-red-contrib-zwave-js/UITab/Stick.png',
-								nodeData:N
-							}
-						};
-						_Elements.push(EL);
-					} else {
-						const EL = {
-							data: {
-								id: N.nodeId,
-								name: `${N.nodeId} - ${N.name || 'No Name'}`,
-								fontSize: '10px',
-								icon: 'resources/node-red-contrib-zwave-js/UITab/Device.png',
-								nodeData:N
-							}
-						};
-
-						_Elements.push(EL);
-
-						if (object[N.nodeId.toString()].lwr !== undefined) {
-							const Stats = object[N.nodeId].lwr;
-							if (Stats.repeaters.length > 0) {
-								let First = true;
-								let Last = undefined;
-								Stats.repeaters.reverse().forEach((R) => {
-									if (First) {
-										const EL = {
-											data: {
-												id: `${N.nodeId}.${R}`,
-												source: N.nodeId,
-												target: R,
-												color: '#0000FF'
-											}
-										};
-										_Elements.push(EL);
-										First = false;
-										Last = R;
-									} else {
-										const EL = {
-											data: {
-												id: `${Last}.${R}`,
-												source: Last,
-												target: R,
-												color: '#0000FF'
-											}
-										};
-										_Elements.push(EL);
-										Last = R;
-									}
-								});
-							} else {
-								const EL = {
-									data: {
-										id: `${N.nodeId}.1`,
-										source: N.nodeId,
-										target: 1,
-										color: '#00FF00'
-									}
-								};
-								_Elements.push(EL);
-							}
-						} else {
-							const EL = {
-								data: {
-									id: `${N.nodeId}.1`,
-									source: N.nodeId,
-									target: 1,
-									color: '#FF0000'
-								}
-							};
-							_Elements.push(EL);
-						}
-					}
-				});
-				res(_Elements);
-				*/
 			});
 		});
 	}
 
 	function NetworkMap() {
-		let Mesh;
-
-		const Options = {
-			draggable: true,
-			modal: true,
-			resizable: true,
-			width: WindowSize.w,
-			height: WindowSize.h,
-			title: 'ZWave Network Mesh',
-			minHeight: 75,
-			buttons: {
-				Close: function () {
-					$(this).dialog('destroy');
-				}
-			}
-		};
-
-		const Window = $('<div>')
-			.css({ padding: 10 })
-			.html('Generating Network Topology Map...');
-		Window.dialog(Options);
-		Window.on('dialogclose', () => {});
-
 		ControllerCMD('ControllerAPI', 'getNodes').then(({ object }) => {
 			GenerateMapJSON(object).then((Elements) => {
-				console.log(Elements);
-
 				document.cookie = 'ZWJSMapData=' + JSON.stringify(Elements);
 				window.open(
 					'resources/node-red-contrib-zwave-js/MeshMap/Map.html',
 					'_blank'
 				);
-
-				/*
-				const StyleSheet = cytoscape.stylesheet();
-
-				// Node
-				StyleSheet.selector('node').css({
-					'font-size': 'data(fontSize)',
-					width: '50px',
-					height: '50px',
-					'background-image': 'data(icon)',
-					'background-color': 'white',
-					'background-fit': 'cover cover',
-					label: 'data(name)'
-				});
-
-				// Edge
-				StyleSheet.selector('egde').css({
-					'curve-style': 'taxi',
-					'taxi-direction': 'auto',
-					'taxi-turn': 20,
-					'taxi-turn-min-distance': 5,
-					'target-arrow-shape': 'triangle',
-					'line-color': 'data(color)'
-				});
-
-				const Template = $('#TPL_Map').html();
-				const templateScript = Handlebars.compile(Template);
-				const HTML = templateScript({});
-
-				Window.html('');
-				Window.append(HTML);
-
-				const data = {
-					layout: {
-						name: 'cose',
-						animate: false
-					},
-					container: $('#NetworkMesh')[0],
-					style: StyleSheet,
-					elements: Elements
-				};
-				console.log(data);
-				Mesh = cytoscape(data);
-				*/
 			});
 		});
 	}
@@ -1437,11 +1285,11 @@ const ZwaveJsUI = (function () {
 			const BTN = $('<button>');
 			BTN.click(() => {
 				for (let i = 0; i < 4; i++) {
-					$(`#NetworkSelect${(i + 1)}`).css({
+					$(`#NetworkSelect${i + 1}`).css({
 						backgroundColor: ''
 					});
 				}
-				$(`#NetworkSelect${(i + 1)}`).css({
+				$(`#NetworkSelect${i + 1}`).css({
 					backgroundColor: 'lightgray'
 				});
 
@@ -1460,7 +1308,7 @@ const ZwaveJsUI = (function () {
 
 				DriverReady = false;
 				deselectCurrentNode();
-				NetworkIdentifier = (i + 1)
+				NetworkIdentifier = i + 1;
 
 				$('#zwave-js-controller-status').html('Waiting for driver...');
 				$('#zwave-js-node-properties').treeList('empty');
@@ -1483,14 +1331,14 @@ const ZwaveJsUI = (function () {
 				setTimeout(WaitLoad, 100);
 			});
 			BTN.addClass('red-ui-button red-ui-button-small');
-			BTN.attr('id', `NetworkSelect${(i + 1)}`);
+			BTN.attr('id', `NetworkSelect${i + 1}`);
 			BTN.css({
 				width: '30px',
 				height: '30px',
 				marginRight: '1px',
 				float: 'right'
 			});
-			BTN.html((i + 1));
+			BTN.html(i + 1);
 			RED.popover.tooltip(BTN, 'Load Network #' + (i + 1));
 			BA.append(BTN);
 		}
@@ -2177,7 +2025,7 @@ const ZwaveJsUI = (function () {
 	}
 
 	function handleNodeEvent(topic, data) {
-		const nodeId = topic.split('/')[3];
+		const nodeId = topic.split('/')[4];
 
 		if (nodeId != selectedNode) return;
 		switch (data.type) {

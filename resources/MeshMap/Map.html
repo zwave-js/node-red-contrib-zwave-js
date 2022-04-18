@@ -1,13 +1,31 @@
 <!DOCTYPE html>
-<html>
-<head>
-<title>Node RED Z-Wave JS Network Mesh</title>
-<script
-	type="text/javascript"
-	src="./cytoscape.min.js"
-></script>
-</head>
-<body>
-
-</body>
+<html style="height: 100vh">
+	<head>
+		<title>Node RED Z-Wave JS Network Mesh</title>
+		<script type="text/javascript" src="./jquery-3.6.0.min.js"></script>
+		<script type="text/javascript" src="./cytoscape.min.js"></script>
+		<script type="text/javascript" src="./maprender.js"></script>
+	</head>
+	<body style="height: 100%">
+		<div style="display: flex; width: 100%; height: 100%">
+			<div id="Details"
+				style="
+					width: 400px;
+					height: 100%;
+					background-color: rgb(241, 241, 241);
+					font-size: 16px;
+					font-family: 'Helvetica Neue Light', 'Calibiri Light', Roboto;
+				"
+			>
+				Select A node to view information.
+			</div>
+			<div
+				id="NetworkMesh"
+				style="width: calc(100% - 400px); height: 100%"
+			></div>
+		</div>
+		<script>
+			Render();
+		</script>
+	</body>
 </html>

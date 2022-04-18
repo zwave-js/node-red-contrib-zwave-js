@@ -62,16 +62,16 @@
 
 	function SortItems(Items) {
 		for (let i = 0; i < Items.length; i++) {
-			IndexMap[Items[i].data('data').index] = i;
+			IndexMap[Items[i].data('data').originalIndex] = i;
 			Items[i].data('data').index = i;
 		}
 	}
 
 	function RemoveItem(Item) {
-		IndexMap[Item.index] = -1;
+		IndexMap[Item.originalIndex] = -1;
 		const Items = $('#filtersets').editableList('items');
 		for (let i = 0; i < Items.length; i++) {
-			IndexMap[Items[i].data('data').index] = i;
+			IndexMap[Items[i].data('data').originalIndex] = i;
 			Items[i].data('data').index = i;
 		}
 	}
@@ -86,7 +86,8 @@
 			data.id = Math.floor((0x99999 - 0x10000) * Math.random()).toString();
 		}
 
-		IndexMap[index] = index;
+		data.originalIndex = index;
+		IndexMap[data.originalIndex] = index;
 
 		$(container).data('data', data);
 		$(container).click(SetActiveFilter);
@@ -204,6 +205,7 @@
 
 			ItemData.name = El.find('.data-name').val();
 			ItemData.strict = El.find('.data-event-Endpoint').prop('checked');
+			delete ItemData.originalIndex;
 			this.filters.push(ItemData);
 		}
 
