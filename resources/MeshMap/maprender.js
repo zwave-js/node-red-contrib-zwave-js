@@ -20,11 +20,11 @@ function getCookie(cname) {
 }
 
 const DataRate = {
-    1: '9.6 kbps',
-    2: '40 kbps',
-    3: '100 kbps',
-    4: '100 kbps (LR)'
-}
+	1: '9.6 kbps',
+	2: '40 kbps',
+	3: '100 kbps',
+	4: '100 kbps (LR)'
+};
 
 function Render() {
 	const Elements = [];
@@ -48,12 +48,12 @@ function Render() {
 				data: {
 					id: N.nodeId,
 					name: `${N.nodeId} - ${N.name || 'No Name'}`,
-                    nameOnly: `${N.name || 'No Name'}`,
-                    location: `${N.location || 'No Location'}`,
+					nameOnly: `${N.name || 'No Name'}`,
+					location: `${N.location || 'No Location'}`,
 					fontSize: '10px',
 					icon: './Device.png',
-                    powerSource: N.powerSource,
-                    statistics: N.statistics
+					powerSource: N.powerSource,
+					statistics: N.statistics
 				}
 			};
 
@@ -71,7 +71,7 @@ function Render() {
 									id: `${N.nodeId}.${R}`,
 									source: N.nodeId,
 									target: R,
-									color: '#0000FF',
+									color: '#0000FF'
 								}
 							};
 							Elements.push(EL);
@@ -149,67 +149,69 @@ function Render() {
 	};
 
 	const Mesh = cytoscape(data);
-    Mesh.on('tap','node',LoadData)
+	Mesh.on('tap', 'node', LoadData);
 }
 
-function LoadData(){
+function LoadData() {
+	const Data = $('<ul>');
 
-    const Data = $('<ul>');
+	// Node
+	const Node = $('<li>');
+	Node.css({ marginBottom: '10px' });
+	Node.html('<strong>Node Details</strong>');
+	Node.appendTo(Data);
 
-    // Node
-    const Node = $("<li>");
-    Node.css({marginBottom:'10px'})
-    Node.html("<strong>Node Details</strong>");
-    Node.appendTo(Data)
+	const NodeDetails = $('<ul>');
+	NodeDetails.appendTo(Node);
+	$(`<li>ID: ${this.data('id')}</li>`).appendTo(NodeDetails);
+	$(`<li>Name: ${this.data('nameOnly')}</li>`).appendTo(NodeDetails);
+	$(`<li>Location: ${this.data('location')}</li>`).appendTo(NodeDetails);
 
-    const NodeDetails = $("<ul>");
-    NodeDetails.appendTo(Node);
-    $(`<li>ID: ${this.data('id')}</li>`).appendTo(NodeDetails);
-    $(`<li>Name: ${this.data('nameOnly')}</li>`).appendTo(NodeDetails);
-    $(`<li>Location: ${this.data('location')}</li>`).appendTo(NodeDetails);
+	// Supply
+	const Battery = $('<li>');
+	Battery.css({ marginBottom: '10px' });
+	Battery.html('<strong>Power Supply</strong>');
+	Battery.appendTo(Data);
 
-    // Supply
-    const Battery = $("<li>");
-    Battery.css({marginBottom:'10px'})
-    Battery.html("<strong>Power Supply</strong>");
-    Battery.appendTo(Data)
+	const BatteryDetails = $('<ul>');
+	BatteryDetails.appendTo(Battery);
+	$(`<li>Source: ${this.data('powerSource').type}</li>`).appendTo(
+		BatteryDetails
+	);
 
-    const BatteryDetails = $("<ul>");
-    BatteryDetails.appendTo(Battery);
-    $(`<li>Source: ${this.data('powerSource').type}</li>`).appendTo(BatteryDetails);
+	if (this.data('powerSource').type === 'battery') {
+		$(`<li>Current Level: ${this.data('powerSource').level}</li>`).appendTo(
+			BatteryDetails
+		);
+	}
 
-    if(this.data('powerSource').type === 'battery'){
-        $(`<li>Current Level: ${this.data('powerSource').level}</li>`).appendTo(BatteryDetails);
-    }
+	// Performance
+	const Performance = $('<li>');
+	Performance.css({ marginBottom: '10px' });
+	Performance.html('<strong>Performance</strong>');
+	Performance.appendTo(Data);
 
-    // Performance
-    const Performance = $("<li>");
-    Performance.css({marginBottom:'10px'})
-    Performance.html("<strong>Performance</strong>");
-    Performance.appendTo(Data)
+	const PerformanceDetails = $('<ul>');
+	PerformanceDetails.appendTo(Performance);
+	$(`<li>Round Trip Time (ms): ${this.data('statistics').rtt}</li>`).appendTo(
+		PerformanceDetails
+	);
 
-    const PerformanceDetails = $("<ul>");
-    PerformanceDetails.appendTo(Performance);
-    $(`<li>Round Trip Time (ms): ${this.data('statistics').rtt}</li>`).appendTo(PerformanceDetails);
-    
+	if (this.data('statistics').lwr !== undefined) {
+		$(
+			`<li>Protocol Data Rate : ${
+				DataRate[this.data('statistics').lwr.protocolDataRate]
+			}</li>`
+		).appendTo(PerformanceDetails);
+		$(
+			`<li>ACK RSSI (Received by Controller): ${
+				this.data('statistics').lwr.rssi
+			} dBm</li>`
+		).appendTo(PerformanceDetails);
+	}
+	$(
+		`<li>ACK RSSI (Received by Node): ${this.data('statistics').rssi} dBm</li>`
+	).appendTo(PerformanceDetails);
 
-
-    if(this.data('statistics').lwr !== undefined){
-        $(`<li>Protocol Data Rate : ${DataRate[this.data('statistics').lwr.protocolDataRate]}</li>`).appendTo(PerformanceDetails); 
-        $(`<li>ACK RSSI (Received by Controller): ${this.data('statistics').lwr.rssi}</li>`).appendTo(PerformanceDetails); 
-    }
-    $(`<li>ACK RSSI (Received by Node): ${this.data('statistics').rssi}</li>`).appendTo(PerformanceDetails);
-
-
-
-
-   $("#Details").html(Data);
-
-
-
-
-
-
-
-  
+	$('#Details').html(Data);
 }
