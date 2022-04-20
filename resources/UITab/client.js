@@ -11,7 +11,7 @@ let ValidateDSK;
 
 /* Just stuff */
 let DriverReady = false;
-const WindowSize = { w: 600, h: 500 };
+const WindowSize = { w: 700, h: 600 };
 let NetworkIdentifier = 0;
 
 let StepsAPI;
@@ -547,7 +547,7 @@ const ZwaveJsUI = (function () {
 	function NetworkMap() {
 		ControllerCMD('ControllerAPI', 'getNodes').then(({ object }) => {
 			GenerateMapJSON(object).then((Elements) => {
-				document.cookie = 'ZWJSMapData=' + JSON.stringify(Elements);
+				localStorage.setItem('ZWJSMapData', JSON.stringify(Elements));
 				window.open(
 					'resources/node-red-contrib-zwave-js/MeshMap/Map.html',
 					'_blank'
@@ -643,6 +643,7 @@ const ZwaveJsUI = (function () {
 
 	function GetNodes() {
 		BA = undefined;
+		deselectCurrentNode();
 		ControllerCMD('ControllerAPI', 'getNodes')
 			.then(({ object }) => {
 				const controllerNode = object.filter((N) => N.isControllerNode);
@@ -1228,7 +1229,7 @@ const ZwaveJsUI = (function () {
 				Expand.find('i').removeClass('fa-square-o');
 			}
 		});
-		Expand.addClass('red-ui-button red-ui-button-small');
+		Expand.addClass('red-ui-button red-ui-button-small zwave-js-round-square');
 		Expand.css({ width: '30px', height: '30px', marginRight: '5px' });
 		Expand.append('<i class="fa fa-square-o fa-lg"></i>');
 		RED.popover.tooltip(Expand, "Expand CC's");
@@ -1240,7 +1241,7 @@ const ZwaveJsUI = (function () {
 			IsDriverReady();
 			ShowIncludeExcludePrompt();
 		});
-		IE.addClass('red-ui-button red-ui-button-small');
+		IE.addClass('red-ui-button red-ui-button-small zwave-js-round-square');
 		IE.css({ width: '30px', height: '30px', marginRight: '1px' });
 		IE.append('<i class="fa fa-wifi fa-lg"></i>');
 		RED.popover.tooltip(IE, 'Include/Exclude');
@@ -1252,7 +1253,7 @@ const ZwaveJsUI = (function () {
 			IsDriverReady();
 			NetworkMap();
 		});
-		Heal.addClass('red-ui-button red-ui-button-small');
+		Heal.addClass('red-ui-button red-ui-button-small zwave-js-round-square');
 		Heal.css({ width: '30px', height: '30px', marginRight: '1px' });
 		Heal.append('<i class="fa fa-globe fa-lg"></i>');
 		RED.popover.tooltip(Heal, 'Network Map');
@@ -1263,7 +1264,7 @@ const ZwaveJsUI = (function () {
 		Monitor.click(() => {
 			ShowCommandViewer();
 		});
-		Monitor.addClass('red-ui-button red-ui-button-small');
+		Monitor.addClass('red-ui-button red-ui-button-small zwave-js-round-square');
 		Monitor.css({ width: '30px', height: '30px', marginRight: '1px' });
 		Monitor.append('<i class="fa fa-bug fa-lg"></i>');
 		RED.popover.tooltip(Monitor, 'UI Command Monitor');
@@ -1274,7 +1275,9 @@ const ZwaveJsUI = (function () {
 		OtherBTN.click(() => {
 			ShowOtherControllolerMenu(OtherBTN);
 		});
-		OtherBTN.addClass('red-ui-button red-ui-button-small');
+		OtherBTN.addClass(
+			'red-ui-button red-ui-button-small zwave-js-round-square'
+		);
 		OtherBTN.css({ width: '30px', height: '30px', marginRight: '1px' });
 		OtherBTN.append('<i class="fa fa-caret-down fa-lg"></i>');
 		RED.popover.tooltip(OtherBTN, 'Other Actions');
@@ -1330,7 +1333,7 @@ const ZwaveJsUI = (function () {
 
 				setTimeout(WaitLoad, 100);
 			});
-			BTN.addClass('red-ui-button red-ui-button-small');
+			BTN.addClass('red-ui-button red-ui-button-small zwave-js-round-square');
 			BTN.attr('id', `NetworkSelect${i + 1}`);
 			BTN.css({
 				width: '30px',
@@ -1396,6 +1399,21 @@ const ZwaveJsUI = (function () {
 
 		// Endpoint Filter
 		$('<div id="zwave-js-node-endpoint-filter">').appendTo(nodeOpts);
+
+		// Node ID
+		$('<div id="zwave-js-selected-node-id">')
+			.addClass('zwave-js-node-row-id')
+			.css({
+				position: 'absolute',
+				top: '20px',
+				width: '30px',
+				height: '30px',
+				lineHeight: '30px',
+				fontSize: '16px',
+				backgroundColor: 'lightgray'
+			})
+			.html('--')
+			.appendTo(nodeOpts);
 
 		// Node Proeprties List
 		$('<div id="zwave-js-node-properties">')
@@ -1701,76 +1719,6 @@ const ZwaveJsUI = (function () {
 		return L;
 	}
 
-	function ShowOtherNodeMenu(button) {
-		const menuOptionMenu = RED.menu.init({
-			id: 'node-option-menu',
-			options: [
-				{
-					id: 'node-option-menu-interview',
-					label: 'Reinterview Node',
-					onselect: function () {
-						IsDriverReady();
-						IsNodeReady(HoveredNode);
-						InterviewNode();
-					}
-				},
-				{
-					id: 'node-option-menu-remove',
-					label: 'Remove Failed Node',
-					onselect: function () {
-						IsDriverReady();
-						RemoveFailedNode();
-						//menuOptionMenu.collapse();
-					}
-				},
-				{
-					id: 'node-option-menu-replace',
-					label: 'Replace Failed Node',
-					onselect: function () {
-						IsDriverReady();
-						ShowReplacePrompt();
-						//	menuOptionMenu.collapse();
-					}
-				},
-				{
-					id: 'node-option-menu-heal',
-					label: 'Run Health Check',
-					onselect: function () {
-						IsDriverReady();
-						IsNodeReady(HoveredNode);
-						HealthCheck();
-					}
-				},
-				{
-					id: 'node-option-menu-db',
-					label: 'View In Device Browser',
-					onselect: function () {
-						IsDriverReady();
-						IsNodeReady(HoveredNode);
-						OpenDB();
-					}
-				}
-			]
-		});
-		menuOptionMenu.css({
-			position: 'absolute'
-		});
-		menuOptionMenu.on('mouseleave', function () {
-			$(this).hide();
-		});
-		menuOptionMenu.on('mouseup', function () {
-			$(this).hide();
-		});
-		menuOptionMenu.appendTo('body');
-
-		const elementPos = button.offset();
-		menuOptionMenu.css({
-			top: elementPos.top + 'px',
-			left: elementPos.left - menuOptionMenu.width() + 20 + 'px'
-		});
-		menuOptionMenu.show();
-	}
-
 	function NameNode() {
 		const Name = prompt('Please enter Node Name', HoveredNode.name);
 		if (!Name) {
@@ -1801,111 +1749,206 @@ const ZwaveJsUI = (function () {
 	}
 
 	function AddOverlayNodeButtons(Node, Row) {
-		if (Node !== undefined) {
-			HoveredNode = Node;
-		}
-
-		console.log(HoveredNode);
-		console.log(BA);
-
-		if (BA === undefined) {
-			BA = $('<div>');
-			BA.css({
-				position: 'absolute',
-				width: '200px',
-				left: '10px',
-				backgroundColor: 'inherit'
-			});
-
-			const Select = $('<button>');
-			Select.click(() => {
-				IsNodeReady(HoveredNode);
-				selectNode(HoveredNode.nodeId);
-			});
-			Select.addClass('red-ui-button red-ui-button-small');
-			Select.css({ width: '30px', height: '30px', marginRight: '5px' });
-			Select.append('<i class="fa fa-info fa-lg"></i>');
-			RED.popover.tooltip(Select, 'Node Details');
-			BA.append(Select);
-
-			const NameLocation = $('<button>');
-			NameLocation.click(() => {
-				IsNodeReady(HoveredNode);
-				NameNode();
-			});
-			NameLocation.addClass('red-ui-button red-ui-button-small');
-			NameLocation.css({ width: '30px', height: '30px', marginRight: '1px' });
-			NameLocation.append('<i class="fa fa-pencil fa-lg"></i>');
-			RED.popover.tooltip(NameLocation, 'Edit Name / Location');
-			BA.append(NameLocation);
-
-			const Heal = $('<button>');
-			Heal.click(() => {
-				IsNodeReady(HoveredNode);
-				StartNodeHeal();
-			});
-			Heal.addClass('red-ui-button red-ui-button-small');
-			Heal.css({ width: '30px', height: '30px', marginRight: '1px' });
-			Heal.append('<i class="fa fa-medkit fa-lg"></i>');
-			RED.popover.tooltip(Heal, 'Heal Node');
-			BA.append(Heal);
-
-			const Associations = $('<button>');
-			Associations.click(() => {
-				HoveredNode.ready;
-				IsNodeReady(HoveredNode);
-				AssociationMGMT();
-			});
-			Associations.addClass('red-ui-button red-ui-button-small');
-			Associations.css({ width: '30px', height: '30px', marginRight: '1px' });
-			Associations.append('<i class="fa fa-code-fork fa-lg"></i>');
-			RED.popover.tooltip(Associations, 'Association Management');
-			BA.append(Associations);
-
-			const OtherBTN = $('<button>');
-			OtherBTN.click(() => {
-				ShowOtherNodeMenu(OtherBTN);
-			});
-			OtherBTN.addClass('red-ui-button red-ui-button-small');
-			OtherBTN.css({ width: '30px', height: '30px', marginRight: '1px' });
-			OtherBTN.append('<i class="fa fa-caret-down fa-lg"></i>');
-			RED.popover.tooltip(OtherBTN, 'Other Actions');
-			BA.append(OtherBTN);
-
-			Row.append(BA);
-		} else {
-			if (Node === undefined && Row === undefined) {
+		if (Node === undefined && Row === undefined) {
+			if (BA !== undefined) {
 				BA.css({
-					position: 'absolute',
-					width: '200px',
-					left: '10px',
-					display: 'none',
+					display: 'none'
+				});
+			}
+		} else {
+			HoveredNode = Node;
+
+			Row.children().css({ display: 'none' });
+			Row.children().first().css({ display: 'block' });
+			Row.css({ height: '30px' });
+
+			if (BA === undefined) {
+				BA = $('<div>');
+				BA.css({
+					position: 'relative',
+					left: '-1px',
 					backgroundColor: 'inherit'
 				});
-				return;
+
+				const NameLocation = $('<button>');
+				NameLocation.click(() => {
+					IsNodeReady(HoveredNode);
+					NameNode();
+				});
+				NameLocation.addClass(
+					'red-ui-button red-ui-button-small zwave-js-round-square'
+				);
+				NameLocation.css({
+					width: '30px',
+					height: '30px',
+					marginRight: '1px'
+				});
+				NameLocation.append('<i class="fa fa-pencil fa-lg"></i>');
+				RED.popover.tooltip(NameLocation, 'Edit Name / Location');
+				BA.append(NameLocation);
+
+				const _HealthCheck = $('<button>');
+				_HealthCheck.click(() => {
+					IsNodeReady(HoveredNode);
+					HealthCheck();
+				});
+				_HealthCheck.addClass(
+					'red-ui-button red-ui-button-small zwave-js-round-square'
+				);
+				_HealthCheck.css({
+					width: '30px',
+					height: '30px',
+					marginRight: '1px'
+				});
+				_HealthCheck.append('<i class="fa fa-list fa-lg"></i>');
+				RED.popover.tooltip(_HealthCheck, 'Run Health Check');
+				BA.append(_HealthCheck);
+
+				const Heal = $('<button>');
+				Heal.click(() => {
+					IsNodeReady(HoveredNode);
+					StartNodeHeal();
+				});
+				Heal.addClass(
+					'red-ui-button red-ui-button-small zwave-js-round-square'
+				);
+				Heal.css({
+					width: '30px',
+					height: '30px',
+					marginRight: '1px'
+				});
+				Heal.append('<i class="fa fa-medkit fa-lg"></i>');
+				RED.popover.tooltip(Heal, 'Heal Node');
+				BA.append(Heal);
+
+				const Associations = $('<button>');
+				Associations.click(() => {
+					IsNodeReady(HoveredNode);
+					AssociationMGMT();
+				});
+				Associations.addClass(
+					'red-ui-button red-ui-button-small zwave-js-round-square'
+				);
+				Associations.css({
+					width: '30px',
+					height: '30px',
+					marginRight: '1px'
+				});
+				Associations.append('<i class="fa fa-code-fork fa-lg"></i>');
+				RED.popover.tooltip(Associations, 'Association Management');
+				BA.append(Associations);
+
+				const Interview = $('<button>');
+				Interview.click(() => {
+					IsNodeReady(HoveredNode);
+					InterviewNode();
+				});
+				Interview.addClass(
+					'red-ui-button red-ui-button-small zwave-js-round-square'
+				);
+				Interview.css({
+					width: '30px',
+					height: '30px',
+					marginRight: '1px'
+				});
+				Interview.append('<i class="fa fa-handshake-o fa-lg"></i>');
+				RED.popover.tooltip(Interview, 'Re-Interview Node');
+				BA.append(Interview);
+
+				const RemoveFailed = $('<button>');
+				RemoveFailed.click(() => {
+					IsNodeReady(HoveredNode);
+					RemoveFailedNode();
+				});
+				RemoveFailed.addClass(
+					'red-ui-button red-ui-button-small zwave-js-round-square'
+				);
+				RemoveFailed.css({
+					width: '30px',
+					height: '30px',
+					marginRight: '1px'
+				});
+				RemoveFailed.append('<i class="fa  fa-trash-o fa-lg"></i>');
+				RED.popover.tooltip(RemoveFailed, 'Remove Failed Node');
+				BA.append(RemoveFailed);
+
+				const ReplaceFailed = $('<button>');
+				ReplaceFailed.click(() => {
+					IsNodeReady(HoveredNode);
+					ShowReplacePrompt();
+				});
+				ReplaceFailed.addClass(
+					'red-ui-button red-ui-button-small zwave-js-round-square'
+				);
+				ReplaceFailed.css({
+					width: '30px',
+					height: '30px',
+					marginRight: '1px'
+				});
+				ReplaceFailed.append('<i class="fa fa-clone fa-lg"></i>');
+				RED.popover.tooltip(ReplaceFailed, 'Replace Failed Node');
+				BA.append(ReplaceFailed);
+
+				const _OpenDB = $('<button>');
+				_OpenDB.click(() => {
+					IsNodeReady(HoveredNode);
+					OpenDB();
+				});
+				_OpenDB.addClass(
+					'red-ui-button red-ui-button-small zwave-js-round-square'
+				);
+				_OpenDB.css({
+					width: '30px',
+					height: '30px',
+					marginRight: '1px'
+				});
+				_OpenDB.append('<i class="fa fa-database fa-lg"></i>');
+				RED.popover.tooltip(_OpenDB, 'Open in Device Browser');
+				BA.append(_OpenDB);
+			} else {
+				BA.css({
+					display: 'block'
+				});
 			}
 
-			BA.css({
-				position: 'absolute',
-				width: '200px',
-				left: '10px',
-				display: 'block',
-				backgroundColor: 'inherit'
-			});
 			Row.append(BA);
 		}
 	}
 
 	function renderNode(node) {
+		let Timer;
+
 		return $('<div>')
 			.addClass('red-ui-treeList-label zwave-js-node-row')
 			.attr('data-nodeid', node.nodeId)
 			.data('info', node)
+			.dblclick(() => {
+				const Row = $('.zwave-js-node-row[data-nodeid="' + node.nodeId + '"]');
+				AddOverlayNodeButtons(node, $(Row));
+				clearTimeout(Timer);
+				Timer = undefined;
+			})
+			.click(() => {
+				if (selectedNode === node.nodeId) {
+					const Row = $(
+						'.zwave-js-node-row[data-nodeid="' + node.nodeId + '"]'
+					);
+					AddOverlayNodeButtons(node, $(Row));
+					return;
+				}
+				clearTimeout(Timer);
+				Timer = undefined;
+				Timer = setTimeout(() => {
+					IsNodeReady(node);
+					selectNode(node.nodeId);
+				}, 250);
+			})
 			.hover(
 				function () {
-					AddOverlayNodeButtons(node, $(this));
+					//AddOverlayNodeButtons(node, $(this));
 				},
 				function () {
+					$(this).children().css({ display: 'block' });
 					AddOverlayNodeButtons();
 				}
 			)
@@ -1975,10 +2018,9 @@ const ZwaveJsUI = (function () {
 	}
 
 	function deselectCurrentNode() {
-		// "Disconnect" from previously selected node
 		if (selectedNode) {
 			$(`#zwave-js-node-list [data-nodeid='${selectedNode}']`).removeClass(
-				'selected'
+				'currentNode'
 			);
 
 			$('#zwave-js-status-box-interview').text('');
@@ -1989,6 +2031,9 @@ const ZwaveJsUI = (function () {
 				handleNodeEvent
 			);
 		}
+
+		$('#zwave-js-selected-node-id').html('--');
+		selectedNode = undefined;
 	}
 
 	function selectNode(id) {
@@ -1998,17 +2043,18 @@ const ZwaveJsUI = (function () {
 		selectedNode = id;
 
 		const selectedEl = $(`#zwave-js-node-list [data-nodeid='${id}']`);
-		selectedEl.addClass('selected');
+		selectedEl.addClass('currentNode');
 		//$('#zwave-js-selected-node-id').text(selectedNode);
 		const info = selectedEl.data('info');
 
+		$('#zwave-js-selected-node-id').html(selectedNode);
 		makeInfo(
 			'#zwave-js-selected-node-info',
 			info.deviceConfig,
 			info.firmwareVersion
 		);
 
-		let Name = `${selectedNode} - ${
+		let Name = `${
 			info.name !== undefined && info.name.length > 0 ? info.name : 'No Name'
 		}`;
 

@@ -1,10 +1,7 @@
 let _Callback;
+let _HTTPAdmin;
+let _NetworkID;
 let _Enabled = false;
-
-const Prep = (HTTPAdmin) => {
-	HTTPAdmin.get('/zwave-js/smartstart-event/started', SendStarted);
-	HTTPAdmin.get('/zwave-js/smartstart-event/code/:Code', ParseCode);
-};
 
 const CheckStatus = (res) => {
 	if (_Enabled) {
@@ -15,15 +12,26 @@ const CheckStatus = (res) => {
 	}
 };
 
-const Start = (Callback, Req) => {
-	_Callback = Callback;
+const Start = (CTX, Req) => {
+	_NetworkID = CTX._NetworkIdentifier;
+	_HTTPAdmin = CTX._RED.httpAdmin;
+	_HTTPAdmin.get(
+		`/zwave-js/${_NetworkID}/smartstart-event/started`,
+		SendStarted
+	);
+	_HTTPAdmin.get(
+		`/zwave-js/${_NetworkID}/smartstart-event/code/:Code`,
+		ParseCode
+	);
+
+	_Callback = CTX._SmartStartCallback;
 	_Enabled = true;
 
 	const Secure = Req.connection.encrypted !== undefined;
 	const Prot = Secure ? 'https://' : 'http://';
 	return new Promise((resolve) => {
 		resolve(
-			`${Prot}${Req.headers.host}/resources/node-red-contrib-zwave-js/SmartStart/Scanchoice.html`
+			`${Prot}${Req.headers.host}/resources/node-red-contrib-zwave-js/SmartStart/Scanchoice.html?net=${_NetworkID}`
 		);
 	});
 };
@@ -45,11 +53,31 @@ function ParseCode(req, res) {
 }
 
 const Stop = () => {
-	_Enabled = false;
+	if (_NetworkID !== undefined) {
+		const Routes = [];
+		_HTTPAdmin._router.stack.forEach((R) => {
+			if (R.route === undefined) {
+				Routes.push(R);
+				return;
+			}
+			if (
+				!R.route.path.startsWith(`/zwave-js/${_NetworkID}/smartstart-event`)
+			) {
+				Routes.push(R);
+				return;
+			}
+		});
+
+		_HTTPAdmin._router.stack = Routes;
+
+		_Enabled = false;
+		_Callback = undefined;
+		_HTTPAdmin = undefined;
+		_NetworkID = undefined;
+	}
 };
 
 module.exports = {
 	Start: Start,
-	Stop: Stop,
-	Prep: Prep
+	Stop: Stop
 };

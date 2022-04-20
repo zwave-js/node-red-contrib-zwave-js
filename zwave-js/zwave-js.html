@@ -137,7 +137,7 @@
 					cellspacing='0'
 				>
 					<tr>
-						<td style='text-align: left;width: 200px;vertical-align: middle; '>
+						<td style='text-align: left;width: 200px;vertical-align: top; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('Default')"
@@ -152,7 +152,7 @@
 						</td>
 					</tr>
 					<tr>
-						<td style='text-align: left;vertical-align: middle; '>
+						<td style='text-align: left;vertical-align: top; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('SmartStart')"
@@ -163,7 +163,7 @@
 						</td>
 					</tr>
 					<tr>
-						<td style='text-align: left; vertical-align: middle; '>
+						<td style='text-align: left; vertical-align: top; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('S0')"
@@ -174,7 +174,7 @@
 						</td>
 					</tr>
 					<tr>
-						<td style='text-align: left; vertical-align: middle; '>
+						<td style='text-align: left; vertical-align: top; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('None')"
@@ -191,7 +191,7 @@
 
 					</tr>
 					<tr>
-						<td style='text-align: left; vertical-align: middle; '>
+						<td style='text-align: left; vertical-align: top; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('Remove')"
@@ -205,7 +205,7 @@
 						</td>
 					</tr>
 					<tr>
-						<td style='text-align: left; vertical-align: middle; '>
+						<td style='text-align: left; vertical-align: top; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('EditSmartStart')"
@@ -696,12 +696,13 @@
 	>
 		This software is provided as-is.<br />
 		<br />
-		The developer(s) of <strong>node-red-contrib-zwave-js</strong> or any libraries it uses,<br />
-		are not responsible for any damage that may result from your attempt
-		to upgrade the firmware.<br />
+		The developer(s) of
+		<strong>node-red-contrib-zwave-js</strong>
+		or any libraries it uses,<br />
+		are not responsible for any damage that may result from your attempt to
+		upgrade the firmware.<br />
 		<br />
-		You are performing this upgrade, soley
-		at your own risk.
+		You are performing this upgrade, soley at your own risk.
 	</div>
 
 	<div
@@ -873,7 +874,7 @@
 		outputs: 1,
 		icon: 'ZWJS.svg',
 		label: function () {
-			return this.name + ' (Net: ' + (this.networkIdentifier || '--') + ')';
+			return this.name;
 		},
 		onpaletteadd: ZwaveJsUI.init,
 		oneditprepare: SortUI,
@@ -897,10 +898,21 @@
 			});
 
 			if (this.networkIdentifier === undefined) {
-				$('#node-input-networkIdentifier').val(data.AvailableNIDs[0]);
-				$('#Network' + data.AvailableNIDs[0]).css({
-					backgroundColor: 'lightgray'
-				});
+				const Deployed = RED.nodes.filterNodes({ type: 'zwave-js' });
+
+				if (Deployed.length === 1) {
+					$('#node-input-networkIdentifier').val(data.UsedNIDs[0]);
+					$('#Network' + data.UsedNIDs[0]).css({
+						backgroundColor: 'lightgray'
+					});
+					$(`#Network${data.UsedNIDs[0]}`).prop('disabled', false);
+					$(`#Network${data.UsedNIDs[0]}`).css({ opacity: 1.0 });
+				} else {
+					$('#node-input-networkIdentifier').val(data.AvailableNIDs[0]);
+					$('#Network' + data.AvailableNIDs[0]).css({
+						backgroundColor: 'lightgray'
+					});
+				}
 			} else {
 				$(`#Network${this.networkIdentifier}`).css({
 					opacity: 1.0,
@@ -994,10 +1006,10 @@
 	</div>
 	<div class="form-row">
 	    <label for="node-input-networkIdentifier" style="width:130px"><i class="fa fa-pencil"></i> Network ID</label>
-	    <button class="red-ui-button red-ui-button-small" style="width: 30px; height: 30px; margin-right: 2px;" id="Network1" onclick="setID(1)">1</button>
-		<button class="red-ui-button red-ui-button-small" style="width: 30px; height: 30px; margin-right: 2px;" id="Network2" onclick="setID(2)">2</button>
-		<button class="red-ui-button red-ui-button-small" style="width: 30px; height: 30px; margin-right: 2px;" id="Network3" onclick="setID(3)">3</button>
-		<button class="red-ui-button red-ui-button-small" style="width: 30px; height: 30px; margin-right: 2px;" id="Network4" onclick="setID(4)">4</button>
+	    <button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network1" onclick="setID(1)">1</button>
+		<button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network2" onclick="setID(2)">2</button>
+		<button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network3" onclick="setID(3)">3</button>
+		<button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network4" onclick="setID(4)">4</button>
 
 	</div>
 	<div class="form-row">

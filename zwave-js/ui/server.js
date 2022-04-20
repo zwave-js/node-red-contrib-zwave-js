@@ -23,10 +23,8 @@ const _Check = (CC) => {
 	return API;
 };
 
-
-let AvailableNIDs = [1,2,3,4];
+let AvailableNIDs = [1, 2, 3, 4];
 let UsedNIDs = [];
-
 
 const SetupGlobals = function (RED) {
 	if (_GlobalInit) return;
@@ -38,7 +36,7 @@ const SetupGlobals = function (RED) {
 	RED.httpAdmin.get(
 		`/zwave-js/cfg-getids`,
 		RED.auth.needsPermission('flows.read'),
-		function (req, res) {
+		(req, res) => {
 			AvailableNIDs.sort();
 			UsedNIDs.sort();
 			res.json({ AvailableNIDs, UsedNIDs });
@@ -48,7 +46,7 @@ const SetupGlobals = function (RED) {
 	RED.httpAdmin.get(
 		`/zwave-js/cfg-cclist`,
 		RED.auth.needsPermission('flows.read'),
-		function (req, res) {
+		(req, res) => {
 			res.json(_CCs);
 		}
 	);
@@ -56,7 +54,7 @@ const SetupGlobals = function (RED) {
 	RED.httpAdmin.get(
 		`/zwave-js/cfg-cclist/:CC`,
 		RED.auth.needsPermission('flows.read'),
-		function (req, res) {
+		(req, res) => {
 			res.json(_CCMethods[req.params.CC.replace(/-/g, ' ')]);
 		}
 	);
@@ -64,7 +62,7 @@ const SetupGlobals = function (RED) {
 	RED.httpAdmin.get(
 		`/zwave-js/cfg-version`,
 		RED.auth.needsPermission('flows.read'),
-		function (req, res) {
+		(req, res) => {
 			delete require.cache[require.resolve('zwave-js/package.json')];
 			const ZWaveJSPackage = require('zwave-js/package.json');
 			res.json({
@@ -78,7 +76,7 @@ const SetupGlobals = function (RED) {
 	RED.httpAdmin.get(
 		`/zwave-js/cfg-serialports`,
 		RED.auth.needsPermission('flows.read'),
-		function (req, res) {
+		(req, res) => {
 			SP.list()
 				.then((ports) => {
 					const a = ports.map((p) => p.path);
@@ -96,11 +94,10 @@ const SetupGlobals = function (RED) {
 
 class UIServer {
 	constructor(RED, ID) {
-		const self = this;
-
 		this._Context = {};
 		this._NodeList;
 		this._RED = RED;
+		this._SmartStartCallback = this._SmartStartCallback.bind(this);
 
 		this._NetworkIdentifier = parseInt(ID);
 
@@ -116,7 +113,7 @@ class UIServer {
 		this._RED.httpAdmin.get(
 			`/zwave-js/${this._NetworkIdentifier}/ping`,
 			this._RED.auth.needsPermission('flows.read'),
-			async function (req, res) {
+			async (req, res) => {
 				res.contentType('text/plain');
 				res.send('pong');
 				res.end(200);
@@ -126,13 +123,13 @@ class UIServer {
 		this._RED.httpAdmin.get(
 			`/zwave-js/${this._NetworkIdentifier}/smart-start-list`,
 			this._RED.auth.needsPermission('flows.read'),
-			async function (req, res) {
+			async (req, res) => {
 				const JSONEntries = [];
-				const Entries = self._Context.controller.getProvisioningEntries();
+				const Entries = this._Context.controller.getProvisioningEntries();
 
 				for (let i = 0; i < Entries.length; i++) {
 					const Entry = Entries[i];
-					const Device = await self._CM.lookupDevice(
+					const Device = await this._CM.lookupDevice(
 						Entry.manufacturerId,
 						Entry.productType,
 						Entry.productId
@@ -151,25 +148,25 @@ class UIServer {
 		this._RED.httpAdmin.get(
 			`/zwave-js/${this._NetworkIdentifier}/cfg-nodelist`,
 			this._RED.auth.needsPermission('flows.read'),
-			function (req, res) {
-				res.json(self._NodeList);
+			(req, res) => {
+				res.json(this._NodeList);
 			}
 		);
 
 		this._RED.httpAdmin.get(
 			`/zwave-js/${this._NetworkIdentifier}/fetch-driver-status`,
 			this._RED.auth.needsPermission('flows.read'),
-			function (req, res) {
+			(req, res) => {
 				res.status(200).end();
-				self._SendStatus();
+				this._SendStatus();
 			}
 		);
 
 		this._RED.httpAdmin.get(
 			`/zwave-js/${this._NetworkIdentifier}/driverready`,
 			this._RED.auth.needsPermission('flows.read'),
-			function (req, res) {
-				const Loaded = self._Context.hasOwnProperty('controller');
+			(req, res) => {
+				const Loaded = this._Context.hasOwnProperty('controller');
 				res.contentType('application/json');
 				res.send({ ready: Loaded });
 			}
@@ -178,7 +175,7 @@ class UIServer {
 		this._RED.httpAdmin.post(
 			`/zwave-js/${this._NetworkIdentifier}/firmwareupdate/:code`,
 			this._RED.auth.needsPermission('flows.write'),
-			function (req, res) {
+			(req, res) => {
 				let _Buffer = Buffer.alloc(0);
 				req.on('data', (Data) => {
 					_Buffer = Buffer.concat([_Buffer, Data]);
@@ -205,19 +202,18 @@ class UIServer {
 							res.status(500).send(err.message);
 						}
 					};
-					self._Context.input({ payload: PL }, Success, Error);
+					this._Context.input({ payload: PL }, Success, Error);
 				});
 			}
 		);
 
-		SmartStart.Prep(this._RED.httpAdmin);
 		this._RED.httpAdmin.get(
 			`/zwave-js/${this._NetworkIdentifier}/smartstart/:Method`,
 			this._RED.auth.needsPermission('flows.write'),
 			async (req, res) => {
 				switch (req.params.Method) {
 					case 'startserver':
-						SmartStart.Start(self._SmartStartCallback, req).then((QRCode) => {
+						SmartStart.Start(this, req).then((QRCode) => {
 							res.status(200);
 							res.end(QRCode);
 						});
@@ -262,9 +258,9 @@ class UIServer {
 								}
 							};
 
-							self._Context.input(StatReq, (Result) => {
+							this._Context.input(StatReq, (Result) => {
 								Stats = Result.payload.object;
-								self._SendHealthCheck(Health, Stats);
+								this._SendHealthCheck(Health, Stats);
 							});
 
 							return; // no need to do anything else here.
@@ -293,11 +289,11 @@ class UIServer {
 						PL.payload.method === 'checkLifelineHealth'
 					) {
 						const HCProgress = (R) => {
-							self._SendHealthCheckProgress(R);
+							this._SendHealthCheckProgress(R);
 						};
 						PL.payload.params.push(HCProgress);
 					}
-					self._Context.input(PL, ResponseProcessor, DoneHandler);
+					this._Context.input(PL, ResponseProcessor, DoneHandler);
 				} catch (err) {
 					clearTimeout(timeout);
 					if (!req.body.noWait) {
@@ -309,253 +305,258 @@ class UIServer {
 			}
 		);
 	}
-}
 
-UIServer.prototype.Register = function (driver, request) {
-	driver.on('driver ready', () => {
-		this._Context.controller = driver.controller;
-		this._Context.input = request;
+	// Methods
 
-		this._Context.controller.on('inclusion started', () => {
-			this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/cmd`, {
-				type: 'node-inclusion-step',
-				event: 'inclusion started'
+	Register(driver, request) {
+		driver.on('driver ready', () => {
+			this._Context.controller = driver.controller;
+			this._Context.input = request;
+
+			this._Context.controller.on('inclusion started', () => {
+				this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/cmd`, {
+					type: 'node-inclusion-step',
+					event: 'inclusion started'
+				});
+			});
+
+			this._Context.controller.on('exclusion started', () => {
+				this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/cmd`, {
+					type: 'node-inclusion-step',
+					event: 'exclusion started'
+				});
+			});
+
+			this._Context.controller.on('exclusion stopped', () => {
+				this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/cmd`, {
+					type: 'node-inclusion-step',
+					event: 'exclusion stopped'
+				});
+			});
+
+			this._Context.controller.on('node added', (N, IR) => {
+				this._WireNodeEvents(N);
+				this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/cmd`, {
+					type: 'node-collection-change',
+					event: 'node added',
+					inclusionResult: IR
+				});
+			});
+
+			this._Context.controller.on('node removed', () => {
+				this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/cmd`, {
+					type: 'node-collection-change',
+					event: 'node removed'
+				});
+			});
+
+			this._Context.controller.nodes.forEach((node) => {
+				this._WireNodeEvents(node);
 			});
 		});
-
-		this._Context.controller.on('exclusion started', () => {
-			this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/cmd`, {
-				type: 'node-inclusion-step',
-				event: 'exclusion started'
-			});
-		});
-
-		this._Context.controller.on('exclusion stopped', () => {
-			this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/cmd`, {
-				type: 'node-inclusion-step',
-				event: 'exclusion stopped'
-			});
-		});
-
-		this._Context.controller.on('node added', (N, IR) => {
-			this._WireNodeEvents(N);
-			this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/cmd`, {
-				type: 'node-collection-change',
-				event: 'node added',
-				inclusionResult: IR
-			});
-		});
-
-		this._Context.controller.on('node removed', () => {
-			this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/cmd`, {
-				type: 'node-collection-change',
-				event: 'node removed'
-			});
-		});
-
-		this._Context.controller.nodes.forEach((node) => {
-			this._WireNodeEvents(node);
-		});
-	});
-};
-
-UIServer.prototype._WireNodeEvents = function (node) {
-	// Status
-	node.on('sleep', (node) => {
-		this._SendNodeStatus(node, 'ASLEEP');
-	});
-	node.on('wake up', (node) => {
-		this._SendNodeStatus(node, 'AWAKE');
-	});
-	node.on('dead', (node) => {
-		this._SendNodeStatus(node, 'DEAD');
-	});
-	node.on('alive', (node) => {
-		this._SendNodeStatus(node, 'ALIVE');
-	});
-	node.on('ready', (node) => {
-		this._SendNodeStatus(node, 'READY');
-	});
-
-	// Values
-	node.on('value added', (node, value) => {
-		this._SendNodeEvent('node-value', node, value);
-		if (value.commandClass === 128) {
-			this._SendBatteryUpdate(node, value);
-		}
-	});
-	node.on('value updated', (node, value) => {
-		this._SendNodeEvent('node-value', node, value);
-		if (value.commandClass === 128) {
-			this._SendBatteryUpdate(node, value);
-		}
-	});
-	node.on('value removed', (node, value) => {
-		this._SendNodeEvent('node-value', node, value);
-	});
-	node.on('value notification', (node, value) => {
-		this._SendNodeEvent('node-value', node, value);
-	});
-	node.on('notification', (node, value) => {
-		this._SendNodeEvent('node-value', node, value);
-	});
-	node.on('firmware update progress', (node, S, R) => {
-		this._SendNodeEvent('node-fwu-progress', node, { sent: S, remain: R });
-	});
-	node.on('firmware update finished', (node, Status) => {
-		this._SendNodeEvent('node-fwu-completed', node, { status: Status });
-	});
-
-	// Meta
-	node.on('metadata update', (node, value) => {
-		this._SendNodeEvent('node-meta', node, value);
-	});
-};
-
-UIServer.prototype._SendBatteryUpdate = function (node, payload) {
-	this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/battery`, {
-		node: node.id,
-		payload: payload
-	});
-};
-
-UIServer.prototype.Unregister = function () {
-	const Routes = [];
-	this._RED.httpAdmin._router.stack.forEach((R) => {
-		if (R.route === undefined) {
-			Routes.push(R);
-			return;
-		}
-		if (!R.route.path.startsWith(`/zwave-js/${this._NetworkIdentifier}`)) {
-			Routes.push(R);
-			return;
-		}
-	});
-
-	this._RED.httpAdmin._router.stack = Routes;
-
-	delete this._Context.controller;
-	delete this._Context.input;
-
-	AvailableNIDs.push(this._NetworkIdentifier);
-	UsedNIDs = UsedNIDs.filter((_ID) => _ID !== this._NetworkIdentifier);
-};
-
-UIServer.prototype._SendStatus = function () {
-	this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/status`, {
-		status: this._LatestStatus
-	});
-};
-
-UIServer.prototype._SendNodeStatus = function (node, status) {
-	this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/cmd`, {
-		type: 'node-status',
-		node: node.id,
-		status: status
-	});
-};
-
-UIServer.prototype._SendHealthCheck = function (HealthCheck, Statistics) {
-	this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/healthcheck`, {
-		payload: { HealthCheck, Statistics }
-	});
-};
-
-UIServer.prototype._SendHealthCheckProgress = function (Round) {
-	this._RED.comms.publish(
-		`/zwave-js/${this._NetworkIdentifier}/healthcheckprogress`,
-		{
-			payload: Round
-		}
-	);
-};
-
-UIServer.prototype._SendNodeEvent = function (type, node, payload) {
-	this._RED.comms.publish(
-		`/zwave-js/${this._NetworkIdentifier}/cmd/${node.id}`,
-		{
-			type: type,
-			payload: payload
-		}
-	);
-};
-
-UIServer.prototype._SmartStartCallback = function (Event, Code) {
-	switch (Event) {
-		case 'Started':
-			this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/cmd`, {
-				type: 'node-inclusion-step',
-				event: 'smart start awaiting codes'
-			});
-			return true;
-
-		case 'Code':
-			const inclusionPackage = ZWaveJS.parseQRCodeString(Code);
-			if (inclusionPackage.version === 1) {
-				this._CM
-					.lookupDevice(
-						inclusionPackage.manufacturerId,
-						inclusionPackage.productType,
-						inclusionPackage.productId
-					)
-					.then((device) => {
-						if (device !== undefined) {
-							this._RED.comms.publish(
-								`/zwave-js/${this._NetworkIdentifier}/cmd`,
-								{
-									type: 'node-inclusion-step',
-									event: 'smart start code received',
-									data: {
-										inclusionPackage: inclusionPackage,
-										humaReadable: {
-											manufacturer: device.manufacturer,
-											label: device.label,
-											description: device.description,
-											dsk: inclusionPackage.dsk.substring(0, 5)
-										}
-									}
-								}
-							);
-						} else {
-							this._RED.comms.publish(
-								`/zwave-js/${this._NetworkIdentifier}/cmd`,
-								{
-									type: 'node-inclusion-step',
-									event: 'smart start code received',
-									data: {
-										inclusionPackage: inclusionPackage,
-										humaReadable: {
-											dsk: inclusionPackage.dsk.substring(0, 5)
-										}
-									}
-								}
-							);
-						}
-					});
-
-				return 1;
-			} else {
-				return 0;
-			}
 	}
-};
 
-UIServer.prototype.Status = function (Message) {
-	this._LatestStatus = Message;
-	this._SendStatus();
-};
+	_WireNodeEvents(node) {
+		// Status
+		node.on('sleep', (node) => {
+			this._SendNodeStatus(node, 'ASLEEP');
+		});
+		node.on('wake up', (node) => {
+			this._SendNodeStatus(node, 'AWAKE');
+		});
+		node.on('dead', (node) => {
+			this._SendNodeStatus(node, 'DEAD');
+		});
+		node.on('alive', (node) => {
+			this._SendNodeStatus(node, 'ALIVE');
+		});
+		node.on('ready', (node) => {
+			this._SendNodeStatus(node, 'READY');
+		});
 
-UIServer.prototype.SendEvent = function (Type, Event, args) {
-	this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/cmd`, {
-		type: Type,
-		event: Event,
-		...args
-	});
-};
+		// Values
+		node.on('value added', (node, value) => {
+			this._SendNodeEvent('node-value', node, value);
+			if (value.commandClass === 128) {
+				this._SendBatteryUpdate(node, value);
+			}
+		});
+		node.on('value updated', (node, value) => {
+			this._SendNodeEvent('node-value', node, value);
+			if (value.commandClass === 128) {
+				this._SendBatteryUpdate(node, value);
+			}
+		});
+		node.on('value removed', (node, value) => {
+			this._SendNodeEvent('node-value', node, value);
+		});
+		node.on('value notification', (node, value) => {
+			this._SendNodeEvent('node-value', node, value);
+		});
+		node.on('notification', (node, value) => {
+			this._SendNodeEvent('node-value', node, value);
+		});
+		node.on('firmware update progress', (node, S, R) => {
+			this._SendNodeEvent('node-fwu-progress', node, { sent: S, remain: R });
+		});
+		node.on('firmware update finished', (node, Status) => {
+			this._SendNodeEvent('node-fwu-completed', node, { status: Status });
+		});
 
-UIServer.prototype.UpateNodeList = function (Nodes) {
-	this._NodeList = Nodes;
-};
+		// Meta
+		node.on('metadata update', (node, value) => {
+			this._SendNodeEvent('node-meta', node, value);
+		});
+	}
+
+	_SendBatteryUpdate(node, payload) {
+		this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/battery`, {
+			node: node.id,
+			payload: payload
+		});
+	}
+
+	Unregister() {
+		const Routes = [];
+		this._RED.httpAdmin._router.stack.forEach((R) => {
+			if (R.route === undefined) {
+				Routes.push(R);
+				return;
+			}
+			if (!R.route.path.startsWith(`/zwave-js/${this._NetworkIdentifier}`)) {
+				Routes.push(R);
+				return;
+			}
+		});
+
+		this._RED.httpAdmin._router.stack = Routes;
+
+		delete this._Context.controller;
+		delete this._Context.input;
+
+		AvailableNIDs.push(this._NetworkIdentifier);
+		UsedNIDs = UsedNIDs.filter((_ID) => _ID !== this._NetworkIdentifier);
+	}
+
+	_SendStatus() {
+		this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/status`, {
+			status: this._LatestStatus
+		});
+	}
+
+	_SendNodeStatus(node, status) {
+		this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/cmd`, {
+			type: 'node-status',
+			node: node.id,
+			status: status
+		});
+	}
+
+	_SendHealthCheck(HealthCheck, Statistics) {
+		this._RED.comms.publish(
+			`/zwave-js/${this._NetworkIdentifier}/healthcheck`,
+			{
+				payload: { HealthCheck, Statistics }
+			}
+		);
+	}
+
+	_SendHealthCheckProgress(Round) {
+		this._RED.comms.publish(
+			`/zwave-js/${this._NetworkIdentifier}/healthcheckprogress`,
+			{
+				payload: Round
+			}
+		);
+	}
+
+	_SendNodeEvent(type, node, payload) {
+		this._RED.comms.publish(
+			`/zwave-js/${this._NetworkIdentifier}/cmd/${node.id}`,
+			{
+				type: type,
+				payload: payload
+			}
+		);
+	}
+
+	_SmartStartCallback(Event, Code) {
+		switch (Event) {
+			case 'Started':
+				this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/cmd`, {
+					type: 'node-inclusion-step',
+					event: 'smart start awaiting codes'
+				});
+				return true;
+
+			case 'Code':
+				const inclusionPackage = ZWaveJS.parseQRCodeString(Code);
+				if (inclusionPackage.version === 1) {
+					this._CM
+						.lookupDevice(
+							inclusionPackage.manufacturerId,
+							inclusionPackage.productType,
+							inclusionPackage.productId
+						)
+						.then((device) => {
+							if (device !== undefined) {
+								this._RED.comms.publish(
+									`/zwave-js/${this._NetworkIdentifier}/cmd`,
+									{
+										type: 'node-inclusion-step',
+										event: 'smart start code received',
+										data: {
+											inclusionPackage: inclusionPackage,
+											humaReadable: {
+												manufacturer: device.manufacturer,
+												label: device.label,
+												description: device.description,
+												dsk: inclusionPackage.dsk.substring(0, 5)
+											}
+										}
+									}
+								);
+							} else {
+								this._RED.comms.publish(
+									`/zwave-js/${this._NetworkIdentifier}/cmd`,
+									{
+										type: 'node-inclusion-step',
+										event: 'smart start code received',
+										data: {
+											inclusionPackage: inclusionPackage,
+											humaReadable: {
+												dsk: inclusionPackage.dsk.substring(0, 5)
+											}
+										}
+									}
+								);
+							}
+						});
+
+					return 1;
+				} else {
+					return 0;
+				}
+		}
+	}
+
+	Status(Message) {
+		this._LatestStatus = Message;
+		this._SendStatus();
+	}
+
+	SendEvent(Type, Event, args) {
+		this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/cmd`, {
+			type: Type,
+			event: Event,
+			...args
+		});
+	}
+
+	UpateNodeList(Nodes) {
+		this._NodeList = Nodes;
+	}
+}
 
 module.exports = {
 	UIServer: UIServer,

@@ -28,7 +28,7 @@ const DataRate = {
 
 function Render() {
 	const Elements = [];
-	const Nodes = JSON.parse(getCookie('ZWJSMapData'));
+	const Nodes = JSON.parse(localStorage.getItem('ZWJSMapData'));
 
 	console.log(Nodes);
 
@@ -78,6 +78,7 @@ function Render() {
 							First = false;
 							Last = R;
 						} else {
+							return;
 							const EL = {
 								data: {
 									id: `${Last}.${R}`,
@@ -132,8 +133,8 @@ function Render() {
 	StyleSheet.selector('egde').css({
 		'curve-style': 'taxi',
 		'taxi-direction': 'auto',
-		'taxi-turn': 20,
-		'taxi-turn-min-distance': 5,
+		'taxi-turn': 5,
+		'taxi-turn-min-distance': 1,
 		'target-arrow-shape': 'triangle',
 		'line-color': 'data(color)'
 	});
@@ -186,32 +187,60 @@ function LoadData() {
 	}
 
 	// Performance
-	const Performance = $('<li>');
-	Performance.css({ marginBottom: '10px' });
-	Performance.html('<strong>Performance</strong>');
-	Performance.appendTo(Data);
+	if (this.data('statistics').rtt !== undefined) {
+		const Performance = $('<li>');
+		Performance.css({ marginBottom: '10px' });
+		Performance.html('<strong>Performance</strong>');
+		Performance.appendTo(Data);
 
-	const PerformanceDetails = $('<ul>');
-	PerformanceDetails.appendTo(Performance);
-	$(`<li>Round Trip Time (ms): ${this.data('statistics').rtt}</li>`).appendTo(
-		PerformanceDetails
-	);
+		const PerformanceDetails = $('<ul>');
+		PerformanceDetails.appendTo(Performance);
+		$(`<li>Round Trip Time (ms): ${this.data('statistics').rtt}</li>`).appendTo(
+			PerformanceDetails
+		);
 
-	if (this.data('statistics').lwr !== undefined) {
+		if (this.data('statistics').lwr !== undefined) {
+			$(
+				`<li>Protocol Data Rate : ${
+					DataRate[this.data('statistics').lwr.protocolDataRate]
+				}</li>`
+			).appendTo(PerformanceDetails);
+			$(
+				`<li>ACK RSSI (Received by Controller): ${
+					this.data('statistics').lwr.rssi
+				} dBm</li>`
+			).appendTo(PerformanceDetails);
+		}
 		$(
-			`<li>Protocol Data Rate : ${
-				DataRate[this.data('statistics').lwr.protocolDataRate]
-			}</li>`
-		).appendTo(PerformanceDetails);
-		$(
-			`<li>ACK RSSI (Received by Controller): ${
-				this.data('statistics').lwr.rssi
+			`<li>ACK RSSI (Received by Node): ${
+				this.data('statistics').rssi
 			} dBm</li>`
 		).appendTo(PerformanceDetails);
 	}
+
+	// Network Stats
+	const NetStats = $('<li>');
+	NetStats.css({ marginBottom: '10px' });
+	NetStats.html('<strong>Network Statistics</strong>');
+	NetStats.appendTo(Data);
+
+	const NetStatsDetails = $('<ul>');
+	NetStatsDetails.appendTo(NetStats);
+	$(`<li>Commands TX: ${this.data('statistics').commandsTX}</li>`).appendTo(
+		NetStatsDetails
+	);
 	$(
-		`<li>ACK RSSI (Received by Node): ${this.data('statistics').rssi} dBm</li>`
-	).appendTo(PerformanceDetails);
+		`<li>Commands TXD: ${this.data('statistics').commandsDroppedTX}</li>`
+	).appendTo(NetStatsDetails);
+	$(`<li>Commands RX: ${this.data('statistics').commandsRX}</li>`).appendTo(
+		NetStatsDetails
+	);
+	$(
+		`<li>Commands RXD: ${this.data('statistics').commandsDroppedRX}</li>`
+	).appendTo(NetStatsDetails);
+	$(`<li>Timeouts: ${this.data('statistics').timeoutResponse}</li>`).appendTo(
+		NetStatsDetails
+	);
 
 	$('#Details').html(Data);
 }

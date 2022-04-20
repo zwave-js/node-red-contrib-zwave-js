@@ -6,6 +6,12 @@ let videoElement;
 let offset;
 const ScannedCodes = {};
 
+const getParam = (param) => {
+	const queryString = window.location.search;
+	const urlParams = new URLSearchParams(queryString);
+	return urlParams.get(param);
+};
+
 function GrabImage() {
 	SendActive()
 		.then(() => {
@@ -164,7 +170,7 @@ function tick() {
 async function SendActive() {
 	return new Promise((resolve, reject) => {
 		const Res = $.ajax({
-			url: '../../../zwave-js/smartstart-event/started',
+			url: `../../../zwave-js/${getParam('net')}/smartstart-event/started`,
 			method: 'get',
 			async: false
 		});
@@ -216,7 +222,7 @@ function SendCode(Code, skipRender) {
 		} else {
 			let Result;
 			$.ajax({
-				url: '../../../zwave-js/smartstart-event/code/' + Code.data,
+				url: `../../../zwave-js/${getParam('net')}/smartstart-event/code/${Code.data}`,
 				method: 'get',
 				success: (data) => {
 					Result = data;

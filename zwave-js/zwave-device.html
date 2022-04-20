@@ -19,7 +19,7 @@
 		outputs: 1,
 		icon: 'Node.svg',
 		label: function () {
-			return this.name + ' (Net: ' + (this.networkIdentifier || '--') + ')';
+			return this.name;
 		},
 		oneditprepare: SortUI,
 		oneditsave: SetIO,
@@ -298,10 +298,10 @@
 	</div>
 	<div class="form-row">
 	    <label  for="node-input-networkIdentifier" style="width:130px"><i class="fa fa-pencil"></i> Network ID</label>
-		<button class="red-ui-button red-ui-button-small" style="width: 30px; height: 30px; margin-right: 2px;" id="Network1" onclick="setID(1)">1</button>
-		<button class="red-ui-button red-ui-button-small" style="width: 30px; height: 30px; margin-right: 2px;" id="Network2" onclick="setID(2)">2</button>
-		<button class="red-ui-button red-ui-button-small" style="width: 30px; height: 30px; margin-right: 2px;" id="Network3" onclick="setID(3)">3</button>
-		<button class="red-ui-button red-ui-button-small" style="width: 30px; height: 30px; margin-right: 2px;" id="Network4" onclick="setID(4)">4</button>
+		<button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network1" onclick="setID(1)">1</button>
+		<button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network2" onclick="setID(2)">2</button>
+		<button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network3" onclick="setID(3)">3</button>
+		<button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network4" onclick="setID(4)">4</button>
 
 	</div>
 	<div class="form-row">

@@ -8,9 +8,14 @@ module.exports = function (RED) {
 
 		const NetworkIdentifier = config.networkIdentifier || 1;
 
+		function SetFlowNodeStatus(Status) {
+			Status.text = `[Net: ${NetworkIdentifier}] ${Status.text}`;
+			RedNode.status(Status);
+		}
+
 		function UpdateStatus(Color, Shape, Text) {
 			if (config.showStatus === undefined || config.showStatus) {
-				RedNode.status({
+				SetFlowNodeStatus({
 					fill: Color,
 					shape: Shape,
 					text: Text

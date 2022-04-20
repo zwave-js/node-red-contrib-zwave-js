@@ -98,6 +98,11 @@ module.exports = function (RED) {
 			}
 		};
 
+		function SetFlowNodeStatus(Status) {
+			Status.text = `[Net: ${NetworkIdentifier}] ${Status.text}`;
+			RedNode.status(Status);
+		}
+
 		// eslint-disable-next-line no-unused-vars
 		let RestoreReadyTimer;
 		function RestoreReadyStatus() {
@@ -121,14 +126,14 @@ module.exports = function (RED) {
 				});
 
 				if (AllReady) {
-					RedNode.status({
+					SetFlowNodeStatus({
 						fill: 'green',
 						shape: 'dot',
 						text: event_AllNodesReady.statusName
 					});
 					UI.Status(event_AllNodesReady.statusName);
 				} else {
-					RedNode.status({
+					SetFlowNodeStatus({
 						fill: 'yellow',
 						shape: 'dot',
 						text: 'Nodes : ' + NotReady.toString() + ' Not ready.'
@@ -169,7 +174,7 @@ module.exports = function (RED) {
 			Logger.add(Pin2Transport);
 		}
 
-		RedNode.status({
+		SetFlowNodeStatus({
 			fill: 'red',
 			shape: 'dot',
 			text: 'Starting Z-Wave driver...'
@@ -881,7 +886,7 @@ module.exports = function (RED) {
 					NodeCheck(Params[0]);
 					ReturnNode.id = Params[0];
 					Send(ReturnNode, 'NODE_HEAL_STARTED', undefined, send);
-					RedNode.status({
+					SetFlowNodeStatus({
 						fill: 'yellow',
 						shape: 'dot',
 						text: 'Node Heal Started: ' + Params[0]
@@ -889,14 +894,14 @@ module.exports = function (RED) {
 					UI.Status('Node Heal Started: ' + Params[0]);
 					const HealResponse = await Driver.controller.healNode(Params[0]);
 					if (HealResponse) {
-						RedNode.status({
+						SetFlowNodeStatus({
 							fill: 'green',
 							shape: 'dot',
 							text: 'Node Heal Successful: ' + Params[0]
 						});
 						UI.Status('Node Heal Successful: ' + Params[0]);
 					} else {
-						RedNode.status({
+						SetFlowNodeStatus({
 							fill: 'red',
 							shape: 'dot',
 							text: 'Node Heal Unsuccessful: ' + Params[0]
@@ -915,7 +920,7 @@ module.exports = function (RED) {
 				case 'beginHealingNetwork':
 					await Driver.controller.beginHealingNetwork();
 					Send(undefined, 'NETWORK_HEAL_STARTED', undefined, send);
-					RedNode.status({
+					SetFlowNodeStatus({
 						fill: 'yellow',
 						shape: 'dot',
 						text: 'Network Heal Started.'
@@ -926,7 +931,7 @@ module.exports = function (RED) {
 				case 'stopHealingNetwork':
 					await Driver.controller.stopHealingNetwork();
 					Send(undefined, 'NETWORK_HEAL_STOPPED', undefined, send);
-					RedNode.status({
+					SetFlowNodeStatus({
 						fill: 'blue',
 						shape: 'dot',
 						text: 'Network Heal Stopped.'
@@ -1596,7 +1601,7 @@ module.exports = function (RED) {
 
 			// All nodes ready
 			Driver.on(event_AllNodesReady.zwaveName, () => {
-				RedNode.status({
+				SetFlowNodeStatus({
 					fill: 'green',
 					shape: 'dot',
 					text: event_AllNodesReady.statusName
@@ -1607,7 +1612,7 @@ module.exports = function (RED) {
 
 			// driver ready
 			Driver.once(event_DriverReady.zwaveName, () => {
-				RedNode.status({
+				SetFlowNodeStatus({
 					fill: 'yellow',
 					shape: 'dot',
 					text: 'Initializing network...'
@@ -1620,7 +1625,7 @@ module.exports = function (RED) {
 					WireNodeEvents(N);
 					Send(N, event_NodeAdded.redName);
 					Send(N, event_InterviewStarted.redName);
-					RedNode.status({
+					SetFlowNodeStatus({
 						fill: 'yellow',
 						shape: 'dot',
 						text: event_InterviewStarted.statusNameWithNode(N)
@@ -1638,7 +1643,7 @@ module.exports = function (RED) {
 					Send(undefined, event_InclusionStarted.redName, {
 						isSecureInclude: Secure
 					});
-					RedNode.status({
+					SetFlowNodeStatus({
 						fill: 'yellow',
 						shape: 'dot',
 						text: event_InclusionStarted.statusName
@@ -1647,7 +1652,7 @@ module.exports = function (RED) {
 				});
 				Driver.controller.on(event_InclusionFailed.zwaveName, () => {
 					Send(undefined, event_InclusionFailed.redName);
-					RedNode.status({
+					SetFlowNodeStatus({
 						fill: 'red',
 						shape: 'dot',
 						text: event_InclusionFailed.statusName
@@ -1657,7 +1662,7 @@ module.exports = function (RED) {
 				});
 				Driver.controller.on(event_InclusionStopped.zwaveName, () => {
 					Send(undefined, event_InclusionStopped.redName);
-					RedNode.status({
+					SetFlowNodeStatus({
 						fill: 'green',
 						shape: 'dot',
 						text: event_InclusionStopped.statusName
@@ -1668,7 +1673,7 @@ module.exports = function (RED) {
 				// Exclusion
 				Driver.controller.on(event_ExclusionStarted.zwaveName, () => {
 					Send(undefined, event_ExclusionStarted.redName);
-					RedNode.status({
+					SetFlowNodeStatus({
 						fill: 'yellow',
 						shape: 'dot',
 						text: event_ExclusionStarted.statusName
@@ -1677,7 +1682,7 @@ module.exports = function (RED) {
 				});
 				Driver.controller.on(event_ExclusionFailed.zwaveName, () => {
 					Send(undefined, event_ExclusionFailed.redName);
-					RedNode.status({
+					SetFlowNodeStatus({
 						fill: 'red',
 						shape: 'dot',
 						text: event_ExclusionFailed.statusName
@@ -1687,7 +1692,7 @@ module.exports = function (RED) {
 				});
 				Driver.controller.on(event_ExclusionStopped.zwaveName, () => {
 					Send(undefined, event_ExclusionStopped.redName);
-					RedNode.status({
+					SetFlowNodeStatus({
 						fill: 'green',
 						shape: 'dot',
 						text: event_ExclusionStopped.statusName
@@ -1703,7 +1708,7 @@ module.exports = function (RED) {
 						Failed: Heal_Failed,
 						Skipped: Heal_Skipped
 					});
-					RedNode.status({
+					SetFlowNodeStatus({
 						fill: 'green',
 						shape: 'dot',
 						text: event_NetworkHealDone.statusName
@@ -1746,7 +1751,7 @@ module.exports = function (RED) {
 
 					const Completed = (100 * Processed) / (Processed + Remain);
 
-					RedNode.status({
+					SetFlowNodeStatus({
 						fill: 'yellow',
 						shape: 'dot',
 						text:
@@ -1822,7 +1827,7 @@ module.exports = function (RED) {
 
 			Node.on(event_InterviewStarted.zwaveName, (N) => {
 				Send(N, event_InterviewStarted.redName);
-				RedNode.status({
+				SetFlowNodeStatus({
 					fill: 'yellow',
 					shape: 'dot',
 					text: event_InterviewStarted.statusNameWithNode(N)
@@ -1833,7 +1838,7 @@ module.exports = function (RED) {
 			Node.on(event_InterviewFailed.zwaveName, (N, Er) => {
 				if (Er.isFinal) {
 					Send(N, event_InterviewFailed.redName, Er);
-					RedNode.status({
+					SetFlowNodeStatus({
 						fill: 'red',
 						shape: 'dot',
 						text: event_InterviewFailed.statusNameWithNode(N)
@@ -1845,7 +1850,7 @@ module.exports = function (RED) {
 
 			Node.on(event_InterviewCompleted.zwaveName, (N) => {
 				Send(N, event_InterviewCompleted.redName);
-				RedNode.status({
+				SetFlowNodeStatus({
 					fill: 'green',
 					shape: 'dot',
 					text: event_InterviewCompleted.statusNameWithNode(N)
