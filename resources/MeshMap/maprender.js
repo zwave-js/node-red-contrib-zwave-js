@@ -3,6 +3,8 @@
 /*eslint no-undef: "warn"*/
 /*eslint no-unused-vars: "warn"*/
 
+let Mesh;
+
 function getCookie(cname) {
 	const name = cname + '=';
 	const decodedCookie = decodeURIComponent(document.cookie);
@@ -51,9 +53,11 @@ function Render() {
 					nameOnly: `${N.name || 'No Name'}`,
 					location: `${N.location || 'No Location'}`,
 					fontSize: '10px',
-					icon: './Device.png',
+					icon:
+						N.powerSource.type === 'battery' ? './Battery.png' : './Mains.png',
 					powerSource: N.powerSource,
-					statistics: N.statistics
+					statistics: N.statistics,
+					path: []
 				}
 			};
 
@@ -71,47 +75,58 @@ function Render() {
 									id: `${N.nodeId}.${R}`,
 									source: N.nodeId,
 									target: R,
-									color: '#0000FF'
+									color: '#f1f1f1'
 								}
 							};
 							Elements.push(EL);
+							Elements.filter(
+								(_N) => _N.data.id === N.nodeId
+							)[0].data.path.push(EL.data.id);
 							First = false;
 							Last = R;
 						} else {
-							return;
 							const EL = {
 								data: {
 									id: `${Last}.${R}`,
 									source: Last,
 									target: R,
-									color: '#0000FF'
+									color: '#f1f1f1'
 								}
 							};
 							Elements.push(EL);
+							Elements.filter(
+								(_N) => _N.data.id === N.nodeId
+							)[0].data.path.push(EL.data.id);
 							Last = R;
 						}
 					});
-				} else {
+
 					const EL = {
 						data: {
-							id: `${N.nodeId}.1`,
-							source: N.nodeId,
+							id: `${Last}.${1}`,
+							source: Last,
 							target: 1,
-							color: '#00FF00'
+							color: '#f1f1f1'
 						}
 					};
 					Elements.push(EL);
+					Elements.filter((_N) => _N.data.id === N.nodeId)[0].data.path.push(
+						EL.data.id
+					);
+				} else {
+					const EL = {
+						data: {
+							id: `${N.nodeId}.${1}`,
+							source: N.nodeId,
+							target: 1,
+							color: '#f1f1f1'
+						}
+					};
+					Elements.push(EL);
+					Elements.filter((_N) => _N.data.id === N.nodeId)[0].data.path.push(
+						EL.data.id
+					);
 				}
-			} else {
-				const EL = {
-					data: {
-						id: `${N.nodeId}.1`,
-						source: N.nodeId,
-						target: 1,
-						color: '#FF0000'
-					}
-				};
-				Elements.push(EL);
 			}
 		}
 	});
@@ -121,8 +136,8 @@ function Render() {
 	// Node
 	StyleSheet.selector('node').css({
 		'font-size': 'data(fontSize)',
-		width: '50px',
-		height: '50px',
+		width: '30px',
+		height: '30px',
 		'background-image': 'data(icon)',
 		'background-color': 'white',
 		'background-fit': 'cover cover',
@@ -131,30 +146,40 @@ function Render() {
 
 	// Edge
 	StyleSheet.selector('egde').css({
-		'curve-style': 'taxi',
-		'taxi-direction': 'auto',
+		'curve-style': 'bezier',
+		/*'taxi-direction': 'auto',
 		'taxi-turn': 5,
-		'taxi-turn-min-distance': 1,
+		'taxi-turn-min-distance': 1,*/
 		'target-arrow-shape': 'triangle',
 		'line-color': 'data(color)'
 	});
 
 	const data = {
 		layout: {
-			name: 'cose',
-			animate: false
+			animate: false,
+			name: 'spread',
+			minDist: 20,
+			prelayout: { name: 'cose', animate: false }
 		},
 		container: $('#NetworkMesh')[0],
 		style: StyleSheet,
 		elements: Elements
 	};
 
-	const Mesh = cytoscape(data);
+	Mesh = cytoscape(data);
 	Mesh.on('tap', 'node', LoadData);
 }
 
 function LoadData() {
 	const Data = $('<ul>');
+	const NodePath = this.data('path');
+
+	Mesh.edges().css({ lineColor: '#ededed' });
+	NodePath.forEach((PS) => {
+		const Color =
+			Mesh.edges("[id='" + PS + "']").data().target === '1' ? 'green' : 'black';
+		Mesh.edges("[id='" + PS + "']").css({ lineColor: Color, zIndex: 100 });
+	});
 
 	// Node
 	const Node = $('<li>');
