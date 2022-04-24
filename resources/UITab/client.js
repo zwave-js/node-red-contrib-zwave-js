@@ -1779,11 +1779,11 @@ const ZwaveJsUI = (function () {
 					]).then(() => {
 						$(`.zwave-js-node-row[data-nodeid='${HoveredNode.nodeId}']`)
 							.find('.zwave-js-node-row-name')
-							.html(Name);
+							.text(Name);
 						if (HoveredNode.nodeId == selectedNode) {
 							let Lable = `${HoveredNode.nodeId} - ${Name}`;
 							if (Location.length > 0) Lable += ` (${Location})`;
-							$('#zwave-js-selected-node-name').html(Lable);
+							$('#zwave-js-selected-node-name').text(Lable);
 						}
 						HoveredNode.name = Name;
 						HoveredNode.location = Location;

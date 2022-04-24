@@ -61,7 +61,7 @@ function SubmitPhoto(e) {
 			inversionAttempts: 'dontInvert'
 		});
 		if (code) {
-			SendCode(code, true).then(() => {
+			SendCode(code).then(() => {
 				if (ScannedCodes[code.data].ok) {
 					alert('Device Accepted.');
 				} else {

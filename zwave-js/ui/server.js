@@ -97,7 +97,7 @@ const SetupGlobals = function (RED) {
 class UIServer {
 	constructor(RED, ID) {
 		this._Context = {};
-		this._NodeList;
+		this._NodeList = undefined;
 		this._RED = RED;
 		this._SmartStartCallback = this._SmartStartCallback.bind(this);
 
@@ -108,7 +108,7 @@ class UIServer {
 		);
 		UsedNIDs.push(this._NetworkIdentifier);
 
-		this._LatestStatus;
+		this._LatestStatus = undefined;
 		this._CM = new ZWJSCFG.ConfigManager();
 		this._CM.loadDeviceIndex();
 
