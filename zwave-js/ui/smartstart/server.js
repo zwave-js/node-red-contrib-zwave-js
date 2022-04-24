@@ -1,3 +1,6 @@
+const FS = require('fs');
+const path = require('path');
+
 let _Callback;
 let _HTTPAdmin;
 let _NetworkID;
@@ -15,6 +18,13 @@ const CheckStatus = (res) => {
 const Start = (CTX, Req) => {
 	_NetworkID = CTX._NetworkIdentifier;
 	_HTTPAdmin = CTX._RED.httpAdmin;
+	_Callback = CTX._SmartStartCallback;
+	_Enabled = true;
+
+	const Secure = Req.connection.encrypted !== undefined;
+	const Prot = Secure ? 'https://' : 'http://';
+	const Prefix = CTX._RED.settings.httpAdminRoot || '/';
+
 	_HTTPAdmin.get(
 		`/zwave-js/${_NetworkID}/smartstart-event/started`,
 		SendStarted
@@ -24,14 +34,33 @@ const Start = (CTX, Req) => {
 		ParseCode
 	);
 
-	_Callback = CTX._SmartStartCallback;
-	_Enabled = true;
+	_HTTPAdmin.get(`/zwave-js/smartstart-scanner`, (req, res) => {
+		const PageFIle = path.join(
+			__dirname,
+			'../',
+			'../',
+			'../',
+			'resources',
+			'SmartStart',
+			'Scan.html'
+		);
 
-	const Secure = Req.connection.encrypted !== undefined;
-	const Prot = Secure ? 'https://' : 'http://';
+		const Base = `${Prot}${req.headers.host}${Prefix}resources/node-red-contrib-zwave-js/SmartStart`;
+
+		let Source = FS.readFileSync(PageFIle, 'utf8');
+		Source = Source.replace(/{BASE}/g, Base);
+		Source = Source.replace(
+			/{WS-BASE}/g,
+			`${Prot}${req.headers.host}${Prefix}`
+		);
+
+		res.contentType('text/html');
+		res.send(Source);
+	});
+
 	return new Promise((resolve) => {
 		resolve(
-			`${Prot}${Req.headers.host}/resources/node-red-contrib-zwave-js/SmartStart/Scanchoice.html?net=${_NetworkID}`
+			`${Prot}${Req.headers.host}${Prefix}zwave-js/smartstart-scanner?net=${_NetworkID}`
 		);
 	});
 };
@@ -52,23 +81,32 @@ function ParseCode(req, res) {
 	}
 }
 
+const RemovePaths = () => {
+	const Routes = [];
+
+	_HTTPAdmin._router.stack.forEach((R) => {
+		if (R.route === undefined) {
+			Routes.push(R);
+			return;
+		}
+
+		if (R.route.path.startsWith(`/zwave-js/${_NetworkID}/smartstart-event`)) {
+			return;
+		}
+
+		if (R.route.path.startsWith(`/zwave-js/smartstart-scanner`)) {
+			return;
+		}
+
+		Routes.push(R);
+	});
+
+	return Routes;
+};
+
 const Stop = () => {
 	if (_NetworkID !== undefined) {
-		const Routes = [];
-		_HTTPAdmin._router.stack.forEach((R) => {
-			if (R.route === undefined) {
-				Routes.push(R);
-				return;
-			}
-			if (
-				!R.route.path.startsWith(`/zwave-js/${_NetworkID}/smartstart-event`)
-			) {
-				Routes.push(R);
-				return;
-			}
-		});
-
-		_HTTPAdmin._router.stack = Routes;
+		_HTTPAdmin._router.stack = RemovePaths();
 
 		_Enabled = false;
 		_Callback = undefined;

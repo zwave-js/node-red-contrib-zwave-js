@@ -2,6 +2,7 @@ module.exports = function (RED) {
 	const Path = require('path');
 	const ModulePackage = require('../package.json');
 	const { NodeEventEmitter } = require('./events');
+	const { Watchdog } = require('./Watchdog');
 	const ZWaveJS = require('zwave-js');
 	const { UIServer, SetupGlobals } = require('./ui/server.js');
 	const {
@@ -67,6 +68,7 @@ module.exports = function (RED) {
 		let Logger;
 		let FileTransport;
 		let Pin2Transport;
+		let WatchdogListener;
 
 		let _GrantResolve = undefined;
 		let _DSKResolve = undefined;
@@ -482,7 +484,7 @@ module.exports = function (RED) {
 				'[SHUTDOWN] [' + Type + ']',
 				'Cleaning up...'
 			);
-			UI.Unregister();
+			UI.Unregister(false);
 			Driver.destroy().then(() => {
 				NodeEventEmitter.removeListener(
 					`zwjs:${NetworkIdentifier}:node:command`,
@@ -1441,6 +1443,8 @@ module.exports = function (RED) {
 
 				if (Payload.hasOwnProperty('currentValue')) {
 					Key = 'currentValue';
+				} else if (Payload.hasOwnProperty('value')) {
+					Key = 'value';
 				}
 
 				if (
@@ -1559,6 +1563,41 @@ module.exports = function (RED) {
 		InitDriver();
 		StartDriver();
 
+		function WatchdogEvent(Recover) {
+			if (!Recover) {
+				Log(
+					'info',
+					'NDERED',
+					undefined,
+					'[SHUTDOWN] [WATCHDOG]',
+					'Cleaning up...'
+				);
+
+				SetFlowNodeStatus({
+					fill: 'red',
+					shape: 'dot',
+					text: 'Watchdog: Monitoring Recovery Oportunity'
+				});
+
+				UI.Status('Watchdog: Monitoring Recovery Oportunity');
+				UI.Unregister(true);
+				Driver.destroy().then(() => {});
+				Send(undefined, 'WATCHDOG', {
+					Status: 'Monitoring Recovery Oportunity'
+				});
+			} else {
+				SetFlowNodeStatus({
+					fill: 'red',
+					shape: 'dot',
+					text: 'Watchdog: Recovering'
+				});
+				UI.Status('Watchdog: Recovering');
+				Send(undefined, 'WATCHDOG', { Status: 'Recovering' });
+				InitDriver();
+				StartDriver();
+			}
+		}
+
 		function InitDriver() {
 			try {
 				Log('info', 'NDERED', undefined, undefined, 'Initializing driver...');
@@ -1583,15 +1622,15 @@ module.exports = function (RED) {
 				return;
 			}
 
-			WireDriverEvents();
 			UI.Register(Driver, Input);
+			WireDriverEvents();
 		}
 
 		function WireDriverEvents() {
 			Driver.on('error', (e) => {
 				if (e.code === ZWaveErrorCodes.Driver_Failed) {
 					Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
-					UI.Unregister();
+					UI.Unregister(false);
 					RedNode.error(e);
 				} else {
 					Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
@@ -1866,7 +1905,7 @@ module.exports = function (RED) {
 				.catch((e) => {
 					if (e.code === ZWaveErrorCodes.Driver_Failed) {
 						Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
-						UI.Unregister();
+						UI.Unregister(false);
 						RedNode.error(e);
 					} else {
 						Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
@@ -1874,7 +1913,10 @@ module.exports = function (RED) {
 					}
 				})
 				.then(() => {
-					// we are live!
+					if (WatchdogListener !== undefined) {
+						WatchdogListener = undefined;
+					}
+					WatchdogListener = new Watchdog(config.serialPort, WatchdogEvent);
 				});
 		}
 	}

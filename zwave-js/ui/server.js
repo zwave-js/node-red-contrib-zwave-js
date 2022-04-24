@@ -4,6 +4,8 @@ const { CommandClasses } = require('@zwave-js/core');
 const ZWaveJS = require('zwave-js');
 const ZWJSCFG = require('@zwave-js/config');
 const SmartStart = require('./smartstart/server');
+const FS = require('fs');
+const path = require('path');
 
 const _CM = new ZWJSCFG.ConfigManager();
 _CM.loadDeviceIndex();
@@ -206,6 +208,28 @@ class UIServer {
 				});
 			}
 		);
+
+		this._RED.httpAdmin.get(`/zwave-js/mesh`, (req, res) => {
+			const Secure = req.connection.encrypted !== undefined;
+			const Prot = Secure ? 'https://' : 'http://';
+
+			const PageFIle = path.join(
+				__dirname,
+				'../',
+				'../',
+				'resources',
+				'MeshMap',
+				'Map.html'
+			);
+
+			const Prefix = this._RED.settings.httpAdminRoot || '/';
+			const Base = `${Prot}${req.headers.host}${Prefix}resources/node-red-contrib-zwave-js/MeshMap`;
+			let Source = FS.readFileSync(PageFIle, 'utf8');
+			Source = Source.replace(/{BASE}/g, Base);
+
+			res.contentType('text/html');
+			res.send(Source);
+		});
 
 		this._RED.httpAdmin.get(
 			`/zwave-js/${this._NetworkIdentifier}/smartstart/:Method`,
@@ -416,26 +440,31 @@ class UIServer {
 		});
 	}
 
-	Unregister() {
-		const Routes = [];
-		this._RED.httpAdmin._router.stack.forEach((R) => {
-			if (R.route === undefined) {
-				Routes.push(R);
-				return;
-			}
-			if (!R.route.path.startsWith(`/zwave-js/${this._NetworkIdentifier}`)) {
-				Routes.push(R);
-				return;
-			}
-		});
+	Unregister(InstanceOnly) {
+		if (InstanceOnly) {
+			delete this._Context.controller;
+			delete this._Context.input;
+		} else {
+			const Routes = [];
+			this._RED.httpAdmin._router.stack.forEach((R) => {
+				if (R.route === undefined) {
+					Routes.push(R);
+					return;
+				}
+				if (!R.route.path.startsWith(`/zwave-js/${this._NetworkIdentifier}`)) {
+					Routes.push(R);
+					return;
+				}
+			});
 
-		this._RED.httpAdmin._router.stack = Routes;
+			this._RED.httpAdmin._router.stack = Routes;
 
-		delete this._Context.controller;
-		delete this._Context.input;
+			delete this._Context.controller;
+			delete this._Context.input;
 
-		AvailableNIDs.push(this._NetworkIdentifier);
-		UsedNIDs = UsedNIDs.filter((_ID) => _ID !== this._NetworkIdentifier);
+			AvailableNIDs.push(this._NetworkIdentifier);
+			UsedNIDs = UsedNIDs.filter((_ID) => _ID !== this._NetworkIdentifier);
+		}
 	}
 
 	_SendStatus() {

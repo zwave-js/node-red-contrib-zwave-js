@@ -1,3 +1,32 @@
+.zwave-js-header-table {
+	width: 97%;
+	margin: auto;
+	white-space: break-spaces;
+	padding: 5px;
+	display: block;
+	box-sizing: content-box;
+}
+
+.zwave-js-header-table td:first-of-type{
+	width: 50px;
+}
+
+.zwave-js-id-box {
+	width: 30px;
+	height: 30px;
+	line-height: 30px;
+	background-color: lightgray;
+	border-style: solid;
+	border-width: 1px;
+	border-radius: 5px;
+	text-align: center;
+	padding: 3px;
+	box-sizing: content-box;
+	font-size: 12px;
+	border-color: rgb(75, 75, 75);
+	font-weight: bold;
+}
+
 .zwave-js-info-box {
 	display: flex;
 	flex-direction: column;
@@ -124,16 +153,18 @@
 	opacity: 1;
 }
 
-#progressbar {
+.progressbar {
 	background-color: #bbb;
 	-webkit-border-radius: 8px;
 	-moz-border-radius: 8px;
 	border-radius: 8px;
 	padding: 3px;
-	margin-top: 20px;
+	width: 70%;
+	margin: auto;
+	margin-top: 50px;
 }
 
-#progressbar > div {
+.progressbar > div {
 	background-color: gray;
 	width: 0%;
 	height: 20px;
@@ -171,6 +202,7 @@ table#zwave-js-associations-table tr:first-of-type {
 
 .SecrutiyButton {
 	width: 130px;
+	height: 45px;
 }
 
 #CommandLog {

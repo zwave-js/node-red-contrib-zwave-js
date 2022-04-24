@@ -18,9 +18,9 @@
 				font-size: 16px;
 			}
 		</style>
-		<script src="./jquery-3.6.0.min.js"></script>
-		<script src="./jsQR.js"></script>
-		<script src="./scripts.js"></script>
+		<script src="{BASE}/jquery-3.6.0.min.js"></script>
+		<script src="{BASE}/jsQR.js"></script>
+		<script src="{BASE}/scripts.js"></script>
 		<style type="text/css">
 			body {
 				font-family: HelveticaNeue-Light, Roboto;
@@ -35,16 +35,9 @@
 			Select the Camera Source Mode
 		</p>
 
-		<input type="button" value="Native (More Control)" onclick="GrabImage()" />
-		<input
-			id="LiveScanButton"
-			type="button"
-			value="Live (Less Control, Requires SSL)"
-			onclick="location.href='./Livescan.html'"
-			style="filter: grayscale(1); pointer-events: none"
-		/>
+		<input type="button" value="Image Capture" onclick="GrabImage()" />
 		<script>
-			EnableLive();
+			SetPrefix('{WS-BASE}');
 		</script>
 	</body>
 </html>

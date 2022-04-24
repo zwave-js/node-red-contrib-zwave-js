@@ -9,9 +9,6 @@
      - The **VALUE_DB** objects are no longer partitioned with **currentValue** and **valueId** properties.
        Instead, the returned objects now include the Value ID on the same level as **currentValue**
      - Much like above, **GET_VALUE_METADATA_RESPONSE** has also been simplified, where the result is attached to **metadata**, with the Value ID on the same level.
-     - The module no longer attempts a restart on a fatal error (i.e the stick is pulled from the socket as an example)
-       This caused more problems than what they resolved, so the descision is made to not attempt recovery.
-       Restarting the node is just as good as a recovery attempt.
 
     **New Features**
      - **VALUE_UPDATED**, **VALUE_NOTIFICATION**, **GET_VALUE_RESPONSE** and **VALUE_DB** now contain a **normalizedObject** property.
@@ -22,6 +19,9 @@
        as the basis of the new map.
      - Multiple ZWave sticks/Networks are now supported (finally)
        - all message will contain a property of **networkId** to indentify the source network.
+     - Improved Recovery when the USB/ZWave transceiver has been removed/re-introduced.
+       - This is possible with a custom Watchdog implmentation, this introduces a new event type of **WATCHDOG**
+         Which will describe what is happening. 
 
     **Fixes**
      - Nodes that are not marked as ready can now be removed correctly.
@@ -32,6 +32,8 @@
      - Bump ZWJS to V9
      - New mapping algorithm - The new algorithm results in a much needed accuracy improvement, and is far superior to previous methods.
      - Nodes have now been named more clearly
+     - Live Camera QR Code Scanning has been removed
+
 
 
   - 6.5.5

@@ -28,7 +28,7 @@ const DataRate = {
 	4: '100 kbps (LR)'
 };
 
-function Render() {
+function Render(Base) {
 	const Elements = [];
 	const Nodes = JSON.parse(localStorage.getItem('ZWJSMapData'));
 
@@ -41,7 +41,7 @@ function Render() {
 					id: N.nodeId,
 					name: 'Controller',
 					fontSize: '12px',
-					icon: './Stick.png'
+					icon: `${Base}/Stick.png`
 				}
 			};
 			Elements.push(EL);
@@ -54,7 +54,9 @@ function Render() {
 					location: `${N.location || 'No Location'}`,
 					fontSize: '10px',
 					icon:
-						N.powerSource.type === 'battery' ? './Battery.png' : './Mains.png',
+						N.powerSource.type === 'battery'
+							? `${Base}/Battery.png`
+							: `${Base}/Mains.png`,
 					powerSource: N.powerSource,
 					statistics: N.statistics,
 					path: []
@@ -147,11 +149,10 @@ function Render() {
 	// Edge
 	StyleSheet.selector('egde').css({
 		'curve-style': 'bezier',
-		/*'taxi-direction': 'auto',
-		'taxi-turn': 5,
-		'taxi-turn-min-distance': 1,*/
 		'target-arrow-shape': 'triangle',
-		'line-color': 'data(color)'
+		'target-arrow-color': '#f1f1f1',
+		'line-color': 'data(color)',
+		trasitionDuration: '1s'
 	});
 
 	const data = {
@@ -174,11 +175,20 @@ function LoadData() {
 	const Data = $('<ul>');
 	const NodePath = this.data('path');
 
-	Mesh.edges().css({ lineColor: '#ededed' });
+	Mesh.edges().css({ lineColor: '#ededed', 'target-arrow-color': '#f1f1f1' });
+	let MST = 1;
 	NodePath.forEach((PS) => {
 		const Color =
 			Mesh.edges("[id='" + PS + "']").data().target === '1' ? 'green' : 'black';
-		Mesh.edges("[id='" + PS + "']").css({ lineColor: Color, zIndex: 100 });
+
+		setTimeout(() => {
+			Mesh.edges("[id='" + PS + "']").css({
+				lineColor: Color,
+				zIndex: 100,
+				'target-arrow-color': 'black'
+			});
+		}, 100 * MST);
+		MST++;
 	});
 
 	// Node

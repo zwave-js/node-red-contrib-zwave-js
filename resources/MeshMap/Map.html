@@ -2,15 +2,16 @@
 <html style="height: 100vh">
 	<head>
 		<title>Node RED Z-Wave JS Network Mesh</title>
-		<script type="text/javascript" src="./jquery-3.6.0.min.js"></script>
-		<script type="text/javascript" src="./cytoscape.min.js"></script>
+		<script type="text/javascript" src="{BASE}/jquery-3.6.0.min.js"></script>
+		<script type="text/javascript" src="{BASE}/cytoscape.min.js"></script>
 		<script src="https://unpkg.com/weaverjs@1.2.0/dist/weaver.min.js"></script>
-		<script type="text/javascript" src="./cytoscape-spread.js"></script>
-		<script type="text/javascript" src="./maprender.js"></script>
+		<script type="text/javascript" src="{BASE}/cytoscape-spread.js"></script>
+		<script type="text/javascript" src="{BASE}/maprender.js"></script>
 	</head>
 	<body style="height: 100%">
 		<div style="display: flex; width: 100%; height: 100%">
-			<div id="Details"
+			<div
+				id="Details"
 				style="
 					width: 400px;
 					height: 100%;
@@ -27,7 +28,7 @@
 			></div>
 		</div>
 		<script>
-			Render();
+			Render('{BASE}');
 		</script>
 	</body>
 </html>
