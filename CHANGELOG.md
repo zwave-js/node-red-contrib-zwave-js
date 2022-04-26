@@ -26,6 +26,7 @@
     **Fixes**
      - Nodes that are not marked as ready can now be removed correctly.
      - Fix potential issue when **httpAdminRoot** has a custom value.
+     - Various performance, stability and optimisations to the UI.
 
     **Changes**
      - Bump serialport to V10

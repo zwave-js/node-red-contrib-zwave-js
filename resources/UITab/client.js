@@ -188,46 +188,6 @@ const ZwaveJsUI = (function () {
 	}
 
 	function RenderHealthCheck(Rounds) {
-		const Options = {
-			draggable: false,
-			modal: true,
-			resizable: false,
-			width: WindowSize.w,
-			height: WindowSize.h,
-			title: 'Node Health Check : Node ' + HoveredNode.nodeId,
-			minHeight: 75,
-			buttons: {
-				Cancel: function () {
-					RED.comms.unsubscribe(
-						`/zwave-js/${NetworkIdentifier}/healthcheck`,
-						processHealthResults
-					);
-					RED.comms.unsubscribe(
-						`/zwave-js/${NetworkIdentifier}/healthcheckprogress`,
-						processHealthCheckProgress
-					);
-					$(this).dialog('destroy');
-				}
-			}
-		};
-
-		HCForm = $('<div>')
-			.css({ padding: 10 })
-			.html(
-				`<div style="width:430px; margin:auto;margin-top:40px;font-size:18px">Running Health Check. This may take a few minutes, please wait...</div><div class="progressbar" style="width:70%;margin: auto; margin-top:50px"><div></div></div>`
-			);
-
-		HCForm.dialog(Options);
-
-		RED.comms.subscribe(
-			`/zwave-js/${NetworkIdentifier}/healthcheck`,
-			processHealthResults
-		);
-		RED.comms.subscribe(
-			`/zwave-js/${NetworkIdentifier}/healthcheckprogress`,
-			processHealthCheckProgress
-		);
-
 		HCRounds = Rounds;
 
 		ControllerCMD(
@@ -236,7 +196,52 @@ const ZwaveJsUI = (function () {
 			undefined,
 			[HoveredNode.nodeId, Rounds],
 			true
-		);
+		)
+			.catch((err) => {
+				modalAlert(err.responseText, 'Could not start Health Check.');
+				throw new Error(err.responseText);
+			})
+			.then(() => {
+				RED.comms.subscribe(
+					`/zwave-js/${NetworkIdentifier}/healthcheck`,
+					processHealthResults
+				);
+				RED.comms.subscribe(
+					`/zwave-js/${NetworkIdentifier}/healthcheckprogress`,
+					processHealthCheckProgress
+				);
+
+				const Options = {
+					draggable: false,
+					modal: true,
+					resizable: false,
+					width: WindowSize.w,
+					height: WindowSize.h,
+					title: 'Node Health Check : Node ' + HoveredNode.nodeId,
+					minHeight: 75,
+					buttons: {
+						Cancel: function () {
+							RED.comms.unsubscribe(
+								`/zwave-js/${NetworkIdentifier}/healthcheck`,
+								processHealthResults
+							);
+							RED.comms.unsubscribe(
+								`/zwave-js/${NetworkIdentifier}/healthcheckprogress`,
+								processHealthCheckProgress
+							);
+							$(this).dialog('destroy');
+						}
+					}
+				};
+
+				HCForm = $('<div>')
+					.css({ padding: 10 })
+					.html(
+						`<div style="width:430px; margin:auto;margin-top:40px;font-size:18px">Running Health Check. This may take a few minutes, please wait...</div><div class="progressbar" style="width:70%;margin: auto; margin-top:50px"><div></div></div>`
+					);
+
+				HCForm.dialog(Options);
+			});
 	}
 
 	function HealthCheck() {
@@ -264,9 +269,14 @@ const ZwaveJsUI = (function () {
 		if (FWRunning) {
 			ControllerCMD('ControllerAPI', 'abortFirmwareUpdate', undefined, [
 				selectedNode
-			]).then(() => {
-				FirmwareForm.dialog('destroy');
-			});
+			])
+				.then(() => {
+					FirmwareForm.dialog('destroy');
+				})
+				.catch((err) => {
+					FirmwareForm.dialog('destroy');
+					throw new Error(err.responseText);
+				});
 		} else {
 			FirmwareForm.dialog('destroy');
 		}
@@ -369,6 +379,7 @@ const ZwaveJsUI = (function () {
 					})
 					.catch((err) => {
 						modalAlert(err.responseText, 'Association could not be added.');
+						throw new Error(err.responseText);
 					});
 			}
 		};
@@ -397,7 +408,8 @@ const ZwaveJsUI = (function () {
 						GMGroupSelected();
 					})
 					.catch((err) => {
-						modalAlert(err.responseText, 'Association Removal Failed');
+						modalAlert(err.responseText, 'Association could not be removed.');
+						throw new Error(err.responseText);
 					});
 			}
 		};
@@ -435,8 +447,8 @@ const ZwaveJsUI = (function () {
 			endpoint: Endpoint
 		};
 
-		ControllerCMD('AssociationsAPI', 'getAssociations', undefined, [AA]).then(
-			({ object }) => {
+		ControllerCMD('AssociationsAPI', 'getAssociations', undefined, [AA])
+			.then(({ object }) => {
 				const Targets = object.Associations.filter((A) => A.GroupID === Group);
 
 				$('#zwave-js-associations-table').find('tr:gt(0)').remove();
@@ -461,92 +473,109 @@ const ZwaveJsUI = (function () {
 						$('#zwave-js-associations-table').append(TR);
 					});
 				});
-			}
-		);
+			})
+			.catch((err) => {
+				modalAlert(err.responseText, 'Could not get associations.');
+				throw new Error(err.responseText);
+			});
 	}
 
 	function AssociationMGMT() {
-		const Options = {
-			draggable: false,
-			modal: true,
-			resizable: false,
-			width: WindowSize.w,
-			height: WindowSize.h,
-			title: `ZWave Association Management: Node ${HoveredNode.nodeId}`,
-			minHeight: 75,
-			buttons: {
-				Close: function () {
-					$(this).dialog('destroy');
-				}
-			}
-		};
-
-		const Form = $('<div>')
-			.css({ padding: 60, paddingTop: 30 })
-			.html('Please wait...');
-		Form.dialog(Options);
-
 		ControllerCMD('AssociationsAPI', 'getAllAssociationGroups', undefined, [
 			HoveredNode.nodeId
-		]).then(({ object }) => {
-			const Template = $('#TPL_Associations').html();
-			const templateScript = Handlebars.compile(Template);
-			const HTML = templateScript({ endpoints: object });
+		])
+			.then(({ object }) => {
+				const Options = {
+					draggable: false,
+					modal: true,
+					resizable: false,
+					width: WindowSize.w,
+					height: WindowSize.h,
+					title: `ZWave Association Management: Node ${HoveredNode.nodeId}`,
+					minHeight: 75,
+					buttons: {
+						Close: function () {
+							$(this).dialog('destroy');
+						}
+					}
+				};
 
-			Form.html('');
-			Form.append(HTML);
+				const Form = $('<div>')
+					.css({ padding: 60, paddingTop: 30 })
+					.html('Please wait...');
+				Form.dialog(Options);
 
-			$('#AMAddBTN').click(AddAssociation);
+				const Template = $('#TPL_Associations').html();
+				const templateScript = Handlebars.compile(Template);
+				const HTML = templateScript({ endpoints: object });
 
-			$('#NODE_EP').change(GMEndPointSelected);
-			$('#NODE_G').change(GMGroupSelected);
+				Form.html('');
+				Form.append(HTML);
 
-			object.forEach((EP) => {
-				Groups[EP.Endpoint] = {};
-				EP.Groups.forEach((AG) => {
-					Groups[EP.Endpoint][AG.GroupID] = {
-						label: AG.AssociationGroupInfo.label,
-						maxNodes: AG.AssociationGroupInfo.maxNodes
-					};
+				$('#AMAddBTN').click(AddAssociation);
+
+				$('#NODE_EP').change(GMEndPointSelected);
+				$('#NODE_G').change(GMGroupSelected);
+
+				object.forEach((EP) => {
+					Groups[EP.Endpoint] = {};
+					EP.Groups.forEach((AG) => {
+						Groups[EP.Endpoint][AG.GroupID] = {
+							label: AG.AssociationGroupInfo.label,
+							maxNodes: AG.AssociationGroupInfo.maxNodes
+						};
+					});
 				});
+			})
+			.catch((err) => {
+				modalAlert(err.responseText, 'Could not get associtions.');
+				throw new Error(err.responseText);
 			});
-		});
 	}
 
 	async function GenerateMapJSON(Nodes) {
 		return new Promise(function (res, rej) {
-			ControllerCMD(
-				'DriverAPI',
-				'getNodeStatistics',
-				undefined,
-				undefined
-			).then(({ object }) => {
-				const _Nodes = [];
+			ControllerCMD('DriverAPI', 'getNodeStatistics', undefined, undefined)
+				.then(({ object }) => {
+					const _Nodes = [];
 
-				Nodes.forEach((N) => {
-					const _Node = {
-						controller: N.isControllerNode,
-						nodeId: N.nodeId,
-						name: N.name,
-						location: N.location,
-						powerSource: N.powerSource,
-						statistics: object[N.nodeId.toString()]
-					};
-					_Nodes.push(_Node);
+					Nodes.forEach((N) => {
+						const _Node = {
+							controller: N.isControllerNode,
+							nodeId: N.nodeId,
+							name: N.name,
+							location: N.location,
+							powerSource: N.powerSource,
+							statistics: object[N.nodeId.toString()]
+						};
+						_Nodes.push(_Node);
+					});
+
+					res(_Nodes);
+				})
+				.catch((err) => {
+					rej(err.responseText);
 				});
-
-				res(_Nodes);
-			});
 		});
 	}
 
 	function NetworkMap() {
-		ControllerCMD('ControllerAPI', 'getNodes').then(({ object }) => {
-			GenerateMapJSON(object).then((Elements) => {
-				localStorage.setItem('ZWJSMapData', JSON.stringify(Elements));
-				window.open('zwave-js/mesh', '_blank');
+		ControllerCMD('ControllerAPI', 'getNodes')
+			.then(({ object }) => {
+				GenerateMapJSON(object)
+					.then((Elements) => {
+						localStorage.setItem('ZWJSMapData', JSON.stringify(Elements));
+						window.open('zwave-js/mesh', '_blank');
+					})
+					.catch((err) => {
+						modalAlert(err, 'Could not generate map.');
+						throw new Error(err);
+					});
+			})
+			.catch((err) => {
+				modalAlert(err.responseText, 'Could not generate map.');
+				throw new Error(err.responseText);
 			});
-		});
 	}
 
 	let nodeOpts;
@@ -694,7 +723,8 @@ const ZwaveJsUI = (function () {
 				}
 			})
 			.catch((err) => {
-				console.error(err);
+				modalAlert(err.responseText, 'Could not fetch nodes.');
+				throw new Error(err.responseText);
 			});
 
 		$('#zwave-js-node-properties > div > div > div > ol').empty();
@@ -727,30 +757,38 @@ const ZwaveJsUI = (function () {
 
 	ValidateDSK = () => {
 		const B = event.target;
-
-		$(B).html('Please wait...');
-		ClearIETimer();
-		ClearSecurityCountDown();
-		$(B).prop('disabled', true);
-
-		ControllerCMD('IEAPI', 'verifyDSK', undefined, [$('#SC_DSK').val()], true);
+		ControllerCMD('IEAPI', 'verifyDSK', undefined, [$('#SC_DSK').val()], true)
+			.catch((err) => {
+				modalAlert(err.responseText, 'Could not verify DSK.');
+				throw new Error(err.responseText);
+			})
+			.then(() => {
+				$(B).html('Please wait...');
+				ClearIETimer();
+				ClearSecurityCountDown();
+				$(B).prop('disabled', true);
+			});
 	};
 
 	GrantSelected = () => {
 		const B = event.target;
-
-		$(B).html('Please wait...');
-		ClearIETimer();
-		ClearSecurityCountDown();
-		$(B).prop('disabled', true);
-
 		const Granted = [];
 		$('.SecurityClassCB').each(function () {
 			if ($(this).is(':checked')) {
 				Granted.push(parseInt($(this).attr('id').replace('SC_', '')));
 			}
 		});
-		ControllerCMD('IEAPI', 'grantClasses', undefined, [Granted], true);
+		ControllerCMD('IEAPI', 'grantClasses', undefined, [Granted], true)
+			.catch((err) => {
+				modalAlert(err.responseText, 'Could not grant Security Classes.');
+				throw new Error(err.responseText);
+			})
+			.then(() => {
+				$(B).html('Please wait...');
+				ClearIETimer();
+				ClearSecurityCountDown();
+				$(B).prop('disabled', true);
+			});
 	};
 
 	StartReplace = (Mode) => {
@@ -779,7 +817,7 @@ const ZwaveJsUI = (function () {
 			Request
 		]).catch((err) => {
 			if (err.status !== 504) {
-				modalAlert(err.responseText, 'Could Not Replace Node');
+				modalAlert(err.responseText, 'Could not replace Node');
 				$(B).html(OT);
 				$(B).prop('disabled', false);
 			}
@@ -808,6 +846,10 @@ const ZwaveJsUI = (function () {
 					url: `zwave-js/${NetworkIdentifier}/smart-start-list`,
 					method: 'GET',
 					dataType: 'json',
+					error: function (err) {
+						modalAlert(err.responseText, 'Could not fetch Smart Start list.');
+						throw new Error(err.responseText);
+					},
 					success: function (List) {
 						List.forEach((Entry) => {
 							const Item = $('<tr class="SmartStartEntry">');
@@ -836,8 +878,17 @@ const ZwaveJsUI = (function () {
 											undefined,
 											[Entry.dsk],
 											true
-										);
-										Item.remove();
+										)
+											.then(() => {
+												Item.remove();
+											})
+											.catch((err) => {
+												modalAlert(
+													err.responseText,
+													'Could not remove Smart Start entry.'
+												);
+												throw new Error(err.responseText);
+											});
 									}
 								};
 								modalPrompt(
@@ -866,6 +917,9 @@ const ZwaveJsUI = (function () {
 						$.ajax({
 							url: `zwave-js/${NetworkIdentifier}/smartstart/startserver`,
 							method: 'GET',
+							error: function (data) {
+								modalAlert(data.responseText, 'Could Not Start Inclusion');
+							},
 							success: function (QRData) {
 								StepsAPI.setStepIndex(StepList.SmartStart);
 								new QRCode($('#SmartStartQR')[0], {
@@ -898,13 +952,15 @@ const ZwaveJsUI = (function () {
 				break;
 
 			case 'Remove':
-				ControllerCMD(
-					'IEAPI',
-					'beginExclusion',
-					undefined,
-					[$('#ERP').is(':checked')],
-					true
-				);
+				ControllerCMD('IEAPI', 'beginExclusion', undefined, [
+					$('#ERP').is(':checked')
+				]).catch((err) => {
+					if (err.status !== 504) {
+						modalAlert(err.responseText, 'Could Not Start Inclusion');
+						$(B).html(OT);
+						$(B).prop('disabled', false);
+					}
+				});
 				return;
 		}
 
@@ -1854,7 +1910,7 @@ const ZwaveJsUI = (function () {
 					height: '30px',
 					marginRight: '1px'
 				});
-				_HealthCheck.append('<i class="fa fa-list fa-lg"></i>');
+				_HealthCheck.append('<i class="fa fa-stethoscope fa-lg"></i>');
 				RED.popover.tooltip(_HealthCheck, 'Run Health Check');
 				BA.append(_HealthCheck);
 
@@ -1944,7 +2000,7 @@ const ZwaveJsUI = (function () {
 					height: '30px',
 					marginRight: '1px'
 				});
-				ReplaceFailed.append('<i class="fa fa-clone fa-lg"></i>');
+				ReplaceFailed.append('<i class="fa fa-chain-broken fa-lg"></i>');
 				RED.popover.tooltip(ReplaceFailed, 'Replace Failed Node');
 				BA.append(ReplaceFailed);
 

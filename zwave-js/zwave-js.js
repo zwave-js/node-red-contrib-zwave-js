@@ -2,7 +2,6 @@ module.exports = function (RED) {
 	const Path = require('path');
 	const ModulePackage = require('../package.json');
 	const { NodeEventEmitter } = require('./events');
-	const { Watchdog } = require('./Watchdog');
 	const ZWaveJS = require('zwave-js');
 	const { UIServer, SetupGlobals } = require('./ui/server.js');
 	const {
@@ -63,16 +62,55 @@ module.exports = function (RED) {
 		const RedNode = this;
 
 		const NetworkIdentifier = config.networkIdentifier || 1;
-		const UI = new UIServer(RED, NetworkIdentifier);
+		let UI = new UIServer(RED, NetworkIdentifier);
 		let Driver;
 		let Logger;
 		let FileTransport;
 		let Pin2Transport;
-		let WatchdogListener;
 
 		let _GrantResolve = undefined;
 		let _DSKResolve = undefined;
 		let _ClientSideAuth = undefined;
+
+		let RecoveryTimer = undefined;
+		let CanRecover = false;
+		const RecoverDriver = (Seconds) => {
+			if (RecoveryTimer !== undefined) {
+				clearTimeout(RecoveryTimer);
+				RecoveryTimer = undefined;
+			}
+
+			EmitRecoveryEvent(`Recovery Scheduled (${Seconds}s)`);
+			RecoveryTimer = setTimeout(() => {
+				EmitRecoveryEvent('Attempting Recovery');
+				AttemptRecovery();
+			}, Seconds * 1000);
+		};
+
+		function EmitRecoveryEvent(Event) {
+			SetFlowNodeStatus({
+				fill: 'red',
+				shape: 'dot',
+				text: 'Watchdog: ' + Event
+			});
+
+			UI.Status('Watchdog: ' + Event);
+			Send(undefined, 'WATCHDOG', { status: Event });
+		}
+
+		function AttemptRecovery() {
+			Log(
+				'info',
+				'NDERED',
+				undefined,
+				'[SHUTDOWN] [WATCHDOG-RECOVERY]',
+				'Cleaning up...'
+			);
+			Driver.destroy().then(() => {
+				InitDriver();
+				StartDriver();
+			});
+		}
 
 		let DriverOptions = {};
 
@@ -484,7 +522,13 @@ module.exports = function (RED) {
 				'[SHUTDOWN] [' + Type + ']',
 				'Cleaning up...'
 			);
+			if (RecoveryTimer !== undefined) {
+				clearTimeout(RecoveryTimer);
+				RecoveryTimer = undefined;
+			}
+			CanRecover = false;
 			UI.Unregister(false);
+			UI = undefined;
 			Driver.destroy().then(() => {
 				NodeEventEmitter.removeListener(
 					`zwjs:${NetworkIdentifier}:node:command`,
@@ -500,6 +544,7 @@ module.exports = function (RED) {
 				if (FileTransport !== undefined) {
 					FileTransport = undefined;
 				}
+				Driver = undefined;
 				if (done) {
 					done();
 				}
@@ -1563,41 +1608,6 @@ module.exports = function (RED) {
 		InitDriver();
 		StartDriver();
 
-		function WatchdogEvent(Recover) {
-			if (!Recover) {
-				Log(
-					'info',
-					'NDERED',
-					undefined,
-					'[SHUTDOWN] [WATCHDOG]',
-					'Cleaning up...'
-				);
-
-				SetFlowNodeStatus({
-					fill: 'red',
-					shape: 'dot',
-					text: 'Watchdog: Monitoring Recovery Oportunity'
-				});
-
-				UI.Status('Watchdog: Monitoring Recovery Oportunity');
-				UI.Unregister(true);
-				Driver.destroy().then(() => {});
-				Send(undefined, 'WATCHDOG', {
-					Status: 'Monitoring Recovery Oportunity'
-				});
-			} else {
-				SetFlowNodeStatus({
-					fill: 'red',
-					shape: 'dot',
-					text: 'Watchdog: Recovering'
-				});
-				UI.Status('Watchdog: Recovering');
-				Send(undefined, 'WATCHDOG', { Status: 'Recovering' });
-				InitDriver();
-				StartDriver();
-			}
-		}
-
 		function InitDriver() {
 			try {
 				Log('info', 'NDERED', undefined, undefined, 'Initializing driver...');
@@ -1630,8 +1640,13 @@ module.exports = function (RED) {
 			Driver.on('error', (e) => {
 				if (e.code === ZWaveErrorCodes.Driver_Failed) {
 					Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
-					UI.Unregister(false);
 					RedNode.error(e);
+					if (CanRecover) {
+						RecoverDriver(15);
+						UI.Unregister(true);
+					} else {
+						UI.Unregister(false);
+					}
 				} else {
 					Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
 					RedNode.error(e);
@@ -1905,18 +1920,17 @@ module.exports = function (RED) {
 				.catch((e) => {
 					if (e.code === ZWaveErrorCodes.Driver_Failed) {
 						Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
-						UI.Unregister(false);
 						RedNode.error(e);
-					} else {
-						Log('error', 'NDERED', undefined, '[ERROR] [DRIVER]', e.message);
-						RedNode.error(e);
+						if (CanRecover) {
+							RecoverDriver(15);
+							UI.Unregister(true);
+						} else {
+							UI.Unregister(false);
+						}
 					}
 				})
 				.then(() => {
-					if (WatchdogListener !== undefined) {
-						WatchdogListener = undefined;
-					}
-					WatchdogListener = new Watchdog(config.serialPort, WatchdogEvent);
+					CanRecover = true;
 				});
 		}
 	}

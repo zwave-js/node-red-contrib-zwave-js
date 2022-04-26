@@ -91,6 +91,28 @@ const SetupGlobals = function (RED) {
 		}
 	);
 
+	RED.httpAdmin.get(`/zwave-js/mesh`, (req, res) => {
+		const Secure = req.connection.encrypted !== undefined;
+		const Prot = Secure ? 'https://' : 'http://';
+
+		const PageFIle = path.join(
+			__dirname,
+			'../',
+			'../',
+			'resources',
+			'MeshMap',
+			'Map.html'
+		);
+
+		const Prefix = RED.settings.httpAdminRoot || '/';
+		const Base = `${Prot}${req.headers.host}${Prefix}resources/node-red-contrib-zwave-js/MeshMap`;
+		let Source = FS.readFileSync(PageFIle, 'utf8');
+		Source = Source.replace(/{BASE}/g, Base);
+
+		res.contentType('text/html');
+		res.send(Source);
+	});
+
 	_GlobalInit = true;
 };
 
@@ -113,19 +135,14 @@ class UIServer {
 		this._CM.loadDeviceIndex();
 
 		this._RED.httpAdmin.get(
-			`/zwave-js/${this._NetworkIdentifier}/ping`,
-			this._RED.auth.needsPermission('flows.read'),
-			async (req, res) => {
-				res.contentType('text/plain');
-				res.send('pong');
-				res.end(200);
-			}
-		);
-
-		this._RED.httpAdmin.get(
 			`/zwave-js/${this._NetworkIdentifier}/smart-start-list`,
 			this._RED.auth.needsPermission('flows.read'),
 			async (req, res) => {
+				if (this._Context.controller === undefined) {
+					res.status(500).send('The Controller is currently unavailable.');
+					return;
+				}
+
 				const JSONEntries = [];
 				const Entries = this._Context.controller.getProvisioningEntries();
 
@@ -178,6 +195,11 @@ class UIServer {
 			`/zwave-js/${this._NetworkIdentifier}/firmwareupdate/:code`,
 			this._RED.auth.needsPermission('flows.write'),
 			(req, res) => {
+				if (this._Context.controller === undefined) {
+					res.status(500).send('The Controller is currently unavailable.');
+					return;
+				}
+
 				let _Buffer = Buffer.alloc(0);
 				req.on('data', (Data) => {
 					_Buffer = Buffer.concat([_Buffer, Data]);
@@ -209,32 +231,15 @@ class UIServer {
 			}
 		);
 
-		this._RED.httpAdmin.get(`/zwave-js/mesh`, (req, res) => {
-			const Secure = req.connection.encrypted !== undefined;
-			const Prot = Secure ? 'https://' : 'http://';
-
-			const PageFIle = path.join(
-				__dirname,
-				'../',
-				'../',
-				'resources',
-				'MeshMap',
-				'Map.html'
-			);
-
-			const Prefix = this._RED.settings.httpAdminRoot || '/';
-			const Base = `${Prot}${req.headers.host}${Prefix}resources/node-red-contrib-zwave-js/MeshMap`;
-			let Source = FS.readFileSync(PageFIle, 'utf8');
-			Source = Source.replace(/{BASE}/g, Base);
-
-			res.contentType('text/html');
-			res.send(Source);
-		});
-
 		this._RED.httpAdmin.get(
 			`/zwave-js/${this._NetworkIdentifier}/smartstart/:Method`,
 			this._RED.auth.needsPermission('flows.write'),
 			async (req, res) => {
+				if (this._Context.controller === undefined) {
+					res.status(500).send('The Controller is currently unavailable.');
+					return;
+				}
+
 				switch (req.params.Method) {
 					case 'startserver':
 						SmartStart.Start(this, req).then((QRCode) => {
@@ -255,77 +260,77 @@ class UIServer {
 			`/zwave-js/${this._NetworkIdentifier}/cmd`,
 			this._RED.auth.needsPermission('flows.write'),
 			async (req, res) => {
-				const timeout = setTimeout(() => res.status(504).end(), 5000);
+				const timeout = setTimeout(() => {
+					res.status(504).end();
+				}, 5000);
 
 				if (req.body.noTimeout) {
 					clearTimeout(timeout);
 				}
 
-				try {
-					if (req.body.noWait) {
-						res.status(202).end();
-					}
-
-					const ResponseProcessor = (Response) => {
-						clearTimeout(timeout);
-
-						if (Response.payload.event === 'HEALTH_CHECK_RESULT') {
-							const Health = Response.payload.object.health;
-							const Node = Response.payload.object.node;
-							let Stats;
-
-							const StatReq = {
-								payload: {
-									mode: 'DriverAPI',
-									method: 'getNodeStatistics',
-									params: [Node]
-								}
-							};
-
-							this._Context.input(StatReq, (Result) => {
-								Stats = Result.payload.object;
-								this._SendHealthCheck(Health, Stats);
-							});
-
-							return; // no need to do anything else here.
-						}
-
-						if (!req.body.noWait) {
-							res.send(Response.payload);
-						}
-					};
-
-					const DoneHandler = (Err) => {
-						if (Err) {
-							clearTimeout(timeout);
-							if (!req.body.noWait) {
-								res.status(500).send(Err.message);
-							}
-						}
-					};
-
-					const PL = {
-						payload: req.body
-					};
-
-					if (
-						PL.payload.mode === 'DriverAPI' &&
-						PL.payload.method === 'checkLifelineHealth'
-					) {
-						const HCProgress = (R) => {
-							this._SendHealthCheckProgress(R);
-						};
-						PL.payload.params.push(HCProgress);
-					}
-					this._Context.input(PL, ResponseProcessor, DoneHandler);
-				} catch (err) {
+				if (this._Context.controller === undefined) {
 					clearTimeout(timeout);
-					if (!req.body.noWait) {
-						res
-							.status(500)
-							.send('_Context.input, is re-initializing. Please try again.');
-					}
+					res.status(500).send('The Controller is currently unavailable.');
+					return;
 				}
+
+				if (req.body.noWait) {
+					clearTimeout(timeout);
+					res.status(202).end();
+				}
+
+				const ResponseProcessor = (Response) => {
+					clearTimeout(timeout);
+
+					if (Response.payload.event === 'HEALTH_CHECK_RESULT') {
+						const Health = Response.payload.object.health;
+						const Node = Response.payload.object.node;
+						let Stats;
+
+						const StatReq = {
+							payload: {
+								mode: 'DriverAPI',
+								method: 'getNodeStatistics',
+								params: [Node]
+							}
+						};
+
+						this._Context.input(StatReq, (Result) => {
+							Stats = Result.payload.object;
+							this._SendHealthCheck(Health, Stats);
+						});
+
+						return; // no need to do anything else here.
+					}
+
+					if (!req.body.noWait) {
+						res.send(Response.payload);
+					}
+				};
+
+				const DoneHandler = (Err) => {
+					if (Err) {
+						clearTimeout(timeout);
+						if (!req.body.noWait) {
+							res.status(500).send(Err.message);
+						}
+					}
+				};
+
+				const PL = {
+					payload: req.body
+				};
+
+				if (
+					PL.payload.mode === 'DriverAPI' &&
+					PL.payload.method === 'checkLifelineHealth'
+				) {
+					const HCProgress = (R) => {
+						this._SendHealthCheckProgress(R);
+					};
+					PL.payload.params.push(HCProgress);
+				}
+				this._Context.input(PL, ResponseProcessor, DoneHandler);
 			}
 		);
 	}
