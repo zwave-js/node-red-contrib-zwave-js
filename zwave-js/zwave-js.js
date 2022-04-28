@@ -1,3 +1,5 @@
+const { send } = require('process');
+
 module.exports = function (RED) {
 	const Path = require('path');
 	const ModulePackage = require('../package.json');
@@ -565,7 +567,7 @@ module.exports = function (RED) {
 				const Mode = msg.payload.mode;
 				switch (Mode) {
 					case 'IEAPI':
-						await IEAPI(msg);
+						await IEAPI(msg, send);
 						break;
 					case 'CCAPI':
 						await CCAPI(msg, send);
@@ -640,7 +642,7 @@ module.exports = function (RED) {
 			});
 		}
 
-		async function IEAPI(msg) {
+		async function IEAPI(msg, send) {
 			const Method = msg.payload.method;
 			const Params = msg.payload.params || [];
 
@@ -652,7 +654,18 @@ module.exports = function (RED) {
 
 			switch (Method) {
 				case 'checkKeyReq':
-					CheckKey(Params[0]);
+					try {
+						CheckKey(Params[0]);
+						Send(undefined, 'KEY_CHECK_RESULT', { ok: true }, send);
+					} catch (err) {
+						Send(
+							undefined,
+							'KEY_CHECK_RESULT',
+							{ ok: false, message: err.message },
+							send
+						);
+					}
+
 					break;
 
 				case 'unprovisionAllSmartStart':
@@ -661,44 +674,97 @@ module.exports = function (RED) {
 						const Entry = Entries[i];
 						Driver.controller.unprovisionSmartStartNode(Entry.dsk);
 					}
+					Send(
+						undefined,
+						'ACTION_DONE',
+						{ api: arguments.callee.name, method: Method },
+						send
+					);
 					break;
 
 				case 'unprovisionSmartStartNode':
 					Driver.controller.unprovisionSmartStartNode(Params[0]);
+					Send(
+						undefined,
+						'ACTION_DONE',
+						{ api: arguments.callee.name, method: Method },
+						send
+					);
 					break;
 
 				case 'commitScans':
 					Params.forEach((S) => {
 						Driver.controller.provisionSmartStartNode(S);
 					});
+					Send(
+						undefined,
+						'ACTION_DONE',
+						{ api: arguments.callee.name, method: Method },
+						send
+					);
 					break;
+
 				case 'beginInclusion':
-					CheckKey(Params[0].strategy);
 					Params[0].userCallbacks = Callbacks;
 					await Driver.controller.beginInclusion(Params[0]);
+					Send(
+						undefined,
+						'ACTION_DONE',
+						{ api: arguments.callee.name, method: Method },
+						send
+					);
 					break;
 
 				case 'beginExclusion':
 					await Driver.controller.beginExclusion(Params[0]);
+					Send(
+						undefined,
+						'ACTION_DONE',
+						{ api: arguments.callee.name, method: Method },
+						send
+					);
 					break;
 
 				case 'grantClasses':
 					Grant(Params[0]);
+					Send(
+						undefined,
+						'ACTION_DONE',
+						{ api: arguments.callee.name, method: Method },
+						send
+					);
 					break;
 
 				case 'verifyDSK':
 					VerifyDSK(Params[0]);
+					Send(
+						undefined,
+						'ACTION_DONE',
+						{ api: arguments.callee.name, method: Method },
+						send
+					);
 					break;
 
 				case 'replaceNode':
-					CheckKey(Params[1].strategy);
 					Params[1].userCallbacks = Callbacks;
 					await Driver.controller.replaceFailedNode(Params[0], Params[1]);
+					Send(
+						undefined,
+						'ACTION_DONE',
+						{ api: arguments.callee.name, method: Method },
+						send
+					);
 					break;
 
 				case 'stop':
 					const IS = await Driver.controller.stopInclusion();
 					const ES = await Driver.controller.stopExclusion();
+					Send(
+						undefined,
+						'ACTION_DONE',
+						{ api: arguments.callee.name, method: Method },
+						send
+					);
 					if (IS || ES) {
 						RestoreReadyStatus();
 					}
@@ -921,6 +987,12 @@ module.exports = function (RED) {
 						throw new Error(ErrorMSG);
 					} else {
 						await Driver.controller.nodes.get(Params[0]).refreshInfo();
+						Send(
+							undefined,
+							'ACTION_DONE',
+							{ api: arguments.callee.name, method: Method },
+							send
+						);
 					}
 					break;
 
@@ -989,6 +1061,12 @@ module.exports = function (RED) {
 
 				case 'removeFailedNode':
 					await Driver.controller.removeFailedNode(Params[0]);
+					Send(
+						undefined,
+						'ACTION_DONE',
+						{ api: arguments.callee.name, method: Method },
+						send
+					);
 					break;
 
 				case 'proprietaryFunction':
@@ -1004,6 +1082,12 @@ module.exports = function (RED) {
 					};
 
 					await Driver.sendMessage(ZWaveMessage, MessageSettings);
+					Send(
+						undefined,
+						'ACTION_DONE',
+						{ api: arguments.callee.name, method: Method },
+						send
+					);
 					break;
 			}
 
@@ -1076,11 +1160,23 @@ module.exports = function (RED) {
 					} else {
 						await ZWaveNode.setValue(Params[0], Params[1]);
 					}
+					Send(
+						undefined,
+						'ACTION_DONE',
+						{ api: arguments.callee.name, method: Method },
+						send
+					);
 					break;
 
 				case 'pollValue':
 					if (Multicast) ThrowVirtualNodeLimit();
 					await ZWaveNode.pollValue(Params[0]);
+					Send(
+						undefined,
+						'ACTION_DONE',
+						{ api: arguments.callee.name, method: Method },
+						send
+					);
 					break;
 			}
 
@@ -1136,6 +1232,13 @@ module.exports = function (RED) {
 			);
 			if (!IsEventResponse && ForceUpdate === undefined) {
 				Send(ReturnNode, 'VALUE_UPDATED', Result, send);
+			} else {
+				Send(
+					undefined,
+					'ACTION_DONE',
+					{ api: arguments.callee.name, method: Method },
+					send
+				);
 			}
 
 			if (ForceUpdate !== undefined) {
