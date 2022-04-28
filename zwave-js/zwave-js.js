@@ -1,5 +1,3 @@
-const { send } = require('process');
-
 module.exports = function (RED) {
 	const Path = require('path');
 	const ModulePackage = require('../package.json');
@@ -1623,6 +1621,14 @@ module.exports = function (RED) {
 		}
 
 		function Send(Node, Subject, Value, send) {
+			// ACTION_DONE is only to sync the state of the UI, we therefore should not pass this on to user reqeusts.
+			// Check if the callback name starts with SERV_ to identify these requests
+			if (Subject === 'ACTION_DONE') {
+				if (send === undefined || !send.name.startsWith('SERV_')) {
+					return;
+				}
+			}
+
 			const PL = {};
 			PL.networkId = NetworkIdentifier;
 

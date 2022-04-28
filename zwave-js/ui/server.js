@@ -217,7 +217,7 @@ class UIServer {
 						params: [parseInt(Parts[0]), parseInt(Parts[1]), Parts[2], _Buffer]
 					};
 
-					const Success = () => {
+					const SERV_Success = () => {
 						res.status(200).end();
 					};
 
@@ -226,7 +226,7 @@ class UIServer {
 							res.status(500).send(err.message);
 						}
 					};
-					this._Context.input({ payload: PL }, Success, Error);
+					this._Context.input({ payload: PL }, SERV_Success, Error);
 				});
 			}
 		);
@@ -279,7 +279,7 @@ class UIServer {
 					res.status(202).end();
 				}
 
-				const ResponseProcessor = (Response) => {
+				const SERV_ResponseProcessor = (Response) => {
 					clearTimeout(timeout);
 
 					if (Response.payload.event === 'HEALTH_CHECK_RESULT') {
@@ -295,10 +295,12 @@ class UIServer {
 							}
 						};
 
-						this._Context.input(StatReq, (Result) => {
+						const SERV_Result = (Response) => {
 							Stats = Result.payload.object;
 							this._SendHealthCheck(Health, Stats);
-						});
+						};
+
+						this._Context.input(StatReq, SERV_Result);
 
 						return; // no need to do anything else here.
 					}
@@ -330,7 +332,7 @@ class UIServer {
 					};
 					PL.payload.params.push(HCProgress);
 				}
-				this._Context.input(PL, ResponseProcessor, DoneHandler);
+				this._Context.input(PL, SERV_ResponseProcessor, DoneHandler);
 			}
 		);
 	}

@@ -160,7 +160,7 @@ const DCs = {
 	setValue: {
 		API: 'ValueAPI',
 		name: 'setValue',
-		noWait: false
+		noWait: true
 	},
 	getValueMetadata: {
 		API: 'ValueAPI',
