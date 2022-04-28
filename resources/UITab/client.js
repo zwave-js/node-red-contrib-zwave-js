@@ -66,6 +66,106 @@ const DCs = {
 		API: 'DriverAPI',
 		name: 'getNodeStatistics',
 		noWait: false
+	},
+	checkKeyReq: {
+		API: 'IEAPI',
+		name: 'checkKeyReq',
+		noWait: false
+	},
+	replaceFailedNode: {
+		API: 'IEAPI',
+		name: 'replaceFailedNode',
+		noWait: false
+	},
+	beginExclusion: {
+		API: 'IEAPI',
+		name: 'beginExclusion',
+		noWait: false
+	},
+	beginInclusion: {
+		API: 'IEAPI',
+		name: 'beginInclusion',
+		noWait: false
+	},
+	stopIE: {
+		API: 'IEAPI',
+		name: 'stopIE',
+		noWait: false
+	},
+	commitScans: {
+		API: 'IEAPI',
+		name: 'commitScans',
+		noWait: false
+	},
+	unprovisionSmartStartNode: {
+		API: 'IEAPI',
+		name: 'unprovisionSmartStartNode',
+		noWait: false
+	},
+	unprovisionAllSmartStart: {
+		API: 'IEAPI',
+		name: 'unprovisionAllSmartStart',
+		noWait: false
+	},
+	healNode: {
+		API: 'ControllerAPI',
+		name: 'healNode',
+		noWait: true
+	},
+	beginHealingNetwork: {
+		API: 'ControllerAPI',
+		name: 'beginHealingNetwork',
+		noWait: false
+	},
+	stopHealingNetwork: {
+		API: 'ControllerAPI',
+		name: 'stopHealingNetwork',
+		noWait: false
+	},
+	hardReset: {
+		API: 'ControllerAPI',
+		name: 'hardReset',
+		noWait: false
+	},
+	refreshInfo: {
+		API: 'ControllerAPI',
+		name: 'refreshInfo',
+		noWait: false
+	},
+	removeFailedNode: {
+		API: 'ControllerAPI',
+		name: 'refreshInfo',
+		noWait: false
+	},
+	setNodeName: {
+		API: 'ControllerAPI',
+		name: 'setNodeName',
+		noWait: false
+	},
+	setNodeLocation: {
+		API: 'ControllerAPI',
+		name: 'setNodeLocation',
+		noWait: false
+	},
+	getDefinedValueIDs: {
+		API: 'ValueAPI',
+		name: 'getDefinedValueIDs',
+		noWait: false
+	},
+	getValue: {
+		API: 'ValueAPI',
+		name: 'getValue',
+		noWait: false
+	},
+	setValue: {
+		API: 'ValueAPI',
+		name: 'setValue',
+		noWait: false
+	},
+	getValueMetadata: {
+		API: 'ValueAPI',
+		name: 'getValueMetadata',
+		noWait: false
 	}
 };
 
@@ -768,6 +868,22 @@ const ZwaveJsUI = (function () {
 		return GP;
 	}
 
+	/* 
+	  GetNodes is called for every node READY event,
+	  so we better limit this as we will get a flood of these during start up
+	*/
+	let GNTimer = undefined;
+	function GetNodesThrottled() {
+		if (GNTimer !== undefined) {
+			clearTimeout(GNTimer);
+			GNTimer = undefined;
+		}
+
+		GNTimer = setTimeout(() => {
+			GetNodes();
+		}, 250);
+	}
+
 	function GetNodes() {
 		BA = undefined;
 		deselectCurrentNode();
@@ -922,13 +1038,22 @@ const ZwaveJsUI = (function () {
 				break;
 		}
 
-		ControllerCMD('IEAPI', 'checkKeyReq', undefined, [Request.strategy])
+		ControllerCMD(
+			DCs.checkKeyReq.API,
+			DCs.checkKeyReq.name,
+			undefined,
+			[Request.strategy],
+			DCs.checkKeyReq.noWait
+		)
 			.then(({ object }) => {
 				if (object.ok) {
-					ControllerCMD('IEAPI', 'replaceNode', undefined, [
-						parseInt(HoveredNode.nodeId),
-						Request
-					]).catch((err) => {
+					ControllerCMD(
+						DCs.replaceFailedNode.API,
+						DCs.replaceFailedNode.name,
+						undefined,
+						[parseInt(HoveredNode.nodeId), Request],
+						DCs.replaceFailedNode.noWait
+					).catch((err) => {
 						modalAlert(err.responseText, 'Could not replace Node.');
 						$(B).html(OT);
 						$(B).prop('disabled', false);
@@ -996,10 +1121,11 @@ const ZwaveJsUI = (function () {
 								const Buttons = {
 									Yes: function () {
 										ControllerCMD(
-											'IEAPI',
-											'unprovisionSmartStartNode',
+											DCs.unprovisionSmartStartNode.API,
+											DCs.unprovisionSmartStartNode.name,
 											undefined,
-											[Entry.dsk]
+											[Entry.dsk],
+											DCs.unprovisionSmartStartNode.noWait
 										)
 											.then(() => {
 												Item.remove();
@@ -1029,7 +1155,13 @@ const ZwaveJsUI = (function () {
 				return;
 
 			case 'SmartStart':
-				ControllerCMD('IEAPI', 'checkKeyReq', undefined, [1])
+				ControllerCMD(
+					DCs.checkKeyReq.API,
+					DCs.checkKeyReq.name,
+					undefined,
+					[1],
+					DCs.checkKeyReq.noWait
+				)
 					.catch((err) => {
 						$(B).html(OT);
 						$(B).prop('disabled', false);
@@ -1082,9 +1214,13 @@ const ZwaveJsUI = (function () {
 				break;
 
 			case 'Remove':
-				ControllerCMD('IEAPI', 'beginExclusion', undefined, [
-					$('#ERP').is(':checked')
-				]).catch((err) => {
+				ControllerCMD(
+					DCs.beginExclusion.API,
+					DCs.beginExclusion.name,
+					undefined,
+					[$('#ERP').is(':checked')],
+					DCs.beginExclusion.noWait
+				).catch((err) => {
 					$(B).html(OT);
 					$(B).prop('disabled', false);
 					modalAlert(err.responseText, 'Could not start Inclusion');
@@ -1093,17 +1229,27 @@ const ZwaveJsUI = (function () {
 				return;
 		}
 
-		ControllerCMD('IEAPI', 'checkKeyReq', undefined, [Request.strategy])
+		ControllerCMD(
+			DCs.checkKeyReq.API,
+			DCs.checkKeyReq.name,
+			undefined,
+			[Request.strategy],
+			DCs.checkKeyReq.noWait
+		)
 			.then(({ object }) => {
 				if (object.ok) {
-					ControllerCMD('IEAPI', 'beginInclusion', undefined, [Request]).catch(
-						(err) => {
-							$(B).html(OT);
-							$(B).prop('disabled', false);
-							modalAlert(err.responseText, 'Could not start Inclusion');
-							throw new Error(err.responseText);
-						}
-					);
+					ControllerCMD(
+						DCs.beginInclusion.API,
+						DCs.beginInclusion.name,
+						undefined,
+						[Request],
+						DCs.beginInclusion.noWait
+					).catch((err) => {
+						$(B).html(OT);
+						$(B).prop('disabled', false);
+						modalAlert(err.responseText, 'Could not start Inclusion');
+						throw new Error(err.responseText);
+					});
 				} else {
 					$(B).html(OT);
 					$(B).prop('disabled', false);
@@ -1136,10 +1282,11 @@ const ZwaveJsUI = (function () {
 						const Buttons = {
 							'Yes - Remove': function () {
 								ControllerCMD(
-									'IEAPI',
-									'unprovisionAllSmartStart',
+									DCs.unprovisionAllSmartStart.API,
+									DCs.unprovisionAllSmartStart.name,
 									undefined,
-									undefined
+									undefined,
+									DCs.unprovisionAllSmartStart.noWait
 								)
 									.catch((err) => {
 										ParentDialog.dialog('destroy');
@@ -1172,11 +1319,15 @@ const ZwaveJsUI = (function () {
 						});
 						ClearIETimer();
 						ClearSecurityCountDown();
-						ControllerCMD('IEAPI', 'stop', undefined, undefined).catch(
-							(err) => {
-								console.log(err.responseText);
-							}
-						);
+						ControllerCMD(
+							DCs.stopIE.API,
+							DCs.stopIE.name,
+							undefined,
+							undefined,
+							DCs.stopIE.noWait
+						).catch((err) => {
+							console.log(err.responseText);
+						});
 						ParentDialog.dialog('destroy');
 					}
 				},
@@ -1189,7 +1340,13 @@ const ZwaveJsUI = (function () {
 						SSEntries.each(function (i, e) {
 							Entries.push($(e).data('inclusionPackage'));
 						});
-						ControllerCMD('IEAPI', 'commitScans', undefined, Entries)
+						ControllerCMD(
+							DCs.commitScans.API,
+							DCs.commitScans.name,
+							undefined,
+							Entries,
+							DCs.commitScans.noWait
+						)
 							.then(() => {
 								StepsAPI.setStepIndex(StepList.SmartStartDone);
 								$('#SmartStartCommit').css({ display: 'none' });
@@ -1250,11 +1407,15 @@ const ZwaveJsUI = (function () {
 					id: 'IEButton',
 					text: 'Cancel',
 					click: function () {
-						ControllerCMD('IEAPI', 'stop', undefined, undefined).catch(
-							(err) => {
-								console.log(err.responseText);
-							}
-						);
+						ControllerCMD(
+							DCs.stopIE.API,
+							DCs.stopIE.name,
+							undefined,
+							undefined,
+							DCs.stopIE.noWait
+						).catch((err) => {
+							console.log(err.responseText);
+						});
 						$(this).dialog('destroy');
 					}
 				}
@@ -1273,11 +1434,11 @@ const ZwaveJsUI = (function () {
 
 	function StartNodeHeal() {
 		ControllerCMD(
-			'ControllerAPI',
-			'healNode',
+			DCs.healNode.API,
+			DCs.healNode.name,
 			undefined,
 			[HoveredNode.nodeId],
-			true
+			DCs.healNode.noWait
 		).catch((err) => {
 			modalAlert(err.responseText, 'Could not start Node heal.');
 			throw new Error(err.responseText);
@@ -1286,10 +1447,11 @@ const ZwaveJsUI = (function () {
 
 	function StartHeal() {
 		ControllerCMD(
-			'ControllerAPI',
-			'beginHealingNetwork',
+			DCs.beginHealingNetwork.API,
+			DCs.beginHealingNetwork.name,
 			undefined,
-			undefined
+			undefined,
+			DCs.beginHealingNetwork.noWait
 		).catch((err) => {
 			modalAlert(err.responseText, 'Could not start network heal.');
 			throw new Error(err.responseText);
@@ -1297,13 +1459,25 @@ const ZwaveJsUI = (function () {
 	}
 
 	function StopHeal() {
-		ControllerCMD('ControllerAPI', 'stopHealingNetwork', undefined, undefined);
+		ControllerCMD(
+			DCs.stopHealingNetwork.API,
+			DCs.stopHealingNetwork.name,
+			undefined,
+			undefined,
+			DCs.stopHealingNetwork.noWait
+		);
 	}
 
 	function Reset() {
 		const Buttons = {
 			'Yes - Reset': function () {
-				ControllerCMD('ControllerAPI', 'hardReset')
+				ControllerCMD(
+					DCs.hardReset.API,
+					DCs.hardReset.name,
+					undefined,
+					undefined,
+					DCs.hardReset.noWait
+				)
 					.then(() => {
 						modalAlert('Your Controller has been reset.', 'Reset Complete');
 						GetNodes();
@@ -1323,9 +1497,13 @@ const ZwaveJsUI = (function () {
 	}
 
 	function InterviewNode() {
-		ControllerCMD('ControllerAPI', 'refreshInfo', undefined, [
-			HoveredNode.nodeId
-		]).catch((err) => {
+		ControllerCMD(
+			DCs.refreshInfo.API,
+			DCs.refreshInfo.name,
+			undefined,
+			[HoveredNode.nodeId],
+			DCs.refreshInfo.noWait
+		).catch((err) => {
 			if (err.status !== 504) {
 				modalAlert(err.responseText, 'Could not interview the Node.');
 				throw new Error(err.responseText);
@@ -1356,9 +1534,13 @@ const ZwaveJsUI = (function () {
 		const Buttons = {
 			'Yes - Remove': function () {
 				Removing = true;
-				ControllerCMD('ControllerAPI', 'removeFailedNode', undefined, [
-					HoveredNode.nodeId
-				])
+				ControllerCMD(
+					DCs.removeFailedNode.API,
+					DCs.removeFailedNode.name,
+					undefined,
+					[HoveredNode.nodeId],
+					DCs.removeFailedNode.noWait
+				)
 					.catch((err) => {
 						if (err.status !== 504) {
 							modalAlert(err.responseText, 'Could not remove the Node.');
@@ -1850,7 +2032,7 @@ const ZwaveJsUI = (function () {
 				);
 				if (data.status == 'READY') {
 					if (DriverReady) {
-						GetNodes();
+						GetNodesThrottled();
 					}
 				} else {
 					nodeRow
@@ -2002,15 +2184,21 @@ const ZwaveJsUI = (function () {
 				const Name = NN.val();
 				const Location = NL.val();
 
-				ControllerCMD('ControllerAPI', 'setNodeName', undefined, [
-					HoveredNode.nodeId,
-					Name
-				])
+				ControllerCMD(
+					DCs.setNodeName.API,
+					DCs.setNodeName.name,
+					undefined,
+					[HoveredNode.nodeId, Name],
+					DCs.setNodeName.noWait
+				)
 					.then(() => {
-						ControllerCMD('ControllerAPI', 'setNodeLocation', undefined, [
-							HoveredNode.nodeId,
-							Location
-						])
+						ControllerCMD(
+							DCs.setNodeLocation.API,
+							DCs.setNodeLocation.name,
+							undefined,
+							[HoveredNode.nodeId, Location],
+							DCs.setNodeLocation.noWait
+						)
 							.then(() => {
 								$(`.zwave-js-node-row[data-nodeid='${HoveredNode.nodeId}']`)
 									.find('.zwave-js-node-row-name')
@@ -2442,7 +2630,13 @@ const ZwaveJsUI = (function () {
 	function getProperties() {
 		updateNodeFetchStatus('Fetching properties...');
 
-		ControllerCMD('ValueAPI', 'getDefinedValueIDs', selectedNode)
+		ControllerCMD(
+			DCs.getDefinedValueIDs.API,
+			DCs.getDefinedValueIDs.name,
+			selectedNode,
+			undefined,
+			DCs.getDefinedValueIDs.noWait
+		)
 			.then(({ object }) => buildPropertyTree(object))
 			.catch((err) => {
 				modalAlert(err.responseText, 'Could not select the Node.');
@@ -2604,13 +2798,25 @@ const ZwaveJsUI = (function () {
 	}
 
 	function getValue(valueId) {
-		ControllerCMD('ValueAPI', 'getValue', selectedNode, [valueId])
+		ControllerCMD(
+			DCs.getValue.API,
+			DCs.getValue.name,
+			selectedNode,
+			[valueId],
+			DCs.getValue.noWait
+		)
 			.then(({ node, object }) => {
 				if (node != selectedNode) {
 					return;
 				}
 				updateValue({ ...valueId, currentValue: object.currentValue });
-				ControllerCMD('ValueAPI', 'getValueMetadata', selectedNode, [valueId])
+				ControllerCMD(
+					DCs.getValueMetadata.API,
+					DCs.getValueMetadata.name,
+					selectedNode,
+					[valueId],
+					DCs.getValueMetadata.noWait
+				)
 					.then(({ node, object }) => {
 						if (!object.metadata || node != selectedNode) {
 							return;
@@ -2787,11 +2993,11 @@ const ZwaveJsUI = (function () {
 				val = +val;
 			}
 			ControllerCMD(
-				'ValueAPI',
-				'setValue',
+				DCs.setValue.API,
+				DCs.setValue.name,
 				selectedNode,
 				[valueId, val],
-				true
+				DCs.setValue.noWait
 			).catch((err) => {
 				modalAlert(err.responseText, 'Could not set value.');
 				throw new Error(err.responseText);

@@ -745,7 +745,7 @@ module.exports = function (RED) {
 					);
 					break;
 
-				case 'replaceNode':
+				case 'replaceFailedNode':
 					Params[1].userCallbacks = Callbacks;
 					await Driver.controller.replaceFailedNode(Params[0], Params[1]);
 					Send(
@@ -756,7 +756,7 @@ module.exports = function (RED) {
 					);
 					break;
 
-				case 'stop':
+				case 'stopIE':
 					const IS = await Driver.controller.stopInclusion();
 					const ES = await Driver.controller.stopExclusion();
 					Send(
