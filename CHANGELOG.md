@@ -18,7 +18,7 @@
      - Network statistics now include route information that is obtained during communication, and is used
        as the basis of the new map.
      - Multiple ZWave sticks/Networks are now supported (finally)
-       - all message will contain a property of **networkId** to indentify the source network.
+       - all message will contain a property of **networkId** to indentify the source network.  
          **WARNING**: Before adding another network - please ensure you open up the currently configured Controller  
                and save it again (Remembering to deploy) - this will allign the current network to ID 1
      - Improved Recovery when the USB/ZWave transceiver has been removed/re-introduced.
