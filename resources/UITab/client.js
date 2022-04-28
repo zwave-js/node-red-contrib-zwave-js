@@ -130,11 +130,11 @@ const DCs = {
 	refreshInfo: {
 		API: 'ControllerAPI',
 		name: 'refreshInfo',
-		noWait: false
+		noWait: true
 	},
 	removeFailedNode: {
 		API: 'ControllerAPI',
-		name: 'refreshInfo',
+		name: 'removeFailedNode',
 		noWait: false
 	},
 	setNodeName: {
@@ -542,8 +542,15 @@ const ZwaveJsUI = (function () {
 						GMGroupSelected();
 					})
 					.catch((err) => {
-						modalAlert(err.responseText, 'Association could not be added.');
-						throw new Error(err.responseText);
+						if (err.status === 504) {
+							modalAlert(
+								'The device maybe in a sleeping state, the association will be added later.',
+								'Association change could not be confirmed'
+							);
+						} else {
+							modalAlert(err.responseText, 'Association could not be added.');
+							throw new Error(err.responseText);
+						}
 					});
 			}
 		};
@@ -578,8 +585,15 @@ const ZwaveJsUI = (function () {
 						GMGroupSelected();
 					})
 					.catch((err) => {
-						modalAlert(err.responseText, 'Association could not be removed.');
-						throw new Error(err.responseText);
+						if (err.status === 504) {
+							modalAlert(
+								'The device maybe in a sleeping state, the association will be removed later.',
+								'Association change could not be confirmed'
+							);
+						} else {
+							modalAlert(err.responseText, 'Association could not be removed.');
+							throw new Error(err.responseText);
+						}
 					});
 			}
 		};
@@ -1195,7 +1209,7 @@ const ZwaveJsUI = (function () {
 						} else {
 							$(B).html(OT);
 							$(B).prop('disabled', false);
-							modalAlert(object.message, 'Missing Keys');
+							modalAlert(object.message, 'Could not start Inclusion');
 						}
 					});
 
@@ -1223,7 +1237,7 @@ const ZwaveJsUI = (function () {
 				).catch((err) => {
 					$(B).html(OT);
 					$(B).prop('disabled', false);
-					modalAlert(err.responseText, 'Could not start Inclusion');
+					modalAlert(err.responseText, 'Could not start Exclusion');
 					throw new Error(err.responseText);
 				});
 				return;
@@ -1316,6 +1330,8 @@ const ZwaveJsUI = (function () {
 						$.ajax({
 							url: `zwave-js/${NetworkIdentifier}/smartstart/stopserver`,
 							method: 'GET'
+						}).catch((err) => {
+							console.log(err.responseText);
 						});
 						ClearIETimer();
 						ClearSecurityCountDown();
@@ -1356,12 +1372,16 @@ const ZwaveJsUI = (function () {
 								$.ajax({
 									url: `zwave-js/${NetworkIdentifier}/smartstart/stopserver`,
 									method: 'GET'
+								}).catch((err) => {
+									console.log(err.responseText);
 								});
 							})
 							.catch((err) => {
 								$.ajax({
 									url: `zwave-js/${NetworkIdentifier}/smartstart/stopserver`,
 									method: 'GET'
+								}).catch((err) => {
+									console.log(err.responseText);
 								});
 								modalAlert(
 									err.responseText,
@@ -1453,7 +1473,7 @@ const ZwaveJsUI = (function () {
 			undefined,
 			DCs.beginHealingNetwork.noWait
 		).catch((err) => {
-			modalAlert(err.responseText, 'Could not start network heal.');
+			modalAlert(err.responseText, 'Could not start Network heal.');
 			throw new Error(err.responseText);
 		});
 	}
@@ -1465,7 +1485,9 @@ const ZwaveJsUI = (function () {
 			undefined,
 			undefined,
 			DCs.stopHealingNetwork.noWait
-		);
+		).catch((err) => {
+			console.log(err.responseText);
+		});
 	}
 
 	function Reset() {
@@ -1504,10 +1526,8 @@ const ZwaveJsUI = (function () {
 			[HoveredNode.nodeId],
 			DCs.refreshInfo.noWait
 		).catch((err) => {
-			if (err.status !== 504) {
-				modalAlert(err.responseText, 'Could not interview the Node.');
-				throw new Error(err.responseText);
-			}
+			modalAlert(err.responseText, 'Could not interview the Node.');
+			throw new Error(err.responseText);
 		});
 	}
 
@@ -1542,9 +1562,7 @@ const ZwaveJsUI = (function () {
 					DCs.removeFailedNode.noWait
 				)
 					.catch((err) => {
-						if (err.status !== 504) {
-							modalAlert(err.responseText, 'Could not remove the Node.');
-						}
+						modalAlert(err.responseText, 'Could not remove the Node.');
 						Removing = false;
 					})
 					.then(() => {
@@ -2352,7 +2370,6 @@ const ZwaveJsUI = (function () {
 				const RemoveFailed = $('<button>');
 				RemoveFailed.click(() => {
 					event.stopPropagation();
-					IsNodeReady(HoveredNode);
 					RemoveFailedNode();
 				});
 				RemoveFailed.addClass(
@@ -2370,7 +2387,6 @@ const ZwaveJsUI = (function () {
 				const ReplaceFailed = $('<button>');
 				ReplaceFailed.click(() => {
 					event.stopPropagation();
-					IsNodeReady(HoveredNode);
 					ShowReplacePrompt();
 				});
 				ReplaceFailed.addClass(
@@ -2639,7 +2655,7 @@ const ZwaveJsUI = (function () {
 		)
 			.then(({ object }) => buildPropertyTree(object))
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not select the Node.');
+				modalAlert(err.responseText, 'Could not fetch Node properties.');
 				throw new Error(err.responseText);
 			});
 	}
@@ -2824,12 +2840,12 @@ const ZwaveJsUI = (function () {
 						updateMeta(valueId, object.metadata);
 					})
 					.catch((err) => {
-						modalAlert(err.responseText, 'Could not select the Node.');
+						modalAlert(err.responseText, 'Could not fetch value Metadata.');
 						throw new Error(err.responseText);
 					});
 			})
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not select the Node.');
+				modalAlert(err.responseText, 'Could not fetch value.');
 				throw new Error(err.responseText);
 			});
 	}

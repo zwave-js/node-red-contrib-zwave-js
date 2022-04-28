@@ -1629,6 +1629,12 @@ module.exports = function (RED) {
 				}
 			}
 
+			// Stop UI Data reaching the User via DNs
+			let SendDNs = true;
+			if (send !== undefined && send.name.startsWith('SERV_')) {
+				SendDNs = false;
+			}
+
 			const PL = {};
 			PL.networkId = NetworkIdentifier;
 
@@ -1680,7 +1686,7 @@ module.exports = function (RED) {
 				'GET_VALUE_METADATA_RESPONSE'
 			];
 
-			if (AllowedSubjectsForDNs.includes(Subject)) {
+			if (AllowedSubjectsForDNs.includes(Subject) && SendDNs) {
 				if (IsolatedNodeId !== undefined) {
 					Log(
 						'debug',

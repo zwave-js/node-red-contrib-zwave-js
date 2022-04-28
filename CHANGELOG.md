@@ -26,7 +26,8 @@
     **Fixes**
      - Nodes that are not marked as ready can now be removed correctly.
      - Fix potential issue when **httpAdminRoot** has a custom value.
-     - Huge performance, stability and optimisations to the UI.
+     - various performance, stability and optimisations to the UI.
+     - UI Interaction is no longer picked up by Device Nodes.
 
     **Changes**
      - Bump serialport to V10

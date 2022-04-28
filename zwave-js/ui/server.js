@@ -260,7 +260,10 @@ class UIServer {
 			`/zwave-js/${this._NetworkIdentifier}/cmd`,
 			this._RED.auth.needsPermission('flows.write'),
 			async (req, res) => {
+				// Some nodes may respond if awake.
+				let TimedOut = false;
 				const timeout = setTimeout(() => {
+					TimedOut = true;
 					res.status(504).end();
 				}, 5000);
 
@@ -296,7 +299,7 @@ class UIServer {
 						};
 
 						const SERV_Result = (Response) => {
-							Stats = Result.payload.object;
+							Stats = Response.payload.object;
 							this._SendHealthCheck(Health, Stats);
 						};
 
@@ -306,7 +309,9 @@ class UIServer {
 					}
 
 					if (!req.body.noWait) {
-						res.send(Response.payload);
+						if (!TimedOut) {
+							res.send(Response.payload);
+						}
 					}
 				};
 
