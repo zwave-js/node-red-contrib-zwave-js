@@ -19,6 +19,8 @@
        as the basis of the new map.
      - Multiple ZWave sticks/Networks are now supported (finally)
        - all message will contain a property of **networkId** to indentify the source network.
+         **WARNING**: Before adding another network - please ensure you open up the currently configured Controller  
+               and save it again (Remembering to deploy) - this will allign the current network to ID 1
      - Improved Recovery when the USB/ZWave transceiver has been removed/re-introduced.
        - This is possible with a custom Watchdog implmentation, this introduces a new event type of **WATCHDOG**
          Which will describe what is happening. 
