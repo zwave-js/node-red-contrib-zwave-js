@@ -22,16 +22,22 @@ function Render(Base) {
 		if (N.controller) {
 			const EL = {
 				data: {
+					isController: N.controller,
 					id: N.nodeId,
 					name: 'Controller',
+					nameOnly: `Controller`,
+					location: `Hopefully away from interference.`,
 					fontSize: '12px',
-					icon: `${Base}/Stick.png`
+					icon: `${Base}/Stick.png`,
+					powerSource: { type: 'bus' },
+					statistics: N.statistics
 				}
 			};
 			Elements.push(EL);
 		} else {
 			const EL = {
 				data: {
+					isController: N.controller,
 					id: N.nodeId,
 					name: `${N.nodeId} - ${N.name || 'No Name'}`,
 					nameOnly: `${N.name || 'No Name'}`,
@@ -160,20 +166,31 @@ function LoadData() {
 	const NodePath = this.data('path');
 
 	Mesh.edges().css({ lineColor: '#ededed', 'target-arrow-color': '#f1f1f1' });
-	let MST = 1;
-	NodePath.forEach((PS) => {
-		const Color =
-			Mesh.edges("[id='" + PS + "']").data().target === '1' ? 'green' : 'black';
 
-		setTimeout(() => {
-			Mesh.edges("[id='" + PS + "']").css({
-				lineColor: Color,
-				zIndex: 100,
-				'target-arrow-color': 'black'
-			});
-		}, 150 * MST);
-		MST++;
-	});
+	if (NodePath !== undefined) {
+		Mesh.edges().css({ lineColor: '#ededed', 'target-arrow-color': '#f1f1f1' });
+		let MST = 1;
+		NodePath.forEach((PS) => {
+			const Color =
+				Mesh.edges("[id='" + PS + "']").data().target === '1'
+					? 'green'
+					: 'black';
+
+			setTimeout(() => {
+				Mesh.edges("[id='" + PS + "']").css({
+					lineColor: Color,
+					zIndex: 100,
+					'target-arrow-color': 'black'
+				});
+			}, 150 * MST);
+			MST++;
+		});
+	} else {
+		Mesh.edges("[target='1']").css({
+			lineColor: 'green',
+			'target-arrow-color': 'black'
+		});
+	}
 
 	// Node
 	const Node = $('<li>');
@@ -245,21 +262,53 @@ function LoadData() {
 
 	const NetStatsDetails = $('<ul>');
 	NetStatsDetails.appendTo(NetStats);
-	$(`<li>Commands TX: ${this.data('statistics').commandsTX}</li>`).appendTo(
-		NetStatsDetails
-	);
-	$(
-		`<li>Commands TXD: ${this.data('statistics').commandsDroppedTX}</li>`
-	).appendTo(NetStatsDetails);
-	$(`<li>Commands RX: ${this.data('statistics').commandsRX}</li>`).appendTo(
-		NetStatsDetails
-	);
-	$(
-		`<li>Commands RXD: ${this.data('statistics').commandsDroppedRX}</li>`
-	).appendTo(NetStatsDetails);
-	$(`<li>Timeouts: ${this.data('statistics').timeoutResponse}</li>`).appendTo(
-		NetStatsDetails
-	);
+
+	if (this.data('isController')) {
+		$(`<li>Messages TX: ${this.data('statistics').messagesTX}</li>`).appendTo(
+			NetStatsDetails
+		);
+		$(
+			`<li>Messages Dropped TX: ${
+				this.data('statistics').messagesDroppedTX
+			}</li>`
+		).appendTo(NetStatsDetails);
+
+		$(`<li>Messages RX: ${this.data('statistics').messagesRX}</li>`).appendTo(
+			NetStatsDetails
+		);
+		$(
+			`<li>Messages Dropped RX: ${
+				this.data('statistics').messagesDroppedRX
+			}</li>`
+		).appendTo(NetStatsDetails);
+		$(`<li>NAK: ${this.data('statistics').NAK}</li>`).appendTo(NetStatsDetails);
+		$(`<li>CAN: ${this.data('statistics').CAN}</li>`).appendTo(NetStatsDetails);
+		$(`<li>ACK Timeout: ${this.data('statistics').timeoutACK}</li>`).appendTo(
+			NetStatsDetails
+		);
+		$(
+			`<li>Response Timeout: ${this.data('statistics').timeoutResponse}</li>`
+		).appendTo(NetStatsDetails);
+		$(
+			`<li>Callback Timeout: ${this.data('statistics').timeoutCallback}</li>`
+		).appendTo(NetStatsDetails);
+	} else {
+		$(`<li>Commands TX: ${this.data('statistics').commandsTX}</li>`).appendTo(
+			NetStatsDetails
+		);
+		$(
+			`<li>Commands TXD: ${this.data('statistics').commandsDroppedTX}</li>`
+		).appendTo(NetStatsDetails);
+		$(`<li>Commands RX: ${this.data('statistics').commandsRX}</li>`).appendTo(
+			NetStatsDetails
+		);
+		$(
+			`<li>Commands RXD: ${this.data('statistics').commandsDroppedRX}</li>`
+		).appendTo(NetStatsDetails);
+		$(`<li>Timeouts: ${this.data('statistics').timeoutResponse}</li>`).appendTo(
+			NetStatsDetails
+		);
+	}
 
 	$('#Details').html(Data);
 }

@@ -67,6 +67,11 @@ const DCs = {
 		name: 'getNodeStatistics',
 		noWait: false
 	},
+	getControllerStatistics: {
+		API: 'DriverAPI',
+		name: 'getControllerStatistics',
+		noWait: false
+	},
 	checkKeyReq: {
 		API: 'IEAPI',
 		name: 'checkKeyReq',
@@ -751,7 +756,20 @@ const ZwaveJsUI = (function () {
 						_Nodes.push(_Node);
 					});
 
-					res(_Nodes);
+					ControllerCMD(
+						DCs.getControllerStatistics.API,
+						DCs.getControllerStatistics.name,
+						undefined,
+						undefined,
+						DCs.getControllerStatistics.noWait
+					)
+						.then(({ object }) => {
+							_Nodes.filter((_PC) => _PC.controller)[0].statistics = object;
+							res(_Nodes);
+						})
+						.catch((err) => {
+							rej(err.responseText);
+						});
 				})
 				.catch((err) => {
 					rej(err.responseText);
@@ -949,13 +967,13 @@ const ZwaveJsUI = (function () {
 				} else {
 					Nodes.forEach((N) => $('#zwave-js-node-list').append(renderNode(N)));
 				}
+
+				$('#zwave-js-node-properties').treeList('empty');
 			})
 			.catch((err) => {
 				modalAlert(err.responseText, 'Could not fetch nodes.');
 				throw new Error(err.responseText);
 			});
-
-		$('#zwave-js-node-properties > div > div > div > ol').empty();
 	}
 
 	function sortByKey(obj) {
@@ -2256,213 +2274,206 @@ const ZwaveJsUI = (function () {
 	}
 
 	function AddOverlayNodeButtons(Node, Row) {
-		if (Node === undefined && Row === undefined) {
-			if (BA !== undefined) {
-				BA.css({
-					display: 'none'
-				});
-			}
+		HoveredNode = Node;
+
+		Row.children().css({ display: 'none' });
+		Row.children().first().css({ display: 'block' });
+		Row.css({ height: '30px' });
+
+		if (BA === undefined) {
+			BA = $('<div>');
+			BA.css({
+				position: 'relative',
+				left: '-1px',
+				backgroundColor: 'inherit'
+			});
+
+			const NameLocation = $('<button>');
+			NameLocation.click(() => {
+				event.stopPropagation();
+				IsNodeReady(HoveredNode);
+				NameNode();
+			});
+			NameLocation.addClass(
+				'red-ui-button red-ui-button-small zwave-js-round-square'
+			);
+			NameLocation.css({
+				width: '30px',
+				height: '30px',
+				marginRight: '1px'
+			});
+			NameLocation.append('<i class="fa fa-pencil fa-lg"></i>');
+			RED.popover.tooltip(NameLocation, 'Edit Name / Location');
+			BA.append(NameLocation);
+
+			const _HealthCheck = $('<button>');
+			_HealthCheck.click(() => {
+				event.stopPropagation();
+				IsNodeReady(HoveredNode);
+				HealthCheck();
+			});
+			_HealthCheck.addClass(
+				'red-ui-button red-ui-button-small zwave-js-round-square'
+			);
+			_HealthCheck.css({
+				width: '30px',
+				height: '30px',
+				marginRight: '1px'
+			});
+			_HealthCheck.append('<i class="fa fa-stethoscope fa-lg"></i>');
+			RED.popover.tooltip(_HealthCheck, 'Run Health Check');
+			BA.append(_HealthCheck);
+
+			const Heal = $('<button>');
+			Heal.click(() => {
+				event.stopPropagation();
+				IsNodeReady(HoveredNode);
+				StartNodeHeal();
+			});
+			Heal.addClass('red-ui-button red-ui-button-small zwave-js-round-square');
+			Heal.css({
+				width: '30px',
+				height: '30px',
+				marginRight: '1px'
+			});
+			Heal.append('<i class="fa fa-medkit fa-lg"></i>');
+			RED.popover.tooltip(Heal, 'Heal Node');
+			BA.append(Heal);
+
+			const Associations = $('<button>');
+			Associations.click(() => {
+				event.stopPropagation();
+				IsNodeReady(HoveredNode);
+				AssociationMGMT();
+			});
+			Associations.addClass(
+				'red-ui-button red-ui-button-small zwave-js-round-square'
+			);
+			Associations.css({
+				width: '30px',
+				height: '30px',
+				marginRight: '1px'
+			});
+			Associations.append('<i class="fa fa-code-fork fa-lg"></i>');
+			RED.popover.tooltip(Associations, 'Association Management');
+			BA.append(Associations);
+
+			const Interview = $('<button>');
+			Interview.click(() => {
+				event.stopPropagation();
+				IsNodeReady(HoveredNode);
+				InterviewNode();
+			});
+			Interview.addClass(
+				'red-ui-button red-ui-button-small zwave-js-round-square'
+			);
+			Interview.css({
+				width: '30px',
+				height: '30px',
+				marginRight: '1px'
+			});
+			Interview.append('<i class="fa fa-handshake-o fa-lg"></i>');
+			RED.popover.tooltip(Interview, 'Re-Interview Node');
+			BA.append(Interview);
+
+			const RemoveFailed = $('<button>');
+			RemoveFailed.click(() => {
+				event.stopPropagation();
+				RemoveFailedNode();
+			});
+			RemoveFailed.addClass(
+				'red-ui-button red-ui-button-small zwave-js-round-square'
+			);
+			RemoveFailed.css({
+				width: '30px',
+				height: '30px',
+				marginRight: '1px'
+			});
+			RemoveFailed.append('<i class="fa  fa-trash-o fa-lg"></i>');
+			RED.popover.tooltip(RemoveFailed, 'Remove Failed Node');
+			BA.append(RemoveFailed);
+
+			const ReplaceFailed = $('<button>');
+			ReplaceFailed.click(() => {
+				event.stopPropagation();
+				ShowReplacePrompt();
+			});
+			ReplaceFailed.addClass(
+				'red-ui-button red-ui-button-small zwave-js-round-square'
+			);
+			ReplaceFailed.css({
+				width: '30px',
+				height: '30px',
+				marginRight: '1px'
+			});
+			ReplaceFailed.append('<i class="fa fa-chain-broken fa-lg"></i>');
+			RED.popover.tooltip(ReplaceFailed, 'Replace Failed Node');
+			BA.append(ReplaceFailed);
+
+			const _OpenDB = $('<button>');
+			_OpenDB.click(() => {
+				IsNodeReady(HoveredNode);
+				OpenDB();
+			});
+			_OpenDB.addClass(
+				'red-ui-button red-ui-button-small zwave-js-round-square'
+			);
+			_OpenDB.css({
+				width: '30px',
+				height: '30px',
+				marginRight: '1px'
+			});
+			_OpenDB.append('<i class="fa fa-database fa-lg"></i>');
+			RED.popover.tooltip(_OpenDB, 'Open in Device Browser');
+			BA.append(_OpenDB);
 		} else {
-			HoveredNode = Node;
+			BA.css({
+				display: 'block'
+			});
+		}
 
-			Row.children().css({ display: 'none' });
-			Row.children().first().css({ display: 'block' });
-			Row.css({ height: '30px' });
+		Row.append(BA);
+	}
 
-			if (BA === undefined) {
-				BA = $('<div>');
-				BA.css({
-					position: 'relative',
-					left: '-1px',
-					backgroundColor: 'inherit'
-				});
-
-				const NameLocation = $('<button>');
-				NameLocation.click(() => {
-					event.stopPropagation();
-					IsNodeReady(HoveredNode);
-					NameNode();
-				});
-				NameLocation.addClass(
-					'red-ui-button red-ui-button-small zwave-js-round-square'
-				);
-				NameLocation.css({
-					width: '30px',
-					height: '30px',
-					marginRight: '1px'
-				});
-				NameLocation.append('<i class="fa fa-pencil fa-lg"></i>');
-				RED.popover.tooltip(NameLocation, 'Edit Name / Location');
-				BA.append(NameLocation);
-
-				const _HealthCheck = $('<button>');
-				_HealthCheck.click(() => {
-					event.stopPropagation();
-					IsNodeReady(HoveredNode);
-					HealthCheck();
-				});
-				_HealthCheck.addClass(
-					'red-ui-button red-ui-button-small zwave-js-round-square'
-				);
-				_HealthCheck.css({
-					width: '30px',
-					height: '30px',
-					marginRight: '1px'
-				});
-				_HealthCheck.append('<i class="fa fa-stethoscope fa-lg"></i>');
-				RED.popover.tooltip(_HealthCheck, 'Run Health Check');
-				BA.append(_HealthCheck);
-
-				const Heal = $('<button>');
-				Heal.click(() => {
-					event.stopPropagation();
-					IsNodeReady(HoveredNode);
-					StartNodeHeal();
-				});
-				Heal.addClass(
-					'red-ui-button red-ui-button-small zwave-js-round-square'
-				);
-				Heal.css({
-					width: '30px',
-					height: '30px',
-					marginRight: '1px'
-				});
-				Heal.append('<i class="fa fa-medkit fa-lg"></i>');
-				RED.popover.tooltip(Heal, 'Heal Node');
-				BA.append(Heal);
-
-				const Associations = $('<button>');
-				Associations.click(() => {
-					event.stopPropagation();
-					IsNodeReady(HoveredNode);
-					AssociationMGMT();
-				});
-				Associations.addClass(
-					'red-ui-button red-ui-button-small zwave-js-round-square'
-				);
-				Associations.css({
-					width: '30px',
-					height: '30px',
-					marginRight: '1px'
-				});
-				Associations.append('<i class="fa fa-code-fork fa-lg"></i>');
-				RED.popover.tooltip(Associations, 'Association Management');
-				BA.append(Associations);
-
-				const Interview = $('<button>');
-				Interview.click(() => {
-					event.stopPropagation();
-					IsNodeReady(HoveredNode);
-					InterviewNode();
-				});
-				Interview.addClass(
-					'red-ui-button red-ui-button-small zwave-js-round-square'
-				);
-				Interview.css({
-					width: '30px',
-					height: '30px',
-					marginRight: '1px'
-				});
-				Interview.append('<i class="fa fa-handshake-o fa-lg"></i>');
-				RED.popover.tooltip(Interview, 'Re-Interview Node');
-				BA.append(Interview);
-
-				const RemoveFailed = $('<button>');
-				RemoveFailed.click(() => {
-					event.stopPropagation();
-					RemoveFailedNode();
-				});
-				RemoveFailed.addClass(
-					'red-ui-button red-ui-button-small zwave-js-round-square'
-				);
-				RemoveFailed.css({
-					width: '30px',
-					height: '30px',
-					marginRight: '1px'
-				});
-				RemoveFailed.append('<i class="fa  fa-trash-o fa-lg"></i>');
-				RED.popover.tooltip(RemoveFailed, 'Remove Failed Node');
-				BA.append(RemoveFailed);
-
-				const ReplaceFailed = $('<button>');
-				ReplaceFailed.click(() => {
-					event.stopPropagation();
-					ShowReplacePrompt();
-				});
-				ReplaceFailed.addClass(
-					'red-ui-button red-ui-button-small zwave-js-round-square'
-				);
-				ReplaceFailed.css({
-					width: '30px',
-					height: '30px',
-					marginRight: '1px'
-				});
-				ReplaceFailed.append('<i class="fa fa-chain-broken fa-lg"></i>');
-				RED.popover.tooltip(ReplaceFailed, 'Replace Failed Node');
-				BA.append(ReplaceFailed);
-
-				const _OpenDB = $('<button>');
-				_OpenDB.click(() => {
-					IsNodeReady(HoveredNode);
-					OpenDB();
-				});
-				_OpenDB.addClass(
-					'red-ui-button red-ui-button-small zwave-js-round-square'
-				);
-				_OpenDB.css({
-					width: '30px',
-					height: '30px',
-					marginRight: '1px'
-				});
-				_OpenDB.append('<i class="fa fa-database fa-lg"></i>');
-				RED.popover.tooltip(_OpenDB, 'Open in Device Browser');
-				BA.append(_OpenDB);
-			} else {
-				BA.css({
-					display: 'block'
-				});
-			}
-
-			Row.append(BA);
+	function ResetBA() {
+		if (LastTargetForBA !== undefined) {
+			LastTargetForBA.children().css({ display: 'block' });
+		}
+		if (BA !== undefined) {
+			BA.css({
+				display: 'none'
+			});
 		}
 	}
 
 	function renderNode(node) {
-		let Timer;
-
 		return $('<div>')
 			.addClass('red-ui-treeList-label zwave-js-node-row')
 			.attr('data-nodeid', node.nodeId)
 			.data('info', node)
-			.dblclick(() => {
-				if (LastTargetForBA !== undefined)
-					LastTargetForBA.children().css({ display: 'block' });
-
-				const Row = $('.zwave-js-node-row[data-nodeid="' + node.nodeId + '"]');
-				AddOverlayNodeButtons(node, $(Row));
-				LastTargetForBA = $(Row);
-
-				clearTimeout(Timer);
-				Timer = undefined;
-			})
-			.click(() => {
+			.click((e) => {
 				if (selectedNode === node.nodeId) {
+					ResetBA();
 					const Row = $(
 						'.zwave-js-node-row[data-nodeid="' + node.nodeId + '"]'
 					);
 					AddOverlayNodeButtons(node, $(Row));
 					LastTargetForBA = $(Row);
 					return;
+				} else {
+					if (e.shiftKey) {
+						ResetBA();
+						const Row = $(
+							'.zwave-js-node-row[data-nodeid="' + node.nodeId + '"]'
+						);
+						AddOverlayNodeButtons(node, $(Row));
+						LastTargetForBA = $(Row);
+					} else {
+						ResetBA();
+						IsNodeReady(node);
+						selectNode(node.nodeId);
+					}
 				}
-				clearTimeout(Timer);
-				Timer = undefined;
-				Timer = setTimeout(() => {
-					if (LastTargetForBA !== undefined)
-						LastTargetForBA.children().css({ display: 'block' });
-					AddOverlayNodeButtons();
-					IsNodeReady(node);
-					selectNode(node.nodeId);
-				}, 250);
 			})
 			.append(
 				$('<div>').html(node.nodeId).addClass('zwave-js-node-row-id'),
@@ -2636,10 +2647,7 @@ const ZwaveJsUI = (function () {
 
 	function updateNodeFetchStatus(text) {
 		$('#zwave-js-node-properties').treeList('data', [
-			{
-				label: text,
-				class: 'zwave-js-node-fetch-status'
-			}
+			{ label: text, class: 'zwave-js-node-fetch-status' }
 		]);
 	}
 

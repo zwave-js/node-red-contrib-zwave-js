@@ -914,7 +914,9 @@ module.exports = function (RED) {
 									property: 'isLow'
 								})
 							},
-							statistics: N.statistics
+							statistics: N.isControllerNode
+								? Driver.controller.statistics
+								: N.statistics
 						});
 					});
 					Nodes.sort((A, B) => A.nodeId - B.nodeId);
