@@ -263,10 +263,12 @@ const ZwaveJsUI = (function () {
 			};
 		}
 
-		$('<div>')
+		const D = $('<div>')
 			.css({ padding: 10, maxWidth: 500, wordWrap: 'break-word' })
 			.html(message)
 			.dialog(Options);
+
+		return D;
 	}
 
 	function ShowCommandViewer() {
@@ -536,6 +538,13 @@ const ZwaveJsUI = (function () {
 					PL[2][0].endpoint = parseInt(EI.val());
 				}
 
+				const D = modalPrompt(
+					'Adding Association...',
+					'Please wait.',
+					[],
+					false
+				);
+
 				ControllerCMD(
 					DCs.addAssociations.API,
 					DCs.addAssociations.name,
@@ -544,9 +553,11 @@ const ZwaveJsUI = (function () {
 					DCs.addAssociations.noWait
 				)
 					.then(() => {
+						D.dialog('destroy');
 						GMGroupSelected();
 					})
 					.catch((err) => {
+						D.dialog('destroy');
 						if (err.status === 504) {
 							modalAlert(
 								'The device maybe in a sleeping state, the association will be added later.',
@@ -579,6 +590,13 @@ const ZwaveJsUI = (function () {
 
 		const Buttons = {
 			Yes: function () {
+				const D = modalPrompt(
+					'Removing Association',
+					'Please wait.',
+					[],
+					false
+				);
+
 				ControllerCMD(
 					DCs.removeAssociations.API,
 					DCs.removeAssociations.name,
@@ -587,9 +605,11 @@ const ZwaveJsUI = (function () {
 					DCs.removeAssociations.noWait
 				)
 					.then(() => {
+						D.dialog('destroy');
 						GMGroupSelected();
 					})
 					.catch((err) => {
+						D.dialog('destroy');
 						if (err.status === 504) {
 							modalAlert(
 								'The device maybe in a sleeping state, the association will be removed later.',
@@ -857,6 +877,10 @@ const ZwaveJsUI = (function () {
 		if (NoTimeoutFor.includes(method)) {
 			Options.timeout = 0;
 			Payload.noTimeout = true;
+		} else {
+			// Hopefully we will never have to depend on this, if so - there is something seriously wrong with the network, that the user should resolve.
+			// Out internal timeouts of 10s will see to anything driver/server related
+			Options.timeout = 30000;
 		}
 
 		if (mode !== 'IEAPI') {
@@ -1571,6 +1595,12 @@ const ZwaveJsUI = (function () {
 		}
 		const Buttons = {
 			'Yes - Remove': function () {
+				const D = modalPrompt(
+					'Checking if Node has failed...',
+					'Please wait.',
+					[],
+					false
+				);
 				Removing = true;
 				ControllerCMD(
 					DCs.removeFailedNode.API,
@@ -1580,10 +1610,12 @@ const ZwaveJsUI = (function () {
 					DCs.removeFailedNode.noWait
 				)
 					.catch((err) => {
+						D.dialog('destroy');
 						modalAlert(err.responseText, 'Could not remove the Node.');
 						Removing = false;
 					})
 					.then(() => {
+						D.dialog('destroy');
 						Removing = false;
 					});
 			}

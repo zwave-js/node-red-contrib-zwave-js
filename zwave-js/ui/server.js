@@ -265,7 +265,7 @@ class UIServer {
 				const timeout = setTimeout(() => {
 					TimedOut = true;
 					res.status(504).end();
-				}, 5000);
+				}, 10000);
 
 				if (req.body.noTimeout) {
 					clearTimeout(timeout);
