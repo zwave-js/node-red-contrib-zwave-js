@@ -950,11 +950,13 @@
 					$('#node-input-serialPort').val('Select Port');
 				}
 
+				const OV = this.serialPort ?? '';
+
 				$('#node-input-serialPort').change(function (event) {
 					var Value = event.target.value;
 
 					if (Value === 'Custom Path...') {
-						Value = prompt('Enter custom serial path.');
+						Value = prompt('Enter custom serial path.',OV);
 						if (Value !== null) {
 							Value = Value.trim();
 							$('#node-input-serialPort').append(new Option(Value, Value));
