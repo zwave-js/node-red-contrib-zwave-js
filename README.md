@@ -47,10 +47,10 @@ Included with the contrib is a [user interface](https://github.com/zwave-js/node
 ![Image](./GHImages/Demo.png)
 
 There are 4 node types included with this contrib ([click here](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/node-types) for full details about these nodes)
- - `zwave-js`: this node is used to set up a connection to your USB Z-Wave controller, set security keys, and manage various advanced controller options
- - `zwave-device`: this node is used to send and receive messages to one or more of the Z-Wave devices on your network
- - `event-filter`: this node is used to filter and sort messages from your Z-Wave devices
- - `cmd-factory`: this node simplifies creation of messages being sent to your Z-Wave devices
+ - `ZWave Controller`: this node is used to set up a connection to your USB Z-Wave controller, set security keys, and manage various advanced controller options
+ - `ZWave Device`: this node is used to send and receive messages to one or more of the Z-Wave devices on your network
+ - `Event Filter`: this node is used to filter and sort messages from your Z-Wave devices
+ - `CMD Factory`: this node simplifies creation of messages being sent to your Z-Wave devices
 
 ### Getting Started Links
  - [Installing](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/getting-started): system requirements and install instructions
