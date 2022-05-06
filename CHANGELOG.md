@@ -13,12 +13,12 @@
     **New Features**
      - **VALUE_UPDATED**, **VALUE_NOTIFICATION**, **GET_VALUE_RESPONSE** and **VALUE_DB** now contain a **normalizedObject** property.
        This property aims to make it easy to utilise the value change, in that it summarises the event with easy to understand property names.
-     - New UI Layout - We have overhauled the UI, and focused on making it fit more into the node red style guide.
-     - An entierly new User Interface to render a Network Mesh Map.
+     - An entierly new side panel UI. This redesign aims to better align with the Node RED style guide.
+     - An entierly new Network Mesh Map, that is now based on routing header information instead of Node Neighbours.
      - Network statistics now include route information that is obtained during communication, and is used
        as the basis of the new map.
      - Multiple ZWave sticks/Networks are now supported (finally)
-       - all message will contain a property of **networkId** to indentify the source network.  
+       - All message will contain a property of **networkId** to indentify the source network.  
          **WARNING**: Before adding another network - please ensure you open up the currently configured Controller  
                and save it again (Remembering to deploy) - this will allign the current network to ID 1
      - Improved Recovery when the USB/ZWave transceiver has been removed/re-introduced.
@@ -28,7 +28,7 @@
     **Fixes**
      - Nodes that are not marked as ready can now be removed correctly.
      - Fix potential issue when **httpAdminRoot** has a custom value.
-     - various performance, stability and optimisations to the UI.
+     - Various performance, stability and optimisations to the UI.
      - UI Interaction is no longer picked up by Device Nodes.
 
     **Changes**

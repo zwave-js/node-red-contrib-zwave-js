@@ -1819,8 +1819,10 @@ const ZwaveJsUI = (function () {
 		});
 		BA.appendTo(CTTD3);
 
+		// Group
 		const Group = $('<button>');
 		Group.click(() => {
+			IsDriverReady();
 			if (GroupedNodes) {
 				GroupedNodes = false;
 				Group.find('i').removeClass('fa-indent');
