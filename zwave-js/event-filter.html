@@ -1,6 +1,7 @@
 ﻿<script type="text/javascript">
 	let Changed = false;
 	let ActiveFilter = undefined;
+	let IndexMap = undefined;
 
 	RED.nodes.registerType('event-filter', {
 		category: 'ZWave JS',
@@ -27,7 +28,7 @@
 		outputLabels: function (index) {
 			return this.filters[index].name;
 		},
-		paletteLabel: 'event-filter'
+		paletteLabel: 'Event Filter'
 	});
 
 	function compare(a, b) {
@@ -41,9 +42,7 @@
 	}
 
 	function SortUI() {
-		$('#node-input-outputs').val('{}');
-		const OPs = JSON.parse($('#node-input-outputs').val());
-
+		IndexMap = {};
 		$('#filtersets').editableList({
 			header: $('<div>').append(
 				'<div>Filter Sets - order defines outputs</div>'
@@ -56,41 +55,25 @@
 			removeItem: RemoveItem
 		});
 
-		let I = 0;
 		this.filters.sort(compare).forEach((Item) => {
-			Item._id = I;
 			$('#filtersets').editableList('addItem', Item);
-			OPs[Item._id] = I;
-			I++;
 		});
-		$('#node-input-outputs').val(JSON.stringify(OPs));
 	}
 
 	function SortItems(Items) {
-		const OPs = JSON.parse($('#node-input-outputs').val() || '{}');
-
 		for (let i = 0; i < Items.length; i++) {
+			IndexMap[Items[i].data('data').originalIndex] = i;
 			Items[i].data('data').index = i;
-			OPs[Items[i].data('data')._id ?? Items[i].data('data').id] = i;
 		}
-		$('#node-input-outputs').val(JSON.stringify(OPs));
 	}
 
 	function RemoveItem(Item) {
-		const OPs = JSON.parse($('#node-input-outputs').val() || '{}');
-		if (Item.hasOwnProperty('_id')) {
-			OPs[Item._id] = -1;
-		} else {
-			delete OPs[Item.id];
-		}
-
+		IndexMap[Item.originalIndex] = -1;
 		const Items = $('#filtersets').editableList('items');
 		for (let i = 0; i < Items.length; i++) {
+			IndexMap[Items[i].data('data').originalIndex] = i;
 			Items[i].data('data').index = i;
-			OPs[Items[i].data('data')._id ?? Items[i].data('data').id] = i;
 		}
-
-		$('#node-input-outputs').val(JSON.stringify(OPs));
 	}
 
 	function AddItem(container, index, data) {
@@ -101,11 +84,11 @@
 			data.events = ['VALUE_UPDATED'];
 			data.strict = false;
 			data.id = Math.floor((0x99999 - 0x10000) * Math.random()).toString();
-
-			const OPs = JSON.parse($('#node-input-outputs').val() || '{}');
-			OPs[data.id] = index;
-			$('#node-input-outputs').val(JSON.stringify(OPs));
 		}
+
+		data.originalIndex = index;
+		IndexMap[data.originalIndex] = index;
+
 		$(container).data('data', data);
 		$(container).click(SetActiveFilter);
 		$(container).css({ minWidth: '400px' });
@@ -220,13 +203,15 @@
 				}
 			});
 
-			delete ItemData._id;
 			ItemData.name = El.find('.data-name').val();
 			ItemData.strict = El.find('.data-event-Endpoint').prop('checked');
+			delete ItemData.originalIndex;
 			this.filters.push(ItemData);
 		}
 
 		ActiveFilter = undefined;
+
+		$('#node-input-outputs').val(JSON.stringify(IndexMap));
 	}
 
 	function AddValueIDToFilter(ValueID) {
@@ -272,12 +257,12 @@
 <!-- prettier-ignore -->
 <script type="text/markdown" data-help-name="event-filter">
 <p>A Z-Wave event filter.</p>
- 
+
 This node allows advanced filtration of the various value events that a node may send. It further allows filtering the type of data that was updated i.e. a Motion Event, Air Temp changes, Door Sensors, etc.
 
 The UI panel on the right can be used to provide the filter values, removing the need to write them yourself, but of course you can use manual entries if you prefer. Please visit our [event filter](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Event-Filter-Node) wiki page for a detailed walkthrough on how to set up your filters.
 
-Essentially this node is a `switch` node with specific sorting for the values found in Z-Wave messages. The Input of this node should be from a `zwave-js` node or a `zwave-device` node.
+Essentially this node is a `switch` node with specific sorting for the values found in Z-Wave messages. The Input of this node should be from a `ZWave Controller` node or a `ZWave Device` node.
 
 ### Message Handling
 

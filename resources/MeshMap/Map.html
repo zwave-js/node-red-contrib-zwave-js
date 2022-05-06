@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html style="height: 100vh">
+	<head>
+		<title>Node RED Z-Wave JS Network Mesh</title>
+		<script type="text/javascript" src="{BASE}/jquery-3.6.0.min.js"></script>
+		<script type="text/javascript" src="{BASE}/cytoscape.min.js"></script>
+		<script src="https://unpkg.com/weaverjs@1.2.0/dist/weaver.min.js"></script>
+		<script type="text/javascript" src="{BASE}/cytoscape-spread.js"></script>
+		<script type="text/javascript" src="{BASE}/maprender.js"></script>
+
+		<style>
+			#Details {
+				width: 400px;
+				height: 400px;
+				background-color: rgb(241, 241, 241);
+				font-size: 14px;
+				font-family: 'Helvetica Neue Light', 'Calibiri Light', Roboto;
+				-webkit-border-radius: 6px;
+				-moz-border-radius: 6px;
+				border-radius: 6px;
+				border-style: solid;
+				border-width: 1px;
+				-webkit-box-shadow: 10px 10px 5px -7px rgba(0, 0, 0, 0.75);
+				-moz-box-shadow: 10px 10px 5px -7px rgba(0, 0, 0, 0.75);
+				box-shadow: 10px 10px 5px -7px rgba(0, 0, 0, 0.75);
+				padding: 10px;
+				box-sizing: content-box;
+			}
+		</style>
+	</head>
+	<body style="height: 100%">
+		<div style="display: flex; width: 100%; height: 100%">
+			<div id="Details">
+				<span
+					>Select A node to view information.<br /><br />NOTE: Disconnected
+					Nodes will have their routes determined, after they first
+					communicate.</span
+				>
+			</div>
+			<div
+				id="NetworkMesh"
+				style="width: calc(100% - 400px); height: 100%"
+			></div>
+		</div>
+		<script>
+			Render('{BASE}');
+		</script>
+	</body>
+</html>

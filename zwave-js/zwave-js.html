@@ -13,10 +13,6 @@
 ></script>
 <script
 	type="text/javascript"
-	src="resources/node-red-contrib-zwave-js/UITab/vis-network.min.js"
-></script>
-<script
-	type="text/javascript"
 	src="resources/node-red-contrib-zwave-js/UITab/jquery-steps.min.js"
 ></script>
 <script
@@ -141,7 +137,7 @@
 					cellspacing='0'
 				>
 					<tr>
-						<td style='text-align: left;width: 200px;vertical-align: middle; '>
+						<td style='text-align: left;width: 200px;vertical-align: top; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('Default')"
@@ -156,7 +152,7 @@
 						</td>
 					</tr>
 					<tr>
-						<td style='text-align: left;vertical-align: middle; '>
+						<td style='text-align: left;vertical-align: top; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('SmartStart')"
@@ -167,7 +163,7 @@
 						</td>
 					</tr>
 					<tr>
-						<td style='text-align: left; vertical-align: middle; '>
+						<td style='text-align: left; vertical-align: top; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('S0')"
@@ -178,7 +174,7 @@
 						</td>
 					</tr>
 					<tr>
-						<td style='text-align: left; vertical-align: middle; '>
+						<td style='text-align: left; vertical-align: top; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('None')"
@@ -195,7 +191,7 @@
 
 					</tr>
 					<tr>
-						<td style='text-align: left; vertical-align: middle; '>
+						<td style='text-align: left; vertical-align: top; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('Remove')"
@@ -209,7 +205,7 @@
 						</td>
 					</tr>
 					<tr>
-						<td style='text-align: left; vertical-align: middle; '>
+						<td style='text-align: left; vertical-align: top; '>
 							<button
 								class='ui-button ui-corner-all ui-widget SecrutiyButton'
 								onclick="StartInclusionExclusion('EditSmartStart')"
@@ -481,7 +477,7 @@
 								onclick="StartReplace('S2')"
 							>S2</button>
 						</td>
-						<td style='text-align: left; vertical-align: top; '>
+						<td style='text-align: left; vertical-align: middle; '>
 							The replacement node will use S2 Security. (Reccomended)
 						</td>
 					</tr>
@@ -492,7 +488,7 @@
 								onclick="StartReplace('S0')"
 							>S0</button>
 						</td>
-						<td style='text-align: left; vertical-align: top; '>
+						<td style='text-align: left; vertical-align: middle; '>
 							The replacement node will use S0 Security. (Not Reccomended)
 						</td>
 					</tr>
@@ -503,7 +499,7 @@
 								onclick="StartReplace('None')"
 							>No Encryption</button>
 						</td>
-						<td style='text-align: left; vertical-align: top; '>
+						<td style='text-align: left; vertical-align: middle; '>
 							The replacement node will not use Security. (Not Reccomended)
 						</td>
 					</tr>
@@ -693,69 +689,25 @@
 	</div>
 </script>
 
-<!--Map-->
-<script id="TPL_Map" type="text/x-handlebars-template">
-	<div class='zwave-js-selected-node-map-info'>
-		<table style='width:100%'>
-			<tr>
-				<td style='width:120px; vertical-align:top'>Node ID</td>
-				<td id='NM_ID'>No Node Selected</td>
-			</tr>
-			<tr>
-				<td style='width:120px; vertical-align:top'>Name</td>
-				<td id='NM_Name'>&nbsp;</td>
-			</tr>
-			<tr>
-				<td style='width:120px; vertical-align:top'>Location</td>
-				<td id='NM_LOC'>&nbsp;</td>
-			</tr>
-			<tr>
-				<td style='width:120px; vertical-align:top'>Manufacturer/Model</td>
-				<td id='NM_MOD'>&nbsp;</td>
-			</tr>
-			<tr>
-				<td style='width:120px; vertical-align:top'>Status</td>
-				<td id='NM_Status'>&nbsp;</td>
-			</tr>
-			<tr style='word-break: break-all;'>
-				<td style='width:120px; vertical-align:top'>Route Slaves</td>
-				<td id='NM_Slaves'>&nbsp;</td>
-			</tr>
-			<tr style='word-break: break-all;'>
-				<td style='width:120px; vertical-align:top'>Route Clients</td>
-				<td id='NM_Clients'>&nbsp;</td>
-			</tr>
-
-		</table>
-		<div
-			id='zwave-js-selected-node-map-info-stats'
-			style='position: absolute;bottom: 5px;width:100%;text-align: center;'
-		>RX:0,
-			<span style='color: red;'>RXD:0</span>, TX:0,
-			<span style='color: red;'>TXD:0</span>,
-			<span style='color: red;'>TO:0</span></div>
-	</div>
-
-	<div id='Network' style='width: 100%; height: 100%;'>
-	</div>
-</script>
-
 <!--Firmware-->
 <script id="TPL_Firmware" type="text/x-handlebars-template">
 	<div
-		style='border: 1px solid red; margin-top: 10px; width: 650px; margin-left: auto; margin-right: auto; padding: 5px;'
+		style='border: 1px solid red; margin-top: 10px; width: 100%; box-sizing: border-box; margin-left: auto; margin-right: auto; padding: 10px;'
 	>
-		This software is provided as-is. The developer(s) of
+		This software is provided as-is.<br />
+		<br />
+		The developer(s) of
 		<strong>node-red-contrib-zwave-js</strong>
-		or any libraries it<br />
-		uses, are not responsible for any damage that may result from your attempt
-		to upgrade the firmware.<br /><br />You are performing this upgrade, soley
-		at your own risk.
+		or any libraries it uses,<br />
+		are not responsible for any damage that may result from your attempt to
+		upgrade the firmware.<br />
+		<br />
+		You are performing this upgrade, soley at your own risk.
 	</div>
 
 	<div
 		id='FWForm'
-		style='width: 650px; margin-left: auto; margin-right: auto; margin-top: 10px; padding: 5px;'
+		style='width: 100%; box-sizing: border-box; margin-left: auto; margin-right: auto; margin-top: 10px; padding: 5px;'
 	>
 		<table>
 			<tbody>
@@ -788,7 +740,7 @@
 				</tr>
 			</tbody>
 		</table>
-		<div id='progressbar'><div></div></div>
+		<div class='progressbar' id='FWProgress'><div></div></div>
 	</div>
 </script>
 
@@ -894,8 +846,9 @@
 		category: 'ZWave JS',
 		color: 'rgb(46,145,205)',
 		defaults: {
+			networkIdentifier: { value: undefined },
 			serialPort: { value: undefined },
-			name: { value: 'Z-Wave JS Controller' },
+			name: { value: 'ZWave Controller' },
 			encryptionKey: { value: undefined },
 			encryptionKeyS2U: { value: undefined },
 			encryptionKeyS2A: { value: undefined },
@@ -926,7 +879,7 @@
 		onpaletteadd: ZwaveJsUI.init,
 		oneditprepare: SortUI,
 		oneditsave: SortIO,
-		paletteLabel: 'zwave-js'
+		paletteLabel: 'ZWave Controller'
 	});
 
 	function SortIO() {
@@ -938,66 +891,104 @@
 	}
 
 	function SortUI() {
-		// 5.0 -> 5.1
-		if (this.logLevelPin === undefined) {
-			$('#node-input-logLevelPin').val('none');
-		}
+		$.getJSON(`zwave-js/cfg-getids`, (data) => {
+			data.UsedNIDs.forEach((ID) => {
+				$(`#Network${ID}`).css({ opacity: 0.5 });
+				$(`#Network${ID}`).prop('disabled', true);
+			});
 
-		// 3.3 -> 3.4
-		if (this.valueCacheDiskThrottle === undefined) {
-			$('#node-input-valueCacheDiskThrottle').val('normal');
-		}
+			const SameNodes = RED.nodes.filterNodes({ type: 'zwave-js' }).length;
 
-		$.getJSON('zwave-js/cfg-serialports', (data) => {
-			$('#node-input-serialPort').empty();
-			$('#node-input-serialPort').append(
-				new Option('Select Port', 'Select Port')
-			);
-			$('#node-input-serialPort').append(
-				new Option('Custom Path...', 'Custom Path...')
-			);
-
-			$('#node-input-serialPort').append(
-				data.map(function (option) {
-					return new Option(option, option);
-				})
-			);
-
-			if (this.serialPort !== undefined) {
-				if (data.indexOf(this.serialPort) < 0) {
-					$('#node-input-serialPort').append(
-						new Option(this.serialPort, this.serialPort)
-					);
+			if (this.networkIdentifier === undefined) {
+				if (data.UsedNIDs.length === 1 && SameNodes === 1) {
+					$('#node-input-networkIdentifier').val(data.UsedNIDs[0]);
+					$('#Network' + data.UsedNIDs[0]).css({
+						opacity: 1.0,
+						backgroundColor: 'lightgray'
+					});
+					$(`#Network${data.UsedNIDs[0]}`).prop('disabled', false);
+				} else {
+					$('#node-input-networkIdentifier').val(data.AvailableNIDs[0]);
+					$('#Network' + data.AvailableNIDs[0]).css({
+						opacity: 1.0,
+						backgroundColor: 'lightgray'
+					});
+					$(`#Network${data.AvailableNIDs[0]}`).prop('disabled', false);
 				}
-
-				$('#node-input-serialPort').val(this.serialPort);
 			} else {
-				$('#node-input-serialPort').val('Select Port');
+				$(`#Network${this.networkIdentifier}`).css({
+					opacity: 1.0,
+					backgroundColor: 'lightgray'
+				});
+				$(`#Network${this.networkIdentifier}`).prop('disabled', false);
 			}
 
-			$('#node-input-serialPort').change(function (event) {
-				var Value = event.target.value;
+			$.getJSON(`zwave-js/cfg-serialports`, (data) => {
+				$('#node-input-serialPort').empty();
+				$('#node-input-serialPort').append(
+					new Option('Select Port', 'Select Port')
+				);
+				$('#node-input-serialPort').append(
+					new Option('Custom Path...', 'Custom Path...')
+				);
 
-				if (Value === 'Custom Path...') {
-					Value = prompt('Enter custom serial path.');
-					if (Value !== null) {
-						Value = Value.trim();
-						$('#node-input-serialPort').append(new Option(Value, Value));
-						$('#node-input-serialPort').val(Value);
+				$('#node-input-serialPort').append(
+					data.map(function (option) {
+						return new Option(option, option);
+					})
+				);
+
+				if (this.serialPort !== undefined) {
+					if (data.indexOf(this.serialPort) < 0) {
+						$('#node-input-serialPort').append(
+							new Option(this.serialPort, this.serialPort)
+						);
 					}
+
+					$('#node-input-serialPort').val(this.serialPort);
+				} else {
+					$('#node-input-serialPort').val('Select Port');
 				}
+
+				const OV = this.serialPort ?? '';
+
+				$('#node-input-serialPort').change(function (event) {
+					var Value = event.target.value;
+
+					if (Value === 'Custom Path...') {
+						Value = prompt('Enter custom serial path.', OV);
+						if (Value !== null) {
+							Value = Value.trim();
+							$('#node-input-serialPort').append(new Option(Value, Value));
+							$('#node-input-serialPort').val(Value);
+						}
+					}
+				});
+				$.getJSON(`zwave-js/cfg-version`, (data) => {
+					$('#MOD_Version').val(data.moduleversion);
+					$('#ZWJS_Version').val(data.zwjsversion);
+					$('#ZWJS_CFGVersion').val(data.zwjscfgversion);
+				});
 			});
 		});
+	}
 
-		$.getJSON('zwave-js/cfg-version', (data) => {
-			$('#MOD_Version').val(data.moduleversion);
-			$('#ZWJS_Version').val(data.zwjsversion);
-			$('#ZWJS_CFGVersion').val(data.zwjscfgversion);
+	function setID(ID) {
+		$('#Network1').css({ backgroundColor: '' });
+		$('#Network2').css({ backgroundColor: '' });
+		$('#Network3').css({ backgroundColor: '' });
+		$('#Network4').css({ backgroundColor: '' });
+
+		$('#node-input-networkIdentifier').val(ID);
+		$('#Network' + ID).css({
+			backgroundColor: 'lightgray'
 		});
 	}
 </script>
 
 <script type="text/x-red" data-template-name="zwave-js">
+
+	<input type="hidden" id="node-input-networkIdentifier">
 
 	<p><strong>Z-Wave JS Analytics Reporting</strong></p>
 
@@ -1016,6 +1007,14 @@
 	<div class="form-row">
 	    <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
 	    <input type="text" id="node-input-name" placeholder="Zwave Controller">
+	</div>
+	<div class="form-row">
+	    <label for="node-input-networkIdentifier" style="width:130px"><i class="fa fa-pencil"></i> Network ID</label>
+	    <button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network1" onclick="setID(1)">1</button>
+		<button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network2" onclick="setID(2)">2</button>
+		<button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network3" onclick="setID(3)">3</button>
+		<button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network4" onclick="setID(4)">4</button>
+
 	</div>
 	<div class="form-row">
 	    <label for="node-input-serialPort" style="width:130px"><i class="fa fa-pencil"></i> Serial Port</label>
@@ -1159,7 +1158,7 @@
  
 Based on [Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/), this is the main node, it is responsible for everything and serves as the configuration for your USB Z-Wave radio.
 
-### Setup 
+### Setup
 
 The only **required** field is "Serial Port", where you must select the location of your USB Z-Wave radio (typically `/dev/ttyACM0` on most Linux setups).
 
@@ -1173,9 +1172,9 @@ Once this node is properly linked to a USB controller, the Z-Wave network setup 
 
 ### Inputs
 
-The input to this node is expected to be a `msg.payload` object containing a Z-Wave command. The zwave-js node can receive commands for the **Controller** itself or for any of the **Devices** on your Z-Wave network.
+The input to this node is expected to be a `msg.payload` object containing a Z-Wave command. The **ZWave Controller** node can receive commands for the **Controller** itself or for any of the **Devices** on your Z-Wave network.
 
-The format of each `msg.payload` object is dependant on which API is being used. The zwave-js node will accept any command from any of the APIs available. Follow the links below for more details on the proper formatting and message options for each API.
+The format of each `msg.payload` object is dependant on which API is being used. The **ZWave Controller** node will accept any command from any of the APIs available. Follow the links below for more details on the proper formatting and message options for each API.
 
 **[Controller API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Controller-API)** is used for network wide operations such as healing your network, manual firmware updates, removing failed nodes, and more.
 
@@ -1183,14 +1182,13 @@ The format of each `msg.payload` object is dependant on which API is being used.
 
 **[Driver API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Driver-API)** is a small set of methods which can pull data from the Z-Wave JS library. It allows to get the full (locally stored) Value Database and some statistics.
 
-**[CC API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/CC-API)** is option 1 of 2 for communication to a single Z-Wave device (node) on your network. These messages can be formed using the **cmd-factory** node.
+**[CC API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/CC-API)** is option 1 of 2 for communication to a single Z-Wave device (node) on your network. These messages can be formed using the **CMD Factory** node.
 
-**[Value API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Value-API)** is option 2 of 2 for communication to a single Z-Wave device (node) on your network. These messages can be formed using the **cmd-factory** node.
+**[Value API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Value-API)** is option 2 of 2 for communication to a single Z-Wave device (node) on your network. These messages can be formed using the **CMD Factory** node.
 
 ### Outputs
 
 The first output from this node will consist of **all** messages. This includes messages related to the controller and any Z-Wave device on your network. There is no internal filter, all messages from the controller and all nodes will always be output from this node. Detailed information about the messages from Z-Wave into Node-RED is available [here](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Payload-Messaging-Format).
 
 A second output is provided when the **Z-Wave JS Logging** from Pin 2 is enabled. Select a log level in the "Level (Pin 2)" field to enable JSON logs being output into your Node-RED flows.
-
 </script>

@@ -96,10 +96,9 @@ module.exports = function (RED) {
 		}
 
 		function IsValueIDMatch(ValueID, MSG, Event, Strict) {
-			let Root = MSG.payload.object;
+			const Root = MSG.payload.object;
 
 			if (Event === 'GET_VALUE_RESPONSE') {
-				Root = Root.valueId;
 				if (!Strict) {
 					delete ValueID['endpoint'];
 				}

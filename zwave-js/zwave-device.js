@@ -6,9 +6,16 @@ module.exports = function (RED) {
 		RED.nodes.createNode(this, config);
 		const RedNode = this;
 
+		const NetworkIdentifier = config.networkIdentifier || 1;
+
+		function SetFlowNodeStatus(Status) {
+			Status.text = `[Net: ${NetworkIdentifier}] ${Status.text}`;
+			RedNode.status(Status);
+		}
+
 		function UpdateStatus(Color, Shape, Text) {
 			if (config.showStatus === undefined || config.showStatus) {
-				RedNode.status({
+				SetFlowNodeStatus({
 					fill: Color,
 					shape: Shape,
 					text: Text
@@ -73,14 +80,20 @@ module.exports = function (RED) {
 			}
 			VarNode = VarValue;
 			if (Out) {
-				NodeEventEmitter.on(`zwjs:node:event:${VarNode}`, processEventMessage);
+				NodeEventEmitter.on(
+					`zwjs:${NetworkIdentifier}:node:event:${VarNode}`,
+					processEventMessage
+				);
 			}
 		}
 
 		if (Array.isArray(config.filteredNodeId)) {
 			if (Out) {
 				config.filteredNodeId.forEach((N) => {
-					NodeEventEmitter.on(`zwjs:node:event:${N}`, processEventMessage);
+					NodeEventEmitter.on(
+						`zwjs:${NetworkIdentifier}:node:event:${N}`,
+						processEventMessage
+					);
 				});
 			}
 			if (config.multicast) {
@@ -94,7 +107,7 @@ module.exports = function (RED) {
 			DeviceMode = 'Specific';
 			if (Out) {
 				NodeEventEmitter.on(
-					`zwjs:node:event:${config.filteredNodeId}`,
+					`zwjs:${NetworkIdentifier}:node:event:${config.filteredNodeId}`,
 					processEventMessage
 				);
 			}
@@ -106,7 +119,10 @@ module.exports = function (RED) {
 		} else if (config.filteredNodeId === 'All') {
 			DeviceMode = 'All';
 			if (Out) {
-				NodeEventEmitter.on('zwjs:node:event:all', processEventMessage);
+				NodeEventEmitter.on(
+					`zwjs:${NetworkIdentifier}:node:event:all`,
+					processEventMessage
+				);
 			}
 			UpdateStatus('green', 'dot', 'Mode: All Nodes');
 		} else if (config.filteredNodeId === 'AS') {
@@ -121,7 +137,7 @@ module.exports = function (RED) {
 		RedNode.on('input', Input);
 		function AddIsolatedNodeID(msg) {
 			NodeEventEmitter.removeAllListeners(
-				`zwjs:node:event:isloated:${RedNode.id}`
+				`zwjs:${NetworkIdentifier}:node:event:isloated:${RedNode.id}`
 			);
 			if (
 				msg.payload.mode === 'ValueAPI' &&
@@ -134,7 +150,7 @@ module.exports = function (RED) {
 				msg.isolatedNodeId = RedNode.id;
 
 				NodeEventEmitter.on(
-					`zwjs:node:event:isloated:${RedNode.id}`,
+					`zwjs:${NetworkIdentifier}:node:event:isloated:${RedNode.id}`,
 					processEventMessage
 				);
 			}
@@ -147,12 +163,12 @@ module.exports = function (RED) {
 						const Node = msg.payload.node;
 						if (Node !== DynamicIDListener) {
 							NodeEventEmitter.removeListener(
-								`zwjs:node:event:${DynamicIDListener}`,
+								`zwjs:${NetworkIdentifier}:node:event:${DynamicIDListener}`,
 								processEventMessage
 							);
 							if (Out) {
 								NodeEventEmitter.on(
-									`zwjs:node:event:${Node}`,
+									`zwjs:${NetworkIdentifier}:node:event:${Node}`,
 									processEventMessage
 								);
 							}
@@ -201,11 +217,11 @@ module.exports = function (RED) {
 						await RateLimiter.removeTokens(1);
 						const TR = LD.cloneDeep(msg);
 						TR.payload.node = parseInt(config.filteredNodeId[i]);
-						NodeEventEmitter.emit('zwjs:node:command', TR);
+						NodeEventEmitter.emit(`zwjs:${NetworkIdentifier}:node:command`, TR);
 					}
 					UpdateStatus('green', 'dot', 'Mode: Multiple');
 				} else {
-					NodeEventEmitter.emit('zwjs:node:command', msg);
+					NodeEventEmitter.emit(`zwjs:${NetworkIdentifier}:node:command`, msg);
 				}
 				if (done) {
 					done();
@@ -223,20 +239,20 @@ module.exports = function (RED) {
 
 		RedNode.on('close', (done) => {
 			NodeEventEmitter.removeAllListeners(
-				`zwjs:node:event:isloated:${RedNode.id}`
+				`zwjs:${NetworkIdentifier}:node:event:isloated:${RedNode.id}`
 			);
 
 			switch (DeviceMode) {
 				case 'Specific':
 					NodeEventEmitter.removeListener(
-						`zwjs:node:event:${config.filteredNodeId}`,
+						`zwjs:${NetworkIdentifier}:node:event:${config.filteredNodeId}`,
 						processEventMessage
 					);
 					break;
 
 				case 'Var':
 					NodeEventEmitter.removeListener(
-						`zwjs:node:event:${VarNode}`,
+						`zwjs:${NetworkIdentifier}:node:event:${VarNode}`,
 						processEventMessage
 					);
 					break;
@@ -245,7 +261,7 @@ module.exports = function (RED) {
 				case 'Multicast':
 					config.filteredNodeId.forEach((N) => {
 						NodeEventEmitter.removeListener(
-							`zwjs:node:event:${N}`,
+							`zwjs:${NetworkIdentifier}:node:event:${N}`,
 							processEventMessage
 						);
 					});
@@ -253,14 +269,14 @@ module.exports = function (RED) {
 
 				case 'All':
 					NodeEventEmitter.removeListener(
-						'zwjs:node:event:all',
+						`zwjs:${NetworkIdentifier}:node:event:all`,
 						processEventMessage
 					);
 					break;
 
 				case 'AS':
 					NodeEventEmitter.removeListener(
-						`zwjs:node:event:${DynamicIDListener}`,
+						`zwjs:${NetworkIdentifier}:node:event:${DynamicIDListener}`,
 						processEventMessage
 					);
 					break;

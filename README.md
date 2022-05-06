@@ -8,7 +8,7 @@
 ![npms.io (maintenance)](https://img.shields.io/npms-io/maintenance-score/node-red-contrib-zwave-js)
 ![Libraries.io dependency status for latest release](https://img.shields.io/librariesio/release/npm/node-red-contrib-zwave-js)
 
-The most powerful/fully integrated Z-Wave node for Node-RED based on Z-Wave JS. If you want a fully featured Z-Wave framework in your Node-RED instance, look no further.
+The most powerful, high performing and highly polished Z-Wave node for Node-RED based on Z-Wave JS. If you want a fully featured Z-Wave framework in your Node-RED instance, you have found it.
 
 > ### ...node-red-contrib-zwave-js is _hands down the best Z-Wave to Node-RED option on the planet._  
 > [@CRXPorter](https://github.com/crxporter), July 2021.  
@@ -22,6 +22,7 @@ The most powerful/fully integrated Z-Wave node for Node-RED based on Z-Wave JS. 
  - The Ability to capture commands for later use.
  - A deep integrated UI within in node red
  - Full Z-Wave control inside Node-RED including:
+   - Multi Stick/Network support
    - Device inclusion/exclusion wizard
    - S0 and S2 security support
    - Supports Security S2 Smart Start (Mobile companion web application)  
@@ -46,10 +47,10 @@ Included with the contrib is a [user interface](https://github.com/zwave-js/node
 ![Image](./GHImages/Demo.png)
 
 There are 4 node types included with this contrib ([click here](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/node-types) for full details about these nodes)
- - `zwave-js`: this node is used to set up a connection to your USB Z-Wave controller, set security keys, and manage various advanced controller options
- - `zwave-device`: this node is used to send and receive messages to one or more of the Z-Wave devices on your network
- - `event-filter`: this node is used to filter and sort messages from your Z-Wave devices
- - `cmd-factory`: this node simplifies creation of messages being sent to your Z-Wave devices
+ - `ZWave Controller`: this node is used to set up a connection to your USB Z-Wave controller, set security keys, and manage various advanced controller options
+ - `ZWave Device`: this node is used to send and receive messages to one or more of the Z-Wave devices on your network
+ - `Event Filter`: this node is used to filter and sort messages from your Z-Wave devices
+ - `CMD Factory`: this node simplifies creation of messages being sent to your Z-Wave devices
 
 ### Getting Started Links
  - [Installing](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/getting-started): system requirements and install instructions
