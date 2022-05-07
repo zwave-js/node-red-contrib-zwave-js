@@ -81,32 +81,22 @@ function ParseCode(req, res) {
 	}
 }
 
-const RemovePaths = () => {
-	const Routes = [];
-
-	_HTTPAdmin._router.stack.forEach((R) => {
-		if (R.route === undefined) {
-			Routes.push(R);
-			return;
-		}
-
-		if (R.route.path.startsWith(`/zwave-js/${_NetworkID}/smartstart-event`)) {
-			return;
-		}
-
-		if (R.route.path.startsWith(`/zwave-js/smartstart-scanner`)) {
-			return;
-		}
-
-		Routes.push(R);
-	});
-
-	return Routes;
-};
-
 const Stop = () => {
 	if (_NetworkID !== undefined) {
-		_HTTPAdmin._router.stack = RemovePaths();
+		const Check = (Route) => {
+			if (Route.route === undefined) {
+				return true;
+			}
+			if (
+				!Route.route.path.startsWith(`/zwave-js/smartstart-scanner`) &&
+				!Route.route.path.startsWith(`/zwave-js/${_NetworkID}/smartstart-event`)
+			) {
+				return true;
+			}
+			return false;
+		};
+
+		_HTTPAdmin._router.stack = _HTTPAdmin._router.stack.filter(Check);
 
 		_Enabled = false;
 		_Callback = undefined;

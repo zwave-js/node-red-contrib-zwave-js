@@ -1,5 +1,11 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 7.0.1
+
+    **Changes**
+     - Small optimisations to Express route cleanup.
+
+
   - 7.0.0
 
     **Breaking Changes**
