@@ -457,19 +457,20 @@ class UIServer {
 			delete this._Context.controller;
 			delete this._Context.input;
 		} else {
-			const Routes = [];
-			this._RED.httpAdmin._router.stack.forEach((R) => {
-				if (R.route === undefined) {
-					Routes.push(R);
-					return;
+			const Check = (Route) => {
+				if (Route.route === undefined) {
+					return true;
 				}
-				if (!R.route.path.startsWith(`/zwave-js/${this._NetworkIdentifier}`)) {
-					Routes.push(R);
-					return;
+				if (
+					!Route.route.path.startsWith(`/zwave-js/${this._NetworkIdentifier}`)
+				) {
+					return true;
 				}
-			});
 
-			this._RED.httpAdmin._router.stack = Routes;
+				return false;
+			};
+			this._RED.httpAdmin._router.stack =
+				this._RED.httpAdmin._router.stack.filter(Check);
 
 			delete this._Context.controller;
 			delete this._Context.input;
