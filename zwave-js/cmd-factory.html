@@ -29,16 +29,13 @@
 
 	function GoToInfo() {
 		event.preventDefault();
-
-		const URL =
-			'https://zwave-js.github.io/node-zwave-js/#/api/CCs/' +
-			$('#node-input-cc').val().replace(/ /g, '') +
-			'?id=' +
-			$('#node-input-method').val().toLowerCase();
-		var link = document.createElement('a');
-		link.href = URL;
-		link.setAttribute('target', '_blank');
-		document.body.appendChild(link);
+		const CC = $('#node-input-cc').val().replace(/ /g, '');
+		const Method = $('#node-input-method').val().toLowerCase();
+		const URL = `https://zwave-js.github.io/node-zwave-js/#/api/CCs/${CC}?id=${Method}`;
+		const link = $('<a>');
+		link.attr('href', URL);
+		link.attr('target', '_blank');
+		$(document).append(link);
 		link.click();
 		link.remove();
 	}
