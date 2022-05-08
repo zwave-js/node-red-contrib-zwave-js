@@ -123,7 +123,7 @@ class UIServer {
 		this._RED = RED;
 		this._SmartStartCallback = this._SmartStartCallback.bind(this);
 
-		this._NetworkIdentifier = parseInt(ID);
+		this._NetworkIdentifier = ID;
 
 		AvailableNIDs = AvailableNIDs.filter(
 			(_ID) => _ID !== this._NetworkIdentifier

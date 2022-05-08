@@ -1,5 +1,11 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 7.0.2
+
+    **Fixes**
+     - Fix **networkId** format
+     - Address LGTM alert
+
   - 7.0.1
 
     **Changes**

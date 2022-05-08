@@ -6,7 +6,7 @@ module.exports = function (RED) {
 		RED.nodes.createNode(this, config);
 		const RedNode = this;
 
-		const NetworkIdentifier = config.networkIdentifier || 1;
+		const NetworkIdentifier = parseInt(config.networkIdentifier || 1);
 
 		function SetFlowNodeStatus(Status) {
 			Status.text = `[Net: ${NetworkIdentifier}] ${Status.text}`;
