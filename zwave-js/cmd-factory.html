@@ -32,12 +32,7 @@
 		const CC = $('#node-input-cc').val().replace(/ /g, '');
 		const Method = $('#node-input-method').val().toLowerCase();
 		const URL = `https://zwave-js.github.io/node-zwave-js/#/api/CCs/${CC}?id=${Method}`;
-		const link = $('<a>');
-		link.attr('href', URL);
-		link.attr('target', '_blank');
-		$(document).append(link);
-		link.click();
-		link.remove();
+		window.open(URL, '_blank');
 	}
 
 	function SortUI() {
