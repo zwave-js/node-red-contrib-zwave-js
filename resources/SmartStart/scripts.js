@@ -97,11 +97,7 @@ function SendCode(Code) {
 	return new Promise((resolve) => {
 		const Entry = ScannedCodes[Code.data];
 		if (Entry !== undefined) {
-			if (Entry.ok) {
-				resolve();
-			} else {
-				resolve();
-			}
+			resolve();
 		} else {
 			let Result;
 			$.ajax({

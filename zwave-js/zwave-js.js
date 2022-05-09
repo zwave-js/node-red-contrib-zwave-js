@@ -1478,13 +1478,11 @@ module.exports = function (RED) {
 						if (
 							!Driver.controller.isAssociationAllowed(Params[0], Params[1], A)
 						) {
-							const ErrorMSG =
-								'Association: Source ' + JSON.stringify(Params[0]);
-							+', Group ' +
-								Params[1] +
-								', Destination ' +
-								JSON.stringify(A) +
-								' is not allowed.';
+							const ErrorMSG = `Association: Source ->  ${JSON.stringify(
+								Params[0]
+							)}, Group -> ${Params[1]}, Destination -> ${JSON.stringify(
+								A
+							)} is not allowed.`;
 							throw new Error(ErrorMSG);
 						}
 					});
