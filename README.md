@@ -5,6 +5,8 @@
 ![NPM](https://img.shields.io/npm/l/node-red-contrib-zwave-js)
 ![npm](https://img.shields.io/npm/v/node-red-contrib-zwave-js)
 [![Package Quality](https://packagequality.com/shield/node-red-contrib-zwave-js.svg)](https://packagequality.com/#?package=node-red-contrib-zwave-js)
+![npm](https://img.shields.io/npm/dt/node-red-contrib-zwave-js)
+![npm](https://img.shields.io/npm/dm/node-red-contrib-zwave-js)
 [![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/zwave-js/node-red-contrib-zwave-js.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/zwave-js/node-red-contrib-zwave-js/context:javascript)
 ![GitHub issues](https://img.shields.io/github/issues-raw/zwave-js/node-red-contrib-zwave-js)
 ![GitHub closed issues](https://img.shields.io/github/issues-closed-raw/zwave-js/node-red-contrib-zwave-js)
