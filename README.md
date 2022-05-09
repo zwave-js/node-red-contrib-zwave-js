@@ -6,8 +6,6 @@
 ![npm](https://img.shields.io/npm/v/node-red-contrib-zwave-js)
 [![Package Quality](https://packagequality.com/shield/node-red-contrib-zwave-js.svg)](https://packagequality.com/#?package=node-red-contrib-zwave-js)
 [![DeepScan grade](https://deepscan.io/api/teams/17652/projects/21011/branches/591232/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=17652&pid=21011&bid=591232)
-![npm](https://img.shields.io/npm/dt/node-red-contrib-zwave-js)
-![npm](https://img.shields.io/npm/dm/node-red-contrib-zwave-js)
 ![GitHub issues](https://img.shields.io/github/issues-raw/zwave-js/node-red-contrib-zwave-js)
 ![GitHub closed issues](https://img.shields.io/github/issues-closed-raw/zwave-js/node-red-contrib-zwave-js)
 ![Libraries.io dependency status for latest release](https://img.shields.io/librariesio/release/npm/node-red-contrib-zwave-js)
