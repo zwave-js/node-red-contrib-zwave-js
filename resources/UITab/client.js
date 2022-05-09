@@ -2953,8 +2953,8 @@ const ZwaveJsUI = (function () {
 
 		// If value is not provided in arguments or in the valueId, then use the stored raw value.
 		const value =
-			valueId?.newValue ??
-			valueId?.currentValue ??
+			valueId.newValue ??
+			valueId.currentValue ??
 			propertyValue.data('value') ??
 			'';
 
@@ -3004,8 +3004,8 @@ const ZwaveJsUI = (function () {
 
 		// If states are provided, translate and add tooltip with raw value
 		const value = propertyValue.data('value');
-		if (meta?.states?.[value]) {
-			propertyValue.text(meta?.states?.[value]);
+		if (meta.states?.[value]) {
+			propertyValue.text(meta.states?.[value]);
 			RED.popover.tooltip(propertyValue, `Raw Value: ${value}`);
 		}
 
