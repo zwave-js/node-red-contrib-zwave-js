@@ -1,14 +1,14 @@
   # node-red-contrib-zwave-js Change Log
 
-   - 7.0.3
+  - 7.0.3
 
     **Changes**
-     - Replaced LGTM quality check with deepscan
-     - Address some deepscan alerts
-     - Added CodeQL security checks
-     - Bump Zwave JS to 9.2.2
-     - Implement publish to NPM wotk flow (github release)
-     - Update shields
+      - Replaced LGTM quality check with deepscan  
+      - Address deepscan alerts  
+      - Added CodeQL security checks  
+      - Bump Zwave JS to 9.2.2  
+      - Implement publish to NPM workflow (github release)  
+      - Update shields  
 
   - 7.0.2
 
