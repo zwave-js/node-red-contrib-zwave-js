@@ -1,5 +1,17 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 7.1.0
+
+    **New Features**
+      - Added new **Advanced Transceiver Settings** dialog (and where supported by the ZWave radio in use)
+        - Region settings
+        - RF Power settings
+        - Backup/Restore NVM
+
+    **Changes**
+      - Increase UI timeout to 15s to account for slower responding systems
+
+
   - 7.0.3
 
     **Changes**

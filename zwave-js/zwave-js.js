@@ -833,6 +833,7 @@ module.exports = function (RED) {
 			);
 
 			let SupportsNN = false;
+			let Result;
 
 			switch (Method) {
 				case 'abortFirmwareUpdate':
@@ -861,6 +862,16 @@ module.exports = function (RED) {
 				case 'setRFRegion':
 					await Driver.controller.setRFRegion(ZWaveJS.RFRegion[Params[0]]);
 					Send(undefined, 'RF_REGION_SET', Params[0], send);
+					break;
+
+				case 'setPowerlevel':
+					Result = await Driver.controller.setPowerlevel(Params[0], Params[1]);
+					Send(undefined, 'CONTROLLER_POWER_LEVEL_SET_RESULT', Result, send);
+					break;
+
+				case 'getPowerlevel':
+					Result = await Driver.controller.getPowerlevel();
+					Send(undefined, 'CONTROLLER_POWER_LEVEL', Result, send);
 					break;
 
 				case 'toggleRF':

@@ -744,6 +744,61 @@
 	</div>
 </script>
 
+<!--RF Settings-->
+<script id="TPL_RF" type="text/x-handlebars-template">
+	<div
+		style='border: 1px solid red; margin-top: 10px; width: 100%; box-sizing: border-box; margin-left: auto; margin-right: auto; padding: 10px;'
+	>
+		This software is provided as-is.<br />
+		<br />
+		The developer(s) of
+		<strong>node-red-contrib-zwave-js</strong>
+		or any libraries it uses,<br />
+		are not responsible for any damage that may result of your use of the below
+		functions.<br />
+		<br />
+		You are performing these actions, soley at your own risk, and are
+		responsible for ensuring any RF changes complies with all applicable laws
+		and regulations.
+	</div>
+	<table style="width:100%; padding: 15px;" cellpadding="10px">
+		<tr id="RF_TR_REGION">
+			<td>RF Region</td>
+			<td style="text-align:right">
+			<select id="RF_REGION">
+				<option value="0x02">Australia/New Zealand</option>
+				<option value="0x08">China</option>
+				<option value="0xff">Default (EU)</option>
+				<option value="0x00">Europe</option>
+				<option value="0x03">Hong Kong</option>
+				<option value="0x05">India</option>
+				<option value="0x06">Israel</option>
+				<option value="0x20">Japan</option>
+				<option value="0x21">Korea</option>
+				<option value="0x07">Russia</option>
+				<option value="0x01">USA</option>
+				<option value="0x09">USA (Long Range)</option>
+				<option value="0xfe" selected>Unknown</option>
+			</select>
+
+			</td>
+		</tr>
+		<tr id="RF_TR_POWER">
+			<td>RF Power Level (dbm)</td>
+			<td style="text-align:right">
+
+			Level: <input id="RF_POWER" type="range" min="-12.8" max="12.7" value="0" style="width:200px"><br />
+			@ 0dbm: <input id="RF_0DBM" type="range" min="-12.8" max="12.7" value="0" style="width:200px">
+
+			</td>
+		</tr>
+		<tr>
+			<td>Backup/Restore NVM</td>
+			<td style="text-align:right"><button style="width:120px; height:30px" class='ui-button ui-corner-all ui-widget SecrutiyButton'">Restore</button> <button button style="width:120px; height:30px"  class='ui-button ui-corner-all ui-widget SecrutiyButton'">Backup</button></td>
+		</tr>
+	</table>
+</script>
+
 <script type="text/javascript">
 	function modalAlert(message, title) {
 		const Buts = {

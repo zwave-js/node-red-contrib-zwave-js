@@ -17,6 +17,26 @@ let NetworkIdentifier = undefined;
 
 /* Commands used throughout */
 const DCs = {
+	getRFRegion: {
+		API: 'ControllerAPI',
+		name: 'getRFRegion',
+		noWait: false
+	},
+	setRFRegion: {
+		API: 'ControllerAPI',
+		name: 'setRFRegion',
+		noWait: false
+	},
+	getPowerlevel: {
+		API: 'ControllerAPI',
+		name: 'getPowerlevel',
+		noWait: false
+	},
+	setPowerlevel: {
+		API: 'ControllerAPI',
+		name: 'setPowerlevel',
+		noWait: false
+	},
 	checkLifelineHealth: {
 		API: 'DriverAPI',
 		name: 'checkLifelineHealth',
@@ -220,6 +240,7 @@ const ZwaveJsUI = (function () {
 	let HCForm; // Health Check Form
 	let HCRounds; // Health Check Rounds
 	let FirmwareForm; // FrimwareForm
+	let RFForm; // FrimwareForm
 	let FWRunning = false; // Firmware Updare Running
 	const Groups = {}; // Association Groups
 	let Removing = false; // Removing Failed Node
@@ -1585,6 +1606,65 @@ const ZwaveJsUI = (function () {
 		window.open(`https://devices.zwave-js.io/?jumpTo=${id}`, '_blank');
 	}
 
+	function RFSettings() {
+		const Options = {
+			draggable: false,
+			modal: true,
+			resizable: false,
+			width: WindowSize.w,
+			height: WindowSize.h,
+			title: 'Advanced Transceiver Settings',
+			minHeight: 75,
+			buttons: {
+				Cancel: function () {
+					$(this).dialog('destroy');
+				}
+			}
+		};
+
+		RFForm = $('<div>').css({ padding: 10 }).html('Please wait...');
+		RFForm.dialog(Options);
+
+		RFForm.html('');
+		const Template = $('#TPL_RF').html();
+		const templateScript = Handlebars.compile(Template);
+		const HTML = templateScript({});
+		RFForm.append(HTML);
+
+		const GetPower = () => {
+			ControllerCMD(
+				DCs.getPowerlevel.API,
+				DCs.getPowerlevel.name,
+				undefined,
+				undefined,
+				DCs.getPowerlevel.noWait
+			)
+				.then(({ object }) => {
+					$('#RF_POWER').val(object.powerlevel);
+					$('#RF_0DBM').val(object.measured0dBm);
+				})
+				.catch((err) => {
+					$('#RF_TR_POWER').css({ opacity: '0.3', pointerEvents: 'none' });
+				});
+		};
+
+		ControllerCMD(
+			DCs.getRFRegion.API,
+			DCs.getRFRegion.name,
+			undefined,
+			undefined,
+			DCs.getRFRegion.noWait
+		)
+			.then(({ object }) => {
+				$('#RF_REGION').val(object);
+				GetPower();
+			})
+			.catch((err) => {
+				$('#RF_TR_REGION').css({ opacity: '0.3', pointerEvents: 'none' });
+				GetPower();
+			});
+	}
+
 	function RemoveFailedNode() {
 		if (Removing) {
 			modalAlert(
@@ -1662,6 +1742,14 @@ const ZwaveJsUI = (function () {
 					onselect: function () {
 						IsDriverReady();
 						FirmwareUpdate();
+					}
+				},
+				{
+					id: 'controller-option-menu-rf',
+					label: 'Transceiver Settings',
+					onselect: function () {
+						IsDriverReady();
+						RFSettings();
 					}
 				},
 				{
