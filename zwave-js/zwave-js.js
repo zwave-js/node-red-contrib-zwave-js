@@ -860,13 +860,26 @@ module.exports = function (RED) {
 					break;
 
 				case 'setRFRegion':
-					await Driver.controller.setRFRegion(ZWaveJS.RFRegion[Params[0]]);
-					Send(undefined, 'RF_REGION_SET', Params[0], send);
+					Result = await Driver.controller.setRFRegion(Params[0]);
+					Send(
+						undefined,
+						'RF_REGION_SET_RESULT',
+						{ targetRegion: Params[0], success: Result },
+						send
+					);
 					break;
 
 				case 'setPowerlevel':
 					Result = await Driver.controller.setPowerlevel(Params[0], Params[1]);
-					Send(undefined, 'CONTROLLER_POWER_LEVEL_SET_RESULT', Result, send);
+					Send(
+						undefined,
+						'CONTROLLER_POWER_LEVEL_SET_RESULT',
+						{
+							targetLevels: { powerlevel: Params[0], measured0dBm: Params[1] },
+							success: Result
+						},
+						send
+					);
 					break;
 
 				case 'getPowerlevel':
@@ -875,8 +888,13 @@ module.exports = function (RED) {
 					break;
 
 				case 'toggleRF':
-					await Driver.controller.toggleRF(Params[0]);
-					Send(undefined, 'RF_STATUS', Params[0], send);
+					Result = await Driver.controller.toggleRF(Params[0]);
+					Send(
+						undefined,
+						'RF_STATUS_SET_RESULT',
+						{ targetStatus: Params[0], success: Result },
+						send
+					);
 					break;
 
 				case 'getNodes':

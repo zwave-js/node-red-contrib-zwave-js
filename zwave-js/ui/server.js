@@ -375,7 +375,8 @@ class UIServer {
 				this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/cmd`, {
 					type: 'node-collection-change',
 					event: 'node added',
-					inclusionResult: IR
+					inclusionResult: IR,
+					securityClass: N.getHighestSecurityClass()
 				});
 			});
 

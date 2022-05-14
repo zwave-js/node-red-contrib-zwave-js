@@ -2095,14 +2095,21 @@ const ZwaveJsUI = (function () {
 					ClearIETimer();
 					ClearSecurityCountDown();
 					GetNodes();
+					const SecurityDescription = GetSecurityClassLabel(data.securityClass);
+					const HTML = `<td style="text-align: center; padding-top: 50px; font-size: 18px;"><span class="fa-stack"><span class="fa ${SecurityDescription.icon} fa-stack-2x"></span></span>${SecurityDescription.label}</td>`;
 					if (
 						data.inclusionResult.lowSecurity !== undefined &&
 						data.inclusionResult.lowSecurity
 					) {
 						StepsAPI.setStepIndex(StepList.AddDoneInsecure);
+						const Row = $('#IR_Security_Row_NOK');
+						Row.html(HTML);
 					} else {
 						StepsAPI.setStepIndex(StepList.AddDone);
+						const Row = $('#IR_Security_Row_OK');
+						Row.html(HTML);
 					}
+
 					$('#IEButton').text('Close');
 				}
 				if (data.event === 'node removed') {
@@ -2281,46 +2288,40 @@ const ZwaveJsUI = (function () {
 		return i;
 	}
 
+	function GetSecurityClassLabel(SC) {
+		switch (SC) {
+			case 0:
+				return { label: 'S2 | Unauthenticated', icon: 'fa-lock', Short: 'S2' };
+
+			case 1:
+				return { label: 'S2 | Authenticated', icon: 'fa-lock', Short: 'S2' };
+
+			case 2:
+				return { label: 'S2 | Access Control', icon: 'fa-lock', Short: 'S2' };
+
+			case 7:
+				return { label: 'S0 | Legacy', icon: 'fa-lock', Short: 'S0' };
+
+			default:
+				return { label: 'No Security', icon: 'fa-unlock-alt', Short: '' };
+		}
+	}
+
 	function renderLock(node) {
 		const L = $('<span>');
 		L.addClass('fa-stack');
 		if (node.highestSecurityClass !== undefined) {
-			switch (node.highestSecurityClass) {
-				case 0:
-					L.append('<span class="fa fa-lock fa-stack-2x"></span>');
-					L.append(
-						'<strong class="fa-stack-1x" style="font-size:80%; color:white; margin-top:4px">S2</strong>'
-					);
-					RED.popover.tooltip(L, 'S2 | Unauthenticated');
-					break;
-				case 1:
-					L.append('<span class="fa fa-lock fa-stack-2x"></span>');
-					L.append(
-						'<strong class="fa-stack-1x" style="font-size:80%; color:white; margin-top:4px">S2</strong>'
-					);
-					RED.popover.tooltip(L, 'S2 | Authenticated');
-					break;
-				case 2:
-					L.append('<span class="fa fa-lock fa-stack-2x"></span>');
-					L.append(
-						'<strong class="fa-stack-1x" style="font-size:80%; color:white; margin-top:4px">S2</strong>'
-					);
-					RED.popover.tooltip(L, 'S2 | Access Control');
-					break;
+			const SecurityDescription = GetSecurityClassLabel(
+				node.highestSecurityClass
+			);
 
-				case 7:
-					L.append('<span class="fa fa-lock fa-stack-2x"></span>');
-					L.append(
-						'<strong class="fa-stack-1x" style="font-size:80%; color:white; margin-top:4px">S0</strong>'
-					);
-					RED.popover.tooltip(L, 'S0 | Legacy');
-					break;
-
-				default:
-					L.append('<span class="fa fa-unlock-alt fa-stack-2x"></span>');
-					RED.popover.tooltip(L, 'No Security!');
-					break;
-			}
+			L.append(
+				`<span class="fa ${SecurityDescription.icon} fa-stack-2x"></span>`
+			);
+			L.append(
+				`<strong class="fa-stack-1x" style="font-size:80%; color:white; margin-top:4px">${SecurityDescription.Short}</strong>`
+			);
+			RED.popover.tooltip(L, SecurityDescription.label);
 		} else {
 			L.append('<span class="fa fa-unlock-alt fa-stack-2x"></span>');
 			RED.popover.tooltip(L, 'No Security!');
