@@ -7,9 +7,11 @@
         - Region settings
         - RF Power settings
         - Backup/Restore NVM
+      - the Inclusion completed dialog, now displays the security class that was achieved.
 
     **Changes**
       - Increase UI timeout to 15s to account for slower responding systems
+      - Optimisations to firmware upload Mechanics.
 
 
   - 7.0.3

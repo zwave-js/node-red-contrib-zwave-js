@@ -836,6 +836,20 @@ module.exports = function (RED) {
 			let Result;
 
 			switch (Method) {
+				case 'restoreNVM':
+					Result = await Driver.controller.restoreNVM(
+						Params[0],
+						Params[1],
+						Params[2]
+					);
+					Send(undefined, 'NVM_RESTORE_DONE', Result, send);
+					break;
+
+				case 'backupNVMRaw':
+					const Data = await Driver.controller.backupNVMRaw(Params[0]);
+					Send(undefined, 'NVM_BACKUP', Data, send);
+					break;
+
 				case 'abortFirmwareUpdate':
 					NodeCheck(Params[0]);
 					ReturnNode.id = Params[0];
@@ -856,7 +870,7 @@ module.exports = function (RED) {
 
 				case 'getRFRegion':
 					const RFR = await Driver.controller.getRFRegion();
-					Send(undefined, 'CURRENT_RF_REGION', ZWaveJS.RFRegion[RFR], send);
+					Send(undefined, 'CURRENT_RF_REGION', RFR, send);
 					break;
 
 				case 'setRFRegion':

@@ -19,6 +19,10 @@
 	type="text/javascript"
 	src="resources/node-red-contrib-zwave-js/UITab/qrcode.min.js"
 ></script>
+<script
+	type="text/javascript"
+	src="resources/node-red-contrib-zwave-js/UITab/FileSaver.min.js"
+></script>
 <link
 	rel="stylesheet"
 	href="resources/node-red-contrib-zwave-js/UITab/styles.css"
@@ -763,44 +767,86 @@
 		responsible for ensuring any RF changes complies with all applicable laws
 		and regulations.
 	</div>
-	<table style="width:100%; padding: 15px;" cellpadding="10px">
-		<tr id="RF_TR_REGION">
+	<table style='width:100%; padding: 15px;' cellpadding='10px'>
+		<tr id='RF_TR_REGION'>
 			<td>RF Region</td>
-			<td style="text-align:right">
-			<select id="RF_REGION">
-				<option value="0x02">Australia/New Zealand</option>
-				<option value="0x08">China</option>
-				<option value="0xff">Default (EU)</option>
-				<option value="0x00">Europe</option>
-				<option value="0x03">Hong Kong</option>
-				<option value="0x05">India</option>
-				<option value="0x06">Israel</option>
-				<option value="0x20">Japan</option>
-				<option value="0x21">Korea</option>
-				<option value="0x07">Russia</option>
-				<option value="0x01">USA</option>
-				<option value="0x09">USA (Long Range)</option>
-				<option value="0xfe" selected>Unknown</option>
-			</select>
+			<td style='text-align:right'>
+				<select id='RF_REGION'>
+					<option value='0x02'>Australia/New Zealand</option>
+					<option value='0x08'>China</option>
+					<option value='0xff'>Default (EU)</option>
+					<option value='0x00'>Europe</option>
+					<option value='0x03'>Hong Kong</option>
+					<option value='0x05'>India</option>
+					<option value='0x06'>Israel</option>
+					<option value='0x20'>Japan</option>
+					<option value='0x21'>Korea</option>
+					<option value='0x07'>Russia</option>
+					<option value='0x01'>USA</option>
+					<option value='0x09'>USA (Long Range)</option>
+					<option value='0xfe' selected>Unknown</option>
+				</select>
 
 			</td>
-			<td style="text-align: right;"><button style="width:70px; height:30px" class="ui-button ui-corner-all ui-widget SecrutiyButton">Apply</button></td>
+			<td style='text-align: right;'><button
+					style='width:70px; height:30px'
+					class='ui-button ui-corner-all ui-widget SecrutiyButton'
+					onclick='SetRegion()'
+				>Apply</button></td>
 		</tr>
-		<tr id="RF_TR_POWER">
+		<tr id='RF_TR_POWER'>
 			<td>RF Power Level (dbm)</td>
-			<td style="text-align:right">
+			<td style='text-align:right'>
 
-			Level: <input id="RF_POWER" type="range" min="-12.8" max="12.7" value="0" style="width:200px"><br />
-			@ 0dbm: <input id="RF_0DBM" type="range" min="-12.8" max="12.7" value="0" style="width:200px">
+				Level (<span id='RF_POWER_V'>0.0</span>):
+				<input
+					id='RF_POWER'
+					oninput="$('#RF_POWER_V').html(parseFloat(this.value).toFixed(1))"
+					type='range'
+					min='-12.8'
+					max='12.7'
+					value='0.0'
+					step='0.1'
+					style='width:200px'
+				/><br />
+				@ 0dbm (<span id='RF_0DBM_V'>0.0</span>):
+				<input
+					id='RF_0DBM'
+					oninput="$('#RF_0DBM_V').html(parseFloat(this.value).toFixed(1))"
+					type='range'
+					min='-12.8'
+					max='12.7'
+					value='0.0'
+					step='0.1'
+					style='width:200px'
+				/>
 
 			</td>
-			<td style="text-align: right;"><button style="width:70px; height:30px" class="ui-button ui-corner-all ui-widget SecrutiyButton">Apply</button></td>
+			<td style='text-align: right;'><button
+					style='width:70px; height:30px'
+					class='ui-button ui-corner-all ui-widget SecrutiyButton'
+					onclick='SetPowerLevel()'
+				>Apply</button></td>
 		</tr>
 		<tr>
 			<td>Backup/Restore NVM</td>
-			<td colspan="2" style="text-align:right"><button style="width:120px; height:30px" class='ui-button ui-corner-all ui-widget SecrutiyButton'">Restore</button> <button button style="width:120px; height:30px"  class='ui-button ui-corner-all ui-widget SecrutiyButton'">Backup</button></td>
+			<td colspan='2' style='text-align:right'><button
+					style='width:120px; height:30px'
+					class='ui-button ui-corner-all ui-widget SecrutiyButton'
+					onclick='restoreNVM()'
+				>Restore</button>
+				<button
+					button
+					style='width:120px; height:30px'
+					class='ui-button ui-corner-all ui-widget SecrutiyButton'
+					onclick='backupNVMRaw()'
+				>Backup</button></td>
 		</tr>
 	</table>
+	<div class='nmprogresslabel' id='NVMProgressLabel'></div>
+	<div style='margin-top:5px' class='progressbar' id='NVMProgress'><div
+		></div></div>
+	<input type='file' id='FILE_BU' style='display:none' />
 </script>
 
 <script type="text/javascript">

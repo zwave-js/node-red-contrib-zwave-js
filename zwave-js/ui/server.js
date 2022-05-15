@@ -6,6 +6,8 @@ const ZWJSCFG = require('@zwave-js/config');
 const SmartStart = require('./smartstart/server');
 const FS = require('fs');
 const path = require('path');
+const bodyParser = require('body-parser');
+const Multipart = require('./multipart');
 
 const _CM = new ZWJSCFG.ConfigManager();
 _CM.loadDeviceIndex();
@@ -192,42 +194,95 @@ class UIServer {
 		);
 
 		this._RED.httpAdmin.post(
-			`/zwave-js/${this._NetworkIdentifier}/firmwareupdate/:code`,
-			this._RED.auth.needsPermission('flows.write'),
+			`/zwave-js/${this._NetworkIdentifier}/restorenvm`,
+			[
+				this._RED.auth.needsPermission('flows.write'),
+				bodyParser.raw({ inflate: true, limit: '50mb', type: () => true })
+			],
 			(req, res) => {
 				if (this._Context.controller === undefined) {
 					res.status(500).send('The Controller is currently unavailable.');
 					return;
 				}
 
-				let _Buffer = Buffer.alloc(0);
-				req.on('data', (Data) => {
-					_Buffer = Buffer.concat([_Buffer, Data]);
-				});
+				const Boundary = Multipart.getBoundary(req.headers['content-type']);
+				const Parts = Multipart.parse(req.body, Boundary);
 
-				req.once('end', () => {
-					const Code = req.params.code;
-					const CodeBuffer = Buffer.from(Code, 'base64');
-					const CodeString = CodeBuffer.toString('ascii');
-					const Parts = CodeString.split(':');
+				const Buffer = Parts.filter((P) => P.hasOwnProperty('filename'))[0]
+					.data;
 
-					const PL = {
-						mode: 'ControllerAPI',
-						method: 'beginFirmwareUpdate',
-						params: [parseInt(Parts[0]), parseInt(Parts[1]), Parts[2], _Buffer]
-					};
+				const SERV_Done = () => {
+					this._SendNVMRestoreDone();
+				};
 
-					const SERV_Success = () => {
-						res.status(200).end();
-					};
+				const SERV_Convert = (Read, Total) => {
+					const Percent = (Read / Total) * 100;
+					this._SendNVMRestoreProgress('Convert', Percent);
+				};
 
-					const Error = (err) => {
-						if (err) {
-							res.status(500).send(err.message);
-						}
-					};
-					this._Context.input({ payload: PL }, SERV_Success, Error);
-				});
+				const SERV_Apply = (Read, Total) => {
+					const Percent = (Read / Total) * 100;
+					this._SendNVMRestoreProgress('Apply', Percent);
+				};
+
+				const PL = {
+					mode: 'ControllerAPI',
+					method: 'restoreNVM',
+					params: [Buffer, SERV_Convert, SERV_Apply]
+				};
+
+				this._Context.input({ payload: PL }, SERV_Done);
+
+				res.status(202).end();
+			}
+		);
+
+		this._RED.httpAdmin.post(
+			`/zwave-js/${this._NetworkIdentifier}/firmwareupdate`,
+			[
+				this._RED.auth.needsPermission('flows.write'),
+				bodyParser.raw({ inflate: true, limit: '50mb', type: () => true })
+			],
+			(req, res) => {
+				if (this._Context.controller === undefined) {
+					res.status(500).send('The Controller is currently unavailable.');
+					return;
+				}
+
+				const Boundary = Multipart.getBoundary(req.headers['content-type']);
+				const Parts = Multipart.parse(req.body, Boundary);
+
+				let NodeID = Parts.filter((P) => P.name === 'NodeID')[0].data.toString(
+					'utf8'
+				);
+				NodeID = parseInt(NodeID);
+
+				let Target = Parts.filter((P) => P.name === 'Target')[0].data.toString(
+					'utf8'
+				);
+				Target = parseInt(Target);
+
+				const Buffer = Parts.filter((P) => P.hasOwnProperty('filename'))[0]
+					.data;
+				const FileName = Parts.filter((P) => P.hasOwnProperty('filename'))[0]
+					.filename;
+
+				const PL = {
+					mode: 'ControllerAPI',
+					method: 'beginFirmwareUpdate',
+					params: [NodeID, Target, FileName, Buffer]
+				};
+
+				const SERV_Success = () => {
+					res.status(200).end();
+				};
+
+				const Error = (err) => {
+					if (err) {
+						res.status(500).send(err.message);
+					}
+				};
+				this._Context.input({ payload: PL }, SERV_Success, Error);
 			}
 		);
 
@@ -285,6 +340,13 @@ class UIServer {
 				const SERV_ResponseProcessor = (Response) => {
 					clearTimeout(timeout);
 
+					// NVM Back up result
+					if (Response.payload.event === 'NVM_BACKUP') {
+						this._SendBackUpFile(Response.payload.object);
+						return; // no need to do anything else here
+					}
+
+					// HC Result
 					if (Response.payload.event === 'HEALTH_CHECK_RESULT') {
 						const Health = Response.payload.object.health;
 						const Node = Response.payload.object.node;
@@ -304,10 +366,10 @@ class UIServer {
 						};
 
 						this._Context.input(StatReq, SERV_Result);
-
 						return; // no need to do anything else here.
 					}
 
+					// Send to UI - if needed.
 					if (!req.body.noWait) {
 						if (!TimedOut) {
 							res.send(Response.payload);
@@ -328,6 +390,7 @@ class UIServer {
 					payload: req.body
 				};
 
+				// Check Life LIne Health
 				if (
 					PL.payload.mode === 'DriverAPI' &&
 					PL.payload.method === 'checkLifelineHealth'
@@ -337,6 +400,20 @@ class UIServer {
 					};
 					PL.payload.params.push(HCProgress);
 				}
+
+				// Backup NVM
+				if (
+					PL.payload.mode === 'ControllerAPI' &&
+					PL.payload.method === 'backupNVMRaw'
+				) {
+					const BackupProgress = (Read, Total) => {
+						const Percent = (Read / Total) * 100;
+						this._SendBackupProgress(Percent);
+					};
+					PL.payload.params = [];
+					PL.payload.params.push(BackupProgress);
+				}
+
 				this._Context.input(PL, SERV_ResponseProcessor, DoneHandler);
 			}
 		);
@@ -500,6 +577,37 @@ class UIServer {
 			`/zwave-js/${this._NetworkIdentifier}/healthcheck`,
 			{
 				payload: { HealthCheck, Statistics }
+			}
+		);
+	}
+
+	_SendBackUpFile(Buffer) {
+		this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/backupfile`, {
+			payload: Buffer
+		});
+	}
+
+	_SendNVMRestoreDone() {
+		this._RED.comms.publish(
+			`/zwave-js/${this._NetworkIdentifier}/nvmrestoredone`,
+			{}
+		);
+	}
+
+	_SendNVMRestoreProgress(Type, Progress) {
+		this._RED.comms.publish(
+			`/zwave-js/${this._NetworkIdentifier}/nvmrestoreprogress`,
+			{
+				payload: { type: Type, progress: Progress }
+			}
+		);
+	}
+
+	_SendBackupProgress(Percent) {
+		this._RED.comms.publish(
+			`/zwave-js/${this._NetworkIdentifier}/backupprocess`,
+			{
+				payload: Percent
 			}
 		);
 	}

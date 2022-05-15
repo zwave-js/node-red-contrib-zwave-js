@@ -8,6 +8,13 @@ let StartInclusionExclusion;
 let StartReplace;
 let GrantSelected;
 let ValidateDSK;
+
+/* UI RF Functions */
+let SetPowerLevel;
+let SetRegion;
+let backupNVMRaw;
+let restoreNVM;
+
 let GroupedNodes = true;
 
 /* Just stuff */
@@ -17,6 +24,16 @@ let NetworkIdentifier = undefined;
 
 /* Commands used throughout */
 const DCs = {
+	restoreNVM: {
+		API: 'ControllerAPI',
+		name: 'restoreNVM',
+		noWait: true
+	},
+	backupNVMRaw: {
+		API: 'ControllerAPI',
+		name: 'backupNVMRaw',
+		noWait: true
+	},
 	getRFRegion: {
 		API: 'ControllerAPI',
 		name: 'getRFRegion',
@@ -473,34 +490,32 @@ const ZwaveJsUI = (function () {
 		const FE = $('#FILE_FW')[0].files[0];
 		const NID = parseInt($('#NODE_FW option:selected').val());
 		const Target = $('#TARGET_FW').val();
-		const Filename = FE.name;
-		const Code = `${NID}:${Target}:${Filename}`;
 
-		const reader = new FileReader();
-		reader.onload = function () {
-			const arrayBuffer = this.result;
-			const array = new Uint8Array(arrayBuffer);
-			const Options = {
-				url: `zwave-js/${NetworkIdentifier}/firmwareupdate/${btoa(Code)}`,
-				method: 'POST',
-				contentType: 'application/octect-stream',
-				data: array,
-				processData: false
-			};
-			$.ajax(Options)
-				.then(() => {
-					FWRunning = true;
-					selectNode(NID);
-					$(":button:contains('Begin Update')")
-						.prop('disabled', true)
-						.addClass('ui-state-disabled');
-					$('#FWProgress').css({ display: 'block' });
-				})
-				.catch((err) => {
-					modalAlert(err.responseText, 'Firmware rejected');
-				});
+		/* Test */
+		const FD = new FormData();
+		FD.append('Binary', FE);
+		FD.append('NodeID', NID);
+		FD.append('Target', Target);
+
+		const Options = {
+			url: `zwave-js/${NetworkIdentifier}/firmwareupdate`,
+			method: 'POST',
+			contentType: false,
+			processData: false,
+			data: FD
 		};
-		reader.readAsArrayBuffer(FE);
+		$.ajax(Options)
+			.then(() => {
+				FWRunning = true;
+				selectNode(NID);
+				$(":button:contains('Begin Update')")
+					.prop('disabled', true)
+					.addClass('ui-state-disabled');
+				$('#FWProgress').css({ display: 'block' });
+			})
+			.catch((err) => {
+				modalAlert(err.responseText, 'Firmware rejected');
+			});
 	}
 
 	function FirmwareUpdate() {
@@ -900,7 +915,7 @@ const ZwaveJsUI = (function () {
 			Payload.noTimeout = true;
 		} else {
 			// Hopefully we will never have to depend on this, if so - there is something seriously wrong with the network, that the user should resolve.
-			// Out internal timeouts of 10s will see to anything driver/server related
+			// Our internal timeouts of 15s will see to anything driver/server related
 			Options.timeout = 30000;
 		}
 
@@ -1020,6 +1035,98 @@ const ZwaveJsUI = (function () {
 				throw new Error(err.responseText);
 			});
 	}
+
+	restoreNVM = () => {
+		$('#FILE_BU').on('change', () => {
+			const FE = $('#FILE_BU')[0].files[0];
+
+			const FD = new FormData();
+			FD.append('Binary', FE);
+
+			const Options = {
+				url: `zwave-js/${NetworkIdentifier}/restorenvm`,
+				method: 'POST',
+				contentType: false,
+				processData: false,
+				data: FD
+			};
+			$.ajax(Options)
+				.then(() => {
+					$('#NVMProgressLabel').html('Starting Restore...');
+					$('#NVMProgress').css({ display: 'block' });
+				})
+				.catch((err) => {
+					modalAlert(err.responseText, 'Could not restore NVM.');
+					throw new Error(err.responseText);
+				});
+
+			$('#FILE_BU').off('change');
+		});
+
+		$('#FILE_BU').click();
+	};
+
+	backupNVMRaw = () => {
+		ControllerCMD(
+			DCs.backupNVMRaw.API,
+			DCs.backupNVMRaw.name,
+			undefined,
+			undefined,
+			DCs.backupNVMRaw.noWait
+		)
+			.catch((err) => {
+				modalAlert(err.responseText, 'Could not back NVM.');
+				throw new Error(err.responseText);
+			})
+			.then(() => {
+				$('#NVMProgressLabel').html('Backing up NVM...');
+				$('#NVMProgress').css({ display: 'block' });
+			});
+	};
+
+	SetRegion = () => {
+		ControllerCMD(
+			DCs.setRFRegion.API,
+			DCs.setRFRegion.name,
+			undefined,
+			[parseInt($('#RF_REGION').val())],
+			DCs.setRFRegion.noWait
+		)
+			.catch((err) => {
+				modalAlert(err.responseText, 'Could not set RF Region.');
+				throw new Error(err.responseText);
+			})
+			.then(({ object }) => {
+				if (!object.success) {
+					modalAlert(
+						'The controller did not accept the values provided.',
+						'Could not set RF Region.'
+					);
+				}
+			});
+	};
+
+	SetPowerLevel = () => {
+		ControllerCMD(
+			DCs.setPowerlevel.API,
+			DCs.setPowerlevel.name,
+			undefined,
+			[parseFloat($('#RF_POWER').val()), parseFloat($('#RF_0DBM').val())],
+			DCs.setPowerlevel.noWait
+		)
+			.catch((err) => {
+				modalAlert(err.responseText, 'Could not set power level.');
+				throw new Error(err.responseText);
+			})
+			.then(({ object }) => {
+				if (!object.success) {
+					modalAlert(
+						'The controller did not accept the values provided.',
+						'Could not set power level.'
+					);
+				}
+			});
+	};
 
 	function sortByKey(obj) {
 		const keys = Object.keys(obj);
@@ -1631,6 +1738,8 @@ const ZwaveJsUI = (function () {
 		const HTML = templateScript({});
 		RFForm.append(HTML);
 
+		$('#NVMProgress').css({ display: 'none' });
+
 		const GetPower = () => {
 			ControllerCMD(
 				DCs.getPowerlevel.API,
@@ -1642,6 +1751,9 @@ const ZwaveJsUI = (function () {
 				.then(({ object }) => {
 					$('#RF_POWER').val(object.powerlevel);
 					$('#RF_0DBM').val(object.measured0dBm);
+
+					$('#RF_POWER_V').html(parseFloat(object.powerlevel).toFixed(1));
+					$('#RF_0DBM_V').html(parseFloat(object.measured0dBm).toFixed(1));
 				})
 				.catch((err) => {
 					$('#RF_TR_POWER').css({ opacity: '0.3', pointerEvents: 'none' });
@@ -1797,6 +1909,23 @@ const ZwaveJsUI = (function () {
 				`/zwave-js/${NetworkIdentifier}/status`,
 				handleStatusUpdate
 			);
+			RED.comms.unsubscribe(
+				`/zwave-js/${NetworkIdentifier}/backupprocess`,
+				handleNVMBackupProgress
+			);
+			RED.comms.unsubscribe(
+				`/zwave-js/${NetworkIdentifier}/backupfile`,
+				handleNVMBackupFile
+			);
+			RED.comms.unsubscribe(
+				`/zwave-js/${NetworkIdentifier}/nvmrestoreprogress`,
+				handleNVMRestoreProgress
+			);
+			RED.comms.unsubscribe(
+				`/zwave-js/${NetworkIdentifier}/nvmrestoredone`,
+				handleNVMRestoreDone
+			);
+
 			deselectCurrentNode();
 		}
 
@@ -1814,6 +1943,22 @@ const ZwaveJsUI = (function () {
 		RED.comms.subscribe(
 			`/zwave-js/${NetworkIdentifier}/status`,
 			handleStatusUpdate
+		);
+		RED.comms.subscribe(
+			`/zwave-js/${NetworkIdentifier}/backupprocess`,
+			handleNVMBackupProgress
+		);
+		RED.comms.subscribe(
+			`/zwave-js/${NetworkIdentifier}/backupfile`,
+			handleNVMBackupFile
+		);
+		RED.comms.subscribe(
+			`/zwave-js/${NetworkIdentifier}/nvmrestoreprogress`,
+			handleNVMRestoreProgress
+		);
+		RED.comms.subscribe(
+			`/zwave-js/${NetworkIdentifier}/nvmrestoredone`,
+			handleNVMRestoreDone
 		);
 
 		setTimeout(WaitLoad, 100);
@@ -2081,6 +2226,49 @@ const ZwaveJsUI = (function () {
 				setTimeout(WaitLoad, 3000);
 			}
 		});
+	}
+
+	function handleNVMBackupFile(topic, data) {
+		$('#NVMProgressLabel').html('Backing up NVM Completed');
+
+		const Bytes = new Uint8Array(data.payload.data);
+		const blob = new Blob([Bytes], {
+			type: 'application/octet-stream'
+		});
+		saveAs(blob, 'NVMBackup.bin');
+	}
+
+	function handleNVMBackupProgress(topic, data) {
+		const P = data.payload;
+		$('#NVMProgress > div').css({ width: `${P}%` });
+	}
+
+	function handleNVMRestoreProgress(topic, data) {
+		const P = data.payload.progress;
+		const T = data.payload.type;
+
+		$('#NVMProgress > div').css({ width: `${P}%` });
+
+		switch (T) {
+			case 'Convert':
+				$('#NVMProgressLabel').html(
+					'Restoring NVM... [Stage 1/2 - Data Buffer conversion]'
+				);
+				break;
+
+			default:
+				$('#NVMProgressLabel').html(
+					'Restoring NVM... [Stage 2/2 - Applying NVM]'
+				);
+				break;
+		}
+	}
+	function handleNVMRestoreDone(topic) {
+		modalAlert(
+			'The Controller restore process has completed. The controller/driver will be restarted.',
+			'NVM Restore Completed'
+		);
+		$('#NVMProgressLabel').html('Restoring NVM Completed');
 	}
 
 	function handleStatusUpdate(topic, data) {
