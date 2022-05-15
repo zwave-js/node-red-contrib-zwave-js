@@ -21,20 +21,23 @@ The most powerful, high performing and highly polished Z-Wave node for Node-RED 
  - 100% Javascript, so its blazing fast!
  - Does not require a build of any static library
  - Stable
- - The Ability to capture commands for later use.
  - A deep integrated UI within in node red
  - Full Z-Wave control inside Node-RED including:
    - Multi Stick/Network support
    - Device inclusion/exclusion wizard
    - S0 and S2 security support
-   - Supports Security S2 Smart Start (Mobile companion web application)  
+   - Supports Security S2 Smart Start via a Mobile (and local) companion web application.
    - Network health checks  
    - Network mesh graph
-   - Firmware updates
+   - Device Firmware updates
+   - Advanced RF configuration
+   - NVM Backup/Restore
    - Associations management
    - Filter node for handling incoming messages from your devices
    - Factory node for simplifying the formatting of outgoing messages
    - Multicast command support
+   - And much more..
+
 
 Since `node-red-contrib-zwave-js` is based on [Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/), we have the support and active maintenance from the amazing group of developers who have built the libraries, APIs, and config files which run this contrib.
 
