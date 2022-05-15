@@ -909,12 +909,25 @@ const ZwaveJsUI = (function () {
 			Options.timeout = 0;
 			Payload.noTimeout = true;
 		} else {
-			// Hopefully we will never have to depend on this, if so - there is something seriously wrong with the network, that the user should resolve.
+			// Hopefully we will never have to depend on this, if so - there is something seriously wrong with the browser, that the user should resolve.
 			// Our internal timeouts of 15s will see to anything driver/server related
 			Options.timeout = 30000;
 		}
 
-		if (mode !== 'IEAPI') {
+		const RestrictedModes = ['IEAPI'];
+		const RestrictedMethods = [
+			'setPowerlevel',
+			'beginFirmwareUpdate',
+			'abortFirmwareUpdate',
+			'setRFRegion',
+			'hardReset',
+			'backupNVMRaw'
+		];
+
+		if (
+			!RestrictedModes.includes(mode) &&
+			!RestrictedMethods.includes(method)
+		) {
 			const Copy = JSON.parse(JSON.stringify({ payload: Payload }));
 			delete Copy.payload.noTimeout;
 			delete Copy.payload.noWait;
@@ -924,13 +937,6 @@ const ZwaveJsUI = (function () {
 			)}</pre><br />`;
 
 			try {
-				$('#CommandLog').append(HTML);
-				$('#CommandLog').scrollTop($('#CommandLog')[0].scrollHeight);
-				// eslint-disable-next-line no-empty
-			} catch (err) {}
-		} else {
-			try {
-				const HTML = `${new Date().toString()}<hr /><pre class="MonitorEntry">Include/Exclude commands are for the UI only.</pre><br />`;
 				$('#CommandLog').append(HTML);
 				$('#CommandLog').scrollTop($('#CommandLog')[0].scrollHeight);
 				// eslint-disable-next-line no-empty
