@@ -24,11 +24,6 @@ let NetworkIdentifier = undefined;
 
 /* Commands used throughout */
 const DCs = {
-	restoreNVM: {
-		API: 'ControllerAPI',
-		name: 'restoreNVM',
-		noWait: true
-	},
 	backupNVMRaw: {
 		API: 'ControllerAPI',
 		name: 'backupNVMRaw',
