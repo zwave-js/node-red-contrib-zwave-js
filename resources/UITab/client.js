@@ -2235,7 +2235,15 @@ const ZwaveJsUI = (function () {
 		const blob = new Blob([Bytes], {
 			type: 'application/octet-stream'
 		});
-		saveAs(blob, 'NVMBackup.bin');
+		const D = new Date();
+		saveAs(
+			blob,
+			`ZWAVE-NVMBackup-NET${NetworkIdentifier}-${(D.getMonth() + 1)
+				.toString()
+				.padStart(2, '0')}${D.getDate()
+				.toString()
+				.padStart(2, '0')}${D.getFullYear()}.bin`
+		);
 	}
 
 	function handleNVMBackupProgress(topic, data) {
