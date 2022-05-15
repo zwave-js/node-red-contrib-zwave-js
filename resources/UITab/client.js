@@ -1037,6 +1037,16 @@ const ZwaveJsUI = (function () {
 			});
 	}
 
+	function EnableCritical(Value) {
+		if (Value) {
+			$('.CriticalDisable').prop('disabled', false);
+			$('.CriticalDisable').css({ opacity: '1.0' });
+		} else {
+			$('.CriticalDisable').prop('disabled', true);
+			$('.CriticalDisable').css({ opacity: '0.4' });
+		}
+	}
+
 	restoreNVM = () => {
 		$('#FILE_BU').on('change', () => {
 			const FE = $('#FILE_BU')[0].files[0];
@@ -1053,11 +1063,13 @@ const ZwaveJsUI = (function () {
 			};
 			$.ajax(Options)
 				.then(() => {
+					EnableCritical(false);
 					$('#NVMProgressLabel').html('Starting Restore...');
 					$('#NVMProgress').css({ display: 'block' });
 				})
 				.catch((err) => {
 					modalAlert(err.responseText, 'Could not restore NVM.');
+					EnableCritical(true);
 					throw new Error(err.responseText);
 				});
 
@@ -1068,6 +1080,7 @@ const ZwaveJsUI = (function () {
 	};
 
 	backupNVMRaw = () => {
+		EnableCritical(false);
 		ControllerCMD(
 			DCs.backupNVMRaw.API,
 			DCs.backupNVMRaw.name,
@@ -1077,6 +1090,7 @@ const ZwaveJsUI = (function () {
 		)
 			.catch((err) => {
 				modalAlert(err.responseText, 'Could not back NVM.');
+				EnableCritical(true);
 				throw new Error(err.responseText);
 			})
 			.then(() => {
@@ -1086,6 +1100,7 @@ const ZwaveJsUI = (function () {
 	};
 
 	SetRegion = () => {
+		EnableCritical(false);
 		ControllerCMD(
 			DCs.setRFRegion.API,
 			DCs.setRFRegion.name,
@@ -1095,19 +1110,24 @@ const ZwaveJsUI = (function () {
 		)
 			.catch((err) => {
 				modalAlert(err.responseText, 'Could not set RF Region.');
+				EnableCritical(true);
 				throw new Error(err.responseText);
 			})
 			.then(({ object }) => {
+				EnableCritical(true);
 				if (!object.success) {
 					modalAlert(
 						'The controller did not accept the values provided.',
 						'Could not set RF Region.'
 					);
+				} else {
+					modalAlert('Settings were applied successfully.', 'RF Region set.');
 				}
 			});
 	};
 
 	SetPowerLevel = () => {
+		EnableCritical(false);
 		ControllerCMD(
 			DCs.setPowerlevel.API,
 			DCs.setPowerlevel.name,
@@ -1117,14 +1137,18 @@ const ZwaveJsUI = (function () {
 		)
 			.catch((err) => {
 				modalAlert(err.responseText, 'Could not set power level.');
+				EnableCritical(true);
 				throw new Error(err.responseText);
 			})
 			.then(({ object }) => {
+				EnableCritical(true);
 				if (!object.success) {
 					modalAlert(
 						'The controller did not accept the values provided.',
 						'Could not set power level.'
 					);
+				} else {
+					modalAlert('Settings were applied successfully.', 'Power level set.');
 				}
 			});
 	};
@@ -2230,6 +2254,7 @@ const ZwaveJsUI = (function () {
 	}
 
 	function handleNVMBackupFile(topic, data) {
+		EnableCritical(true);
 		$('#NVMProgressLabel').html('Backing up NVM Completed');
 
 		const Bytes = new Uint8Array(data.payload.data);
@@ -2239,9 +2264,9 @@ const ZwaveJsUI = (function () {
 		const D = new Date();
 		saveAs(
 			blob,
-			`ZWAVE-NVMBackup-NET${NetworkIdentifier}-${(D.getMonth() + 1)
+			`ZWAVE-NVMBackup-NET${NetworkIdentifier}-${D.getDate()
 				.toString()
-				.padStart(2, '0')}${D.getDate()
+				.padStart(2, '0')}${(D.getMonth() + 1)
 				.toString()
 				.padStart(2, '0')}${D.getFullYear()}.bin`
 		);
@@ -2273,6 +2298,7 @@ const ZwaveJsUI = (function () {
 		}
 	}
 	function handleNVMRestoreDone(topic) {
+		EnableCritical(true);
 		modalAlert(
 			'The Controller restore process has completed. The controller/driver will be restarted.',
 			'NVM Restore Completed'
