@@ -1950,6 +1950,10 @@ const ZwaveJsUI = (function () {
 				`/zwave-js/${NetworkIdentifier}/nvmrestoredone`,
 				handleNVMRestoreDone
 			);
+			RED.comms.unsubscribe(
+				`/zwave-js/${NetworkIdentifier}/nvmrestoreerror`,
+				handleNVMRestoreError
+			);
 
 			deselectCurrentNode();
 		}
@@ -1984,6 +1988,10 @@ const ZwaveJsUI = (function () {
 		RED.comms.subscribe(
 			`/zwave-js/${NetworkIdentifier}/nvmrestoredone`,
 			handleNVMRestoreDone
+		);
+		RED.comms.subscribe(
+			`/zwave-js/${NetworkIdentifier}/nvmrestoreerror`,
+			handleNVMRestoreError
 		);
 
 		setTimeout(WaitLoad, 100);
@@ -2297,6 +2305,13 @@ const ZwaveJsUI = (function () {
 				break;
 		}
 	}
+
+	function handleNVMRestoreError(topic, data) {
+		EnableCritical(true);
+		modalAlert(data.payload, 'NVM Restore Failed');
+		$('#NVMProgressLabel').html('Restoring NVM Failed');
+	}
+
 	function handleNVMRestoreDone(topic) {
 		EnableCritical(true);
 		modalAlert(

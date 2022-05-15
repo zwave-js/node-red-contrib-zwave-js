@@ -215,6 +215,12 @@ class UIServer {
 					this._SendNVMRestoreDone();
 				};
 
+				const SERV_Error = (Err) => {
+					if (Err) {
+						this._SendNVMRestoreError(Err);
+					}
+				};
+
 				const SERV_Convert = (Read, Total) => {
 					const Percent = (Read / Total) * 100;
 					this._SendNVMRestoreProgress('Convert', Percent);
@@ -231,7 +237,7 @@ class UIServer {
 					params: [Buffer, SERV_Convert, SERV_Apply]
 				};
 
-				this._Context.input({ payload: PL }, SERV_Done);
+				this._Context.input({ payload: PL }, SERV_Done, SERV_Error);
 
 				res.status(202).end();
 			}
@@ -591,6 +597,15 @@ class UIServer {
 		this._RED.comms.publish(
 			`/zwave-js/${this._NetworkIdentifier}/nvmrestoredone`,
 			{}
+		);
+	}
+
+	_SendNVMRestoreError(Err) {
+		this._RED.comms.publish(
+			`/zwave-js/${this._NetworkIdentifier}/nvmrestoreerror`,
+			{
+				payload: Err.message
+			}
 		);
 	}
 
