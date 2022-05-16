@@ -2269,15 +2269,14 @@ const ZwaveJsUI = (function () {
 		const blob = new Blob([Bytes], {
 			type: 'application/octet-stream'
 		});
-		const D = new Date();
-		saveAs(
-			blob,
-			`ZWAVE-NVMBackup-NET${NetworkIdentifier}-${D.getDate()
-				.toString()
-				.padStart(2, '0')}${(D.getMonth() + 1)
-				.toString()
-				.padStart(2, '0')}${D.getFullYear()}.bin`
-		);
+		const DTE = new Date();
+		const DD = DTE.getDate().toString().padStart(2, '0');
+		const MM = (DTE.getMonth() + 1).toString().padStart(2, '0');
+		const YYYY = DTE.getFullYear();
+
+		const FN = `ZW-NET${NetworkIdentifier}-NVM-${YYYY}${MM}${DD}.bin`;
+
+		saveAs(blob, FN);
 	}
 
 	function handleNVMBackupProgress(topic, data) {
