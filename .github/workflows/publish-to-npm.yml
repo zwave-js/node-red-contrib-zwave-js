@@ -7,6 +7,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: github.actor == 'marcus-j-davies'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
