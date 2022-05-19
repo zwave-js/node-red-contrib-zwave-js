@@ -5,15 +5,17 @@ on:
     types: [published]
 
 jobs:
-  Release:
+  build:
     runs-on: ubuntu-latest
-    if: github.actor == 'marcus-j-davies'
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Node
+        uses: actions/setup-node@v2
         with:
           node-version: 14
           registry-url: https://registry.npmjs.org/
-      - run: npm publish --access public
+      - name: Publish package on NPM
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
