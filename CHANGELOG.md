@@ -11,7 +11,7 @@
 
     **Changes**
       - Increase UI timeout to 15s to account for slower responding systems
-      - Optimisations to firmware upload Mechanics.
+      - Optimizations to firmware upload Mechanics.
       - Bump ZWave JS to 9.3.0.
 
 
