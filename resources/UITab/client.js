@@ -8,6 +8,13 @@ let StartInclusionExclusion;
 let StartReplace;
 let GrantSelected;
 let ValidateDSK;
+
+/* UI RF Functions */
+let SetPowerLevel;
+let SetRegion;
+let backupNVMRaw;
+let restoreNVM;
+
 let GroupedNodes = true;
 
 /* Just stuff */
@@ -17,6 +24,31 @@ let NetworkIdentifier = undefined;
 
 /* Commands used throughout */
 const DCs = {
+	backupNVMRaw: {
+		API: 'ControllerAPI',
+		name: 'backupNVMRaw',
+		noWait: true
+	},
+	getRFRegion: {
+		API: 'ControllerAPI',
+		name: 'getRFRegion',
+		noWait: false
+	},
+	setRFRegion: {
+		API: 'ControllerAPI',
+		name: 'setRFRegion',
+		noWait: false
+	},
+	getPowerlevel: {
+		API: 'ControllerAPI',
+		name: 'getPowerlevel',
+		noWait: false
+	},
+	setPowerlevel: {
+		API: 'ControllerAPI',
+		name: 'setPowerlevel',
+		noWait: false
+	},
 	checkLifelineHealth: {
 		API: 'DriverAPI',
 		name: 'checkLifelineHealth',
@@ -220,6 +252,7 @@ const ZwaveJsUI = (function () {
 	let HCForm; // Health Check Form
 	let HCRounds; // Health Check Rounds
 	let FirmwareForm; // FrimwareForm
+	let RFForm; // FrimwareForm
 	let FWRunning = false; // Firmware Updare Running
 	const Groups = {}; // Association Groups
 	let Removing = false; // Removing Failed Node
@@ -452,34 +485,32 @@ const ZwaveJsUI = (function () {
 		const FE = $('#FILE_FW')[0].files[0];
 		const NID = parseInt($('#NODE_FW option:selected').val());
 		const Target = $('#TARGET_FW').val();
-		const Filename = FE.name;
-		const Code = `${NID}:${Target}:${Filename}`;
 
-		const reader = new FileReader();
-		reader.onload = function () {
-			const arrayBuffer = this.result;
-			const array = new Uint8Array(arrayBuffer);
-			const Options = {
-				url: `zwave-js/${NetworkIdentifier}/firmwareupdate/${btoa(Code)}`,
-				method: 'POST',
-				contentType: 'application/octect-stream',
-				data: array,
-				processData: false
-			};
-			$.ajax(Options)
-				.then(() => {
-					FWRunning = true;
-					selectNode(NID);
-					$(":button:contains('Begin Update')")
-						.prop('disabled', true)
-						.addClass('ui-state-disabled');
-					$('#FWProgress').css({ display: 'block' });
-				})
-				.catch((err) => {
-					modalAlert(err.responseText, 'Firmware rejected');
-				});
+		/* Test */
+		const FD = new FormData();
+		FD.append('Binary', FE);
+		FD.append('NodeID', NID);
+		FD.append('Target', Target);
+
+		const Options = {
+			url: `zwave-js/${NetworkIdentifier}/firmwareupdate`,
+			method: 'POST',
+			contentType: false,
+			processData: false,
+			data: FD
 		};
-		reader.readAsArrayBuffer(FE);
+		$.ajax(Options)
+			.then(() => {
+				FWRunning = true;
+				selectNode(NID);
+				$(":button:contains('Begin Update')")
+					.prop('disabled', true)
+					.addClass('ui-state-disabled');
+				$('#FWProgress').css({ display: 'block' });
+			})
+			.catch((err) => {
+				modalAlert(err.responseText, 'Firmware rejected');
+			});
 	}
 
 	function FirmwareUpdate() {
@@ -878,12 +909,25 @@ const ZwaveJsUI = (function () {
 			Options.timeout = 0;
 			Payload.noTimeout = true;
 		} else {
-			// Hopefully we will never have to depend on this, if so - there is something seriously wrong with the network, that the user should resolve.
-			// Out internal timeouts of 10s will see to anything driver/server related
+			// Hopefully we will never have to depend on this, if so - there is something seriously wrong with the browser, that the user should resolve.
+			// Our internal timeouts of 15s will see to anything driver/server related
 			Options.timeout = 30000;
 		}
 
-		if (mode !== 'IEAPI') {
+		const RestrictedModes = ['IEAPI'];
+		const RestrictedMethods = [
+			'setPowerlevel',
+			'beginFirmwareUpdate',
+			'abortFirmwareUpdate',
+			'setRFRegion',
+			'hardReset',
+			'backupNVMRaw'
+		];
+
+		if (
+			!RestrictedModes.includes(mode) &&
+			!RestrictedMethods.includes(method)
+		) {
 			const Copy = JSON.parse(JSON.stringify({ payload: Payload }));
 			delete Copy.payload.noTimeout;
 			delete Copy.payload.noWait;
@@ -893,13 +937,6 @@ const ZwaveJsUI = (function () {
 			)}</pre><br />`;
 
 			try {
-				$('#CommandLog').append(HTML);
-				$('#CommandLog').scrollTop($('#CommandLog')[0].scrollHeight);
-				// eslint-disable-next-line no-empty
-			} catch (err) {}
-		} else {
-			try {
-				const HTML = `${new Date().toString()}<hr /><pre class="MonitorEntry">Include/Exclude commands are for the UI only.</pre><br />`;
 				$('#CommandLog').append(HTML);
 				$('#CommandLog').scrollTop($('#CommandLog')[0].scrollHeight);
 				// eslint-disable-next-line no-empty
@@ -999,6 +1036,122 @@ const ZwaveJsUI = (function () {
 				throw new Error(err.responseText);
 			});
 	}
+
+	function EnableCritical(Value) {
+		if (Value) {
+			$('.CriticalDisable').prop('disabled', false);
+			$('.CriticalDisable').css({ opacity: '1.0' });
+		} else {
+			$('.CriticalDisable').prop('disabled', true);
+			$('.CriticalDisable').css({ opacity: '0.4' });
+		}
+	}
+
+	restoreNVM = () => {
+		$('#FILE_BU').on('change', () => {
+			const FE = $('#FILE_BU')[0].files[0];
+
+			const FD = new FormData();
+			FD.append('Binary', FE);
+
+			const Options = {
+				url: `zwave-js/${NetworkIdentifier}/restorenvm`,
+				method: 'POST',
+				contentType: false,
+				processData: false,
+				data: FD
+			};
+			$.ajax(Options)
+				.then(() => {
+					EnableCritical(false);
+					$('#NVMProgressLabel').html('Starting Restore...');
+					$('#NVMProgress').css({ display: 'block' });
+				})
+				.catch((err) => {
+					modalAlert(err.responseText, 'Could not restore NVM.');
+					EnableCritical(true);
+					throw new Error(err.responseText);
+				});
+
+			$('#FILE_BU').off('change');
+		});
+
+		$('#FILE_BU').click();
+	};
+
+	backupNVMRaw = () => {
+		EnableCritical(false);
+		ControllerCMD(
+			DCs.backupNVMRaw.API,
+			DCs.backupNVMRaw.name,
+			undefined,
+			undefined,
+			DCs.backupNVMRaw.noWait
+		)
+			.catch((err) => {
+				modalAlert(err.responseText, 'Could not back NVM.');
+				EnableCritical(true);
+				throw new Error(err.responseText);
+			})
+			.then(() => {
+				$('#NVMProgressLabel').html('Backing up NVM...');
+				$('#NVMProgress').css({ display: 'block' });
+			});
+	};
+
+	SetRegion = () => {
+		EnableCritical(false);
+		ControllerCMD(
+			DCs.setRFRegion.API,
+			DCs.setRFRegion.name,
+			undefined,
+			[parseInt($('#RF_REGION').val())],
+			DCs.setRFRegion.noWait
+		)
+			.catch((err) => {
+				modalAlert(err.responseText, 'Could not set RF Region.');
+				EnableCritical(true);
+				throw new Error(err.responseText);
+			})
+			.then(({ object }) => {
+				EnableCritical(true);
+				if (!object.success) {
+					modalAlert(
+						'The controller did not accept the values provided.',
+						'Could not set RF Region.'
+					);
+				} else {
+					modalAlert('Settings were applied successfully.', 'RF Region set.');
+				}
+			});
+	};
+
+	SetPowerLevel = () => {
+		EnableCritical(false);
+		ControllerCMD(
+			DCs.setPowerlevel.API,
+			DCs.setPowerlevel.name,
+			undefined,
+			[parseFloat($('#RF_POWER').val()), parseFloat($('#RF_0DBM').val())],
+			DCs.setPowerlevel.noWait
+		)
+			.catch((err) => {
+				modalAlert(err.responseText, 'Could not set power level.');
+				EnableCritical(true);
+				throw new Error(err.responseText);
+			})
+			.then(({ object }) => {
+				EnableCritical(true);
+				if (!object.success) {
+					modalAlert(
+						'The controller did not accept the values provided.',
+						'Could not set power level.'
+					);
+				} else {
+					modalAlert('Settings were applied successfully.', 'Power level set.');
+				}
+			});
+	};
 
 	function sortByKey(obj) {
 		const keys = Object.keys(obj);
@@ -1585,6 +1738,70 @@ const ZwaveJsUI = (function () {
 		window.open(`https://devices.zwave-js.io/?jumpTo=${id}`, '_blank');
 	}
 
+	function RFSettings() {
+		const Options = {
+			draggable: false,
+			modal: true,
+			resizable: false,
+			width: WindowSize.w,
+			height: WindowSize.h,
+			title: 'Advanced Transceiver Settings',
+			minHeight: 75,
+			buttons: {
+				Cancel: function () {
+					$(this).dialog('destroy');
+				}
+			}
+		};
+
+		RFForm = $('<div>').css({ padding: 10 }).html('Please wait...');
+		RFForm.dialog(Options);
+
+		RFForm.html('');
+		const Template = $('#TPL_RF').html();
+		const templateScript = Handlebars.compile(Template);
+		const HTML = templateScript({});
+		RFForm.append(HTML);
+
+		$('#NVMProgress').css({ display: 'none' });
+
+		const GetPower = () => {
+			ControllerCMD(
+				DCs.getPowerlevel.API,
+				DCs.getPowerlevel.name,
+				undefined,
+				undefined,
+				DCs.getPowerlevel.noWait
+			)
+				.then(({ object }) => {
+					$('#RF_POWER').val(object.powerlevel);
+					$('#RF_0DBM').val(object.measured0dBm);
+
+					$('#RF_POWER_V').html(parseFloat(object.powerlevel).toFixed(1));
+					$('#RF_0DBM_V').html(parseFloat(object.measured0dBm).toFixed(1));
+				})
+				.catch((err) => {
+					$('#RF_TR_POWER').css({ opacity: '0.3', pointerEvents: 'none' });
+				});
+		};
+
+		ControllerCMD(
+			DCs.getRFRegion.API,
+			DCs.getRFRegion.name,
+			undefined,
+			undefined,
+			DCs.getRFRegion.noWait
+		)
+			.then(({ object }) => {
+				$('#RF_REGION').val(object);
+				GetPower();
+			})
+			.catch((err) => {
+				$('#RF_TR_REGION').css({ opacity: '0.3', pointerEvents: 'none' });
+				GetPower();
+			});
+	}
+
 	function RemoveFailedNode() {
 		if (Removing) {
 			modalAlert(
@@ -1665,6 +1882,14 @@ const ZwaveJsUI = (function () {
 					}
 				},
 				{
+					id: 'controller-option-menu-rf',
+					label: 'Transceiver Settings',
+					onselect: function () {
+						IsDriverReady();
+						RFSettings();
+					}
+				},
+				{
 					id: 'controller-option-menu-reset',
 					label: 'Reset Controller',
 					onselect: function () {
@@ -1709,6 +1934,27 @@ const ZwaveJsUI = (function () {
 				`/zwave-js/${NetworkIdentifier}/status`,
 				handleStatusUpdate
 			);
+			RED.comms.unsubscribe(
+				`/zwave-js/${NetworkIdentifier}/backupprocess`,
+				handleNVMBackupProgress
+			);
+			RED.comms.unsubscribe(
+				`/zwave-js/${NetworkIdentifier}/backupfile`,
+				handleNVMBackupFile
+			);
+			RED.comms.unsubscribe(
+				`/zwave-js/${NetworkIdentifier}/nvmrestoreprogress`,
+				handleNVMRestoreProgress
+			);
+			RED.comms.unsubscribe(
+				`/zwave-js/${NetworkIdentifier}/nvmrestoredone`,
+				handleNVMRestoreDone
+			);
+			RED.comms.unsubscribe(
+				`/zwave-js/${NetworkIdentifier}/nvmrestoreerror`,
+				handleNVMRestoreError
+			);
+
 			deselectCurrentNode();
 		}
 
@@ -1726,6 +1972,26 @@ const ZwaveJsUI = (function () {
 		RED.comms.subscribe(
 			`/zwave-js/${NetworkIdentifier}/status`,
 			handleStatusUpdate
+		);
+		RED.comms.subscribe(
+			`/zwave-js/${NetworkIdentifier}/backupprocess`,
+			handleNVMBackupProgress
+		);
+		RED.comms.subscribe(
+			`/zwave-js/${NetworkIdentifier}/backupfile`,
+			handleNVMBackupFile
+		);
+		RED.comms.subscribe(
+			`/zwave-js/${NetworkIdentifier}/nvmrestoreprogress`,
+			handleNVMRestoreProgress
+		);
+		RED.comms.subscribe(
+			`/zwave-js/${NetworkIdentifier}/nvmrestoredone`,
+			handleNVMRestoreDone
+		);
+		RED.comms.subscribe(
+			`/zwave-js/${NetworkIdentifier}/nvmrestoreerror`,
+			handleNVMRestoreError
 		);
 
 		setTimeout(WaitLoad, 100);
@@ -1995,6 +2261,65 @@ const ZwaveJsUI = (function () {
 		});
 	}
 
+	function handleNVMBackupFile(topic, data) {
+		EnableCritical(true);
+		$('#NVMProgressLabel').html('Backing up NVM Completed');
+
+		const Bytes = new Uint8Array(data.payload.data);
+		const blob = new Blob([Bytes], {
+			type: 'application/octet-stream'
+		});
+		const DTE = new Date();
+		const DD = DTE.getDate().toString().padStart(2, '0');
+		const MM = (DTE.getMonth() + 1).toString().padStart(2, '0');
+		const YYYY = DTE.getFullYear();
+
+		const FN = `ZW-NET${NetworkIdentifier}-NVM-${YYYY}${MM}${DD}.bin`;
+
+		saveAs(blob, FN);
+	}
+
+	function handleNVMBackupProgress(topic, data) {
+		const P = data.payload;
+		$('#NVMProgress > div').css({ width: `${P}%` });
+	}
+
+	function handleNVMRestoreProgress(topic, data) {
+		const P = data.payload.progress;
+		const T = data.payload.type;
+
+		$('#NVMProgress > div').css({ width: `${P}%` });
+
+		switch (T) {
+			case 'Convert':
+				$('#NVMProgressLabel').html(
+					'Restoring NVM... [Stage 1/2 - Data Buffer conversion]'
+				);
+				break;
+
+			default:
+				$('#NVMProgressLabel').html(
+					'Restoring NVM... [Stage 2/2 - Applying NVM]'
+				);
+				break;
+		}
+	}
+
+	function handleNVMRestoreError(topic, data) {
+		EnableCritical(true);
+		modalAlert(data.payload, 'NVM Restore Failed');
+		$('#NVMProgressLabel').html('Restoring NVM Failed');
+	}
+
+	function handleNVMRestoreDone(topic) {
+		EnableCritical(true);
+		modalAlert(
+			'The Controller restore process has completed. The controller/driver will be restarted.',
+			'NVM Restore Completed'
+		);
+		$('#NVMProgressLabel').html('Restoring NVM Completed');
+	}
+
 	function handleStatusUpdate(topic, data) {
 		$('#zwave-js-controller-status').html(data.status);
 	}
@@ -2007,14 +2332,21 @@ const ZwaveJsUI = (function () {
 					ClearIETimer();
 					ClearSecurityCountDown();
 					GetNodes();
+					const SecurityDescription = GetSecurityClassLabel(data.securityClass);
+					const HTML = `<td style="text-align: center; padding-top: 50px; font-size: 18px;"><span class="fa-stack"><span class="fa ${SecurityDescription.icon} fa-stack-2x"></span></span>${SecurityDescription.label}</td>`;
 					if (
 						data.inclusionResult.lowSecurity !== undefined &&
 						data.inclusionResult.lowSecurity
 					) {
 						StepsAPI.setStepIndex(StepList.AddDoneInsecure);
+						const Row = $('#IR_Security_Row_NOK');
+						Row.html(HTML);
 					} else {
 						StepsAPI.setStepIndex(StepList.AddDone);
+						const Row = $('#IR_Security_Row_OK');
+						Row.html(HTML);
 					}
+
 					$('#IEButton').text('Close');
 				}
 				if (data.event === 'node removed') {
@@ -2193,46 +2525,40 @@ const ZwaveJsUI = (function () {
 		return i;
 	}
 
+	function GetSecurityClassLabel(SC) {
+		switch (SC) {
+			case 0:
+				return { label: 'S2 | Unauthenticated', icon: 'fa-lock', Short: 'S2' };
+
+			case 1:
+				return { label: 'S2 | Authenticated', icon: 'fa-lock', Short: 'S2' };
+
+			case 2:
+				return { label: 'S2 | Access Control', icon: 'fa-lock', Short: 'S2' };
+
+			case 7:
+				return { label: 'S0 | Legacy', icon: 'fa-lock', Short: 'S0' };
+
+			default:
+				return { label: 'No Security', icon: 'fa-unlock-alt', Short: '' };
+		}
+	}
+
 	function renderLock(node) {
 		const L = $('<span>');
 		L.addClass('fa-stack');
 		if (node.highestSecurityClass !== undefined) {
-			switch (node.highestSecurityClass) {
-				case 0:
-					L.append('<span class="fa fa-lock fa-stack-2x"></span>');
-					L.append(
-						'<strong class="fa-stack-1x" style="font-size:80%; color:white; margin-top:4px">S2</strong>'
-					);
-					RED.popover.tooltip(L, 'S2 | Unauthenticated');
-					break;
-				case 1:
-					L.append('<span class="fa fa-lock fa-stack-2x"></span>');
-					L.append(
-						'<strong class="fa-stack-1x" style="font-size:80%; color:white; margin-top:4px">S2</strong>'
-					);
-					RED.popover.tooltip(L, 'S2 | Authenticated');
-					break;
-				case 2:
-					L.append('<span class="fa fa-lock fa-stack-2x"></span>');
-					L.append(
-						'<strong class="fa-stack-1x" style="font-size:80%; color:white; margin-top:4px">S2</strong>'
-					);
-					RED.popover.tooltip(L, 'S2 | Access Control');
-					break;
+			const SecurityDescription = GetSecurityClassLabel(
+				node.highestSecurityClass
+			);
 
-				case 7:
-					L.append('<span class="fa fa-lock fa-stack-2x"></span>');
-					L.append(
-						'<strong class="fa-stack-1x" style="font-size:80%; color:white; margin-top:4px">S0</strong>'
-					);
-					RED.popover.tooltip(L, 'S0 | Legacy');
-					break;
-
-				default:
-					L.append('<span class="fa fa-unlock-alt fa-stack-2x"></span>');
-					RED.popover.tooltip(L, 'No Security!');
-					break;
-			}
+			L.append(
+				`<span class="fa ${SecurityDescription.icon} fa-stack-2x"></span>`
+			);
+			L.append(
+				`<strong class="fa-stack-1x" style="font-size:80%; color:white; margin-top:4px">${SecurityDescription.Short}</strong>`
+			);
+			RED.popover.tooltip(L, SecurityDescription.label);
 		} else {
 			L.append('<span class="fa fa-unlock-alt fa-stack-2x"></span>');
 			RED.popover.tooltip(L, 'No Security!');

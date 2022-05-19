@@ -833,8 +833,23 @@ module.exports = function (RED) {
 			);
 
 			let SupportsNN = false;
+			let Result;
 
 			switch (Method) {
+				case 'restoreNVM':
+					Result = await Driver.controller.restoreNVM(
+						Params[0],
+						Params[1],
+						Params[2]
+					);
+					Send(undefined, 'NVM_RESTORE_DONE', Result, send);
+					break;
+
+				case 'backupNVMRaw':
+					const Data = await Driver.controller.backupNVMRaw(Params[0]);
+					Send(undefined, 'NVM_BACKUP', Data, send);
+					break;
+
 				case 'abortFirmwareUpdate':
 					NodeCheck(Params[0]);
 					ReturnNode.id = Params[0];
@@ -855,17 +870,45 @@ module.exports = function (RED) {
 
 				case 'getRFRegion':
 					const RFR = await Driver.controller.getRFRegion();
-					Send(undefined, 'CURRENT_RF_REGION', ZWaveJS.RFRegion[RFR], send);
+					Send(undefined, 'CURRENT_RF_REGION', RFR, send);
 					break;
 
 				case 'setRFRegion':
-					await Driver.controller.setRFRegion(ZWaveJS.RFRegion[Params[0]]);
-					Send(undefined, 'RF_REGION_SET', Params[0], send);
+					Result = await Driver.controller.setRFRegion(Params[0]);
+					Send(
+						undefined,
+						'RF_REGION_SET_RESULT',
+						{ targetRegion: Params[0], success: Result },
+						send
+					);
+					break;
+
+				case 'setPowerlevel':
+					Result = await Driver.controller.setPowerlevel(Params[0], Params[1]);
+					Send(
+						undefined,
+						'CONTROLLER_POWER_LEVEL_SET_RESULT',
+						{
+							targetLevels: { powerlevel: Params[0], measured0dBm: Params[1] },
+							success: Result
+						},
+						send
+					);
+					break;
+
+				case 'getPowerlevel':
+					Result = await Driver.controller.getPowerlevel();
+					Send(undefined, 'CONTROLLER_POWER_LEVEL', Result, send);
 					break;
 
 				case 'toggleRF':
-					await Driver.controller.toggleRF(Params[0]);
-					Send(undefined, 'RF_STATUS', Params[0], send);
+					Result = await Driver.controller.toggleRF(Params[0]);
+					Send(
+						undefined,
+						'RF_STATUS_SET_RESULT',
+						{ targetStatus: Params[0], success: Result },
+						send
+					);
 					break;
 
 				case 'getNodes':

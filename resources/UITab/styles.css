@@ -153,6 +153,12 @@
 	opacity: 1;
 }
 
+.nmprogresslabel {
+	width: 70%;
+	margin: auto;
+	margin-top: 50px;
+}
+
 .progressbar {
 	background-color: #bbb;
 	-webkit-border-radius: 8px;
