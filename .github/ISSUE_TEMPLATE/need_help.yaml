@@ -1,7 +1,7 @@
 name: Need Help
 description: If you just need some help. don't hesitate to ask.
 title: "[Help]: "
-labels: [help wanted]
+labels: [help-wanted]
 assignees:
   - marcus-j-davies
   - crxporter
