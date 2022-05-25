@@ -1132,7 +1132,10 @@ const ZwaveJsUI = (function () {
 			DCs.setPowerlevel.API,
 			DCs.setPowerlevel.name,
 			undefined,
-			[parseFloat($('#RF_POWER').val()), parseFloat($('#RF_0DBM').val())],
+			[
+				parseFloat($('#RF_POWER').slider('value')),
+				parseFloat($('#RF_0DBM').slider('value'))
+			],
 			DCs.setPowerlevel.noWait
 		)
 			.catch((err) => {
@@ -1765,6 +1768,28 @@ const ZwaveJsUI = (function () {
 
 		$('#NVMProgress').css({ display: 'none' });
 
+		const PowerSlider = $('#RF_POWER_SLIDER');
+		$('#RF_POWER').slider({
+			min: -12.8,
+			max: 12.7,
+			step: 0.1,
+			range: 'min',
+			slide: function (event, ui) {
+				PowerSlider.text(ui.value);
+			}
+		});
+
+		const MeasuredSlider = $('#RF_0DBM_SLIDER');
+		$('#RF_0DBM').slider({
+			min: -12.8,
+			max: 12.7,
+			step: 0.1,
+			range: 'min',
+			slide: function (event, ui) {
+				MeasuredSlider.text(ui.value);
+			}
+		});
+
 		const GetPower = () => {
 			ControllerCMD(
 				DCs.getPowerlevel.API,
@@ -1774,11 +1799,10 @@ const ZwaveJsUI = (function () {
 				DCs.getPowerlevel.noWait
 			)
 				.then(({ object }) => {
-					$('#RF_POWER').val(object.powerlevel);
-					$('#RF_0DBM').val(object.measured0dBm);
-
-					$('#RF_POWER_V').html(parseFloat(object.powerlevel).toFixed(1));
-					$('#RF_0DBM_V').html(parseFloat(object.measured0dBm).toFixed(1));
+					PowerSlider.text(object.powerlevel);
+					$('#RF_POWER').slider('value', object.powerlevel);
+					MeasuredSlider.text(object.measured0dBm);
+					$('#RF_0DBM').slider('value', object.measured0dBm);
 				})
 				.catch((err) => {
 					$('#RF_TR_POWER').css({ opacity: '0.3', pointerEvents: 'none' });

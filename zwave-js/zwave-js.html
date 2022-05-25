@@ -795,31 +795,32 @@
 				>Apply</button></td>
 		</tr>
 		<tr id='RF_TR_POWER'>
-			<td>RF Power Level (dbm)</td>
+			<td>RF Power Level (dBm)</td>
 			<td style='text-align:right'>
 
-				Level (<span id='RF_POWER_V'>0.0</span>):
-				<input
+				<div
 					id='RF_POWER'
-					oninput="$('#RF_POWER_V').html(parseFloat(this.value).toFixed(1))"
-					type='range'
-					min='-12.8'
-					max='12.7'
-					value='0.0'
-					step='0.1'
-					style='width:200px'
-				/><br />
-				@ 0dbm (<span id='RF_0DBM_V'>0.0</span>):
-				<input
+					style='text-align:left;width: 270px;margin: 5px;height: 20px; float: right; line-height: 20px;'
+				>
+					&nbsp;&nbsp;Power Level
+					<div
+						id='RF_POWER_SLIDER'
+						class='ui-slider-handle'
+						style='width: 35px;height: 20px;line-height: 20px;font-size: 12px;'
+					></div>
+				</div>
+
+				<div
 					id='RF_0DBM'
-					oninput="$('#RF_0DBM_V').html(parseFloat(this.value).toFixed(1))"
-					type='range'
-					min='-12.8'
-					max='12.7'
-					value='0.0'
-					step='0.1'
-					style='width:200px'
-				/>
+					style='text-align:left;width: 270px;margin: 5px;height: 20px; float: right; line-height: 20px;'
+				>
+					&nbsp;&nbsp;Measured 0dBm
+					<div
+						id='RF_0DBM_SLIDER'
+						class='ui-slider-handle'
+						style='width: 35px;height: 20px;line-height: 20px;font-size: 12px;'
+					></div>
+				</div>
 
 			</td>
 			<td style='text-align: right;'><button
