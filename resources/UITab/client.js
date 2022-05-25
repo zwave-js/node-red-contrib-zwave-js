@@ -520,7 +520,7 @@ const ZwaveJsUI = (function () {
 			resizable: false,
 			width: WindowSize.w,
 			height: WindowSize.h,
-			title: 'ZWave Device Firmware Updater',
+			title: `ZWave Device Firmware Updater (Network ${NetworkIdentifier})`,
 			minHeight: 75,
 			buttons: {
 				'Begin Update': PerformUpdate,
@@ -1481,7 +1481,7 @@ const ZwaveJsUI = (function () {
 			resizable: false,
 			width: WindowSize.w,
 			height: WindowSize.h,
-			title: 'Node Inclusion/Exclusion',
+			title: `Node Inclusion/Exclusion (Network ${NetworkIdentifier})`,
 			minHeight: 75,
 			buttons: [
 				{
@@ -1745,10 +1745,10 @@ const ZwaveJsUI = (function () {
 			resizable: false,
 			width: WindowSize.w,
 			height: WindowSize.h,
-			title: 'Advanced Transceiver Settings',
+			title: `Advanced Transceiver Settings (Network ${NetworkIdentifier})`,
 			minHeight: 75,
 			buttons: {
-				Cancel: function () {
+				Close: function () {
 					$(this).dialog('destroy');
 				}
 			}
