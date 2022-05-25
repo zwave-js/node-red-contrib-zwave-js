@@ -297,6 +297,10 @@
 	    <input type="text" id="node-input-name" placeholder="My ZWave Node" style="width: calc(100% - 135px)">
 	</div>
 	<div class="form-row">
+	    <label for="node-input-showStatus" style="width:130px"><i class="fa fa-pencil"></i> Show Status</label>
+	    <input type="checkbox" id="node-input-showStatus" />
+	</div>
+	<div class="form-row">
 	    <label  for="node-input-networkIdentifier" style="width:130px"><i class="fa fa-pencil"></i> Network ID</label>
 		<button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network1" onclick="setID(1)">1</button>
 		<button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network2" onclick="setID(2)">2</button>
@@ -334,10 +338,6 @@
 	    <label for="node-input-filteredNodeId" style="width:130px"><i class="fa fa-pencil"></i> Node ID(s)</label>
 	    <select id="node-input-filteredNodeId" style="width: calc(100% - 135px)">
 	    </select>
-	</div>
-	<div class="form-row">
-	    <label for="node-input-showStatus" style="width:130px"><i class="fa fa-pencil"></i> Show Status</label>
-	    <input type="checkbox" id="node-input-showStatus" />
 	</div>
 	<div class="form-tips" id="node-tip">
 		    Note: This node works in conjunction with the main Z-Wave JS Controller node, therefore, ensure the controller node is in one of your flows and in a deployed state before using this node.

@@ -125,7 +125,7 @@
 	</div>
 	<div class="form-row">
 	    <label for="node-input-api" style="width:130px"><i class="fa fa-pencil"></i> API</label>
-	    <select id="node-input-api" onchange="SortAPI()">
+	    <select id="node-input-api" onchange="SortAPI()" style="width: calc(100% - 135px)">
 	        <option value="CCAPI">CCAPI</option>
 			<option value="ValueAPI">ValueAPI</option>
 	    </select>
@@ -135,27 +135,27 @@
 	</p>
 	<div class="form-row" forapi="ValueAPI">
 	    <label for="node-input-vapiMode" style="width:130px"><i class="fa fa-pencil"></i> Method</label>
-		<select id="node-input-vapiMode">
+		<select id="node-input-vapiMode" style="width: calc(100% - 135px)">
 	        <option value="setValue">Set</option>
 			<option value="getValue">Get</option>
 	    </select>
 	</div>
 	<div class="form-row" forapi="ValueAPI">
 	    <label for="node-input-vapiValueId" style="width:130px"><i class="fa fa-pencil"></i> ValueID { }</label>
-	    <input style="width:50px" type="text" id="node-input-vapiValueId" placeholder="valueId">
+	    <input style="width: calc(100% - 135px)" type="text" id="node-input-vapiValueId" placeholder="valueId">
 	</div>
 	<p forapi="CCAPI">
 	    <strong>Command Class</strong>
 	</p>
 	<div class="form-row" forapi="CCAPI">
 	    <label for="node-input-cc" style="width:130px"><i class="fa fa-pencil"></i> CC</label>
-		<select id="node-input-cc" onchange="GetMethods()">
+		<select id="node-input-cc" onchange="GetMethods()" style="width: calc(100% - 135px)">
 	        <option value="Select Command Class">Select Command Class</option>
 	    </select>
 	</div>
 	<div class="form-row" forapi="CCAPI">
 	    <label for="node-input-method" style="width:130px"><i class="fa fa-pencil"></i> Method</label>
-		<select style="margin-bottom:5px" id="node-input-method">
+		<select id="node-input-method" style="width: calc(100% - 135px);margin-bottom:5px">
 	        <option value="Select Method">Select Method</option>
 	    </select><br />
 		<a style="margin-left:135px; color: blue;text-decoration: underline;" onclick="GoToInfo()" href="#">View Parameter Definition</a>
@@ -166,30 +166,30 @@
 	</div>
 	<div class="form-row" forapi="CCAPI">
 	    <label for="node-input-forceUpdate" style="width:130px"><i class="fa fa-pencil"></i> Force Update { }</label>
-	    <input style="width:50px" type="text" id="node-input-forceUpdate" placeholder="forceUpdate">
+	    <input style="width: calc(100% - 135px)" type="text" id="node-input-forceUpdate" placeholder="forceUpdate">
 	</div>
 	<p>
 	    <strong>Command Parameters</strong>
 	</p>
 	<div class="form-row">
 	    <label for="node-input-node" style="width:130px"><i class="fa fa-pencil"></i> Node</label>
-	    <input style="width:50px" type="text" id="node-input-node" placeholder="topic">
+	    <input style="width: calc(100% - 135px)" type="text" id="node-input-node" placeholder="topic">
 	</div>
 	<div class="form-row">
 	    <label for="node-input-endpoint" style="width:130px"><i class="fa fa-pencil"></i> Endpoint</label>
-	    <input style="width:50px" type="text" id="node-input-endpoint" placeholder="endpoint">
+	    <input style="width: calc(100% - 135px)" type="text" id="node-input-endpoint" placeholder="endpoint">
 	</div>
 	<div class="form-row" forapi="CCAPI">
 	    <label for="node-input-params" style="width:130px"><i class="fa fa-pencil"></i> Params [ ]</label>
-	    <input style="width:50px" type="text" id="node-input-params" placeholder="payload">
+	    <input style="width: calc(100% - 135px)" type="text" id="node-input-params" placeholder="payload">
 	</div>
 	<div class="form-row" forapi="ValueAPI">
 	    <label for="node-input-vapiOptions" style="width:130px"><i class="fa fa-pencil"></i> Set Options { }</label>
-	    <input style="width:50px" type="text" id="node-input-vapiOptions" placeholder="options">
+	    <input style="width: calc(100% - 135px)" type="text" id="node-input-vapiOptions" placeholder="options">
 	</div>
 	<div class="form-row" forapi="ValueAPI">
 	    <label for="node-input-vapiValue" style="width:130px"><i class="fa fa-pencil"></i> Value</label>
-	    <input style="width:50px" type="text" id="node-input-vapiValue" placeholder="payload">
+	    <input style="width: calc(100% - 135px)" type="text" id="node-input-vapiValue" placeholder="payload">
 	</div>
 	<div class="form-tips" id="node-tip">
 		    All JSONata expressions are based on the root path of <code>msg</code>, i.e specifying <code>payload</code> will yield the object stored at <code>msg.payload</code>.

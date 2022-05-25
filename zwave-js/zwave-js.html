@@ -1126,7 +1126,7 @@
 	</div>
 	<div class="form-row">
 	    <label for="node-input-serialPort" style="width:130px"><i class="fa fa-pencil"></i> Serial Port</label>
-	    <select id="node-input-serialPort">
+	    <select id="node-input-serialPort" style="width: calc(100% - 135px)">
 	    </select>
 
 	</div>
@@ -1135,22 +1135,22 @@
 	</p>
 	<div class="form-row">
 	    <label for="node-input-encryptionKey" style="width:130px"><i class="fa fa-pencil"></i> S0</label>
-	    <input type="text" id="node-input-encryptionKey" placeholder="32 character hexadecimal" style="width: calc(70% - 152px)" onpaste="handleNetworkKeyPaste(event)">
+	    <input type="text" id="node-input-encryptionKey" placeholder="32 character hexadecimal" style="width: calc(100% - 290px)" onpaste="handleNetworkKeyPaste(event)">
 		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
 	</div>
 	<div class="form-row">
 	    <label for="node-input-encryptionKeyS2U" style="width:130px"><i class="fa fa-pencil"></i> S2 Unauth</label>
-	    <input type="text" id="node-input-encryptionKeyS2U" placeholder="32 character hexadecimal" style="width: calc(70% - 152px)" onpaste="handleNetworkKeyPaste(event)">
+	    <input type="text" id="node-input-encryptionKeyS2U" placeholder="32 character hexadecimal" style="width: calc(100% - 290px)" onpaste="handleNetworkKeyPaste(event)">
 		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
 	</div>
 	<div class="form-row">
 	    <label for="node-input-encryptionKeyS2A" style="width:130px"><i class="fa fa-pencil"></i> S2 Auth</label>
-	    <input type="text" id="node-input-encryptionKeyS2A" placeholder="32 character hexadecimal" style="width: calc(70% - 152px)" onpaste="handleNetworkKeyPaste(event)">
+	    <input type="text" id="node-input-encryptionKeyS2A" placeholder="32 character hexadecimal" style="width: calc(100% - 290px)" onpaste="handleNetworkKeyPaste(event)">
 		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
 	</div>
 	<div class="form-row">
 	    <label for="node-input-encryptionKeyS2AC" style="width:130px"><i class="fa fa-pencil"></i> S2 Access Ctrl</label>
-	    <input type="text" id="node-input-encryptionKeyS2AC" placeholder="32 character hexadecimal" style="width: calc(70% - 152px)" onpaste="handleNetworkKeyPaste(event)">
+	    <input type="text" id="node-input-encryptionKeyS2AC" placeholder="32 character hexadecimal" style="width: calc(100% - 290px)" onpaste="handleNetworkKeyPaste(event)">
 		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
 	</div>
 	<br />
@@ -1179,7 +1179,7 @@
 	</p>
 	<div class="form-row">
 	    <label  for="node-input-logLevelPin" style="width:130px"><i class="fa fa-pencil"></i> Level (Pin 2)</label>
-	    <select id="node-input-logLevelPin">
+	    <select id="node-input-logLevelPin" style="width: calc(100% - 135px)">
 	        <option value="none">Logging Disabled</option>
 	        <option value="error">Error</option>
 	        <option value="warn">Warn</option>
@@ -1191,7 +1191,7 @@
 	</div>
 	<div class="form-row">
 	    <label  for="node-input-logLevel" style="width:130px"><i class="fa fa-pencil"></i> Level (File)</label>
-	    <select id="node-input-logLevel">
+	    <select id="node-input-logLevel" style="width: calc(100% - 135px)">
 	        <option value="none">Logging Disabled</option>
 	        <option value="error">Error</option>
 	        <option value="warn">Warn</option>
@@ -1219,7 +1219,7 @@
 	</div>
 	<div class="form-row">
 	    <label  for="node-input-valueCacheDiskThrottle" style="width:130px"><i class="fa fa-pencil"></i> Disk IO Throttle</label>
-	    <select id="node-input-valueCacheDiskThrottle">
+	    <select id="node-input-valueCacheDiskThrottle" style="width: calc(100% - 135px)">
 	        <option value="normal">Normal</option>
 	        <option value="slow">Slow</option>
 	        <option value="fast">Fast</option>
@@ -1239,7 +1239,7 @@
 	</div>
 	<div class="form-row">
 	    <label  for="node-input-serialAPIStarted" style="width:130px"><i class="fa fa-pencil"></i> SR Timeout</label>
-	    <input type="text" id="node-input-serialAPIStarted" placeholder="Use Default">
+	    <input type="text" id="node-input-serialAPIStarted" placeholder="Use Default" style="width: calc(100% - 135px)">
 	</div>
 	<br />
 	<p>
@@ -1255,7 +1255,7 @@
 	</div>
 	<div class="form-row">
 	    <label  for="ZWJS_CFGVersion" style="width:130px"><i class="fa fa-info"></i> DB Version</label>
-	    <input type="text" id="ZWJS_CFGVersion" style="width: calc(100% - 152px)" readonly>
+	    <input type="text" id="ZWJS_CFGVersion" style="width: calc(100% - 290px)" readonly>
 		<button class="ui-button ui-corner-all ui-widget" style="width:152px" id="node-dialog-updates" onclick="DBUpdate()">Check For Updates</button>
 	</div>
 </script>
