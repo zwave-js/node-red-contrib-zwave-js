@@ -294,7 +294,7 @@
 
 	<div class="form-row">
 	    <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
-	    <input type="text" id="node-input-name" placeholder="My ZWave Node">
+	    <input type="text" id="node-input-name" placeholder="My ZWave Node" style="width: calc(100% - 135px)">
 	</div>
 	<div class="form-row">
 	    <label  for="node-input-networkIdentifier" style="width:130px"><i class="fa fa-pencil"></i> Network ID</label>
@@ -306,7 +306,7 @@
 	</div>
 	<div class="form-row">
 	    <label for="node-input-filteredMode" style="width:130px"><i class="fa fa-pencil"></i> Mode</label>
-	    <select id="node-input-filteredMode" onchange="SortFilterChange()">
+	    <select id="node-input-filteredMode" onchange="SortFilterChange()" style="width: calc(100% - 135px)">
 	        <option value="All">All Nodes</option>
 	        <option value="Multiple">Multiple Nodes</option>
 	        <option value="Multicast">Multicast</option>
@@ -320,7 +320,7 @@
 	</div>
 	<div class="form-row">
 	    <label for="node-input-datamode" style="width:130px"><i class="fa fa-pencil"></i> Network Mode</label>
-	    <select id="node-input-datamode" onchange="showIsolated()">
+	    <select id="node-input-datamode" onchange="showIsolated()" style="width: calc(100% - 135px)">
 	        <option value="Send/Receive">Send/Receive</option>
 	        <option value="Send">Send</option>
 	        <option value="Receive">Receive</option>
@@ -332,7 +332,7 @@
 	</div>
 	<div class="form-row">
 	    <label for="node-input-filteredNodeId" style="width:130px"><i class="fa fa-pencil"></i> Node ID(s)</label>
-	    <select id="node-input-filteredNodeId">
+	    <select id="node-input-filteredNodeId" style="width: calc(100% - 135px)">
 	    </select>
 	</div>
 	<div class="form-row">
