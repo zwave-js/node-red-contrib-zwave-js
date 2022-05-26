@@ -1,11 +1,11 @@
   # node-red-contrib-zwave-js Change Log
 
   - 7.1.1
-  
-   **Fixes**  
+
+    **Fixes**  
       - Missing body-parser module (we no longer use it) and now read the body directly from express.
 
-   **Changes**  
+    **Changes**  
       - Small improvements to power level sliders in RF settings, and the UI in general.
       - Updated all config inputs to use all available width.
       - The active Network ID is now part of the controller dialogs. 
