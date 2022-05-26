@@ -5,13 +5,11 @@
 	"description": "The most powerful, high performing and highly polished Z-Wave node for Node-RED based on Z-Wave JS. If you want a fully featured Z-Wave framework in your Node-RED instance, you have found it.",
 	"dependencies": {
 		"limiter": "^2.1.0",
-		"body-parser":"^1.20.0",
 		"lodash": "^4.17.21",
 		"serialport": "^10.4.0",
 		"winston": "^3.7.2",
 		"winston-transport": "^4.5.0",
 		"zwave-js": "^9.3.0"
-
 	},
 	"devDependencies": {
 		"eslint": "^8.16.0",

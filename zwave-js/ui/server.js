@@ -6,7 +6,6 @@ const ZWJSCFG = require('@zwave-js/config');
 const SmartStart = require('./smartstart/server');
 const FS = require('fs');
 const path = require('path');
-const bodyParser = require('body-parser');
 const Multipart = require('./multipart');
 
 const _CM = new ZWJSCFG.ConfigManager();
@@ -195,20 +194,24 @@ class UIServer {
 
 		this._RED.httpAdmin.post(
 			`/zwave-js/${this._NetworkIdentifier}/restorenvm`,
-			[
-				this._RED.auth.needsPermission('flows.write'),
-				bodyParser.raw({ inflate: true, limit: '50mb', type: () => true })
-			],
-			(req, res) => {
+			this._RED.auth.needsPermission('flows.write'),
+			async (req, res) => {
 				if (this._Context.controller === undefined) {
 					res.status(500).send('The Controller is currently unavailable.');
 					return;
 				}
 
-				const Boundary = Multipart.getBoundary(req.headers['content-type']);
-				const Parts = Multipart.parse(req.body, Boundary);
+				const buffers = [];
+				for await (const chunk of req) {
+					buffers.push(chunk);
+				}
 
-				const Buffer = Parts.filter((P) => P.hasOwnProperty('filename'))[0]
+				const data = Buffer.concat(buffers);
+
+				const Boundary = Multipart.getBoundary(req.headers['content-type']);
+				const Parts = Multipart.parse(data, Boundary);
+
+				const _Buffer = Parts.filter((P) => P.hasOwnProperty('filename'))[0]
 					.data;
 
 				const SERV_Done = () => {
@@ -234,7 +237,7 @@ class UIServer {
 				const PL = {
 					mode: 'ControllerAPI',
 					method: 'restoreNVM',
-					params: [Buffer, SERV_Convert, SERV_Apply]
+					params: [_Buffer, SERV_Convert, SERV_Apply]
 				};
 
 				this._Context.input({ payload: PL }, SERV_Done, SERV_Error);
@@ -245,18 +248,22 @@ class UIServer {
 
 		this._RED.httpAdmin.post(
 			`/zwave-js/${this._NetworkIdentifier}/firmwareupdate`,
-			[
-				this._RED.auth.needsPermission('flows.write'),
-				bodyParser.raw({ inflate: true, limit: '50mb', type: () => true })
-			],
-			(req, res) => {
+			this._RED.auth.needsPermission('flows.write'),
+			async (req, res) => {
 				if (this._Context.controller === undefined) {
 					res.status(500).send('The Controller is currently unavailable.');
 					return;
 				}
 
+				const buffers = [];
+				for await (const chunk of req) {
+					buffers.push(chunk);
+				}
+
+				const data = Buffer.concat(buffers);
+
 				const Boundary = Multipart.getBoundary(req.headers['content-type']);
-				const Parts = Multipart.parse(req.body, Boundary);
+				const Parts = Multipart.parse(data, Boundary);
 
 				let NodeID = Parts.filter((P) => P.name === 'NodeID')[0].data.toString(
 					'utf8'
@@ -268,7 +275,7 @@ class UIServer {
 				);
 				Target = parseInt(Target);
 
-				const Buffer = Parts.filter((P) => P.hasOwnProperty('filename'))[0]
+				const _Buffer = Parts.filter((P) => P.hasOwnProperty('filename'))[0]
 					.data;
 				const FileName = Parts.filter((P) => P.hasOwnProperty('filename'))[0]
 					.filename;
@@ -276,7 +283,7 @@ class UIServer {
 				const PL = {
 					mode: 'ControllerAPI',
 					method: 'beginFirmwareUpdate',
-					params: [NodeID, Target, FileName, Buffer]
+					params: [NodeID, Target, FileName, _Buffer]
 				};
 
 				const SERV_Success = () => {

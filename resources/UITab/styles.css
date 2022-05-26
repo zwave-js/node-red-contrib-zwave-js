@@ -248,6 +248,7 @@ table#zwave-js-associations-table tr:first-of-type {
 	color: white !important;
 	margin-top: 2px;
 	transform: translateX(-10px);
+	cursor: pointer;
 }
 .ui-slider-range {
 	background: rgba(200, 200, 200, 0.3);
