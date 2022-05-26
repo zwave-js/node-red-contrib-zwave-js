@@ -1,6 +1,7 @@
   # node-red-contrib-zwave-js Change Log
 
   - 7.1.1
+  
    **Fixes**  
       - Missing body-parser module (we no longer use it) and now read the body directly from express.
 
