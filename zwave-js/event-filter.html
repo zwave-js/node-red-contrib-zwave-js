@@ -28,7 +28,10 @@
 		outputLabels: function (index) {
 			return this.filters[index].name;
 		},
-		paletteLabel: 'Event Filter'
+		paletteLabel: 'Event Filter',
+		oneditresize: function (size) {
+			$('#filtersets').editableList('height', size.height - 70);
+		}
 	});
 
 	function compare(a, b) {
@@ -242,7 +245,7 @@
 
 	  <div class="form-row">
 	      <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
-	      <input type="text" id="node-input-name" placeholder="Filter Name">
+	      <input type="text" id="node-input-name" placeholder="Filter Name" style="width: calc(100% - 135px)">
 	  </div>
 	  <div class="form-row">
 	    <label for="node-input-showStatus" style="width:130px"><i class="fa fa-pencil"></i> Show Status</label>

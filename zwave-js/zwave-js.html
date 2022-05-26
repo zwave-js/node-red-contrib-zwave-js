@@ -795,31 +795,32 @@
 				>Apply</button></td>
 		</tr>
 		<tr id='RF_TR_POWER'>
-			<td>RF Power Level (dbm)</td>
+			<td>RF Power Level (dBm)</td>
 			<td style='text-align:right'>
 
-				Level (<span id='RF_POWER_V'>0.0</span>):
-				<input
+				<div
 					id='RF_POWER'
-					oninput="$('#RF_POWER_V').html(parseFloat(this.value).toFixed(1))"
-					type='range'
-					min='-12.8'
-					max='12.7'
-					value='0.0'
-					step='0.1'
-					style='width:200px'
-				/><br />
-				@ 0dbm (<span id='RF_0DBM_V'>0.0</span>):
-				<input
+					style='text-align:left;width: 270px;margin: 5px;height: 20px; float: right; line-height: 20px;'
+				>
+					&nbsp;&nbsp;Power Level
+					<div
+						id='RF_POWER_SLIDER'
+						class='ui-slider-handle'
+						style='width: 35px;height: 20px;line-height: 20px;font-size: 12px;'
+					></div>
+				</div>
+
+				<div
 					id='RF_0DBM'
-					oninput="$('#RF_0DBM_V').html(parseFloat(this.value).toFixed(1))"
-					type='range'
-					min='-12.8'
-					max='12.7'
-					value='0.0'
-					step='0.1'
-					style='width:200px'
-				/>
+					style='text-align:left;width: 270px;margin: 5px;height: 20px; float: right; line-height: 20px;'
+				>
+					&nbsp;&nbsp;Measured 0dBm
+					<div
+						id='RF_0DBM_SLIDER'
+						class='ui-slider-handle'
+						style='width: 35px;height: 20px;line-height: 20px;font-size: 12px;'
+					></div>
+				</div>
 
 			</td>
 			<td style='text-align: right;'><button
@@ -829,7 +830,10 @@
 				>Apply</button></td>
 		</tr>
 		<tr>
-			<td>Backup/Restore NVM</td>
+			<td>Backup/Restore NVM<br />
+				<span style='font-size: 12px;'>Backups will be downloaded to your
+					computer.</span>
+			</td>
 			<td colspan='2' style='text-align:right'><button
 					style='width:120px; height:30px'
 					class='ui-button ui-corner-all ui-widget SecrutiyButton CriticalDisable'
@@ -843,7 +847,11 @@
 				>Backup</button></td>
 		</tr>
 	</table>
-	<div class='nmprogresslabel' id='NVMProgressLabel'></div>
+	<div
+		class='nmprogresslabel'
+		id='NVMProgressLabel'
+		style='margin-top:10px'
+	></div>
 	<div style='margin-top:5px' class='progressbar' id='NVMProgress'><div
 		></div></div>
 	<input type='file' id='FILE_BU' style='display:none' />
@@ -1111,7 +1119,7 @@
 	</p>
 	<div class="form-row">
 	    <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
-	    <input type="text" id="node-input-name" placeholder="Zwave Controller">
+	    <input type="text" id="node-input-name" placeholder="Zwave Controller" style="width: calc(100% - 135px)">
 	</div>
 	<div class="form-row">
 	    <label for="node-input-networkIdentifier" style="width:130px"><i class="fa fa-pencil"></i> Network ID</label>
@@ -1123,7 +1131,7 @@
 	</div>
 	<div class="form-row">
 	    <label for="node-input-serialPort" style="width:130px"><i class="fa fa-pencil"></i> Serial Port</label>
-	    <select id="node-input-serialPort">
+	    <select id="node-input-serialPort" style="width: calc(100% - 135px)">
 	    </select>
 
 	</div>
@@ -1132,22 +1140,22 @@
 	</p>
 	<div class="form-row">
 	    <label for="node-input-encryptionKey" style="width:130px"><i class="fa fa-pencil"></i> S0</label>
-	    <input type="text" id="node-input-encryptionKey" placeholder="32 character hexadecimal" style="width: calc(70% - 152px)" onpaste="handleNetworkKeyPaste(event)">
+	    <input type="text" id="node-input-encryptionKey" placeholder="32 character hexadecimal" style="width: calc(100% - 290px)" onpaste="handleNetworkKeyPaste(event)">
 		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
 	</div>
 	<div class="form-row">
 	    <label for="node-input-encryptionKeyS2U" style="width:130px"><i class="fa fa-pencil"></i> S2 Unauth</label>
-	    <input type="text" id="node-input-encryptionKeyS2U" placeholder="32 character hexadecimal" style="width: calc(70% - 152px)" onpaste="handleNetworkKeyPaste(event)">
+	    <input type="text" id="node-input-encryptionKeyS2U" placeholder="32 character hexadecimal" style="width: calc(100% - 290px)" onpaste="handleNetworkKeyPaste(event)">
 		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
 	</div>
 	<div class="form-row">
 	    <label for="node-input-encryptionKeyS2A" style="width:130px"><i class="fa fa-pencil"></i> S2 Auth</label>
-	    <input type="text" id="node-input-encryptionKeyS2A" placeholder="32 character hexadecimal" style="width: calc(70% - 152px)" onpaste="handleNetworkKeyPaste(event)">
+	    <input type="text" id="node-input-encryptionKeyS2A" placeholder="32 character hexadecimal" style="width: calc(100% - 290px)" onpaste="handleNetworkKeyPaste(event)">
 		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
 	</div>
 	<div class="form-row">
 	    <label for="node-input-encryptionKeyS2AC" style="width:130px"><i class="fa fa-pencil"></i> S2 Access Ctrl</label>
-	    <input type="text" id="node-input-encryptionKeyS2AC" placeholder="32 character hexadecimal" style="width: calc(70% - 152px)" onpaste="handleNetworkKeyPaste(event)">
+	    <input type="text" id="node-input-encryptionKeyS2AC" placeholder="32 character hexadecimal" style="width: calc(100% - 290px)" onpaste="handleNetworkKeyPaste(event)">
 		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
 	</div>
 	<br />
@@ -1156,19 +1164,19 @@
 	</p>
 	<div class="form-row">
 	    <label  for="node-input-ackTimeout" style="width:130px"><i class="fa fa-pencil"></i> ACK</label>
-	    <input type="text" id="node-input-ackTimeout" placeholder="Use Default">
+	    <input type="text" id="node-input-ackTimeout" placeholder="Use Default" style="width: calc(100% - 135px)">
 	</div>
 	<div class="form-row">
 	    <label  for="node-input-controllerTimeout" style="width:130px"><i class="fa fa-pencil"></i> Controller</label>
-	    <input type="text" id="node-input-controllerTimeout" placeholder="Use Default">
+	    <input type="text" id="node-input-controllerTimeout" placeholder="Use Default" style="width: calc(100% - 135px)">
 	</div>
 	<div class="form-row">
 	    <label  for="node-input-sendDataCallback" style="width:130px"><i class="fa fa-pencil"></i> Callback</label>
-	    <input type="text" id="node-input-sendDataCallback" placeholder="Use Default">
+	    <input type="text" id="node-input-sendDataCallback" placeholder="Use Default" style="width: calc(100% - 135px)">
 	</div>
 	<div class="form-row">
 	    <label  for="node-input-sendResponseTimeout" style="width:130px"><i class="fa fa-pencil"></i> Req -> Res</label>
-	    <input type="text" id="node-input-sendResponseTimeout" placeholder="Use Default">
+	    <input type="text" id="node-input-sendResponseTimeout" placeholder="Use Default" style="width: calc(100% - 135px)">
 	</div>
 	<br />
 	<p>
@@ -1176,7 +1184,7 @@
 	</p>
 	<div class="form-row">
 	    <label  for="node-input-logLevelPin" style="width:130px"><i class="fa fa-pencil"></i> Level (Pin 2)</label>
-	    <select id="node-input-logLevelPin">
+	    <select id="node-input-logLevelPin" style="width: calc(100% - 135px)">
 	        <option value="none">Logging Disabled</option>
 	        <option value="error">Error</option>
 	        <option value="warn">Warn</option>
@@ -1188,7 +1196,7 @@
 	</div>
 	<div class="form-row">
 	    <label  for="node-input-logLevel" style="width:130px"><i class="fa fa-pencil"></i> Level (File)</label>
-	    <select id="node-input-logLevel">
+	    <select id="node-input-logLevel" style="width: calc(100% - 135px)">
 	        <option value="none">Logging Disabled</option>
 	        <option value="error">Error</option>
 	        <option value="warn">Warn</option>
@@ -1200,11 +1208,11 @@
 	</div>
 	<div class="form-row">
 	    <label  for="node-input-logFile" style="width:130px"><i class="fa fa-pencil"></i> Log File</label>
-	    <input type="text" id="node-input-logFile" placeholder="zwave-js.log">
+	    <input type="text" id="node-input-logFile" placeholder="zwave-js.log" style="width: calc(100% - 135px)">
 	</div>
 	<div class="form-row">
 	    <label  for="node-input-logFile" style="width:130px"><i class="fa fa-pencil"></i> Node Filter</label>
-	    <input type="text" id="node-input-logNodeFilter" placeholder="2,5,24">
+	    <input type="text" id="node-input-logNodeFilter" placeholder="2,5,24" style="width: calc(100% - 135px)">
 	</div>
 	<br />
 	<p>
@@ -1212,11 +1220,11 @@
 	</p>
 	<div class="form-row">
 	    <label  for="node-input-customConfigPath" style="width:130px"><i class="fa fa-pencil"></i> Custom CFG Dir</label>
-	    <input type="text" id="node-input-customConfigPath" placeholder="/some/directory">
+	    <input type="text" id="node-input-customConfigPath" placeholder="/some/directory" style="width: calc(100% - 135px)">
 	</div>
 	<div class="form-row">
 	    <label  for="node-input-valueCacheDiskThrottle" style="width:130px"><i class="fa fa-pencil"></i> Disk IO Throttle</label>
-	    <select id="node-input-valueCacheDiskThrottle">
+	    <select id="node-input-valueCacheDiskThrottle" style="width: calc(100% - 135px)">
 	        <option value="normal">Normal</option>
 	        <option value="slow">Slow</option>
 	        <option value="fast">Fast</option>
@@ -1232,11 +1240,11 @@
 	</div>
 	<div class="form-row">
 	    <label  for="node-input-softResetUSB" style="width:130px"><i class="fa fa-pencil"></i> Soft Reset USB</label>
-	    <input type="checkbox" id="node-input-softResetUSB">
+	    <input type="checkbox" id="node-input-softResetUSB" style="width: calc(100% - 135px)">
 	</div>
 	<div class="form-row">
 	    <label  for="node-input-serialAPIStarted" style="width:130px"><i class="fa fa-pencil"></i> SR Timeout</label>
-	    <input type="text" id="node-input-serialAPIStarted" placeholder="Use Default">
+	    <input type="text" id="node-input-serialAPIStarted" placeholder="Use Default" style="width: calc(100% - 135px)">
 	</div>
 	<br />
 	<p>
@@ -1244,15 +1252,15 @@
 	</p>
 	<div class="form-row">
 	    <label  for="MOD_Version" style="width:130px"><i class="fa fa-info"></i> Module Version</label>
-	    <input type="text" id="MOD_Version" readonly>
+	    <input type="text" id="MOD_Version" readonly style="width: calc(100% - 135px)">
 	</div>
 	<div class="form-row">
 	    <label  for="ZWJS_Version" style="width:130px"><i class="fa fa-info"></i> Driver Version</label>
-	    <input type="text" id="ZWJS_Version" readonly>
+	    <input type="text" id="ZWJS_Version" readonly style="width: calc(100% - 135px)">
 	</div>
 	<div class="form-row">
 	    <label  for="ZWJS_CFGVersion" style="width:130px"><i class="fa fa-info"></i> DB Version</label>
-	    <input type="text" id="ZWJS_CFGVersion" style="width: calc(70% - 152px)" readonly>
+	    <input type="text" id="ZWJS_CFGVersion" style="width: calc(100% - 290px)" readonly>
 		<button class="ui-button ui-corner-all ui-widget" style="width:152px" id="node-dialog-updates" onclick="DBUpdate()">Check For Updates</button>
 	</div>
 </script>

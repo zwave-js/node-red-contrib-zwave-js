@@ -7,7 +7,7 @@
 	box-sizing: content-box;
 }
 
-.zwave-js-header-table td:first-of-type{
+.zwave-js-header-table td:first-of-type {
 	width: 50px;
 }
 
@@ -234,4 +234,22 @@ table#zwave-js-associations-table tr:first-of-type {
 }
 .json-string {
 	color: rgb(130, 152, 52);
+}
+
+.ui-slider-handle {
+	position: relative;
+	width: 3em;
+	height: 1.6em;
+	top: 50%;
+	text-align: center;
+	line-height: 1.6em;
+	border-color: rgba(140, 140, 140, 1) !important;
+	background: rgba(180, 180, 180, 1) !important;
+	color: white !important;
+	margin-top: 2px;
+	transform: translateX(-10px);
+	cursor: pointer !important;
+}
+.ui-slider-range {
+	background: rgba(200, 200, 200, 0.3);
 }
