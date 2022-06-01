@@ -59,6 +59,6 @@ body:
   - type: textarea
     id: logs
     attributes:
-      label: Relevant Z-Wave-JS log **text file**
+      label: Relevant Z-Wave-JS log as a text file
       description: Please upload your log file from zwave-js. Simply drag and drop a `.txt` file.
       render: shell
