@@ -52,5 +52,4 @@ body:
     id: logs
     attributes:
       label: Any code to add?
-      description: If you have any JS code or logs, paste it here. This will be automatically formatted into code, so no need for backticks.
-      render: shell
+      description: If you have any JS code or logs, drag the files here.
