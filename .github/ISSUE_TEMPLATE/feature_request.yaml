@@ -9,37 +9,21 @@ body:
     attributes:
       value:
         We love new ideas!
-  - type: input
-    id: contact
-    attributes:
-      label: Contact Details (optional)
-      description: How can we get in touch with you if we need more info?
-      placeholder: ex. email@example.com
-    validations:
-      required: false
   - type: textarea
     id: feature_description
     attributes:
       label: What is your idea?
       description: "Please describe your feature here:"
       placeholder: Tell us what you see!
-      value: "Please describe your idea, drag screenshots or drawings here if they help your explanation."
+      value: "Please describe your idea, drag screenshots or drawings here if they help your explanation. Please be as detailed as possible."
     validations:
       required: true
-  - type: textarea
-    id: extra_info
-    attributes:
-      label: Any more details?
-      placeholder: Reproduce!
-      value: "If this is specific to some hardware or specific software version, please explain here."
-    validations:
-      required: false
   - type: input
     id: version
     attributes:
       label: Version
       description: What version of our software are you running?
-      placeholder: ex. 4.2.0
+      placeholder: ex. 7.1.1
     validations:
       required: false
   - type: input
@@ -47,7 +31,7 @@ body:
     attributes:
       label: Node-RED Version
       description: What version of Node-RED are you running?
-      placeholder: ex. 2.0.1
+      placeholder: ex. 3.0.0
     validations:
       required: false
   - type: dropdown
@@ -67,5 +51,5 @@ body:
     id: logs
     attributes:
       label: Any code to add?
-      description: If you have any JS code, paste it here. This will be automatically formatted into code, so no need for backticks.
+      description: "If you have any code (such as a JS function that does what you want or some JSON you would like to see output from the node), paste it here. This will be automatically formatted into code, so no need for backticks."
       render: shell

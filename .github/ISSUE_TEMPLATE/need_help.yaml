@@ -10,37 +10,21 @@ body:
     attributes:
       value:
         Our users are the best! We are happy to help any way we can.
-  - type: input
-    id: contact
-    attributes:
-      label: Contact Details (optional)
-      description: How can we get in touch with you if we need more info?
-      placeholder: ex. email@example.com
-    validations:
-      required: false
   - type: textarea
     id: help-request
     attributes:
       label: How can we help?
       description: "Describe your question here"
       placeholder: Tell us what you see!
-      value: "What's happening? Drag screenshots or drawings here if they help your explanation."
+      value: "What's happening? Drag screenshots or drawings here if they help your explanation. Please be as detailed as possible."
     validations:
       required: true
-  - type: textarea
-    id: extra_info
-    attributes:
-      label: Any more details?
-      placeholder: details
-      value: "If this is specific to some hardware or specific software version, please explain here."
-    validations:
-      required: false
   - type: input
     id: version
     attributes:
       label: Version
       description: What version of our software are you running?
-      placeholder: ex. 4.2.0
+      placeholder: ex. 7.1.1
     validations:
       required: false
   - type: input
@@ -48,7 +32,7 @@ body:
     attributes:
       label: Node-RED Version
       description: What version of Node-RED are you running?
-      placeholder: ex. 2.0.1
+      placeholder: ex. 3.0.0
     validations:
       required: false
   - type: dropdown
