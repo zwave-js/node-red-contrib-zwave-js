@@ -51,4 +51,4 @@ body:
     id: logs
     attributes:
       label: Any code to add?
-      description: "If you have any code (such as a JS function that does what you want or some JSON you would like to see output from the node), paste it here. This will be automatically formatted into code, so no need for backticks."
+      description: "If you have any code (such as a JS function that does what you want or some JSON you would like to see output from the node), drag the files here."
