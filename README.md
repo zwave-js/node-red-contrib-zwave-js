@@ -15,7 +15,7 @@ The most powerful, high performing and highly polished Z-Wave node for Node-RED 
 > ### ...node-red-contrib-zwave-js is _hands down the best Z-Wave to Node-RED option on the planet._  
 > [@CRXPorter](https://github.com/crxporter), July 2021.  
 
-### What is it?
+## What is it?
 
  - Part of the awesome [Z-Wave JS](https://github.com/zwave-js) org
  - 100% Javascript, so its blazing fast!
@@ -41,13 +41,13 @@ The most powerful, high performing and highly polished Z-Wave node for Node-RED 
 
 Since `node-red-contrib-zwave-js` is based on [Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/), we have the support and active maintenance from the amazing group of developers who have built the libraries, APIs, and config files which run this contrib.
 
-### The User Interface
+## The User Interface
 
 ![Image](./GHImages/ZWUI.gif) 
 
 Included with the contrib is a [user interface](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/User-Interface) where Z-Wave network management is handled. The controller side of the UI is used to include/exclude devices, heal the network, update firmware, and view the network map for diagnosing problems. The device side of the UI is used to configure devices, manage associations, and provide setup help for the nodes which will be used in your flows.
 
-### The Nodes
+## The Nodes
 
 ![Image](./GHImages/Demo.png)
 
@@ -57,13 +57,13 @@ There are 4 node types included with this contrib ([click here](https://github.c
  - `Event Filter`: this node is used to filter and sort messages from your Z-Wave devices
  - `CMD Factory`: this node simplifies creation of messages being sent to your Z-Wave devices
 
-### Getting Started Links
+## Getting Started Links
  - [Installing](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/getting-started): system requirements and install instructions
  - [Just Show Me How](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/First-Z-Wave-Flow-Setup): first day walkthrough
  - [Wiki](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/getting-started): just about everything
  - [Change Log](./CHANGELOG.md): whats changed?
 
-### Awesome People - Thanks!
+## Awesome People - Thanks!
 
  - [marcus-j-davies](https://github.com/marcus-j-davies) our main developer who claims "*my software doesn't have bugs*"
  - [AlCalzone](https://github.com/AlCalzone) for creating [ZWave-JS](https://github.com/zwave-js/node-zwave-js) that makes this possible
@@ -71,7 +71,7 @@ There are 4 node types included with this contrib ([click here](https://github.c
  - [CRXPorter](https://github.com/crxporter) for creating all the help material/finding this project
  - [thk](https://github.com/thk-socal) for the relentless beta testing
 
- ### License
+ ## License
  MIT License
 
 Copyright (c) 2019 Marcus Davies
