@@ -298,7 +298,7 @@ const ZwaveJsUI = (function () {
 
 		const D = $('<div>')
 			.css({ padding: 10, maxWidth: 500, wordWrap: 'break-word' })
-			.html(message)
+			.text(message)
 			.dialog(Options);
 
 		return D;
