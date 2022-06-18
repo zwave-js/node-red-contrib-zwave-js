@@ -1,5 +1,12 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 7.1.2
+
+    **Changes**  
+      - Address minor security warnings
+      - Bump ZWave JS
+      - Bump Prettier
+
   - 7.1.1
 
     **Fixes**  
