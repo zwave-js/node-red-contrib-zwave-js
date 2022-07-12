@@ -40,14 +40,17 @@
 	-moz-border-radius: 4px !important;
 	border-radius: 4px !important;
 }
+
 .zwave-js-node-row {
 	border-bottom: dotted 1px gray;
 	display: flex;
 	height: 30px;
 }
+
 .zwave-js-node-row.currentNode .zwave-js-node-row-id {
 	background-color: lightgray;
 }
+
 .zwave-js-node-row-id {
 	width: 20px;
 	height: 20px;
@@ -66,19 +69,23 @@
 .zwave-js-node-row-name {
 	width: 45%;
 }
+
 .zwave-js-node-row-status {
 	width: 11%;
 	font-size: x-small;
 	text-align: center;
 }
+
 .zwave-js-node-row-ready {
 	width: 11%;
 	text-align: center;
 }
+
 .zwave-js-node-row-security {
 	width: 11%;
 	text-align: center;
 }
+
 .zwave-js-node-row-battery {
 	width: 11%;
 	text-align: center;
@@ -92,15 +99,19 @@
 .zwave-js-node-fetch-status {
 	font-style: italic;
 }
+
 .zwave-js-node-fetch-status:hover {
 	background-color: inherit !important;
 }
 
 #zwave-js-node-properties .red-ui-treeList-label {
 	cursor: default;
-	display: block !important; /* NR 2 fix */
-	align-items: unset !important; /* NR 2 fix */
+	display: block !important;
+	/* NR 2 fix */
+	align-items: unset !important;
+	/* NR 2 fix */
 }
+
 .zwave-js-node-property-endpoint {
 	margin-left: 5px;
 	padding: 2px;
@@ -108,23 +119,48 @@
 	border-style: solid;
 	border-radius: 8px;
 }
+
 .zwave-js-node-property {
 	display: inline-flex;
 	justify-content: space-between;
 	gap: 10px;
 	word-break: keep-all;
 }
+
 .zwave-js-node-property-edit-button {
 	cursor: pointer;
 }
+
 .zwave-js-node-property-value {
 	text-align: right;
 	margin-right: 10px;
 }
+
 .zwave-js-property-value-type-boolean {
 	text-transform: uppercase;
 	font-size: smaller;
 }
+
+.zwave-js-ac {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	padding: 5px;
+	line-height: 10px;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	text-align: center;
+}
+
+.zwave-js-ac.green {
+	background-color: limegreen;
+}
+.zwave-js-ac.red {
+	background-color: red;
+	color: white;
+}
+
 
 .zwave-js-selected-node-map-info {
 	width: 300px;
@@ -149,6 +185,7 @@
 	opacity: 0.7;
 	transition-duration: 0.5s;
 }
+
 .zwave-js-selected-node-map-info:hover {
 	opacity: 1;
 }
@@ -170,7 +207,7 @@
 	margin-top: 50px;
 }
 
-.progressbar > div {
+.progressbar>div {
 	background-color: gray;
 	width: 0%;
 	height: 20px;
@@ -229,9 +266,11 @@ table#zwave-js-associations-table tr:first-of-type {
 .json-key {
 	color: rgb(199, 48, 53);
 }
+
 .json-value {
 	color: rgb(243, 135, 48);
 }
+
 .json-string {
 	color: rgb(130, 152, 52);
 }
@@ -250,6 +289,7 @@ table#zwave-js-associations-table tr:first-of-type {
 	transform: translateX(-10px);
 	cursor: pointer !important;
 }
+
 .ui-slider-range {
 	background: rgba(200, 200, 200, 0.3);
 }

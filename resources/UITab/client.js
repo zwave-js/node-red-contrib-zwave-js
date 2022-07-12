@@ -563,49 +563,31 @@ const ZwaveJsUI = (function () {
 
 		const Buttons = {
 			Add: function () {
-				const PL = [
-					{
-						nodeId: HoveredNode.nodeId,
-						endpoint: parseInt($('#NODE_EP').val())
-					},
-					parseInt($('#NODE_G').val()),
-					[{ nodeId: parseInt(NI.val()) }]
-				];
-
-				if (parseInt(EI.val()) > 0) {
-					PL[2][0].endpoint = parseInt(EI.val());
+				const EP = parseInt(EI.val());
+				const AD = { nodeId: parseInt(NI.val()) };
+				if (EP > 0) {
+					AD.endpoint = EP;
 				}
 
-				const D = modalPrompt(
-					'Adding Association...',
-					'Please wait.',
-					[],
-					false
-				);
+				const TR = $('<tr>');
+				$('<td>')
+					.html(`<div class="zwave-js-ac green">+</div> ${NI.val()}`)
+					.appendTo(TR);
+				$('<td>')
+					.html(EP < 1 ? '0 (Root Device)' : EP)
+					.appendTo(TR);
+				const TD3 = $('<td>').css({ textAlign: 'right' }).appendTo(TR);
+				$('<input>')
+					.attr('type', 'button')
+					.addClass('ui-button ui-corner-all ui-widget')
+					.attr('value', 'Delete')
+					.attr('data-address', JSON.stringify(AD))
+					.attr('data-committed', false)
+					.attr('data-action', 'add')
+					.click(DeleteAssociation)
+					.appendTo(TD3);
 
-				ControllerCMD(
-					DCs.addAssociations.API,
-					DCs.addAssociations.name,
-					undefined,
-					PL,
-					DCs.addAssociations.noWait
-				)
-					.then(() => {
-						D.dialog('destroy');
-						GMGroupSelected();
-					})
-					.catch((err) => {
-						D.dialog('destroy');
-						if (err.status === 504) {
-							modalAlert(
-								'The device maybe in a sleeping state, the association will be added later.',
-								'Association change could not be confirmed'
-							);
-						} else {
-							modalAlert(err.responseText, 'Association could not be added.');
-							throw new Error(err.responseText);
-						}
-					});
+				$('#zwave-js-associations-table').append(TR);
 			}
 		};
 
@@ -618,46 +600,23 @@ const ZwaveJsUI = (function () {
 	}
 
 	function DeleteAssociation() {
-		const Association = JSON.parse($(this).attr('data-address'));
-
-		const PL = [
-			{ nodeId: HoveredNode.nodeId, endpoint: parseInt($('#NODE_EP').val()) },
-			parseInt($('#NODE_G').val()),
-			[Association]
-		];
-
+		const Button = $(this);
 		const Buttons = {
 			Yes: function () {
-				const D = modalPrompt(
-					'Removing Association',
-					'Please wait.',
-					[],
-					false
-				);
+				const Committed =
+					Button.attr('data-committed') === 'true' ? true : false;
 
-				ControllerCMD(
-					DCs.removeAssociations.API,
-					DCs.removeAssociations.name,
-					undefined,
-					PL,
-					DCs.removeAssociations.noWait
-				)
-					.then(() => {
-						D.dialog('destroy');
-						GMGroupSelected();
-					})
-					.catch((err) => {
-						D.dialog('destroy');
-						if (err.status === 504) {
-							modalAlert(
-								'The device maybe in a sleeping state, the association will be removed later.',
-								'Association change could not be confirmed'
-							);
-						} else {
-							modalAlert(err.responseText, 'Association could not be removed.');
-							throw new Error(err.responseText);
-						}
-					});
+				if (Committed) {
+					const Association = JSON.parse(Button.attr('data-address'));
+					Button.attr('data-committed', false);
+					Button.attr('data-action', 'remove');
+					Button.closest('tr')
+						.children('td:first')
+						.html(`<div class="zwave-js-ac red">-</div> ${Association.nodeId}`);
+					Button.off('click');
+				} else {
+					Button.closest('tr').remove();
+				}
 			}
 		};
 
@@ -720,6 +679,7 @@ const ZwaveJsUI = (function () {
 							.addClass('ui-button ui-corner-all ui-widget')
 							.attr('value', 'Delete')
 							.attr('data-address', JSON.stringify(AD))
+							.attr('data-committed', true)
 							.click(DeleteAssociation)
 							.appendTo(TD3);
 
@@ -751,6 +711,130 @@ const ZwaveJsUI = (function () {
 					title: `ZWave Association Management: Node ${HoveredNode.nodeId}`,
 					minHeight: 75,
 					buttons: {
+						'Commit Changes': function () {
+							const nodeRow = $('#zwave-js-node-list').find(
+								`[data-nodeid='${HoveredNode.nodeId}']`
+							);
+
+							if (nodeRow.data().info.status.toUpperCase() === 'ASLEEP') {
+								modalAlert(
+									'This node is a sleep, please wake up the node before commiting Association changes',
+									'Node is a sleep'
+								);
+								return;
+							}
+
+							const Removals = $('#zwave-js-associations-table').find(
+								"input[data-committed='false'][data-action='remove']"
+							);
+							const Additions = $('#zwave-js-associations-table').find(
+								"input[data-committed='false'][data-action='add']"
+							);
+
+							const D = modalPrompt(
+								'Processing association changes...',
+								'Please wait.',
+								[],
+								false
+							);
+
+							const DoRemovals = () => {
+								return new Promise((resolve, reject) => {
+									const PL = [
+										{
+											nodeId: HoveredNode.nodeId,
+											endpoint: parseInt($('#NODE_EP').val())
+										},
+										parseInt($('#NODE_G').val()),
+										[]
+									];
+
+									Removals.each(function (index) {
+										PL[2].push(JSON.parse($(this).attr('data-address')));
+									});
+
+									if (Removals.length < 1) {
+										resolve();
+										return;
+									}
+
+									ControllerCMD(
+										DCs.removeAssociations.API,
+										DCs.removeAssociations.name,
+										undefined,
+										PL,
+										DCs.removeAssociations.noWait
+									)
+										.then(() => {
+											resolve();
+										})
+										.catch((err) => {
+											reject(err);
+										});
+								});
+							};
+
+							const DoAdditions = () => {
+								return new Promise((resolve, reject) => {
+									const PL = [
+										{
+											nodeId: HoveredNode.nodeId,
+											endpoint: parseInt($('#NODE_EP').val())
+										},
+										parseInt($('#NODE_G').val()),
+										[]
+									];
+
+									Additions.each(function (index) {
+										PL[2].push(JSON.parse($(this).attr('data-address')));
+									});
+
+									if (Additions.length < 1) {
+										resolve();
+										return;
+									}
+
+									ControllerCMD(
+										DCs.addAssociations.API,
+										DCs.addAssociations.name,
+										undefined,
+										PL,
+										DCs.addAssociations.noWait
+									)
+										.then(() => {
+											resolve();
+										})
+										.catch((err) => {
+											reject(err);
+										});
+								});
+							};
+
+							DoRemovals()
+								.then(() => {
+									DoAdditions()
+										.then(() => {
+											D.dialog('destroy');
+											GMGroupSelected();
+										})
+										.catch((err) => {
+											D.dialog('destroy');
+											modalAlert(
+												err.responseText,
+												'Could not process association changes.'
+											);
+											throw new Error(err.responseText);
+										});
+								})
+								.catch((err) => {
+									D.dialog('destroy');
+									modalAlert(
+										err.responseText,
+										'Could not process association changes.'
+									);
+									throw new Error(err.responseText);
+								});
+						},
 						Close: function () {
 							$(this).dialog('destroy');
 						}
@@ -873,7 +957,10 @@ const ZwaveJsUI = (function () {
 
 	function IsNodeReady(Node) {
 		if (!Node.ready) {
-			modalAlert('This node is not ready', 'Node Not Ready');
+			modalAlert(
+				'This node is not ready. Shift + click to view options',
+				'Node Not Ready'
+			);
 			throw new Error('Node Not Ready');
 		}
 	}
@@ -2463,6 +2550,7 @@ const ZwaveJsUI = (function () {
 				const nodeRow = $('#zwave-js-node-list').find(
 					`[data-nodeid='${data.node}']`
 				);
+				nodeRow.data().info.status = data.status;
 				if (data.status == 'READY') {
 					if (DriverReady) {
 						GetNodesThrottled();
