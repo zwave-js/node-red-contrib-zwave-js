@@ -7,12 +7,12 @@
 		"limiter": "^2.1.0",
 		"lodash": "^4.17.21",
 		"serialport": "^10.4.0",
-		"winston": "^3.7.2",
+		"winston": "^3.8.1",
 		"winston-transport": "^4.5.0",
-		"zwave-js": "^9.4.0"
+		"zwave-js": "^9.6.0"
 	},
 	"devDependencies": {
-		"eslint": "^8.18.0",
+		"eslint": "^8.19.0",
 		"prettier": "^2.7.1"
 	},
 	"scripts": {
