@@ -296,11 +296,18 @@ const ZwaveJsUI = (function () {
 			};
 		}
 
-		const D = $('<div>')
-			.css({ padding: 10, maxWidth: 500, wordWrap: 'break-word' })
-			.text(message)
-			.dialog(Options);
+		const D = $('<div>').css({
+			padding: 10,
+			maxWidth: 500,
+			wordWrap: 'break-word'
+		});
 
+		if (typeof message === 'object') {
+			D.html(message);
+		} else {
+			D.text(message);
+		}
+		D.dialog(Options);
 		return D;
 	}
 
