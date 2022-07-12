@@ -1653,7 +1653,20 @@ module.exports = function (RED) {
 					}
 				}
 
-				NO.label = Meta.label;
+				if (Meta.label !== undefined) {
+					NO.label = Meta.label;
+				} else {
+					let Name;
+					switch (VID.commandClass) {
+						case 67: // Thermo Setpoint;
+							Name = ZWaveJS.getEnumMemberName(
+								ZWaveJS.ThermostatSetpointType,
+								VID.propertyKey
+							);
+					}
+					NO.label = Name;
+				}
+
 				if (Meta.unit !== undefined) NO.unit = Meta.unit;
 				if (Meta.description !== undefined) NO.description = Meta.description;
 
