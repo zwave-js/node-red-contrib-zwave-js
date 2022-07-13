@@ -142,25 +142,25 @@
 }
 
 .zwave-js-ac {
-	display: inline-block;
-	width: 10px;
-	height: 10px;
+	display: none;
+	width: 15px;
+	height: 15px;
 	padding: 5px;
-	line-height: 10px;
+	line-height: 15px;
+	border-width: 1px;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
 	border-radius: 5px;
 	text-align: center;
-}
+	background-color: lightgray;
+	border-color: rgb(75, 75, 75);
+	border-style: solid;
 
-.zwave-js-ac.green {
-	background-color: limegreen;
 }
-.zwave-js-ac.red {
-	background-color: red;
-	color: white;
+.zwave-js-ac i {
+	font-size: 16px !important;
+	color: #666;
 }
-
 
 .zwave-js-selected-node-map-info {
 	width: 300px;

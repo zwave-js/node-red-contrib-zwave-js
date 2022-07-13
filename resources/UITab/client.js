@@ -564,17 +564,20 @@ const ZwaveJsUI = (function () {
 		const Buttons = {
 			Add: function () {
 				const EP = parseInt(EI.val());
-				const AD = { nodeId: parseInt(NI.val()) };
+				const ND = parseInt(NI.val());
+				const AD = { nodeId: ND };
 				if (EP > 0) {
 					AD.endpoint = EP;
 				}
 
 				const TR = $('<tr>');
 				$('<td>')
-					.html(`<div class="zwave-js-ac green">+</div> ${NI.val()}`)
+					.html(
+						`<div class="zwave-js-ac" style="display:inline-block"><i class="fa fa-plus fa-lg"></i></div> ${ND}`
+					)
 					.appendTo(TR);
 				$('<td>')
-					.html(EP < 1 ? '0 (Root Device)' : EP)
+					.text(EP < 1 ? '0 (Root Device)' : EP)
 					.appendTo(TR);
 				const TD3 = $('<td>').css({ textAlign: 'right' }).appendTo(TR);
 				$('<input>')
@@ -607,12 +610,13 @@ const ZwaveJsUI = (function () {
 					Button.attr('data-committed') === 'true' ? true : false;
 
 				if (Committed) {
-					const Association = JSON.parse(Button.attr('data-address'));
 					Button.attr('data-committed', false);
 					Button.attr('data-action', 'remove');
 					Button.closest('tr')
 						.children('td:first')
-						.html(`<div class="zwave-js-ac red">-</div> ${Association.nodeId}`);
+						.find('.zwave-js-ac')
+						.css({ display: 'inline-block' })
+						.html('<i class="fa fa-trash fa-lg"></i>');
 					Button.off('click');
 				} else {
 					Button.closest('tr').remove();
@@ -669,7 +673,11 @@ const ZwaveJsUI = (function () {
 				Targets.forEach((AG) => {
 					AG.AssociationAddress.forEach((AD) => {
 						const TR = $('<tr>');
-						$('<td>').html(AD.nodeId).appendTo(TR);
+						$('<td>')
+							.html(
+								`<div class="zwave-js-ac"><i class="fa fa-plus fa-lg"></i></div> ${AD.nodeId}`
+							)
+							.appendTo(TR);
 						$('<td>')
 							.html(AD.endpoint ?? '0 (Root Device)')
 							.appendTo(TR);

@@ -687,6 +687,7 @@
 	</table>
 	<div style='text-align: right;'>
 		<input
+		style="margin-right: 8px;margin-top: 5px;width: 70px"
 			id='AMAddBTN'
 			class='ui-button ui-corner-all ui-widget'
 			type='button'
@@ -715,39 +716,80 @@
 		id='FWForm'
 		style='width: 100%; box-sizing: border-box; margin-left: auto; margin-right: auto; margin-top: 10px; padding: 5px;'
 	>
-		<table>
-			<tbody>
-				<tr>
-					<td>Target Node</td>
-					<td>
-						<select id='NODE_FW'>
-							<option>Select Node...</option>
-							{{#each nodes}}
-								{{#if this.length}}
-									<optgroup label=' --- {{@key}} --- '>
-										{{#each this}}
-											<option value='{{id}}'>{{id}} - {{name}}</option>
-										{{/each}}
-									</optgroup>
-								{{/if}}
-							{{/each}}
-						</select>
-					</td>
-				</tr>
-				<tr>
-					<td>Firmware Update Target</td>
-					<td>
-						<input type='number' value='0' min='0' max='2' id='TARGET_FW' />
-					</td>
-				</tr>
-				<tr>
-					<td>Firmware Update File</td>
-					<td><input type='file' id='FILE_FW' /></td>
-				</tr>
-			</tbody>
-		</table>
+	<div id="tabs">
+		<ul>
+			<li><a href="#tabs-1">Local File</a></li>
+			<li><a href="#tabs-2">Firmware Update Service</a></li>
+		  </ul>
+		  <div id="tabs-1" style="padding:20px">
+			<table>
+				<tbody>
+					<tr>
+						<td>Target Node</td>
+						<td>
+							<select id='NODE_FW'>
+								<option>Select Node...</option>
+								{{#each nodes}}
+									{{#if this.length}}
+										<optgroup label=' --- {{@key}} --- '>
+											{{#each this}}
+												<option value='{{id}}'>{{id}} - {{name}}</option>
+											{{/each}}
+										</optgroup>
+									{{/if}}
+								{{/each}}
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td>Firmware Update Target</td>
+						<td>
+							<input type='number' value='0' min='0' max='2' id='TARGET_FW' />
+						</td>
+					</tr>
+					<tr>
+						<td>Firmware Update File</td>
+						<td><input type='file' id='FILE_FW' /></td>
+					</tr>
+				</tbody>
+			</table>
+		  </div>
+		  <div id="tabs-2" style="padding:20px">
+			<table>
+				<tbody>
+					<tr>
+						<td>Target Node</td>
+						<td>
+							<select id='NODE_FW'>
+								<option>Select Node...</option>
+								{{#each nodes}}
+									{{#if this.length}}
+										<optgroup label=' --- {{@key}} --- '>
+											{{#each this}}
+												<option value='{{id}}'>{{id}} - {{name}}</option>
+											{{/each}}
+										</optgroup>
+									{{/if}}
+								{{/each}}
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2"><button
+							button
+							style='width:150px; height:30px'
+							class='ui-button ui-corner-all ui-widget SecrutiyButton CriticalDisable'
+							onclick=''
+						>Check For Update</button></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	
 		<div class='progressbar' id='FWProgress'><div></div></div>
 	</div>
+	<script type="text/javascript">$( "#tabs" ).tabs()</script>;
 </script>
 
 <!--RF Settings-->
