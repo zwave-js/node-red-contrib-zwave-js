@@ -1,5 +1,3 @@
-const { formatWithOptions } = require('util');
-
 module.exports = function (RED) {
 	const Path = require('path');
 	const ModulePackage = require('../package.json');
