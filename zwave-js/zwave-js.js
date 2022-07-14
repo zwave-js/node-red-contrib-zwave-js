@@ -1,3 +1,5 @@
+const { formatWithOptions } = require('util');
+
 module.exports = function (RED) {
 	const Path = require('path');
 	const ModulePackage = require('../package.json');
@@ -836,6 +838,22 @@ module.exports = function (RED) {
 			let Result;
 
 			switch (Method) {
+				case 'getAvailableFirmwareUpdates':
+					NodeCheck(Params[0]);
+					ReturnNode.id = Params[0];
+					const FWU = await Driver.controller.getAvailableFirmwareUpdates(
+						Params[0]
+					);
+					Send(ReturnNode, 'FIRMWARE_UPDATE_CHECK_RESULT', FWU, send);
+					break;
+
+				case 'beginOTAFirmwareUpdate':
+					NodeCheck(Params[0]);
+					ReturnNode.id = Params[0];
+					await Driver.controller.beginOTAFirmwareUpdate(Params[0], Params[1]);
+					Send(ReturnNode, 'FIRMWARE_UPDATE_STARTED', Params[1], send);
+					break;
+
 				case 'restoreNVM':
 					Result = await Driver.controller.restoreNVM(
 						Params[0],

@@ -744,7 +744,7 @@
 					<tr>
 						<td>Firmware Update Target</td>
 						<td>
-							<input type='number' value='0' min='0' max='2' id='TARGET_FW' />
+							<input type='number' value='0' min='0' id='TARGET_FW' />
 						</td>
 					</tr>
 					<tr>
@@ -760,7 +760,7 @@
 					<tr>
 						<td>Target Node</td>
 						<td>
-							<select id='NODE_FW'>
+							<select id='NODE_FWC'>
 								<option>Select Node...</option>
 								{{#each nodes}}
 									{{#if this.length}}
@@ -779,7 +779,7 @@
 							button
 							style='width:150px; height:30px'
 							class='ui-button ui-corner-all ui-widget SecrutiyButton CriticalDisable'
-							onclick=''
+							onclick='CheckForUpdate()'
 						>Check For Update</button></td>
 					</tr>
 				</tbody>

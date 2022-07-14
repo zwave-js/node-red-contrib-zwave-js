@@ -9,6 +9,9 @@ let StartReplace;
 let GrantSelected;
 let ValidateDSK;
 
+/* Firmware */
+let CheckForUpdate;
+
 /* UI RF Functions */
 let SetPowerLevel;
 let SetRegion;
@@ -202,6 +205,16 @@ const DCs = {
 	getValueMetadata: {
 		API: 'ValueAPI',
 		name: 'getValueMetadata',
+		noWait: false
+	},
+	getAvailableFirmwareUpdates: {
+		API: 'ControllerAPI',
+		name: 'getAvailableFirmwareUpdates',
+		noWait: false
+	},
+	beginOTAFirmwareUpdate: {
+		API: 'ControllerAPI',
+		name: 'beginOTAFirmwareUpdate',
 		noWait: false
 	}
 };
@@ -399,8 +412,11 @@ const ZwaveJsUI = (function () {
 			DCs.checkLifelineHealth.noWait
 		)
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not start Health Check.');
-				throw new Error(err.responseText);
+				modalAlert(
+					err.responseText || err.message,
+					'Could not start Health Check.'
+				);
+				throw new Error(err.responseText || err.message);
 			})
 			.then(() => {
 				RED.comms.subscribe(
@@ -480,7 +496,7 @@ const ZwaveJsUI = (function () {
 				})
 				.catch((err) => {
 					FirmwareForm.dialog('destroy');
-					console.log(err.responseText);
+					console.error(err);
 				});
 		} else {
 			FirmwareForm.dialog('destroy');
@@ -493,7 +509,6 @@ const ZwaveJsUI = (function () {
 		const NID = parseInt($('#NODE_FW option:selected').val());
 		const Target = $('#TARGET_FW').val();
 
-		/* Test */
 		const FD = new FormData();
 		FD.append('Binary', FE);
 		FD.append('NodeID', NID);
@@ -516,7 +531,8 @@ const ZwaveJsUI = (function () {
 				$('#FWProgress').css({ display: 'block' });
 			})
 			.catch((err) => {
-				modalAlert(err.responseText, 'Firmware rejected');
+				modalAlert(err.responseText || err.message, 'Firmware rejected');
+				throw new Error(err.responseText || err.message);
 			});
 	}
 
@@ -696,8 +712,11 @@ const ZwaveJsUI = (function () {
 				});
 			})
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not get associations.');
-				throw new Error(err.responseText);
+				modalAlert(
+					err.responseText || err.message,
+					'Could not get associations.'
+				);
+				throw new Error(err.responseText || err.message);
 			});
 	}
 
@@ -828,19 +847,19 @@ const ZwaveJsUI = (function () {
 										.catch((err) => {
 											D.dialog('destroy');
 											modalAlert(
-												err.responseText,
+												err.responseText || err.message,
 												'Could not process association changes.'
 											);
-											throw new Error(err.responseText);
+											throw new Error(err.responseText || err.message);
 										});
 								})
 								.catch((err) => {
 									D.dialog('destroy');
 									modalAlert(
-										err.responseText,
+										err.responseText || err.message,
 										'Could not process association changes.'
 									);
-									throw new Error(err.responseText);
+									throw new Error(err.responseText || err.message);
 								});
 						},
 						Close: function () {
@@ -877,8 +896,11 @@ const ZwaveJsUI = (function () {
 				});
 			})
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not get associtions.');
-				throw new Error(err.responseText);
+				modalAlert(
+					err.responseText || err.message,
+					'Could not get associtions.'
+				);
+				throw new Error(err.responseText || err.message);
 			});
 	}
 
@@ -918,11 +940,11 @@ const ZwaveJsUI = (function () {
 							res(_Nodes);
 						})
 						.catch((err) => {
-							rej(err.responseText);
+							rej(err.responseText || err.message);
 						});
 				})
 				.catch((err) => {
-					rej(err.responseText);
+					rej(err.responseText || err.message);
 				});
 		});
 	}
@@ -947,8 +969,8 @@ const ZwaveJsUI = (function () {
 					});
 			})
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not generate map.');
-				throw new Error(err.responseText);
+				modalAlert(err.responseText || err.message, 'Could not generate map.');
+				throw new Error(err.responseText || err.message);
 			});
 	}
 
@@ -1134,8 +1156,8 @@ const ZwaveJsUI = (function () {
 				$('#zwave-js-node-properties').treeList('empty');
 			})
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not fetch nodes.');
-				throw new Error(err.responseText);
+				modalAlert(err.responseText || err.message, 'Could not fetch nodes.');
+				throw new Error(err.responseText || err.message);
 			});
 	}
 
@@ -1170,9 +1192,9 @@ const ZwaveJsUI = (function () {
 					$('#NVMProgress').css({ display: 'block' });
 				})
 				.catch((err) => {
-					modalAlert(err.responseText, 'Could not restore NVM.');
+					modalAlert(err.responseText || err.message, 'Could not restore NVM.');
 					EnableCritical(true);
-					throw new Error(err.responseText);
+					throw new Error(err.responseText || err.message);
 				});
 
 			$('#FILE_BU').off('change');
@@ -1191,9 +1213,9 @@ const ZwaveJsUI = (function () {
 			DCs.backupNVMRaw.noWait
 		)
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not back NVM.');
+				modalAlert(err.responseText || err.message, 'Could not back NVM.');
 				EnableCritical(true);
-				throw new Error(err.responseText);
+				throw new Error(err.responseText || err.message);
 			})
 			.then(() => {
 				$('#NVMProgressLabel').html('Backing up NVM...');
@@ -1211,9 +1233,9 @@ const ZwaveJsUI = (function () {
 			DCs.setRFRegion.noWait
 		)
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not set RF Region.');
+				modalAlert(err.responseText || err.message, 'Could not set RF Region.');
 				EnableCritical(true);
-				throw new Error(err.responseText);
+				throw new Error(err.responseText || err.message);
 			})
 			.then(({ object }) => {
 				EnableCritical(true);
@@ -1241,9 +1263,12 @@ const ZwaveJsUI = (function () {
 			DCs.setPowerlevel.noWait
 		)
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not set power level.');
+				modalAlert(
+					err.responseText || err.message,
+					'Could not set power level.'
+				);
 				EnableCritical(true);
-				throw new Error(err.responseText);
+				throw new Error(err.responseText || err.message);
 			})
 			.then(({ object }) => {
 				EnableCritical(true);
@@ -1293,8 +1318,8 @@ const ZwaveJsUI = (function () {
 			DCs.verifyDSK.noWait
 		)
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not verify DSK.');
-				throw new Error(err.responseText);
+				modalAlert(err.responseText || err.message, 'Could not verify DSK.');
+				throw new Error(err.responseText || err.message);
 			})
 			.then(() => {
 				$(B).html('Please wait...');
@@ -1320,8 +1345,11 @@ const ZwaveJsUI = (function () {
 			DCs.grantClasses.noWait
 		)
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not grant Security Classes.');
-				throw new Error(err.responseText);
+				modalAlert(
+					err.responseText || err.message,
+					'Could not grant Security Classes.'
+				);
+				throw new Error(err.responseText || err.message);
 			})
 			.then(() => {
 				$(B).html('Please wait...');
@@ -1368,9 +1396,13 @@ const ZwaveJsUI = (function () {
 						[parseInt(HoveredNode.nodeId), Request],
 						DCs.replaceFailedNode.noWait
 					).catch((err) => {
-						modalAlert(err.responseText, 'Could not replace Node.');
+						modalAlert(
+							err.responseText || err.message,
+							'Could not replace Node.'
+						);
 						$(B).html(OT);
 						$(B).prop('disabled', false);
+						throw new Error(err.responseText || err.message);
 					});
 				} else {
 					modalAlert(object.message, 'Could not replace Node.');
@@ -1381,8 +1413,8 @@ const ZwaveJsUI = (function () {
 			.catch((err) => {
 				$(B).html(OT);
 				$(B).prop('disabled', false);
-				modalAlert(err.responseText, 'Could not replace Node.');
-				throw new Error(err.responseText);
+				modalAlert(err.responseText || err.message, 'Could not replace Node.');
+				throw new Error(err.responseText || err.message);
 			});
 	};
 
@@ -1409,8 +1441,11 @@ const ZwaveJsUI = (function () {
 					method: 'GET',
 					dataType: 'json',
 					error: function (err) {
-						modalAlert(err.responseText, 'Could not fetch Smart Start list.');
-						throw new Error(err.responseText);
+						modalAlert(
+							err.responseText || err.message,
+							'Could not fetch Smart Start list.'
+						);
+						throw new Error(err.responseText || err.message);
 					},
 					success: function (List) {
 						List.forEach((Entry) => {
@@ -1446,10 +1481,10 @@ const ZwaveJsUI = (function () {
 											})
 											.catch((err) => {
 												modalAlert(
-													err.responseText,
+													err.responseText || err.message,
 													'Could not remove Smart Start entry.'
 												);
-												throw new Error(err.responseText);
+												throw new Error(err.responseText || err.message);
 											});
 									}
 								};
@@ -1479,8 +1514,11 @@ const ZwaveJsUI = (function () {
 					.catch((err) => {
 						$(B).html(OT);
 						$(B).prop('disabled', false);
-						modalAlert(err.responseText, 'Could not start Inclusion');
-						throw new Error(err.responseText);
+						modalAlert(
+							err.responseText || err.message,
+							'Could not start Inclusion'
+						);
+						throw new Error(err.responseText || err.message);
 					})
 					.then(({ object }) => {
 						if (object.ok) {
@@ -1489,8 +1527,11 @@ const ZwaveJsUI = (function () {
 								url: `zwave-js/${NetworkIdentifier}/smartstart/startserver`,
 								method: 'GET',
 								error: function (err) {
-									modalAlert(err.responseText, 'Could not start Inclusion');
-									throw new Error(err.responseText);
+									modalAlert(
+										err.responseText || err.message,
+										'Could not start Inclusion'
+									);
+									throw new Error(err.responseText || err.message);
 								},
 								success: function (QRData) {
 									StepsAPI.setStepIndex(StepList.SmartStart);
@@ -1537,8 +1578,11 @@ const ZwaveJsUI = (function () {
 				).catch((err) => {
 					$(B).html(OT);
 					$(B).prop('disabled', false);
-					modalAlert(err.responseText, 'Could not start Exclusion');
-					throw new Error(err.responseText);
+					modalAlert(
+						err.responseText || err.message,
+						'Could not start Exclusion'
+					);
+					throw new Error(err.responseText || err.message);
 				});
 				return;
 		}
@@ -1561,8 +1605,11 @@ const ZwaveJsUI = (function () {
 					).catch((err) => {
 						$(B).html(OT);
 						$(B).prop('disabled', false);
-						modalAlert(err.responseText, 'Could not start Inclusion');
-						throw new Error(err.responseText);
+						modalAlert(
+							err.responseText || err.message,
+							'Could not start Inclusion'
+						);
+						throw new Error(err.responseText || err.message);
 					});
 				} else {
 					$(B).html(OT);
@@ -1573,8 +1620,11 @@ const ZwaveJsUI = (function () {
 			.catch((err) => {
 				$(B).html(OT);
 				$(B).prop('disabled', false);
-				modalAlert(err.responseText, 'Could not start Inclusion');
-				throw new Error(err.responseText);
+				modalAlert(
+					err.responseText || err.message,
+					'Could not start Inclusion'
+				);
+				throw new Error(err.responseText || err.message);
 			});
 	};
 
@@ -1605,10 +1655,10 @@ const ZwaveJsUI = (function () {
 									.catch((err) => {
 										ParentDialog.dialog('destroy');
 										modalAlert(
-											err.responseText,
+											err.responseText || err.message,
 											'Could not purge Smart Start entries'
 										);
-										throw new Error(err.responseText);
+										throw new Error(err.responseText || err.message);
 									})
 									.then(() => {
 										ParentDialog.dialog('destroy');
@@ -1631,7 +1681,7 @@ const ZwaveJsUI = (function () {
 							url: `zwave-js/${NetworkIdentifier}/smartstart/stopserver`,
 							method: 'GET'
 						}).catch((err) => {
-							console.log(err.responseText);
+							console.error(err);
 						});
 						ClearIETimer();
 						ClearSecurityCountDown();
@@ -1642,7 +1692,7 @@ const ZwaveJsUI = (function () {
 							undefined,
 							DCs.stopIE.noWait
 						).catch((err) => {
-							console.log(err.responseText);
+							console.error(err);
 						});
 						ParentDialog.dialog('destroy');
 					}
@@ -1673,7 +1723,7 @@ const ZwaveJsUI = (function () {
 									url: `zwave-js/${NetworkIdentifier}/smartstart/stopserver`,
 									method: 'GET'
 								}).catch((err) => {
-									console.log(err.responseText);
+									console.error(err);
 								});
 							})
 							.catch((err) => {
@@ -1681,13 +1731,13 @@ const ZwaveJsUI = (function () {
 									url: `zwave-js/${NetworkIdentifier}/smartstart/stopserver`,
 									method: 'GET'
 								}).catch((err) => {
-									console.log(err.responseText);
+									console.error(err);
 								});
 								modalAlert(
-									err.responseText,
+									err.responseText || err.message,
 									'Could not commit Smart Start entries.'
 								);
-								throw new Error(err.responseText);
+								throw new Error(err.responseText || err.message);
 							});
 					}
 				},
@@ -1734,7 +1784,7 @@ const ZwaveJsUI = (function () {
 							undefined,
 							DCs.stopIE.noWait
 						).catch((err) => {
-							console.log(err.responseText);
+							console.error(err);
 						});
 						$(this).dialog('destroy');
 					}
@@ -1760,8 +1810,8 @@ const ZwaveJsUI = (function () {
 			[HoveredNode.nodeId],
 			DCs.healNode.noWait
 		).catch((err) => {
-			modalAlert(err.responseText, 'Could not start Node heal.');
-			throw new Error(err.responseText);
+			modalAlert(err.responseText || err.message, 'Could not start Node heal.');
+			throw new Error(err.responseText || err.message);
 		});
 	}
 
@@ -1773,8 +1823,11 @@ const ZwaveJsUI = (function () {
 			undefined,
 			DCs.beginHealingNetwork.noWait
 		).catch((err) => {
-			modalAlert(err.responseText, 'Could not start Network heal.');
-			throw new Error(err.responseText);
+			modalAlert(
+				err.responseText || err.message,
+				'Could not start Network heal.'
+			);
+			throw new Error(err.responseText || err.message);
 		});
 	}
 
@@ -1786,7 +1839,7 @@ const ZwaveJsUI = (function () {
 			undefined,
 			DCs.stopHealingNetwork.noWait
 		).catch((err) => {
-			console.log(err.responseText);
+			console.error(err);
 		});
 	}
 
@@ -1805,8 +1858,11 @@ const ZwaveJsUI = (function () {
 						GetNodes();
 					})
 					.catch((err) => {
-						modalAlert(err.responseText, 'Could not reset the Controller.');
-						throw new Error(err.responseText);
+						modalAlert(
+							err.responseText || err.message,
+							'Could not reset the Controller.'
+						);
+						throw new Error(err.responseText || err.message);
 					});
 			}
 		};
@@ -1826,8 +1882,11 @@ const ZwaveJsUI = (function () {
 			[HoveredNode.nodeId],
 			DCs.refreshInfo.noWait
 		).catch((err) => {
-			modalAlert(err.responseText, 'Could not interview the Node.');
-			throw new Error(err.responseText);
+			modalAlert(
+				err.responseText || err.message,
+				'Could not interview the Node.'
+			);
+			throw new Error(err.responseText || err.message);
 		});
 	}
 
@@ -1908,6 +1967,7 @@ const ZwaveJsUI = (function () {
 				})
 				.catch((err) => {
 					$('#RF_TR_POWER').css({ opacity: '0.3', pointerEvents: 'none' });
+					console.error(err);
 				});
 		};
 
@@ -1924,6 +1984,7 @@ const ZwaveJsUI = (function () {
 			})
 			.catch((err) => {
 				$('#RF_TR_REGION').css({ opacity: '0.3', pointerEvents: 'none' });
+				console.error(err);
 				GetPower();
 			});
 	}
@@ -1954,8 +2015,12 @@ const ZwaveJsUI = (function () {
 				)
 					.catch((err) => {
 						D.dialog('destroy');
-						modalAlert(err.responseText, 'Could not remove the Node.');
+						modalAlert(
+							err.responseText || err.message,
+							'Could not remove the Node.'
+						);
 						Removing = false;
+						throw new Error(err.responseText || err.message);
 					})
 					.then(() => {
 						D.dialog('destroy');
@@ -2372,6 +2437,91 @@ const ZwaveJsUI = (function () {
 				AttachToNetwork(data.UsedNIDs[0]);
 			}
 		});
+
+		CheckForUpdate = () => {
+			const Node = parseInt($('#NODE_FWC option:selected').val());
+
+			const nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${Node}']`);
+
+			if (nodeRow.data().info.status.toUpperCase() === 'ASLEEP') {
+				modalAlert(
+					'This node is a sleep, please wake up the node before checking for Firmware updates',
+					'Node is a sleep'
+				);
+				return;
+			}
+
+			ControllerCMD(
+				DCs.getAvailableFirmwareUpdates.API,
+				DCs.getAvailableFirmwareUpdates.name,
+				undefined,
+				[Node],
+				DCs.getAvailableFirmwareUpdates.noWait
+			)
+				.then(({ object }) => {
+					if (object.length > 0) {
+						//
+						const Container = $('<div>');
+						Container.append(
+							`<strong>Version ${object[0].version}</strong><br /><br />`
+						);
+
+						Container.append('<strong>Change Log</strong>');
+
+						const CLL = $('<ul>');
+						const ChangeLogs = object[0].changelog.split('\n');
+						ChangeLogs.forEach((CL) => {
+							CLL.append(`<li>${CL.replace(/\n/g, '<br />')}</li>`);
+						});
+						CLL.appendTo(Container);
+
+						const Buttons = {
+							Update: function () {
+								$(this)
+									.prop('disabled', true)
+									.addClass('ui-state-disabled')
+									.text('Please wait...');
+
+								// Yuk!
+								const File = object[0].files.filter((F) => F.target === 0)[0];
+
+								ControllerCMD(
+									DCs.beginOTAFirmwareUpdate.API,
+									DCs.beginOTAFirmwareUpdate.name,
+									undefined,
+									[Node, File],
+									DCs.beginOTAFirmwareUpdate.noWait
+								)
+									.then(() => {
+										FWRunning = true;
+										selectNode(Node);
+										$('#FWProgress').css({ display: 'block' });
+									})
+									.catch((err) => {
+										modalAlert(
+											err.responseText || err.message,
+											'Could not begin update'
+										);
+										throw new Error(err.responseText || err.message);
+									});
+							}
+						};
+						modalPrompt(Container, 'Firmware Update Available', Buttons, true);
+					} else {
+						modalAlert(
+							'No firmware updates are available for this Node.',
+							'Firmware update check'
+						);
+					}
+				})
+				.catch((err) => {
+					modalAlert(
+						err.responseText || err.message,
+						'Could not check for updates'
+					);
+					throw new Error(err.responseText || err.message);
+				});
+		};
 	}
 	// Init done
 
@@ -2736,18 +2886,18 @@ const ZwaveJsUI = (function () {
 							})
 							.catch((err) => {
 								modalAlert(
-									err.responseText,
+									err.responseText || err.message,
 									'Could not set Node name and /or location.'
 								);
-								throw new Error(err.responseText);
+								throw new Error(err.responseText || err.message);
 							});
 					})
 					.catch((err) => {
 						modalAlert(
-							err.responseText,
+							err.responseText || err.message,
 							'Could not set Node name and /or location.'
 						);
-						throw new Error(err.responseText);
+						throw new Error(err.responseText || err.message);
 					});
 			}
 		};
@@ -3150,8 +3300,11 @@ const ZwaveJsUI = (function () {
 		)
 			.then(({ object }) => buildPropertyTree(object))
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not fetch Node properties.');
-				throw new Error(err.responseText);
+				modalAlert(
+					err.responseText || err.message,
+					'Could not fetch Node properties.'
+				);
+				throw new Error(err.responseText || err.message);
 			});
 	}
 
@@ -3335,13 +3488,16 @@ const ZwaveJsUI = (function () {
 						updateMeta(valueId, object.metadata);
 					})
 					.catch((err) => {
-						modalAlert(err.responseText, 'Could not fetch value Metadata.');
-						throw new Error(err.responseText);
+						modalAlert(
+							err.responseText || err.message,
+							'Could not fetch value Metadata.'
+						);
+						throw new Error(err.responseText || err.message);
 					});
 			})
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not fetch value.');
-				throw new Error(err.responseText);
+				modalAlert(err.responseText || err.message, 'Could not fetch value.');
+				throw new Error(err.responseText || err.message);
 			});
 	}
 
@@ -3510,8 +3666,8 @@ const ZwaveJsUI = (function () {
 				[valueId, val],
 				DCs.setValue.noWait
 			).catch((err) => {
-				modalAlert(err.responseText, 'Could not set value.');
-				throw new Error(err.responseText);
+				modalAlert(err.responseText || err.message, 'Could not set value.');
+				throw new Error(err.responseText || err.message);
 			});
 			editor.remove();
 		}
