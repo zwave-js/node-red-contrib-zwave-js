@@ -1,6 +1,6 @@
   # node-red-contrib-zwave-js Change Log
 
-   - 7.2.0
+  - 7.2.0
 
     **New Features**
       - Implemented a Firmware Update Service, that allows to install Firmware on devices that have known updates
