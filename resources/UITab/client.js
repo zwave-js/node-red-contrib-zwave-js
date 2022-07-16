@@ -278,6 +278,7 @@ const ZwaveJsUI = (function () {
 	let selectedNode; // Selected Node
 	let LastTargetForBA; // BA TArget
 	let WakeResolver; // Resolve for wake wait
+	let WakeResolverTarget; // Target Wake Node
 
 	function modalAlert(message, title) {
 		const Buts = {
@@ -721,6 +722,24 @@ const ZwaveJsUI = (function () {
 			});
 	}
 
+	async function WaitForNodeWake(NodeID) {
+		const WD = modalPrompt(
+			'This device is asleep, please wake it up...',
+			'Waiting for device to wake up',
+			[],
+			false
+		);
+
+		WakeResolverTarget = NodeID;
+		await new Promise((res) => {
+			WakeResolver = res;
+		});
+
+		WakeResolver = undefined;
+		WakeResolverTarget = undefined;
+		WD.dialog('destroy');
+	}
+
 	function AssociationMGMT() {
 		ControllerCMD(
 			DCs.getAllAssociationGroups.API,
@@ -745,27 +764,7 @@ const ZwaveJsUI = (function () {
 							);
 
 							if (nodeRow.data().info.status.toUpperCase() === 'ASLEEP') {
-								const WD = modalPrompt(
-									'This device is Asleep, please wake it up...',
-									'Waiting for device to wake up',
-									[],
-									false
-								);
-
-								await new Promise((res) => {
-									WakeResolver = res;
-								});
-
-								WakeResolver = undefined;
-								WD.dialog('destroy');
-
-								/*
-								modalAlert(
-									'This node is a sleep, please wake up the node before commiting Association changes',
-									'Node is a sleep'
-								);
-								return;
-								*/
+								await WaitForNodeWake(HoveredNode.nodeId);
 							}
 
 							const Removals = $('#zwave-js-associations-table').find(
@@ -2455,17 +2454,13 @@ const ZwaveJsUI = (function () {
 			}
 		});
 
-		CheckForUpdate = () => {
+		CheckForUpdate = async () => {
 			const Node = parseInt($('#NODE_FWC option:selected').val());
 
 			const nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${Node}']`);
 
 			if (nodeRow.data().info.status.toUpperCase() === 'ASLEEP') {
-				modalAlert(
-					'This node is a sleep, please wake up the node before checking for Firmware updates',
-					'Node is a sleep'
-				);
-				return;
+				await WaitForNodeWake(Node);
 			}
 
 			ControllerCMD(
@@ -2738,13 +2733,12 @@ const ZwaveJsUI = (function () {
 					}
 				} else {
 					if (
-						data.node === HoveredNode.nodeId &&
+						data.node === WakeResolverTarget &&
+						WakeResolver !== undefined &&
 						(data.status.toUpperCase() === 'AWAKE' ||
 							data.status.toUpperCase() === 'ALIVE')
 					) {
-						if (WakeResolver !== undefined) {
-							WakeResolver();
-						}
+						WakeResolver();
 					}
 					nodeRow
 						.find('.zwave-js-node-row-status')
