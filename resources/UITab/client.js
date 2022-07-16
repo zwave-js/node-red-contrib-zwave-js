@@ -285,7 +285,7 @@ const ZwaveJsUI = (function () {
 		modalPrompt(message, title, Buts);
 	}
 
-	function modalPrompt(message, title, buttons, addCancel) {
+	function modalPrompt(message, title, buttons, addCancel, IsHTML) {
 		const Options = {
 			draggable: false,
 			modal: true,
@@ -315,8 +315,8 @@ const ZwaveJsUI = (function () {
 			wordWrap: 'break-word'
 		});
 
-		if (typeof message === 'object') {
-			D.append(message);
+		if (IsHTML) {
+			D.html(message);
 		} else {
 			D.text(message);
 		}
@@ -615,7 +615,7 @@ const ZwaveJsUI = (function () {
 		HTML.append(' Endpoint: ');
 		EI.appendTo(HTML);
 
-		modalPrompt(HTML, 'New Association', Buttons, true);
+		modalPrompt(HTML, 'New Association', Buttons, true, true);
 	}
 
 	function DeleteAssociation() {
@@ -2506,7 +2506,13 @@ const ZwaveJsUI = (function () {
 									});
 							}
 						};
-						modalPrompt(Container, 'Firmware Update Available', Buttons, true);
+						modalPrompt(
+							Container,
+							'Firmware Update Available',
+							Buttons,
+							true,
+							true
+						);
 					} else {
 						modalAlert(
 							'No firmware updates are available for this Node.',
@@ -2907,7 +2913,7 @@ const ZwaveJsUI = (function () {
 		HTML.append(' Location: ');
 		NL.appendTo(HTML);
 
-		modalPrompt(HTML, 'Set Node Name & Location', Buttons, true);
+		modalPrompt(HTML, 'Set Node Name & Location', Buttons, true, true);
 	}
 
 	function AddOverlayNodeButtons(Node, Row) {
