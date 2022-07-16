@@ -279,6 +279,7 @@ const ZwaveJsUI = (function () {
 	let LastTargetForBA; // BA TArget
 	let WakeResolver; // Resolve for wake wait
 	let WakeResolverTarget; // Target Wake Node
+	let NodesListed = false; // nodes listed
 
 	function modalAlert(message, title) {
 		const Buts = {
@@ -1168,7 +1169,7 @@ const ZwaveJsUI = (function () {
 				} else {
 					Nodes.forEach((N) => $('#zwave-js-node-list').append(renderNode(N)));
 				}
-
+				NodesListed = true;
 				$('#zwave-js-node-properties').treeList('empty');
 			})
 			.catch((err) => {
@@ -2726,7 +2727,11 @@ const ZwaveJsUI = (function () {
 				const nodeRow = $('#zwave-js-node-list').find(
 					`[data-nodeid='${data.node}']`
 				);
-				nodeRow.data().info.status = data.status;
+
+				if (NodesListed) {
+					nodeRow.data().info.status = data.status;
+				}
+
 				if (data.status == 'READY') {
 					if (DriverReady) {
 						GetNodesThrottled();
@@ -2740,9 +2745,11 @@ const ZwaveJsUI = (function () {
 					) {
 						WakeResolver();
 					}
-					nodeRow
-						.find('.zwave-js-node-row-status')
-						.html(renderStatusIcon(data.status.toUpperCase()));
+					if (NodesListed) {
+						nodeRow
+							.find('.zwave-js-node-row-status')
+							.html(renderStatusIcon(data.status.toUpperCase()));
+					}
 				}
 				break;
 		}
