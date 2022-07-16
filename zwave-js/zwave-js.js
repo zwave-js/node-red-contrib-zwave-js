@@ -2070,11 +2070,11 @@ module.exports = function (RED) {
 				});
 
 				Node.on(event_Dead.zwaveName, (N) => {
-					Send(N, event_Sleep.redName);
+					Send(N, event_Dead.redName);
 				});
 
 				Node.on(event_Alive.zwaveName, (N) => {
-					Send(N, event_Sleep.redName);
+					Send(N, event_Alive.redName);
 				});
 			});
 
