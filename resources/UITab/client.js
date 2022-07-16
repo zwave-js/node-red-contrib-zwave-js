@@ -277,6 +277,7 @@ const ZwaveJsUI = (function () {
 	let HoveredNode = undefined; // Hovered Node
 	let selectedNode; // Selected Node
 	let LastTargetForBA; // BA TArget
+	let WakeResolver; // Resolve for wake wait
 
 	function modalAlert(message, title) {
 		const Buts = {
@@ -738,17 +739,33 @@ const ZwaveJsUI = (function () {
 					title: `ZWave Association Management: Node ${HoveredNode.nodeId}`,
 					minHeight: 75,
 					buttons: {
-						'Commit Changes': function () {
+						'Commit Changes': async function () {
 							const nodeRow = $('#zwave-js-node-list').find(
 								`[data-nodeid='${HoveredNode.nodeId}']`
 							);
 
 							if (nodeRow.data().info.status.toUpperCase() === 'ASLEEP') {
+								const WD = modalPrompt(
+									'This device is Asleep, please wake it up...',
+									'Waiting for device to wake up',
+									[],
+									false
+								);
+
+								await new Promise((res) => {
+									WakeResolver = res;
+								});
+
+								WakeResolver = undefined;
+								WD.dialog('destroy');
+
+								/*
 								modalAlert(
 									'This node is a sleep, please wake up the node before commiting Association changes',
 									'Node is a sleep'
 								);
 								return;
+								*/
 							}
 
 							const Removals = $('#zwave-js-associations-table').find(
@@ -2720,6 +2737,15 @@ const ZwaveJsUI = (function () {
 						GetNodesThrottled();
 					}
 				} else {
+					if (
+						data.node === HoveredNode.nodeId &&
+						(data.status.toUpperCase() === 'AWAKE' ||
+							data.status.toUpperCase() === 'ALIVE')
+					) {
+						if (WakeResolver !== undefined) {
+							WakeResolver();
+						}
+					}
 					nodeRow
 						.find('.zwave-js-node-row-status')
 						.html(renderStatusIcon(data.status.toUpperCase()));
