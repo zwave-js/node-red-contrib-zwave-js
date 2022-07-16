@@ -1,5 +1,23 @@
   # node-red-contrib-zwave-js Change Log
 
+   - 7.2.0
+
+    **New Features**
+      - Implemented a Firmware Update Service, that allows to install Firmware on devices that have known updates
+      - 2 new event types have been added : **ALIVE**, **DEAD** - these allow you to monitor if a device has been marked dead
+        or alive accordingly.
+
+    **Bug Fixes**
+      - Modal alerts are now rendering HTML content once again
+      - Missing `normalizedObject.label` for Thermostat devices
+
+    **Changes**  
+      - Association Management has been updated, and changes are now applied in batch.
+      - For battery operated devices, certain UI actions now ask you to wake up said device before anything is comitted.
+      - Bump ZWave JS
+      - Bump Winston
+      - Bump ESlint
+
   - 7.1.2
 
     **Changes**  

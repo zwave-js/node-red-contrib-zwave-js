@@ -484,6 +484,10 @@ class UIServer {
 	}
 
 	_WireNodeEvents(node) {
+		if (node.isControllerNode) {
+			return;
+		}
+
 		// Status
 		node.on('sleep', (node) => {
 			this._SendNodeStatus(node, 'ASLEEP');

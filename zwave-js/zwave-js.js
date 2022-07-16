@@ -45,6 +45,8 @@ module.exports = function (RED) {
 	const event_ValueAdded = new SanitizedEventName('value added');
 	const event_Wake = new SanitizedEventName('wake up');
 	const event_Sleep = new SanitizedEventName('sleep');
+	const event_Dead = new SanitizedEventName('dead');
+	const event_Alive = new SanitizedEventName('alive');
 	const event_InterviewStarted = new SanitizedEventName('interview started');
 	const event_InterviewFailed = new SanitizedEventName('interview failed');
 	const event_InterviewCompleted = new SanitizedEventName(
@@ -1753,6 +1755,8 @@ module.exports = function (RED) {
 				'VALUE_UPDATED',
 				'SLEEP',
 				'WAKE_UP',
+				'DEAD',
+				'ALIVE',
 				'VALUE_ID_LIST',
 				'GET_VALUE_RESPONSE',
 				'GET_VALUE_METADATA_RESPONSE'
@@ -2025,11 +2029,11 @@ module.exports = function (RED) {
 		}
 
 		function WireNodeEvents(Node) {
-			Node.once(event_Ready.zwaveName, (N) => {
-				if (N.isControllerNode) {
-					return;
-				}
+			if (Node.isControllerNode) {
+				return;
+			}
 
+			Node.once(event_Ready.zwaveName, () => {
 				Node.on(event_FirmwareUpdateFinished.zwaveName, (N, S) => {
 					Send(N, event_FirmwareUpdateFinished.redName, S);
 				});
@@ -2062,6 +2066,14 @@ module.exports = function (RED) {
 				});
 
 				Node.on(event_Sleep.zwaveName, (N) => {
+					Send(N, event_Sleep.redName);
+				});
+
+				Node.on(event_Dead.zwaveName, (N) => {
+					Send(N, event_Sleep.redName);
+				});
+
+				Node.on(event_Alive.zwaveName, (N) => {
 					Send(N, event_Sleep.redName);
 				});
 			});
