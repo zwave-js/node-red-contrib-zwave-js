@@ -1676,7 +1676,9 @@ module.exports = function (RED) {
 				} else {
 					let Name;
 					switch (VID.commandClass) {
-						case 67: // Thermo Setpoint;
+						// Thermostat Setpoint
+						case 'Thermostat Setpoint':
+						case 67:
 							Name = ZWaveJS.getEnumMemberName(
 								ZWaveJS.ThermostatSetpointType,
 								VID.propertyKey
