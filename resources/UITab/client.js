@@ -316,7 +316,7 @@ const ZwaveJsUI = (function () {
 		});
 
 		if (typeof message === 'object') {
-			D.html(message);
+			D.append(message);
 		} else {
 			D.text(message);
 		}
@@ -3268,7 +3268,7 @@ const ZwaveJsUI = (function () {
 						break;
 					case 255:
 						modalAlert(
-							`The firmware for node ${nodeId} has been updated. A restart is required (which may happen automatically)`,
+							`The firmware for node ${nodeId} has been updated. The device will be restarted.`,
 							'ZWave Device Firmware Update'
 						);
 						break;
