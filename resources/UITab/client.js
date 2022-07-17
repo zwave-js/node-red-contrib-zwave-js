@@ -522,7 +522,7 @@ const ZwaveJsUI = (function () {
 		)
 			.then(() => {
 				FWRunning = true;
-				selectNode(NID);
+				selectNode(Node);
 				$(":button:contains('Begin Update')")
 					.prop('disabled', true)
 					.addClass('ui-state-disabled');
