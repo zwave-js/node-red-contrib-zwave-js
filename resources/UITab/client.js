@@ -2556,8 +2556,9 @@ const ZwaveJsUI = (function () {
 
 						for (let i = 0; i < object[0].files.length; i++) {
 							const File = object[0].files[i];
-							Buttons[`Update (Target ${File.target})`] =
+							Buttons[`Update (Target ${File.target})`] = function () {
 								PerformUpdateFromService(Node, File);
+							};
 						}
 
 						modalPrompt(
