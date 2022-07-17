@@ -1,6 +1,6 @@
 {
 	"name": "node-red-contrib-zwave-js",
-	"version": "7.2.1-beta.5",
+	"version": "7.2.1-beta.6",
 	"license": "MIT",
 	"description": "The most powerful, high performing and highly polished Z-Wave node for Node-RED based on Z-Wave JS. If you want a fully featured Z-Wave framework in your Node-RED instance, you have found it.",
 	"dependencies": {
