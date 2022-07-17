@@ -507,6 +507,33 @@ const ZwaveJsUI = (function () {
 		FWRunning = false;
 	}
 
+	async function PerformUpdateFromService(Node, File) {
+		const nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${Node}']`);
+		if (nodeRow.data().info.status.toUpperCase() === 'ASLEEP') {
+			await WaitForNodeWake(Node);
+		}
+
+		ControllerCMD(
+			DCs.beginOTAFirmwareUpdate.API,
+			DCs.beginOTAFirmwareUpdate.name,
+			undefined,
+			[Node, File],
+			DCs.beginOTAFirmwareUpdate.noWait
+		)
+			.then(() => {
+				FWRunning = true;
+				selectNode(NID);
+				$(":button:contains('Begin Update')")
+					.prop('disabled', true)
+					.addClass('ui-state-disabled');
+				$('#FWProgress').css({ display: 'block' });
+			})
+			.catch((err) => {
+				modalAlert(err.responseText || err.message, 'Firmware rejected');
+				throw new Error(err.responseText || err.message);
+			});
+	}
+
 	async function PerformUpdate() {
 		const FE = $('#FILE_FW')[0].files[0];
 		const NID = parseInt($('#NODE_FW option:selected').val());
@@ -2494,6 +2521,7 @@ const ZwaveJsUI = (function () {
 						CLL.appendTo(Container);
 
 						const Buttons = {
+							/*
 							Update: function () {
 								$(this)
 									.prop('disabled', true)
@@ -2523,7 +2551,15 @@ const ZwaveJsUI = (function () {
 										throw new Error(err.responseText || err.message);
 									});
 							}
+							*/
 						};
+
+						for (let i = 0; i < object[0].files.length; i++) {
+							const File = object[0].files[i];
+							Buttons[`Update (Target ${File.target})`] =
+								PerformUpdateFromService(Node, File);
+						}
+
 						modalPrompt(
 							Container,
 							'Firmware Update Available',
