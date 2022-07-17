@@ -2508,7 +2508,11 @@ const ZwaveJsUI = (function () {
 						//
 						const Container = $('<div>');
 						Container.append(
-							`<strong>Version ${object[0].version}</strong><br /><br />`
+							`Current Version <strong>${
+								nodeRow.data().info.firmwareVersion
+							}</strong> New Version <strong>${
+								object[0].version
+							}</strong><br /><br />`
 						);
 
 						Container.append('<strong>Change Log</strong>');
@@ -2520,39 +2524,7 @@ const ZwaveJsUI = (function () {
 						});
 						CLL.appendTo(Container);
 
-						const Buttons = {
-							/*
-							Update: function () {
-								$(this)
-									.prop('disabled', true)
-									.addClass('ui-state-disabled')
-									.text('Please wait...');
-
-								// Yuk!
-								const File = object[0].files.filter((F) => F.target === 0)[0];
-
-								ControllerCMD(
-									DCs.beginOTAFirmwareUpdate.API,
-									DCs.beginOTAFirmwareUpdate.name,
-									undefined,
-									[Node, File],
-									DCs.beginOTAFirmwareUpdate.noWait
-								)
-									.then(() => {
-										FWRunning = true;
-										selectNode(Node);
-										$('#FWProgress').css({ display: 'block' });
-									})
-									.catch((err) => {
-										modalAlert(
-											err.responseText || err.message,
-											'Could not begin update'
-										);
-										throw new Error(err.responseText || err.message);
-									});
-							}
-							*/
-						};
+						const Buttons = {};
 
 						for (let i = 0; i < object[0].files.length; i++) {
 							const File = object[0].files[i];
