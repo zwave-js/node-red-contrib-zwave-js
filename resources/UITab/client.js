@@ -507,10 +507,15 @@ const ZwaveJsUI = (function () {
 		FWRunning = false;
 	}
 
-	function PerformUpdate() {
+	async function PerformUpdate() {
 		const FE = $('#FILE_FW')[0].files[0];
 		const NID = parseInt($('#NODE_FW option:selected').val());
 		const Target = $('#TARGET_FW').val();
+
+		const nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${NID}']`);
+		if (nodeRow.data().info.status.toUpperCase() === 'ASLEEP') {
+			await WaitForNodeWake(NID);
+		}
 
 		const FD = new FormData();
 		FD.append('Binary', FE);
