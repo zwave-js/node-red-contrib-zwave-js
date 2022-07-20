@@ -11,10 +11,12 @@
       - Implemented a Firmware Update Service, that allows to install Firmware on devices that have known updates
       - 2 new event types have been added : **ALIVE**, **DEAD** - these allow you to monitor if a device has been marked dead
         or alive accordingly.
+      - Added a color chooser for color input types in the UI
 
     **Bug Fixes**
       - Modal alerts are now rendering HTML content once again
       - Missing `normalizedObject.label` for Thermostat devices
+      - Fix some data type odities in the UI editor
 
     **Changes**  
       - Current Value(s) who's type is an object have been changed to prompt for a double click in the UI

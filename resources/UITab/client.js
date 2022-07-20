@@ -3694,7 +3694,7 @@ const ZwaveJsUI = (function () {
 		}
 
 		const meta = propertyRow.data('meta');
-		const input = $('<input>');
+		const input = $('<input id="zwave-js-value-input">');
 		input.keyup(() => {
 			if (event.which === 13) {
 				CommitNewVal();
@@ -3809,16 +3809,8 @@ const ZwaveJsUI = (function () {
 					);
 				} else if (meta.type == 'color') {
 					// COLOR
-					editor.append(
-						input,
-						makeSetButton(),
-						$('<span>').text(
-							makeInfoStr(
-								['Min Length', 'minLength'],
-								['Max Length', 'maxLength']
-							)
-						)
-					);
+					editor.append(input, makeSetButton());
+					input.minicolors();
 				} else {
 					// How did you get here?
 					editor.append('Missing ValueType');
