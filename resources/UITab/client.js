@@ -3632,7 +3632,9 @@ const ZwaveJsUI = (function () {
 			propertyValue.text(`${value} ${propertyValue.data('unit')}`);
 		} else {
 			// Otherwise just display raw value
-			propertyValue.text(value);
+			const DisplayValue =
+				typeof value === 'object' ? '(Object - Double click)' : value;
+			propertyValue.text(DisplayValue);
 		}
 
 		// Some formatting
