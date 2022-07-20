@@ -1,8 +1,13 @@
   # node-red-contrib-zwave-js Change Log
 
-  - 7.2.1
+  - 8.0.0
+
+    **Breaking Changes**
+      - Dropped support for Node 12
 
     **New Features**
+      - Default scales can now be applied inside the controller config
+      - Added ability to export/import node name & location maps
       - Implemented a Firmware Update Service, that allows to install Firmware on devices that have known updates
       - 2 new event types have been added : **ALIVE**, **DEAD** - these allow you to monitor if a device has been marked dead
         or alive accordingly.
@@ -12,9 +17,10 @@
       - Missing `normalizedObject.label` for Thermostat devices
 
     **Changes**  
+      - Current Value(s) who's type is an object have been changed to prompt for a double click in the UI
       - Association Management has been updated, and changes are now applied in batch.
       - For battery operated devices, certain UI actions now ask you to wake up said device before anything is comitted.
-      - Bump ZWave JS
+      - Bump ZWave JS to V10
       - Bump Winston
       - Bump ESlint
 
