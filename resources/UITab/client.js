@@ -3676,7 +3676,7 @@ const ZwaveJsUI = (function () {
 		// Add "edit" icon, if applicable
 		const icon = propertyRow.prev();
 		icon.empty();
-		if (meta.writeable)
+		if (meta.writeable && meta.type !== 'any')
 			$('<i>')
 				.addClass('fa fa-pencil zwave-js-node-property-edit-button')
 				.click(() => showEditor(valueId))
@@ -3721,7 +3721,7 @@ const ZwaveJsUI = (function () {
 			editor.remove();
 		}
 
-		if (meta.writeable) {
+		if (meta.writeable && meta.type !== 'any') {
 			// Step 1: Create editor block and add below value block
 
 			editor = $('<div>')
@@ -3807,14 +3807,18 @@ const ZwaveJsUI = (function () {
 							)
 						)
 					);
-				} else if (meta.type == 'any') {
-					// ANY
+				} else if (meta.type == 'color') {
+					// COLOR
 					editor.append(
 						input,
 						makeSetButton(),
-						$('<span>').html('Caution: ValueType is "Any"')
+						$('<span>').text(
+							makeInfoStr(
+								['Min Length', 'minLength'],
+								['Max Length', 'maxLength']
+							)
+						)
 					);
-					return;
 				} else {
 					// How did you get here?
 					editor.append('Missing ValueType');
