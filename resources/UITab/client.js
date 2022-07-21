@@ -2104,27 +2104,32 @@ const ZwaveJsUI = (function () {
 			undefined,
 			undefined,
 			DCs.getNodes.noWait
-		).then(({ object }) => {
-			const EXP = [];
-			const Count = object.length;
-			for (let i = 0; i < Count; i++) {
-				const Node = object[i];
-				if (!Node.isControllerNode) {
-					if (Node.name !== undefined || Node.location !== undefined) {
-						const Entry = {};
-						Entry.nodeId = Node.nodeId;
-						if (Node.name !== undefined) Entry.name = Node.name;
-						if (Node.location !== undefined) Entry.location = Node.location;
-						EXP.push(Entry);
+		)
+			.then(({ object }) => {
+				const EXP = [];
+				const Count = object.length;
+				for (let i = 0; i < Count; i++) {
+					const Node = object[i];
+					if (!Node.isControllerNode) {
+						if (Node.name !== undefined || Node.location !== undefined) {
+							const Entry = {};
+							Entry.nodeId = Node.nodeId;
+							if (Node.name !== undefined) Entry.name = Node.name;
+							if (Node.location !== undefined) Entry.location = Node.location;
+							EXP.push(Entry);
+						}
 					}
 				}
-			}
 
-			downloadObjectAsJSON(
-				EXP,
-				`ZWave Name & Location Map NET${NetworkIdentifier}`
-			);
-		});
+				downloadObjectAsJSON(
+					EXP,
+					`ZWave Name & Location Map NET${NetworkIdentifier}`
+				);
+			})
+			.catch((err) => {
+				modalAlert(err.responseText || err.message, 'Could not fetch nodes.');
+				throw new Error(err.responseText || err.message);
+			});
 	}
 
 	function ImportNLMap() {}
