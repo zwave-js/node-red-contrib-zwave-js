@@ -2085,6 +2085,50 @@ const ZwaveJsUI = (function () {
 		);
 	}
 
+	function downloadObjectAsJSON(exportObj, exportName) {
+		var dataStr =
+			'data:text/json;charset=utf-8,' +
+			encodeURIComponent(JSON.stringify(exportObj));
+		var downloadAnchorNode = document.createElement('a');
+		downloadAnchorNode.setAttribute('href', dataStr);
+		downloadAnchorNode.setAttribute('download', exportName + '.json');
+		document.body.appendChild(downloadAnchorNode); // required for firefox
+		downloadAnchorNode.click();
+		downloadAnchorNode.remove();
+	}
+
+	function ExportNLMap() {
+		ControllerCMD(
+			DCs.getNodes.API,
+			DCs.getNodes.name,
+			undefined,
+			undefined,
+			DCs.getNodes.noWait
+		).then(({ object }) => {
+			const EXP = [];
+			const Count = object.length;
+			for (let i = 0; i < Count; i++) {
+				const Node = object[i];
+				if (!Node.isControllerNode) {
+					if (Node.name !== undefined || Node.location !== undefined) {
+						const Entry = {};
+						Entry.nodeId = Node.nodeId;
+						if (Node.name !== undefined) Entry.name = Node.name;
+						if (Node.location !== undefined) Entry.location = Node.location;
+						EXP.push(Entry);
+					}
+				}
+			}
+
+			downloadObjectAsJSON(
+				EXP,
+				`ZWave Name & Location Map NET${NetworkIdentifier}`
+			);
+		});
+	}
+
+	function ImportNLMap() {}
+
 	function ShowOtherControllolerMenu(button) {
 		const menuOptionMenu = RED.menu.init({
 			id: 'controller-option-menu',
@@ -2112,6 +2156,18 @@ const ZwaveJsUI = (function () {
 						IsDriverReady();
 						StopHeal();
 					}
+				},
+				{
+					id: 'controller-option-menu-nl-export',
+					label: 'Export Name/Location Map',
+					onselect: function () {
+						ExportNLMap();
+					}
+				},
+				{
+					id: 'controller-option-menu-nl-import',
+					label: 'Import Name/Location Map',
+					onselect: function () {}
 				},
 				{
 					id: 'controller-option-menu-firmware',
