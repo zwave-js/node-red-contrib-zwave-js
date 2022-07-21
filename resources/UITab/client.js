@@ -2086,10 +2086,10 @@ const ZwaveJsUI = (function () {
 	}
 
 	function downloadObjectAsJSON(exportObj, exportName) {
-		var dataStr =
+		const dataStr =
 			'data:text/json;charset=utf-8,' +
 			encodeURIComponent(JSON.stringify(exportObj));
-		var downloadAnchorNode = document.createElement('a');
+		const downloadAnchorNode = document.createElement('a');
 		downloadAnchorNode.setAttribute('href', dataStr);
 		downloadAnchorNode.setAttribute('download', exportName + '.json');
 		document.body.appendChild(downloadAnchorNode); // required for firefox
@@ -2132,7 +2132,53 @@ const ZwaveJsUI = (function () {
 			});
 	}
 
-	function ImportNLMap() {}
+	function ImportNLMap() {
+		const input = document.createElement('input');
+		input.type = 'file';
+
+		const OnLoad = async (e) => {
+			const Nodes = JSON.parse(e.target.result);
+
+			try {
+				for (let i = 0; i < Nodes.length; i++) {
+					const Node = Nodes[i];
+
+					if (Node.name !== undefined) {
+						await ControllerCMD(
+							DCs.setNodeName.API,
+							DCs.setNodeName.name,
+							undefined,
+							[Node.nodeId, Node.name],
+							DCs.setNodeName.noWait
+						);
+					}
+
+					if (Node.location !== undefined) {
+						await ControllerCMD(
+							DCs.setNodeLocation.API,
+							DCs.setNodeLocation.name,
+							undefined,
+							[Node.nodeId, Node.location],
+							DCs.setNodeLocation.noWait
+						);
+					}
+				}
+				input.remove();
+				GetNodes();
+			} catch (err) {
+				modalAlert(err.responseText || err.message, 'Could not finish import.');
+				throw new Error(err.responseText || err.message);
+			}
+		};
+
+		const OnChange = (e) => {
+			const reader = new FileReader();
+			reader.onload = OnLoad;
+			reader.readAsText(e.target.files[0]);
+		};
+		input.onchange = OnChange;
+		input.click();
+	}
 
 	function ShowOtherControllolerMenu(button) {
 		const menuOptionMenu = RED.menu.init({
@@ -2172,7 +2218,9 @@ const ZwaveJsUI = (function () {
 				{
 					id: 'controller-option-menu-nl-import',
 					label: 'Import Name/Location Map',
-					onselect: function () {}
+					onselect: function () {
+						ImportNLMap();
+					}
 				},
 				{
 					id: 'controller-option-menu-firmware',
