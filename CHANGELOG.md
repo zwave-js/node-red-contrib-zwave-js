@@ -3,7 +3,7 @@
   - 8.0.0
 
     **Breaking Changes**
-      - Dropped support for Node 12
+      - Dropped support for Node 12 (min required is now 14.13.0)
 
     **New Features**
       - Default scales can now be applied inside the controller config

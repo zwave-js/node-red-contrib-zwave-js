@@ -19,7 +19,7 @@
 		"validate": "node-red-dev validate -o validation_result.json"
 	},
 	"engines": {
-		"node": ">=12.22.2"
+		"node": ">=14.13.0"
 	},
 	"keywords": [
 		"node-red",
