@@ -17,6 +17,7 @@
       - Modal alerts are now rendering HTML content once again
       - Missing `normalizedObject.label` for Thermostat devices
       - Fix some data type odities in the UI editor
+      - `msg` properties are now carried through the CMD Factory node
 
     **Changes**  
       - Current Value(s) who's type is an object have been changed to prompt for a double click in the UI
