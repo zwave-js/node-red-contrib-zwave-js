@@ -3788,11 +3788,11 @@ const ZwaveJsUI = (function () {
 		if (meta.writeable && meta.type !== 'any')
 			$('<i>')
 				.addClass('fa fa-pencil zwave-js-node-property-edit-button')
-				.click(() => showEditor(valueId))
+				.click(() => showEditor(valueId, value))
 				.appendTo(icon);
 	}
 
-	function showEditor(valueId) {
+	function showEditor(valueId, value) {
 		const propertyRow = getPropertyRow(valueId);
 
 		// If editor is already displayed, close it instead
@@ -3804,6 +3804,7 @@ const ZwaveJsUI = (function () {
 
 		const meta = propertyRow.data('meta');
 		const input = $('<input id="zwave-js-value-input">');
+		inout.val(value)
 		input.keyup(() => {
 			if (event.which === 13) {
 				CommitNewVal();
