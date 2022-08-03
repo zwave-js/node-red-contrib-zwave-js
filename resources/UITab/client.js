@@ -3804,7 +3804,7 @@ const ZwaveJsUI = (function () {
 
 		const meta = propertyRow.data('meta');
 		const input = $('<input id="zwave-js-value-input">');
-		inout.val(value)
+		input.val(value)
 		input.keyup(() => {
 			if (event.which === 13) {
 				CommitNewVal();
