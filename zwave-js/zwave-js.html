@@ -1057,6 +1057,15 @@
 	}
 
 	function SortUI() {
+
+		if(this.scalesHumidity === undefined){
+			$('#node-input-scalesHumidity').val("0x00");
+		}
+
+		if(this.scalesTemp === undefined){
+			$('#node-input-scalesTemp').val("0x00");
+		}
+
 		$.getJSON(`zwave-js/cfg-getids`, (data) => {
 			data.UsedNIDs.forEach((ID) => {
 				$(`#Network${ID}`).css({ opacity: 0.5 });
