@@ -119,6 +119,9 @@
 
 <script type="text/x-red" data-template-name="cmd-factory">
 
+	<p class="zwave-js-config-section-title">
+	    <strong>Basic Settings</strong>
+	</p>
 	<div class="form-row">
 	    <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
 	    <input type="text" id="node-input-name" placeholder="ZWave CMD Factory" style="width: calc(100% - 135px)">
@@ -130,7 +133,7 @@
 			<option value="ValueAPI">ValueAPI</option>
 	    </select>
 	</div>
-	<p forapi="ValueAPI">
+	<p class="zwave-js-config-section-title" forapi="ValueAPI">
 	    <strong>ValueAPI Command Settings</strong>
 	</p>
 	<div class="form-row" forapi="ValueAPI">
@@ -144,8 +147,8 @@
 	    <label for="node-input-vapiValueId" style="width:130px"><i class="fa fa-pencil"></i> ValueID { }</label>
 	    <input style="width: calc(100% - 135px)" type="text" id="node-input-vapiValueId" placeholder="valueId">
 	</div>
-	<p forapi="CCAPI">
-	    <strong>Command Class</strong>
+	<p class="zwave-js-config-section-title" forapi="CCAPI">
+	    <strong>CCAPI Settings/strong>
 	</p>
 	<div class="form-row" forapi="CCAPI">
 	    <label for="node-input-cc" style="width:130px"><i class="fa fa-pencil"></i> CC</label>
@@ -168,8 +171,8 @@
 	    <label for="node-input-forceUpdate" style="width:130px"><i class="fa fa-pencil"></i> Force Update { }</label>
 	    <input style="width: calc(100% - 135px)" type="text" id="node-input-forceUpdate" placeholder="forceUpdate">
 	</div>
-	<p>
-	    <strong>Command Parameters</strong>
+	<p class="zwave-js-config-section-title">
+	    <strong>Command Parameters/strong>
 	</p>
 	<div class="form-row">
 	    <label for="node-input-node" style="width:130px"><i class="fa fa-pencil"></i> Node</label>
