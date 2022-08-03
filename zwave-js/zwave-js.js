@@ -481,16 +481,6 @@ module.exports = function (RED) {
 			abort: Abort
 		};
 
-		// License Keys
-		DriverOptions.apiKeys = {};
-		if (config.FWlicenseKey !== undefined && config.FWlicenseKey.length > 0) {
-			if (config.FWlicenseKey.toUpperCase() !== 'NON-COMMERCIAL') {
-				DriverOptions.apiKeys.firmwareUpdateService = config.FWlicenseKey;
-			} else {
-				DriverOptions.apiKeys.firmwareUpdateService = FWK;
-			}
-		}
-
 		// Scales
 		DriverOptions.preferences = {
 			scales: { temperature: 0x00, humidity: 0x00 }
@@ -499,10 +489,56 @@ module.exports = function (RED) {
 			DriverOptions.preferences.scales.temperature = parseInt(
 				config.scalesTemp
 			);
+			Log(
+				'debug',
+				'NDERED',
+				undefined,
+				'[options] [preferences.scales.temperature]',
+				config.scalesTemp
+			);
 		}
 		if (config.scalesHumidity !== undefined) {
 			DriverOptions.preferences.scales.humidity = parseInt(
 				config.scalesHumidity
+			);
+			Log(
+				'debug',
+				'NDERED',
+				undefined,
+				'[options] [preferences.scales.humidity]',
+				config.scalesHumidity
+			);
+		}
+
+		// License Keys
+		DriverOptions.apiKeys = {};
+		if (config.FWlicenseKey !== undefined && config.FWlicenseKey.length > 0) {
+			if (config.FWlicenseKey.toUpperCase() !== 'NON-COMMERCIAL') {
+				DriverOptions.apiKeys.firmwareUpdateService = config.FWlicenseKey;
+				Log(
+					'debug',
+					'NDERED',
+					undefined,
+					'[FWUS]',
+					'Commercial license applied'
+				);
+			} else {
+				DriverOptions.apiKeys.firmwareUpdateService = FWK;
+				Log(
+					'debug',
+					'NDERED',
+					undefined,
+					'[FWUS]',
+					'Open source license applied'
+				);
+			}
+		} else {
+			Log(
+				'debug',
+				'NDERED',
+				undefined,
+				'[FWUS]',
+				'No key provided - Service may fail!'
 			);
 		}
 
