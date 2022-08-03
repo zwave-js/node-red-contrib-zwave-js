@@ -56,6 +56,8 @@ module.exports = function (RED) {
 	const event_HealNetworkProgress = new SanitizedEventName(
 		'heal network progress'
 	);
+	const FWK =
+		'ceb8fd78b90cceb4d64cddec000630b7d692ac44e2daa0bd6e75047bdce05c7bae3b3925ef8e3e833419f593e62fe8f0';
 
 	SetupGlobals(RED);
 
@@ -472,6 +474,21 @@ module.exports = function (RED) {
 		GetKey('encryptionKeyS2A', 'S2_Authenticated');
 		GetKey('encryptionKeyS2AC', 'S2_AccessControl');
 
+		// S2 Callbacks
+		DriverOptions.inclusionUserCallbacks = {
+			grantSecurityClasses: GrantSecurityClasses,
+			validateDSKAndEnterPIN: ValidateDSK,
+			abort: Abort
+		};
+
+		// License Keys
+		DriverOptions.apiKeys = {};
+		if (config.FWlicenseKey !== undefined && config.FWlicenseKey.length > 0) {
+			DriverOptions.apiKeys.firmwareUpdateService = config.FWlicenseKey;
+		} else {
+			DriverOptions.apiKeys.firmwareUpdateService = FWK;
+		}
+
 		function ShareNodeList() {
 			const NodeList = {};
 
@@ -705,7 +722,6 @@ module.exports = function (RED) {
 					break;
 
 				case 'beginInclusion':
-					Params[0].userCallbacks = Callbacks;
 					await Driver.controller.beginInclusion(Params[0]);
 					Send(
 						undefined,
@@ -716,7 +732,13 @@ module.exports = function (RED) {
 					break;
 
 				case 'beginExclusion':
-					await Driver.controller.beginExclusion(Params[0]);
+					const ExOptions = {
+						strategy: ZWaveJS.ExclusionStrategy.ExcludeOnly
+					};
+					if (Params[0]) {
+						ExOptions.strategy = ZWaveJS.ExclusionStrategy.Unprovision;
+					}
+					await Driver.controller.beginExclusion(ExOptions);
 					Send(
 						undefined,
 						'ACTION_DONE',
@@ -746,7 +768,6 @@ module.exports = function (RED) {
 					break;
 
 				case 'replaceFailedNode':
-					Params[1].userCallbacks = Callbacks;
 					await Driver.controller.replaceFailedNode(Params[0], Params[1]);
 					Send(
 						undefined,
@@ -1216,11 +1237,7 @@ module.exports = function (RED) {
 					break;
 
 				case 'setValue':
-					if (Params.length > 2) {
-						await ZWaveNode.setValue(Params[0], Params[1], Params[2]);
-					} else {
-						await ZWaveNode.setValue(Params[0], Params[1]);
-					}
+					await ZWaveNode.setValue(...Params);
 					Send(
 						undefined,
 						'ACTION_DONE',
@@ -2060,7 +2077,7 @@ module.exports = function (RED) {
 
 				Node.on(event_ValueAdded.zwaveName, (N, VL) => {
 					VL.normalizedObject = buildNormalized(VL, N.id);
-					Send(N, 'VALUE_UPDATED', VL); // we dont differentiate between added, update - cant see the need.
+					Send(N, event_ValueUpdated.redName, VL); // we dont differentiate between added, update - cant see the need.
 				});
 
 				Node.on(event_Wake.zwaveName, (N) => {
