@@ -1031,7 +1031,8 @@
 			intvwUserCodes: { value: false },
 			softResetUSB: { value: false },
 			outputs: { value: 1 },
-			disableOptimisticValueUpdate: { value: false }
+			disableOptimisticValueUpdate: { value: false },
+			FWlicenseKey: { value: undefined }
 		},
 		inputs: 1,
 		outputs: 1,
@@ -1153,7 +1154,9 @@
 
 	<input type="hidden" id="node-input-networkIdentifier">
 
-	<p><strong>Z-Wave JS Analytics Reporting</strong></p>
+	<p class="zwave-js-config-section-title">
+		<strong>Z-Wave JS Analytics Reporting</strong>
+	</p>
 
 	<div class="form-tips" id="node-tip" style="margin-bottom: 10px; padding: 0px; background: none; border:none;min-width:480px">
 	Please allow the Z-Wave JS project to collect some anonymized data regarding the devices you own so that we can generate statistics that allow us to better focus our development efforts. This information is not tracked to any identifiable user or IP address and <strong>cannot be used to identify you</strong><br /><br />For more specifics about the data collected, click <a target="_blank" style="text-decoration:underline;color:blue" href="https://zwave-js.github.io/node-zwave-js/#/data-collection/user-disclosure">here</a>.
@@ -1164,7 +1167,20 @@
 	    <input type="checkbox" id="node-input-sendUsageStatistics">
 	</div>
 
-	<p>
+	<p class="zwave-js-config-section-title">
+		<strong>Z-Wave JS Firmware Update Service</strong>
+	</p>
+
+	<div class="form-tips" id="node-tip" style="margin-bottom: 10px; padding: 0px; background: none; border:none;min-width:480px">
+	Z-Wave JS offers a Firmware Update service, by where a check can be made to ensure your devices are using the latest firmware. This service is free to use for non-commercial installations, if this descibes the current installation, please enter NON-COMMERCIAL, else please enter your license key instead.<br /><br />To obtain a commercial key, click <a target="_blank" style="text-decoration:underline;color:blue" href="https://github.com/zwave-js/firmware-updates#api-keys">here</a>.
+	</div>
+
+	<div class="form-row">
+	    <label  for="node-input-FWlicenseKey" style="width:130px"><i class="fa fa-pencil"></i>FWUS License Key</label>
+	    <input type="text" id="node-input-FWlicenseKey">
+	</div>
+
+	<p class="zwave-js-config-section-title">
 	    <strong>Basic settings</strong>
 	</p>
 	<div class="form-row">
@@ -1185,7 +1201,7 @@
 	    </select>
 
 	</div>
-	<p>
+	<p class="zwave-js-config-section-title">
 	    <strong>Encryption Keys</strong>
 	</p>
 	<div class="form-row">
@@ -1209,7 +1225,7 @@
 		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
 	</div>
 	<br />
-	<p>
+	<p class="zwave-js-config-section-title">
 	    <strong>Timeouts (ms)</strong>
 	</p>
 	<div class="form-row">
@@ -1229,7 +1245,7 @@
 	    <input type="text" id="node-input-sendResponseTimeout" placeholder="Use Default" style="width: calc(100% - 135px)">
 	</div>
 	<br />
-	<p>
+	<p class="zwave-js-config-section-title">
 	    <strong>Z-Wave JS Logging</strong>
 	</p>
 	<div class="form-row">
@@ -1265,7 +1281,7 @@
 	    <input type="text" id="node-input-logNodeFilter" placeholder="2,5,24" style="width: calc(100% - 135px)">
 	</div>
 	<br />
-	<p>
+	<p class="zwave-js-config-section-title">
 	    <strong>Advanced Driver Settings</strong>
 	</p>
 	<div class="form-row">
@@ -1297,7 +1313,7 @@
 	    <input type="text" id="node-input-serialAPIStarted" placeholder="Use Default" style="width: calc(100% - 135px)">
 	</div>
 	<br />
-	<p>
+	<p class="zwave-js-config-section-title">
 	    <strong>Version Information</strong>
 	</p>
 	<div class="form-row">

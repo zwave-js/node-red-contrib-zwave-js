@@ -484,9 +484,11 @@ module.exports = function (RED) {
 		// License Keys
 		DriverOptions.apiKeys = {};
 		if (config.FWlicenseKey !== undefined && config.FWlicenseKey.length > 0) {
-			DriverOptions.apiKeys.firmwareUpdateService = config.FWlicenseKey;
-		} else {
-			DriverOptions.apiKeys.firmwareUpdateService = FWK;
+			if (config.FWlicenseKey !== 'NON-COMMERCIAL') {
+				DriverOptions.apiKeys.firmwareUpdateService = config.FWlicenseKey;
+			} else {
+				DriverOptions.apiKeys.firmwareUpdateService = FWK;
+			}
 		}
 
 		function ShareNodeList() {
@@ -662,12 +664,6 @@ module.exports = function (RED) {
 		async function IEAPI(msg, send) {
 			const Method = msg.payload.method;
 			const Params = msg.payload.params || [];
-
-			const Callbacks = {
-				grantSecurityClasses: GrantSecurityClasses,
-				validateDSKAndEnterPIN: ValidateDSK,
-				abort: Abort
-			};
 
 			switch (Method) {
 				case 'checkKeyReq':

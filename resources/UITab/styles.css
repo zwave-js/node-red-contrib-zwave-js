@@ -7,6 +7,14 @@
 	box-sizing: content-box;
 }
 
+.zwave-js-config-section-title {
+	background-color: lightgray;
+	padding: 5px;
+	-webkit-border-radius: 5px !important;
+	-moz-border-radius: 5px !important;
+	border-radius: 5px !important;
+}
+
 .zwave-js-header-table td:first-of-type {
 	width: 50px;
 }
@@ -18,7 +26,9 @@
 	background-color: lightgray;
 	border-style: solid;
 	border-width: 1px;
-	border-radius: 5px;
+	-webkit-border-radius: 5px !important;
+	-moz-border-radius: 5px !important;
+	border-radius: 5px !important;
 	text-align: center;
 	padding: 3px;
 	box-sizing: content-box;
@@ -155,7 +165,6 @@
 	background-color: lightgray;
 	border-color: rgb(75, 75, 75);
 	border-style: solid;
-
 }
 .zwave-js-ac i {
 	font-size: 16px !important;
@@ -207,7 +216,7 @@
 	margin-top: 50px;
 }
 
-.progressbar>div {
+.progressbar > div {
 	background-color: gray;
 	width: 0%;
 	height: 20px;
