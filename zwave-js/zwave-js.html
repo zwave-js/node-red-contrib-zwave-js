@@ -1032,7 +1032,9 @@
 			softResetUSB: { value: false },
 			outputs: { value: 1 },
 			disableOptimisticValueUpdate: { value: false },
-			FWlicenseKey: { value: 'NON-COMMERCIAL' }
+			FWlicenseKey: { value: 'NON-COMMERCIAL' },
+			scalesTemp: { value: '0x00' },
+			scalesHumidity: { value: '0x00' }
 		},
 		inputs: 1,
 		outputs: 1,
@@ -1243,6 +1245,24 @@
 	<div class="form-row">
 	    <label  for="node-input-sendResponseTimeout" style="width:130px"><i class="fa fa-pencil"></i> Req -> Res</label>
 	    <input type="text" id="node-input-sendResponseTimeout" placeholder="Use Default" style="width: calc(100% - 135px)">
+	</div>
+	<br />
+	<p class="zwave-js-config-section-title">
+	    <strong>Value Scales</strong>
+	</p>
+	<div class="form-row">
+	    <label  for="node-input-scalesTemp" style="width:130px"><i class="fa fa-pencil"></i> Temperature</label>
+		<select id="node-input-scalesTemp" style="width: calc(100% - 135px)">
+	        <option value="0x00">Celsius (°C)</option>
+	        <option value="0x01">Fahrenheit (°F)</option>
+	    </select>
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-scalesHumidity" style="width:130px"><i class="fa fa-pencil"></i> Humidity</label>
+		<select id="node-input-scalesHumidity" style="width: calc(100% - 135px)">
+	        <option value="0x00">Percentage (%)</option>
+	        <option value="0x01">Absolute Humidity (g/m³)</option>
+	    </select>
 	</div>
 	<br />
 	<p class="zwave-js-config-section-title">

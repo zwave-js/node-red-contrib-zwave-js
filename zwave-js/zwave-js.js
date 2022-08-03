@@ -484,11 +484,26 @@ module.exports = function (RED) {
 		// License Keys
 		DriverOptions.apiKeys = {};
 		if (config.FWlicenseKey !== undefined && config.FWlicenseKey.length > 0) {
-			if (config.FWlicenseKey !== 'NON-COMMERCIAL') {
+			if (config.FWlicenseKey.toUpperCase() !== 'NON-COMMERCIAL') {
 				DriverOptions.apiKeys.firmwareUpdateService = config.FWlicenseKey;
 			} else {
 				DriverOptions.apiKeys.firmwareUpdateService = FWK;
 			}
+		}
+
+		// Scales
+		DriverOptions.preferences = {
+			scales: { temperature: 0x00, humidity: 0x00 }
+		};
+		if (config.scalesTemp !== undefined) {
+			DriverOptions.preferences.scales.temperature = parseInt(
+				config.scalesTemp
+			);
+		}
+		if (config.scalesHumidity !== undefined) {
+			DriverOptions.preferences.scales.humidity = parseInt(
+				config.scalesHumidity
+			);
 		}
 
 		function ShareNodeList() {
