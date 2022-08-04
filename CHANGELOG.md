@@ -8,7 +8,7 @@
     **New Features**
       - Default scales can now be applied inside the controller config
       - Added ability to export/import node name & location maps
-      - Implemented a Firmware Update Service, that allows to install Firmware on devices that have known updates
+      - Implemented a Firmware Update Service, that allows to install Firmware on devices that have known updates - Please double click controller!
       - 2 new event types have been added : **ALIVE**, **DEAD** - these allow you to monitor if a device has been marked dead
         or alive accordingly.
       - Added a color chooser for color input types in the UI
