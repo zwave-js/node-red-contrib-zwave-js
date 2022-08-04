@@ -3742,12 +3742,18 @@ const ZwaveJsUI = (function () {
 		} else {
 			// Otherwise just display raw value
 
-			if (meta.type === 'string[]' || meta.type === 'number[]') {
-				propertyValue.text(value.join(', '));
-			} else {
-				const DisplayValue =
-					typeof value === 'object' ? '(Object - Double click)' : value;
-				propertyValue.text(DisplayValue);
+			switch (typeof value) {
+				case 'object':
+					if (Array.isArray(value) && typeof value[0] !== 'object') {
+						propertyValue.text(value.join(', '));
+					} else {
+						propertyValue.text('(Object - Double click)');
+					}
+					break;
+
+				default:
+					propertyValue.text(value);
+					break;
 			}
 		}
 
