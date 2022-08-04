@@ -247,7 +247,7 @@ JSONFormatter.json = {
 		var str = '<span class=json-string>';
 		var r = pIndent || '';
 		if (pKey) r = r + key + pKey + '</span>';
-		if (pVal) r = r + (pVal[0] == '"' ? str : val) + pVal + '</span>';
+		if (pVal) r = r + (pVal[0] === '"' ? str : val) + pVal + '</span>';
 		return r + (pEnd || '');
 	},
 	prettyPrint: function (obj) {
@@ -2855,7 +2855,7 @@ const ZwaveJsUI = (function () {
 					nodeRow.data().info.status = data.status;
 				}
 
-				if (data.status == 'READY') {
+				if (data.status === 'READY') {
 					if (DriverReady) {
 						GetNodesThrottled();
 					}
@@ -3032,7 +3032,7 @@ const ZwaveJsUI = (function () {
 								$(`.zwave-js-node-row[data-nodeid='${HoveredNode.nodeId}']`)
 									.find('.zwave-js-node-row-name')
 									.text(Name);
-								if (HoveredNode.nodeId == selectedNode) {
+								if (HoveredNode.nodeId === selectedNode) {
 									let Lable = `${HoveredNode.nodeId} - ${Name}`;
 									if (Location.length > 0) Lable += ` (${Location})`;
 									$('#zwave-js-selected-node-name').text(Lable);
@@ -3352,7 +3352,7 @@ const ZwaveJsUI = (function () {
 	}
 
 	function selectNode(id) {
-		if (selectedNode == id) return;
+		if (selectedNode === id) return;
 		deselectCurrentNode();
 
 		selectedNode = id;
@@ -3474,7 +3474,7 @@ const ZwaveJsUI = (function () {
 	};
 
 	function buildPropertyTree(valueIdList) {
-		if (valueIdList.length == 0) {
+		if (valueIdList.length === 0) {
 			updateNodeFetchStatus('No properties found');
 			return;
 		}
@@ -3486,7 +3486,7 @@ const ZwaveJsUI = (function () {
 			.map(({ commandClass, commandClassName }) => {
 				// Step 2: For each CC, get all associated properties
 				const propsInCC = valueIdList.filter(
-					(valueId) => valueId.commandClass == commandClass
+					(valueId) => valueId.commandClass === commandClass
 				);
 
 				return {
@@ -3727,10 +3727,10 @@ const ZwaveJsUI = (function () {
 			// If meta known, translate the value and add tooltip with raw value
 			propertyValue.text(meta?.states?.[value]);
 			RED.popover.tooltip(propertyValue, `Raw Value: ${value}`);
-		} else if (valueId.commandClass == 114) {
+		} else if (valueId.commandClass === 114) {
 			// If command class "Manufacturer Specific", show hex values
 			propertyValue.text(hexDisplay(value));
-			if (valueId.property == 'manufacturerId')
+			if (valueId.property === 'manufacturerId')
 				RED.popover.tooltip(
 					propertyValue,
 					$(`#zwave-js-node-list .selected`).data('info')?.deviceConfig
@@ -3741,9 +3741,14 @@ const ZwaveJsUI = (function () {
 			propertyValue.text(`${value} ${propertyValue.data('unit')}`);
 		} else {
 			// Otherwise just display raw value
-			const DisplayValue =
-				typeof value === 'object' ? '(Object - Double click)' : value;
-			propertyValue.text(DisplayValue);
+
+			if (meta.type === 'string[]' || meta.type === 'number[]') {
+				propertyValue.text(value.join(', '));
+			} else {
+				const DisplayValue =
+					typeof value === 'object' ? '(Object - Double click)' : value;
+				propertyValue.text(DisplayValue);
+			}
 		}
 
 		// Some formatting
@@ -3805,6 +3810,7 @@ const ZwaveJsUI = (function () {
 		const meta = propertyRow.data('meta');
 		const input = $('<input id="zwave-js-value-input">');
 		input.val(value);
+		input.attr('value', value);
 		input.keyup(() => {
 			if (event.which === 13) {
 				CommitNewVal();
@@ -3812,10 +3818,10 @@ const ZwaveJsUI = (function () {
 		});
 		let editor;
 		function CommitNewVal(val) {
-			if (val == undefined) {
+			if (val === undefined) {
 				val = input.val();
 			}
-			if (meta.type == 'number') {
+			if (meta.type === 'number') {
 				val = +val;
 			}
 			ControllerCMD(
@@ -3875,7 +3881,7 @@ const ZwaveJsUI = (function () {
 			}
 
 			if (meta.allowManualEntry === undefined || meta.allowManualEntry) {
-				if (meta.type == 'number') {
+				if (meta.type === 'number') {
 					// Number
 					editor.append(
 						input,
@@ -3889,7 +3895,7 @@ const ZwaveJsUI = (function () {
 							)
 						)
 					);
-				} else if (meta.type == 'boolean') {
+				} else if (meta.type === 'boolean') {
 					// BOOLEAN
 					editor.append(
 						$('<div>').append(
@@ -3905,7 +3911,7 @@ const ZwaveJsUI = (function () {
 								.text('False')
 						)
 					);
-				} else if (meta.type == 'string') {
+				} else if (meta.type === 'string') {
 					// STRING
 					editor.append(
 						input,
@@ -3917,7 +3923,7 @@ const ZwaveJsUI = (function () {
 							)
 						)
 					);
-				} else if (meta.type == 'color') {
+				} else if (meta.type === 'color') {
 					// COLOR
 					editor.append(input, makeSetButton());
 					input.minicolors();
