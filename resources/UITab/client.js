@@ -3814,9 +3814,11 @@ const ZwaveJsUI = (function () {
 		}
 
 		const meta = propertyRow.data('meta');
+
 		const input = $('<input id="zwave-js-value-input">');
-		input.val(value);
-		input.attr('value', value);
+		const elementValue = meta.lastSetUIValue || value;
+		input.val(elementValue);
+		input.attr('value', elementValue);
 		input.keyup(() => {
 			if (event.which === 13) {
 				CommitNewVal();
@@ -3828,7 +3830,7 @@ const ZwaveJsUI = (function () {
 				val = input.val();
 			}
 			if (meta.type === 'number') {
-				val = +val;
+				val = parseInt(val);
 			}
 			ControllerCMD(
 				DCs.setValue.API,
@@ -3840,6 +3842,7 @@ const ZwaveJsUI = (function () {
 				modalAlert(err.responseText || err.message, 'Could not set value.');
 				throw new Error(err.responseText || err.message);
 			});
+			meta.lastSetUIValue = val.replace('#', ''); // # - for color values
 			editor.remove();
 		}
 
