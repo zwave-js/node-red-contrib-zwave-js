@@ -510,7 +510,8 @@ const ZwaveJsUI = (function () {
 	async function PerformUpdateFromService(Node, File) {
 		const nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${Node}']`);
 		if (nodeRow.data().info.status.toUpperCase() === 'ASLEEP') {
-			if (await !WaitForNodeWake(Node)) {
+			const A = await WaitForNodeWake(Node);
+			if (!A) {
 				return;
 			}
 		}
@@ -543,7 +544,8 @@ const ZwaveJsUI = (function () {
 
 		const nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${NID}']`);
 		if (nodeRow.data().info.status.toUpperCase() === 'ASLEEP') {
-			if (await !WaitForNodeWake(NID)) {
+			const A = await WaitForNodeWake(NID);
+			if (!A) {
 				return;
 			}
 		}
@@ -815,7 +817,8 @@ const ZwaveJsUI = (function () {
 							);
 
 							if (nodeRow.data().info.status.toUpperCase() === 'ASLEEP') {
-								if (await !WaitForNodeWake(HoveredNode.nodeId)) {
+								const A = await WaitForNodeWake(HoveredNode.nodeId);
+								if (!A) {
 									return;
 								}
 							}
@@ -2622,7 +2625,8 @@ const ZwaveJsUI = (function () {
 			const nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${Node}']`);
 
 			if (nodeRow.data().info.status.toUpperCase() === 'ASLEEP') {
-				if (await !WaitForNodeWake(Node)) {
+				const A = await WaitForNodeWake(Node);
+				if (!A) {
 					return;
 				}
 			}
