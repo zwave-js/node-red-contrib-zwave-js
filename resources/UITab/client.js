@@ -762,16 +762,16 @@ const ZwaveJsUI = (function () {
 	}
 
 	async function WaitForNodeWake(NodeID) {
+		const Buttons = {
+			Cancel: function () {
+				WakeResolver(false);
+			}
+		};
+
 		const WD = modalPrompt(
 			'This device is asleep, please wake it up...',
 			'Waiting for device to wake up',
-			[
-				{
-					Cancel: function () {
-						WakeResolver(false);
-					}
-				}
-			],
+			Buttons,
 			false
 		);
 
@@ -833,7 +833,7 @@ const ZwaveJsUI = (function () {
 							const D = modalPrompt(
 								'Processing association changes...',
 								'Please wait.',
-								[],
+								{},
 								false
 							);
 
@@ -2074,7 +2074,7 @@ const ZwaveJsUI = (function () {
 				const D = modalPrompt(
 					'Checking if Node has failed...',
 					'Please wait.',
-					[],
+					{},
 					false
 				);
 				Removing = true;
@@ -3868,7 +3868,7 @@ const ZwaveJsUI = (function () {
 				modalAlert(err.responseText || err.message, 'Could not set value.');
 				throw new Error(err.responseText || err.message);
 			});
-			meta.lastSetUIValue = val.replace('#', ''); // # - for color values
+			meta.lastSetUIValue = val;
 			editor.remove();
 		}
 
