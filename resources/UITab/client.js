@@ -590,7 +590,6 @@ const ZwaveJsUI = (function () {
 				'Begin Update': PerformUpdate,
 				Cancel: function () {
 					AbortUpdate();
-					$(this).dialog('destroy');
 				}
 			}
 		};
