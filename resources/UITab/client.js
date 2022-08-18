@@ -510,7 +510,9 @@ const ZwaveJsUI = (function () {
 	async function PerformUpdateFromService(Node, File) {
 		const nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${Node}']`);
 		if (nodeRow.data().info.status.toUpperCase() === 'ASLEEP') {
-			await WaitForNodeWake(Node);
+			if (await !WaitForNodeWake(Node)) {
+				return;
+			}
 		}
 
 		ControllerCMD(
@@ -541,7 +543,9 @@ const ZwaveJsUI = (function () {
 
 		const nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${NID}']`);
 		if (nodeRow.data().info.status.toUpperCase() === 'ASLEEP') {
-			await WaitForNodeWake(NID);
+			if (await !WaitForNodeWake(NID)) {
+				return;
+			}
 		}
 
 		const FD = new FormData();
@@ -759,18 +763,32 @@ const ZwaveJsUI = (function () {
 		const WD = modalPrompt(
 			'This device is asleep, please wake it up...',
 			'Waiting for device to wake up',
-			[],
+			[
+				{
+					Cancel: function () {
+						WakeResolver(false);
+					}
+				}
+			],
 			false
 		);
 
 		WakeResolverTarget = NodeID;
-		await new Promise((res) => {
+
+		const Result = await new Promise((res) => {
 			WakeResolver = res;
 		});
 
 		WakeResolver = undefined;
 		WakeResolverTarget = undefined;
-		WD.dialog('destroy');
+
+		try {
+			WD.dialog('destroy');
+		} catch (Err) {
+			// WD could already be destroyed
+		}
+
+		return Result;
 	}
 
 	function AssociationMGMT() {
@@ -797,7 +815,9 @@ const ZwaveJsUI = (function () {
 							);
 
 							if (nodeRow.data().info.status.toUpperCase() === 'ASLEEP') {
-								await WaitForNodeWake(HoveredNode.nodeId);
+								if (await !WaitForNodeWake(HoveredNode.nodeId)) {
+									return;
+								}
 							}
 
 							const Removals = $('#zwave-js-associations-table').find(
@@ -2602,7 +2622,9 @@ const ZwaveJsUI = (function () {
 			const nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${Node}']`);
 
 			if (nodeRow.data().info.status.toUpperCase() === 'ASLEEP') {
-				await WaitForNodeWake(Node);
+				if (await !WaitForNodeWake(Node)) {
+					return;
+				}
 			}
 
 			ControllerCMD(
@@ -2866,7 +2888,7 @@ const ZwaveJsUI = (function () {
 						(data.status.toUpperCase() === 'AWAKE' ||
 							data.status.toUpperCase() === 'ALIVE')
 					) {
-						WakeResolver();
+						WakeResolver(true);
 					}
 					if (NodesListed) {
 						nodeRow
