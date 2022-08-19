@@ -4,7 +4,7 @@
 
     **Breaking Changes**
       - Dropped support for Node 12 (min required is now 14.13.0)
-      - If you use the **set** method of the **Configuration** CC in **CCAPI** mode, the argumnets must now be one object (detailed below)
+      - If you use the **set** method of the **Configuration** CC in **CCAPI** mode, the arguments must now have one object (detailed below)
         ```javascript
         [
           {"parameter": <number>, "value": <Desired Value>, "valueSize": <Number>}
