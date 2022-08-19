@@ -4,6 +4,13 @@
 
     **Breaking Changes**
       - Dropped support for Node 12 (min required is now 14.13.0)
+      - If you use the **set** method of the **Configuration** CC in **CCAPI** mode, the argumnets must now be one object (detailed below)
+        ```javascript
+        [
+          {"parameter": <number>, "value": <Desired Value>, "valueSize": <Number>}
+        ]
+        ```
+        previously this was ```[<number>, <Desired Value>, <Number>]```
 
     **New Features**
       - Default scales can now be applied inside the controller config
