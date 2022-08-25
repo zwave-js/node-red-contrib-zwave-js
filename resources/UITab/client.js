@@ -2639,6 +2639,22 @@ const ZwaveJsUI = (function () {
 			)
 				.then(({ object }) => {
 					if (object.length > 0) {
+
+						const FWs = object;
+						FWs.forEach((FW) =>{
+
+							const Version = FW.version
+							const ChangeLog = FW.changelog.split('\n');
+							const Files = FW.files;
+
+							const OBJ = JSON.stringify({Version,ChangeLog,Files});
+
+							alert(OBJ);
+
+						})
+						
+
+						/*
 						//
 						const Container = $('<div>');
 						Container.append(
@@ -2674,6 +2690,7 @@ const ZwaveJsUI = (function () {
 							true,
 							true
 						);
+						*/
 					} else {
 						modalAlert(
 							'No firmware updates are available for this Node.',
