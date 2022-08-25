@@ -2664,36 +2664,16 @@ const ZwaveJsUI = (function () {
 								const B = $(`<label for="Target_${F.target}">Target ${F.target}</label> <input type="radio" name="fw_target" value="${F.target}" id="Target_${F.target}"> `);
 								B.data('FWTarget',{file:F,node:Node});
 								Content.append(B)
-
-								
-
-								/*
-								B.addClass('ui-button ui-corner-all ui-widget SecrutiyButton');
-								B.css({width:'145px',height:'30px'})
-								B.prop("disabled",true);
-								B.text(`Update (Target: ${F.target})`);
-								B.click = function(){
-									PerformUpdateFromService(Node, F);
-								}
-								Content.append(B)
-								*/
 							})
-
+							
 							FWList.append(Content);
-							$("input[type='radio']").checkboxradio();
-
-							/*
-							const Files = FW.files;
-
-							const OBJ = JSON.stringify({Version,ChangeLog,Files});
-
-							alert(OBJ);
-							*/
-
+						
 						})
 
 						$(`button:contains('Check For Update')`).parent().append(FWList);
+						$("input[type=radio]").checkboxradio();
 						FWList.accordion();
+						
 						
 
 						/*
