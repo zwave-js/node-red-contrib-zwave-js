@@ -2664,14 +2664,12 @@ const ZwaveJsUI = (function () {
 								const B = $(`<label for="Target_${F.target}">Target ${F.target}</label> <input type="radio" name="fw_target" value="${F.target}" id="Target_${F.target}"> `);
 								B.data('FWTarget',{file:F,node:Node});
 								Content.append(B)
+								B.checkboxradio();
 							})
-							
 							FWList.append(Content);
-						
 						})
 
 						$(`button:contains('Check For Update')`).parent().append(FWList);
-						$("input[type=radio]").checkboxradio();
 						FWList.accordion();
 						
 						
