@@ -2661,9 +2661,11 @@ const ZwaveJsUI = (function () {
 							Content.append(CL);
 
 							FW.files.forEach((F) =>{
-								const B = $(`<input type="radio" name="fw_target" id="Target_${F.target}"><label for="Target_${F.target}">Target ${F.target}</label> `);
+								const B = $(`<label for="Target_${F.target}">Target ${F.target}</label> <input type="radio" name="fw_target" value="${F.target}" id="Target_${F.target}"> `);
 								B.data('FWTarget',{file:F,node:Node});
 								Content.append(B)
+
+								
 
 								/*
 								B.addClass('ui-button ui-corner-all ui-widget SecrutiyButton');
@@ -2678,6 +2680,7 @@ const ZwaveJsUI = (function () {
 							})
 
 							FWList.append(Content);
+							$("input[type='radio']").checkboxradio();
 
 							/*
 							const Files = FW.files;
