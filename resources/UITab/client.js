@@ -2661,7 +2661,11 @@ const ZwaveJsUI = (function () {
 							Content.append(CL);
 
 							FW.files.forEach((F) =>{
-								const B = $('<button>');
+								const B = $(`<input type="radio" name="fw_target" id="Target_${F.target}"><label for="Target_${F.target}">Target ${F.target}</label> `);
+								B.data('FWTarget',{file:F,node:Node});
+								Content.append(B)
+
+								/*
 								B.addClass('ui-button ui-corner-all ui-widget SecrutiyButton');
 								B.css({width:'145px',height:'30px'})
 								B.prop("disabled",true);
@@ -2670,6 +2674,7 @@ const ZwaveJsUI = (function () {
 									PerformUpdateFromService(Node, F);
 								}
 								Content.append(B)
+								*/
 							})
 
 							FWList.append(Content);
