@@ -2671,8 +2671,7 @@ const ZwaveJsUI = (function () {
 
 						})
 
-						$(event.target).parent().append(FWList);
-
+						$(`button:contains('Check For Update')`).parent().append(FWList);
 						FWList.accordion();
 						
 
