@@ -2658,8 +2658,17 @@ const ZwaveJsUI = (function () {
 							ChangeLog.forEach((CLE) =>{
 								CL.append(`<li>${CLE}</li>`);
 							})
-
 							Content.append(CL);
+
+							FW.files.forEach((F) =>{
+								const B = $('<button>');
+								B.text(`Update (Target: ${F.target})`);
+								B.click = function(){
+									PerformUpdateFromService(Node, F);
+								}
+								Content.append(B)
+							})
+
 							FWList.append(Content);
 
 							/*
