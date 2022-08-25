@@ -2639,8 +2639,9 @@ const ZwaveJsUI = (function () {
 				DCs.getAvailableFirmwareUpdates.noWait
 			)
 				.then(({ object }) => {
-					if (object.length > 0) {
 
+					if (object.length > 0) {
+						$("#FWs").remove();
 						const FWList = $('<div id="FWs">');
 
 						const FWs = object;
