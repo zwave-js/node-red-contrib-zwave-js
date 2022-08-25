@@ -2646,7 +2646,7 @@ const ZwaveJsUI = (function () {
 						const FWs = object;
 						FWs.forEach((FW) =>{
 							
-							const Current = nodeRow.data().info.firmwareVersion === FW.version ? "(Current)" : "";
+							const Current = nodeRow.data().info.firmwareVersion.toString() === FW.version.toString() ? "(Current)" : "";
 
 							FWList.append(`<h3>${FW.version} ${Current}</h3>`);
 							const ChangeLog = FW.changelog.split('\n');
