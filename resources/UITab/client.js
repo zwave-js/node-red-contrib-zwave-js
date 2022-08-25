@@ -3,6 +3,8 @@
 /*eslint no-undef: "warn"*/
 /*eslint no-unused-vars: "warn"*/
 
+const { compareStrings } = require("@zwave-js/shared");
+
 /* UI Inclusion Functions */
 let StartInclusionExclusion;
 let StartReplace;
@@ -2640,18 +2642,39 @@ const ZwaveJsUI = (function () {
 				.then(({ object }) => {
 					if (object.length > 0) {
 
+						const FWList = $('<div id="FWs">');
+
 						const FWs = object;
 						FWs.forEach((FW) =>{
+							
+							const Current = nodeRow.data().info.firmwareVersion === FW.version ? "(Current)" : "";
 
-							const Version = FW.version
+							FWList.append(`<h3>${FW.version} ${Current}</h3>`);
 							const ChangeLog = FW.changelog.split('\n');
+
+							const Content = $("<div>");
+							const CL = $("<ul>");
+
+							ChangeLog.forEach((CLE) =>{
+								CL.append(`<li>${CLE}</li>`);
+							})
+
+							Content.append(CL);
+							FWList.append(Content);
+
+							/*
 							const Files = FW.files;
 
 							const OBJ = JSON.stringify({Version,ChangeLog,Files});
 
 							alert(OBJ);
+							*/
 
 						})
+
+						$(event.target).parent().append(FWList);
+
+						FWList.accordion();
 						
 
 						/*
