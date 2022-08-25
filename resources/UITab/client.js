@@ -3,7 +3,6 @@
 /*eslint no-undef: "warn"*/
 /*eslint no-unused-vars: "warn"*/
 
-const { compareStrings } = require("@zwave-js/shared");
 
 /* UI Inclusion Functions */
 let StartInclusionExclusion;
