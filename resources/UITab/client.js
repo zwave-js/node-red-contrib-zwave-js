@@ -2662,7 +2662,7 @@ const ZwaveJsUI = (function () {
 
 							FW.files.forEach((F) =>{
 								const B = $('<button>');
-								B.addClass('ui-button ui-corner-all ui-widget SecrutiyButton CriticalDisable');
+								B.addClass('ui-button ui-corner-all ui-widget SecrutiyButton');
 								B.css({width:'145px',height:'30px'})
 								B.prop("disabled",true);
 								B.text(`Update (Target: ${F.target})`);
