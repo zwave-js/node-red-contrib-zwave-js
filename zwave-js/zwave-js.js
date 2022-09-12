@@ -1028,6 +1028,7 @@ module.exports = function (RED) {
 							isControllerNode: N.isControllerNode,
 							supportsBeaming: N.supportsBeaming,
 							keepAwake: N.keepAwake,
+							lastSeen: N.ZWNR_lastSeen || 0,
 							powerSource: {
 								type: N.supportsCC(CommandClasses.Battery)
 									? 'battery'
@@ -1402,6 +1403,14 @@ module.exports = function (RED) {
 			);
 
 			switch (Method) {
+				case 'getLastSeenTimestamps':
+					const PL = {};
+					Driver.controller.nodes.forEach((N) => {
+						PL[N.id] = N.ZWNR_lastSeen || 0;
+					});
+					Send(undefined, 'LAST_SEEN_TIMESTAMP_RESULT', PL, send);
+					break;
+
 				case 'checkLifelineHealth':
 					const NID = Params[0];
 					const Rounds = Params[1] || undefined;
@@ -1827,6 +1836,18 @@ module.exports = function (RED) {
 				'GET_VALUE_RESPONSE',
 				'GET_VALUE_METADATA_RESPONSE'
 			];
+
+			const TimestampSubjects = [
+				'VALUE_NOTIFICATION',
+				'NOTIFICATION',
+				'VALUE_UPDATED',
+				'WAKE_UP',
+				'ALIVE'
+			];
+
+			if (TimestampSubjects.includes(Subject)) {
+				Driver.controller.node.get(Node.id).ZWNR_lastSeen = PL.timestamp;
+			}
 
 			if (AllowedSubjectsForDNs.includes(Subject) && SendDNs) {
 				if (IsolatedNodeId !== undefined) {
