@@ -19,6 +19,8 @@
       - 2 new event types have been added : **ALIVE**, **DEAD** - these allow you to monitor if a device has been marked dead
         or alive accordingly.
       - Added a color chooser for color input types in the UI
+      - Added a new **Driver** function **getLastSeenTimestamps**  
+      - Node list now contains the date when the device was last seen.
 
     **Bug Fixes**
       - Modal alerts are now rendering HTML content once again
