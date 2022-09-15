@@ -2655,14 +2655,14 @@ const ZwaveJsUI = (function () {
 						FWs.forEach((FW) => {
 							const VG = $(`<optgroup label=' --- ${FW.version} --- '>`);
 							FW.files.forEach((F) => {
-								const FW = $(`<option>`);
-								FW.data('FWTarget', {
+								const FWF = $(`<option>`);
+								FWF.data('FWTarget', {
 									file: F,
 									node: Node,
 									cl: FW.changelog.split('\n')
 								});
-								FW.text(`Target : ${F.target}`);
-								VG.append(FW);
+								FWF.text(`Target : ${F.target}`);
+								VG.append(FWF);
 							});
 							$('#NODE_FWCV').append(VG);
 						});
