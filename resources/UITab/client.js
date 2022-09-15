@@ -2644,9 +2644,11 @@ const ZwaveJsUI = (function () {
 				DCs.getAvailableFirmwareUpdates.noWait
 			)
 				.then(({ object }) => {
-					
+					$('#NODE_FWCV').empty();
+					$('#NODE_FWCV').append('<option>Select Version & File...</option>');
+
 					Wait.dialog('destroy');
-					
+
 					//
 					if (object.length > 0) {
 						const FWs = object;
@@ -2664,95 +2666,13 @@ const ZwaveJsUI = (function () {
 							});
 							$('#NODE_FWCV').append(VG);
 						});
-					}
-					else{
-						modalAlert(
-							'No firmware updates are available for this Node.',
-							'Firmware update check'
-						);
-					}
-					//
-
-					if (object.length > 0) {
-						$('#FWs').remove();
-						const FWList = $('<div id="FWs">');
-
-						const FWs = object;
-						FWs.forEach((FW) => {
-							const Current =
-								nodeRow.data().info.firmwareVersion.toString() ===
-								FW.version.toString()
-									? '(Current)'
-									: '';
-
-							FWList.append(`<h3>${FW.version} ${Current}</h3>`);
-							const ChangeLog = FW.changelog.split('\n');
-
-							const Content = $('<div>');
-							const CL = $('<ul>');
-
-							ChangeLog.forEach((CLE) => {
-								CL.append(`<li>${CLE}</li>`);
-							});
-							Content.append(CL);
-
-							FW.files.forEach((F) => {
-								const B = $(
-									`<label for="Target_${F.target}">Target ${F.target}</label> <input type="radio" name="fw_target" value="${F.target}" id="Target_${F.target}"> `
-								);
-								B.data('FWTarget', { file: F, node: Node });
-								Content.append(B);
-								//B.checkboxradio();
-							});
-							FWList.append(Content);
-						});
-
-						$(`button:contains('Check For Update')`).parent().append(FWList);
-						FWList.accordion();
-
-						/*
-						//
-						const Container = $('<div>');
-						Container.append(
-							`Current Version <strong>${
-								nodeRow.data().info.firmwareVersion
-							}</strong> New Version <strong>${
-								object[0].version
-							}</strong><br /><br />`
-						);
-
-						Container.append('<strong>Change Log</strong>');
-
-						const CLL = $('<ul>');
-						const ChangeLogs = object[0].changelog.split('\n');
-						ChangeLogs.forEach((CL) => {
-							CLL.append(`<li>${CL.replace(/\n/g, '<br />')}</li>`);
-						});
-						CLL.appendTo(Container);
-
-						const Buttons = {};
-
-						for (let i = 0; i < object[0].files.length; i++) {
-							const File = object[0].files[i];
-							Buttons[`Update (Target ${File.target})`] = function () {
-								PerformUpdateFromService(Node, File);
-							};
-						}
-
-						modalPrompt(
-							Container,
-							'Firmware Update Available',
-							Buttons,
-							true,
-							true
-						);
-						*/
 					} else {
 						modalAlert(
 							'No firmware updates are available for this Node.',
 							'Firmware update check'
 						);
 					}
+					//
 				})
 				.catch((err) => {
 					modalAlert(
