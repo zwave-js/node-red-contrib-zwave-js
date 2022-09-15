@@ -2644,8 +2644,9 @@ const ZwaveJsUI = (function () {
 				DCs.getAvailableFirmwareUpdates.noWait
 			)
 				.then(({ object }) => {
-
-
+					
+					Wait.dialog('destroy');
+					
 					//
 					if (object.length > 0) {
 						const FWs = object;
