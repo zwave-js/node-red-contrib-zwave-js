@@ -2644,10 +2644,10 @@ const ZwaveJsUI = (function () {
 				DCs.getAvailableFirmwareUpdates.noWait
 			)
 				.then(({ object }) => {
+					Wait.dialog('destroy');
+
 					$('#NODE_FWCV').empty();
 					$('#NODE_FWCV').append('<option>Select Version & File...</option>');
-
-					Wait.dialog('destroy');
 
 					//
 					if (object.length > 0) {
@@ -2675,6 +2675,7 @@ const ZwaveJsUI = (function () {
 					//
 				})
 				.catch((err) => {
+					Wait.dialog('destroy');
 					modalAlert(
 						err.responseText || err.message,
 						'Could not check for updates'
