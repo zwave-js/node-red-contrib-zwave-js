@@ -3,7 +3,6 @@
 /*eslint no-undef: "warn"*/
 /*eslint no-unused-vars: "warn"*/
 
-
 /* UI Inclusion Functions */
 let StartInclusionExclusion;
 let StartReplace;
@@ -2621,7 +2620,6 @@ const ZwaveJsUI = (function () {
 
 		CheckForUpdate = async () => {
 			const Node = parseInt($('#NODE_FWC option:selected').val());
-
 			const nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${Node}']`);
 
 			if (nodeRow.data().info.status.toUpperCase() === 'ASLEEP') {
@@ -2630,6 +2628,13 @@ const ZwaveJsUI = (function () {
 					return;
 				}
 			}
+
+			const Wait = modalPrompt(
+				'Querying Firmware Update Service..',
+				'Please wait...',
+				{},
+				false
+			);
 
 			ControllerCMD(
 				DCs.getAvailableFirmwareUpdates.API,
@@ -2640,39 +2645,69 @@ const ZwaveJsUI = (function () {
 			)
 				.then(({ object }) => {
 
+
+					//
 					if (object.length > 0) {
-						$("#FWs").remove();
+						const FWs = object;
+						FWs.forEach((FW) => {
+							const VG = $(`<optgroup label=' --- ${FW.version} --- '>`);
+							FW.files.forEach((F) => {
+								const FW = $(`<option>`);
+								FW.data('FWTarget', {
+									file: F,
+									node: Node,
+									cl: FW.changelog.split('\n')
+								});
+								FW.text(`Target : ${F.target}`);
+								VG.append(FW);
+							});
+							$('#NODE_FWCV').append(VG);
+						});
+					}
+					else{
+						modalAlert(
+							'No firmware updates are available for this Node.',
+							'Firmware update check'
+						);
+					}
+					//
+
+					if (object.length > 0) {
+						$('#FWs').remove();
 						const FWList = $('<div id="FWs">');
 
 						const FWs = object;
-						FWs.forEach((FW) =>{
-							
-							const Current = nodeRow.data().info.firmwareVersion.toString() === FW.version.toString() ? "(Current)" : "";
+						FWs.forEach((FW) => {
+							const Current =
+								nodeRow.data().info.firmwareVersion.toString() ===
+								FW.version.toString()
+									? '(Current)'
+									: '';
 
 							FWList.append(`<h3>${FW.version} ${Current}</h3>`);
 							const ChangeLog = FW.changelog.split('\n');
 
-							const Content = $("<div>");
-							const CL = $("<ul>");
+							const Content = $('<div>');
+							const CL = $('<ul>');
 
-							ChangeLog.forEach((CLE) =>{
+							ChangeLog.forEach((CLE) => {
 								CL.append(`<li>${CLE}</li>`);
-							})
+							});
 							Content.append(CL);
 
-							FW.files.forEach((F) =>{
-								const B = $(`<label for="Target_${F.target}">Target ${F.target}</label> <input type="radio" name="fw_target" value="${F.target}" id="Target_${F.target}"> `);
-								B.data('FWTarget',{file:F,node:Node});
-								Content.append(B)
+							FW.files.forEach((F) => {
+								const B = $(
+									`<label for="Target_${F.target}">Target ${F.target}</label> <input type="radio" name="fw_target" value="${F.target}" id="Target_${F.target}"> `
+								);
+								B.data('FWTarget', { file: F, node: Node });
+								Content.append(B);
 								//B.checkboxradio();
-							})
+							});
 							FWList.append(Content);
-						})
+						});
 
 						$(`button:contains('Check For Update')`).parent().append(FWList);
 						FWList.accordion();
-						
-						
 
 						/*
 						//

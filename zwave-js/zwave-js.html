@@ -763,12 +763,12 @@
 			</table>
 		  </div>
 		  <div id="tabs-2" style="padding:20px">
-			<table>
+			<table style="width: 100%;">
 				<tbody>
 					<tr>
 						<td>Target Node</td>
 						<td>
-							<select id='NODE_FWC'>
+							<select id='NODE_FWC' onchange="CheckForUpdate()">
 								<option>Select Node...</option>
 								{{#each nodes}}
 									{{#if this.length}}
@@ -783,12 +783,12 @@
 						</td>
 					</tr>
 					<tr>
-						<td colspan="2"><button
-							button
-							style='width:150px; height:30px'
-							class='ui-button ui-corner-all ui-widget SecrutiyButton CriticalDisable'
-							onclick='CheckForUpdate()'
-						>Check For Update</button></td>
+						<td>Firmware Version</td>
+						<td>
+							<select id='NODE_FWCV'>
+								<option>Select Version & File...</option>
+							</select>
+						</td>
 					</tr>
 				</tbody>
 			</table>
