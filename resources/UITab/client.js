@@ -2647,12 +2647,22 @@ const ZwaveJsUI = (function () {
 					Wait.dialog('destroy');
 
 					const ShowCL = function () {
-						const SelectedFW = $('#NODE_FWCV').find(':selected');
-						alert(SelectedFW.data('FWTarget').cl.toString());
+						const SelectedFW = $('#NODE_FWCV')
+							.find(':selected')
+							.data('FWTarget');
+						const List = $('<ul>');
+						for (let i = 0; i < SelectedFW.cl.length; i++) {
+							List.append(`<li>${SelectedFW.cl[i]}</li>`);
+						}
+
+						$('#ChangeLog').empty();
+						$('#ChangeLog').append(List);
 					};
 
+					$('#ChangeLog').empty();
 					$('#NODE_FWCV').empty();
 					$('#NODE_FWCV').append('<option>Select Version & File...</option>');
+					$('#NODE_FWCV').off('change');
 					$('#NODE_FWCV').change(ShowCL);
 
 					//
