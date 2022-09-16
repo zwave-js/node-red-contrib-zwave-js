@@ -2646,8 +2646,14 @@ const ZwaveJsUI = (function () {
 				.then(({ object }) => {
 					Wait.dialog('destroy');
 
+					const ShowCL = function () {
+						const SelectedFW = $('#NODE_FWCV').find(':selected');
+						alert(SelectedFW.data('FWTarget').cl.toString());
+					};
+
 					$('#NODE_FWCV').empty();
 					$('#NODE_FWCV').append('<option>Select Version & File...</option>');
+					$('#NODE_FWCV').change(ShowCL);
 
 					//
 					if (object.length > 0) {
@@ -2661,7 +2667,7 @@ const ZwaveJsUI = (function () {
 									node: Node,
 									cl: FW.changelog.split('\n')
 								});
-								FWF.text(`Target : ${F.target}`);
+								FWF.text(`${FW.version} -> Target : ${F.target}`);
 								VG.append(FWF);
 							});
 							$('#NODE_FWCV').append(VG);
