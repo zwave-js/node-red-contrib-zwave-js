@@ -538,6 +538,14 @@ const ZwaveJsUI = (function () {
 	}
 
 	async function PerformUpdate() {
+		const CurrentFWMode = $('#tabs').tabs('option', 'active');
+
+		if (CurrentFWMode === 1) {
+			const SelectedFW = $('#NODE_FWCV').find(':selected').data('FWTarget');
+			PerformUpdateFromService(SelectedFW.node, SelectedFW.file);
+			return;
+		}
+
 		const FE = $('#FILE_FW')[0].files[0];
 		const NID = parseInt($('#NODE_FW option:selected').val());
 		const Target = $('#TARGET_FW').val();
