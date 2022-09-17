@@ -3571,11 +3571,13 @@ const ZwaveJsUI = (function () {
 			);
 			CCProps.forEach((Prop) => {
 
+				const Type = Prop.metadata.type;
+				const Writeable = Prop.metadata.writeable;
+
 				const Child = renderPropertyElement(Prop);
-
 				propertyList.treeList('data')[Index].treeList.addChild({ element: Child });
-
-				if (Prop.metadata.writeable && Prop.metadata.type !== 'any') {
+				
+				if (Writeable && Type !== 'any') {
 					const icon = Child.prev();
 					icon.empty();
 					$('<i>')
