@@ -1403,18 +1403,20 @@ module.exports = function (RED) {
 			);
 
 			switch (Method) {
-				case 'getLastSeenTimestamps':
+				case 'getLastEvents':
 					const PL = [];
 					Driver.controller.nodes.forEach((N) => {
 						const I = {
 							node: N.id,
 							nodeName: getNodeInfoForPayload(N.id, 'name'),
 							nodeLocation: getNodeInfoForPayload(N.id, 'location'),
-							timestamp: N.ZWNR_lastSeen || 0
+							timestamp: N.ZWNR_lastSeen || 0,
+							event: N.ZWNR_lastEvent,
+							object: N.ZWNR_lastObject
 						};
 						PL.push(I);
 					});
-					Send(undefined, 'LAST_SEEN_TIMESTAMP_RESULT', PL, send);
+					Send(undefined, 'LAST_EVENTS_RESULT', PL, send);
 					break;
 
 				case 'checkLifelineHealth':
@@ -1855,6 +1857,8 @@ module.exports = function (RED) {
 
 			if (TimestampSubjects.includes(Subject)) {
 				Driver.controller.nodes.get(Node.id).ZWNR_lastSeen = PL.timestamp;
+				Driver.controller.nodes.get(Node.id).ZWNR_lastEvent = PL.event;
+				Driver.controller.nodes.get(Node.id).ZWNR_lastObject = PL.object;
 			}
 
 			if (AllowedSubjectsForDNs.includes(Subject) && SendDNs) {

@@ -19,7 +19,7 @@
       - 2 new event types have been added : **ALIVE**, **DEAD** - these allow you to monitor if a device has been marked dead
         or alive accordingly.
       - Added a color chooser for color input types in the UI
-      - Added a new **Driver** function **getLastSeenTimestamps**  
+      - Added a new **Driver** function **getLastEvents**  
       - Node list now contains the date when the device was last seen.
 
     **Bug Fixes**
@@ -32,6 +32,7 @@
       - Current Value(s) who's type is an object have been changed to prompt for a double click in the UI
       - Association Management has been updated, and changes are now applied in batch.
       - For battery operated devices, certain UI actions now ask you to wake up said device before anything is comitted.
+      - Various performance boosts in the UI
       - Bump ZWave JS to V10
       - Bump Winston
       - Bump ESlint
