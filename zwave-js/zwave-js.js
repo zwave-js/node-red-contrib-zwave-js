@@ -1481,12 +1481,14 @@ module.exports = function (RED) {
 						};
 						const VIDs = Driver.controller.nodes.get(NID).getDefinedValueIDs();
 						VIDs.forEach((VID) => {
+							const M = Driver.controller.nodes.get(NID).getValueMetadata(VID);
 							const V = Driver.controller.nodes.get(NID).getValue(VID);
 							const VI = {
 								...VID,
 								currentValue: V
 							};
 							VI.normalizedObject = buildNormalized(VI, NID);
+							VI.metadata = M;
 							G.values.push(VI);
 						});
 						Result.push(G);
