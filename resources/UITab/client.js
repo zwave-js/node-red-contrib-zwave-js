@@ -3510,25 +3510,6 @@ const ZwaveJsUI = (function () {
 				);
 				throw new Error(err.responseText || err.message);
 			});
-
-		/*
-
-		ControllerCMD(
-			DCs.getDefinedValueIDs.API,
-			DCs.getDefinedValueIDs.name,
-			selectedNode,
-			undefined,
-			DCs.getDefinedValueIDs.noWait
-		)
-			.then(({ object }) => buildPropertyTree(object))
-			.catch((err) => {
-				modalAlert(
-					err.responseText || err.message,
-					'Could not fetch Node properties.'
-				);
-				throw new Error(err.responseText || err.message);
-			});
-		*/
 	}
 
 	const uniqBy = (collection, ...props) => {
@@ -3547,15 +3528,16 @@ const ZwaveJsUI = (function () {
 		}
 		updateNodeFetchStatus('');
 
-		/////
-
 		const CCList = uniqBy(valueIdList, 'commandClass');
 		CCList.sort((a, b) => a.commandClassName.localeCompare(b.commandClassName));
 
 		const Data = [];
 		CCList.forEach((CC) => {
 			Data.push({
-				label: `${CC.commandClassName}`,
+				element: renderCommandClassElement(
+					CC.commandClass,
+					CC.commandClassName
+				),
 				expanded: false,
 				children: []
 			});
@@ -3570,14 +3552,15 @@ const ZwaveJsUI = (function () {
 				(VID) => VID.commandClass === V.commandClass
 			);
 			CCProps.forEach((Prop) => {
-
 				const Type = Prop.metadata.type;
 				const Writeable = Prop.metadata.writeable;
 				const CV = Prop.currentValue;
 
 				const Child = renderPropertyElement(Prop);
-				propertyList.treeList('data')[Index].treeList.addChild({ element: Child });
-				
+				propertyList
+					.treeList('data')
+					[Index].treeList.addChild({ element: Child });
+
 				if (Writeable && Type !== 'any') {
 					const icon = Child.prev();
 					icon.empty();
@@ -3589,33 +3572,6 @@ const ZwaveJsUI = (function () {
 			});
 			Index++;
 		});
-
-		/////
-
-		/*
-
-
-		// Step 1: Make list of all supported command classes
-		const data = uniqBy(valueIdList, 'commandClass')
-			.sort((a, b) => a.commandClassName.localeCompare(b.commandClassName))
-			.map(({ commandClass, commandClassName }) => {
-				// Step 2: For each CC, get all associated properties
-				const propsInCC = valueIdList.filter(
-					(valueId) => valueId.commandClass === commandClass
-				);
-
-				return {
-					element: renderCommandClassElement(commandClass, commandClassName),
-					expanded: false,
-					children: propsInCC.map((valueId) => {
-						return { element: renderPropertyElement(valueId) };
-					})
-				};
-			});
-
-		// Step 3: Render tree
-		const propertyList = $('#zwave-js-node-properties');
-		propertyList.treeList('data', data);
 
 		// Step 4: Add endpoint numbers where applicable
 		propertyList
@@ -3663,10 +3619,7 @@ const ZwaveJsUI = (function () {
 						$('.zwave-js-node-property').closest('li').show();
 					})
 			);
-			
 		}
-
-		*/
 	}
 
 	function renderCommandClassElement(commandClass, commandClassName) {
@@ -3759,46 +3712,6 @@ const ZwaveJsUI = (function () {
 			return;
 		}
 		updateMeta(valueId, metadata, el);
-
-		/*
-		ControllerCMD(
-			DCs.getValue.API,
-			DCs.getValue.name,
-			selectedNode,
-			[valueId],
-			DCs.getValue.noWait
-		)
-			.then(({ node, object }) => {
-				if (node != selectedNode) {
-					return;
-				}
-				updateValue({ ...valueId, currentValue: object.currentValue });
-				ControllerCMD(
-					DCs.getValueMetadata.API,
-					DCs.getValueMetadata.name,
-					selectedNode,
-					[valueId],
-					DCs.getValueMetadata.noWait
-				)
-					.then(({ node, object }) => {
-						if (!object.metadata || node != selectedNode) {
-							return;
-						}
-						updateMeta(valueId, object.metadata);
-					})
-					.catch((err) => {
-						modalAlert(
-							err.responseText || err.message,
-							'Could not fetch value Metadata.'
-						);
-						throw new Error(err.responseText || err.message);
-					});
-			})
-			.catch((err) => {
-				modalAlert(err.responseText || err.message, 'Could not fetch value.');
-				throw new Error(err.responseText || err.message);
-			});
-			*/
 	}
 
 	function handleBattery(topic, data) {
@@ -3937,16 +3850,15 @@ const ZwaveJsUI = (function () {
 			propertyValue.text(`${value} ${meta.unit}`);
 		}
 
-		/*
-		// Add "edit" icon, if applicable
-		const icon = propertyRow.prev();
-		icon.empty();
-		if (meta.writeable && meta.type !== 'any')
-			$('<i>')
-				.addClass('fa fa-pencil zwave-js-node-property-edit-button')
-				.click(() => showEditor(valueId, value))
-				.appendTo(icon);
-		*/
+		if (El === undefined) {
+			const icon = propertyRow.prev();
+			icon.empty();
+			if (meta.writeable && meta.type !== 'any')
+				$('<i>')
+					.addClass('fa fa-pencil zwave-js-node-property-edit-button')
+					.click(() => showEditor(valueId, value))
+					.appendTo(icon);
+		}
 	}
 
 	function showEditor(valueId, value) {
