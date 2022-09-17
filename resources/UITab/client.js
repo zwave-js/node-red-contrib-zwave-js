@@ -3547,13 +3547,15 @@ const ZwaveJsUI = (function () {
 		}
 		updateNodeFetchStatus('');
 
+		/////
+
 		const CCList = uniqBy(valueIdList, 'commandClass');
 		CCList.sort((a, b) => a.commandClassName.localeCompare(b.commandClassName));
 
 		const Data = [];
 		CCList.forEach((CC) => {
 			Data.push({
-				label: `${hexDisplay(CC.commandClass)} - ${CC.commandClassName}`,
+				label: `${CC.commandClassName}`,
 				expanded: false,
 				children: []
 			});
@@ -3570,10 +3572,12 @@ const ZwaveJsUI = (function () {
 
 			CCProps.forEach((Prop) => {
 				const Child = renderPropertyElement(Prop);
-				propertyList.treeList('data')[Index].treeList.addChild(Child);
+				propertyList.treeList('data')[Index].treeList.addChild({ element: Child });
 				Index++;
 			});
 		});
+
+		/////
 
 		/*
 
