@@ -3663,7 +3663,7 @@ const ZwaveJsUI = (function () {
 			.text(label)
 			.appendTo(el);
 		$('<span>').addClass('zwave-js-node-property-value').appendTo(el);
-		getValue(valueId, Split.metadata, Split.currentValue);
+		getValue(valueId, Split.metadata, Split.currentValue, el);
 		el.dblclick(function () {
 			const data = $(this).data();
 			const valueData = $(this).find('.zwave-js-node-property-value').data();
@@ -3702,13 +3702,12 @@ const ZwaveJsUI = (function () {
 		return el;
 	}
 
-	function getValue(valueId, metadata, currentValue) {
-		updateValue({ ...valueId, currentValue: currentValue });
-
+	function getValue(valueId, metadata, currentValue, el) {
+		updateValue({ ...valueId, currentValue }, el);
 		if (metadata === undefined) {
 			return;
 		}
-		updateMeta(valueId, metadata);
+		updateMeta(valueId, metadata, el);
 
 		/*
 		ControllerCMD(
@@ -3785,9 +3784,9 @@ const ZwaveJsUI = (function () {
 		}
 	}
 
-	function updateValue(valueId) {
+	function updateValue(valueId, El) {
 		// Assumes you already checked if this applies to selectedNode
-		const propertyRow = getPropertyRow(valueId);
+		const propertyRow = El || getPropertyRow(valueId);
 
 		if (!propertyRow) {
 			// AHHH!!! What do we do now?!
@@ -3860,10 +3859,10 @@ const ZwaveJsUI = (function () {
 		propertyValue.data('value', value);
 	}
 
-	function updateMeta(valueId, meta = {}) {
+	function updateMeta(valueId, meta = {}, El) {
 		// Assumes you already checked if this applies to selectedNode
 
-		const propertyRow = getPropertyRow(valueId);
+		const propertyRow = El || getPropertyRow(valueId);
 		const propertyValue = propertyRow.find('.zwave-js-node-property-value');
 
 		propertyRow.data('meta', meta);
