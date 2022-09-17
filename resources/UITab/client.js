@@ -207,6 +207,11 @@ const DCs = {
 		name: 'getValueMetadata',
 		noWait: false
 	},
+	getValueDB: {
+		API: 'DriverAPI',
+		name: 'getValueDB',
+		noWait: false
+	},
 	getAvailableFirmwareUpdates: {
 		API: 'ControllerAPI',
 		name: 'getAvailableFirmwareUpdates',
@@ -3491,6 +3496,24 @@ const ZwaveJsUI = (function () {
 		updateNodeFetchStatus('Fetching properties...');
 
 		ControllerCMD(
+			DCs.getValueDB.API,
+			DCs.getValueDB.name,
+			undefined,
+			[selectedNode],
+			DCs.getValueDB.noWait
+		)
+			.then(({ object }) => buildPropertyTree(object[0].values))
+			.catch((err) => {
+				modalAlert(
+					err.responseText || err.message,
+					'Could not fetch Node properties.'
+				);
+				throw new Error(err.responseText || err.message);
+			});
+
+		/*
+
+		ControllerCMD(
 			DCs.getDefinedValueIDs.API,
 			DCs.getDefinedValueIDs.name,
 			selectedNode,
@@ -3505,6 +3528,7 @@ const ZwaveJsUI = (function () {
 				);
 				throw new Error(err.responseText || err.message);
 			});
+		*/
 	}
 
 	const uniqBy = (collection, ...props) => {
@@ -3517,6 +3541,7 @@ const ZwaveJsUI = (function () {
 	};
 
 	function buildPropertyTree(valueIdList) {
+
 		if (valueIdList.length === 0) {
 			updateNodeFetchStatus('No properties found');
 			return;
@@ -3661,6 +3686,15 @@ const ZwaveJsUI = (function () {
 	}
 
 	function getValue(valueId) {
+
+		updateValue({ ...valueId, currentValue: valueId.currentValue });
+
+		if (!valueId.metadata) {
+			return;
+		}
+		updateMeta(valueId, valueId.metadata);
+
+		/*
 		ControllerCMD(
 			DCs.getValue.API,
 			DCs.getValue.name,
@@ -3698,6 +3732,7 @@ const ZwaveJsUI = (function () {
 				modalAlert(err.responseText || err.message, 'Could not fetch value.');
 				throw new Error(err.responseText || err.message);
 			});
+			*/
 	}
 
 	function handleBattery(topic, data) {
