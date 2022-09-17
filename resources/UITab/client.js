@@ -3541,7 +3541,6 @@ const ZwaveJsUI = (function () {
 	};
 
 	function buildPropertyTree(valueIdList) {
-
 		if (valueIdList.length === 0) {
 			updateNodeFetchStatus('No properties found');
 			return;
@@ -3631,6 +3630,9 @@ const ZwaveJsUI = (function () {
 			.attr('data-endpoint', valueId.endpoint)
 			.attr('data-propertyId', makePropertyId(valueId))
 			.data('valueId', valueId);
+		delete el.data('valueId').normalizedObject;
+		delete el.data('valueId').currentValue;
+		delete el.data('valueId').metadata;
 		const label =
 			valueId.propertyKeyName ??
 			valueId.propertyName ??
@@ -3686,7 +3688,6 @@ const ZwaveJsUI = (function () {
 	}
 
 	function getValue(valueId) {
-
 		updateValue({ ...valueId, currentValue: valueId.currentValue });
 
 		if (!valueId.metadata) {
