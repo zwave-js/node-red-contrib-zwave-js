@@ -57,7 +57,7 @@ module.exports = function (RED) {
 		'heal network progress'
 	);
 	const FWK =
-		'ceb8fd78b90cceb4d64cddec000630b7d692ac44e2daa0bd6e75047bdce05c7bae3b3925ef8e3e833419f593e62fe8f0';
+		'127c49b6f2928a6579e82ecab64a83fc94a6436f03d5cb670b8ac44412687b75f0667843';
 
 	SetupGlobals(RED);
 
