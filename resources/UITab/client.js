@@ -3570,8 +3570,19 @@ const ZwaveJsUI = (function () {
 				(VID) => VID.commandClass === V.commandClass
 			);
 			CCProps.forEach((Prop) => {
+
 				const Child = renderPropertyElement(Prop);
+
 				propertyList.treeList('data')[Index].treeList.addChild({ element: Child });
+
+				if (Prop.metadata.writeable && Prop.metadata.type !== 'any') {
+					const icon = Child.prev();
+					icon.empty();
+					$('<i>')
+						.addClass('fa fa-pencil zwave-js-node-property-edit-button')
+						.click(() => showEditor(Prop, V.currentValue))
+						.appendTo(icon);
+				}
 			});
 			Index++;
 		});
@@ -3923,6 +3934,7 @@ const ZwaveJsUI = (function () {
 			propertyValue.text(`${value} ${meta.unit}`);
 		}
 
+		/*
 		// Add "edit" icon, if applicable
 		const icon = propertyRow.prev();
 		icon.empty();
@@ -3931,6 +3943,7 @@ const ZwaveJsUI = (function () {
 				.addClass('fa fa-pencil zwave-js-node-property-edit-button')
 				.click(() => showEditor(valueId, value))
 				.appendTo(icon);
+		*/
 	}
 
 	function showEditor(valueId, value) {
