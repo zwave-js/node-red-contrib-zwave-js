@@ -3573,6 +3573,7 @@ const ZwaveJsUI = (function () {
 
 				const Type = Prop.metadata.type;
 				const Writeable = Prop.metadata.writeable;
+				const CV = Prop.currentValue;
 
 				const Child = renderPropertyElement(Prop);
 				propertyList.treeList('data')[Index].treeList.addChild({ element: Child });
@@ -3582,7 +3583,7 @@ const ZwaveJsUI = (function () {
 					icon.empty();
 					$('<i>')
 						.addClass('fa fa-pencil zwave-js-node-property-edit-button')
-						.click(() => showEditor(Prop, V.currentValue))
+						.click(() => showEditor(Prop, CV))
 						.appendTo(icon);
 				}
 			});
