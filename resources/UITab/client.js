@@ -3624,15 +3624,30 @@ const ZwaveJsUI = (function () {
 		return el;
 	}
 
+	function splitObject(valueId) {
+		// delete normalizedObject
+		delete valueId.normalizedObject;
+
+		// Value
+		const Value = valueId.currentValue;
+		delete valueId.currentValue;
+
+		// Meta
+		const MetaData = JSON.parse(JSON.stringify(valueId.metadata));
+		delete valueId.metadata;
+
+		return { valueId: valueId, currentValue: Value, metadata: MetaData };
+	}
+
 	function renderPropertyElement(valueId) {
+		const Split = splitObject(valueId);
+		valueId = Split.valueId;
+
 		const el = $('<div>')
 			.addClass('zwave-js-node-property')
 			.attr('data-endpoint', valueId.endpoint)
 			.attr('data-propertyId', makePropertyId(valueId))
 			.data('valueId', valueId);
-		delete el.data('valueId').normalizedObject;
-		delete el.data('valueId').currentValue;
-		delete el.data('valueId').metadata;
 		const label =
 			valueId.propertyKeyName ??
 			valueId.propertyName ??
@@ -3648,7 +3663,7 @@ const ZwaveJsUI = (function () {
 			.text(label)
 			.appendTo(el);
 		$('<span>').addClass('zwave-js-node-property-value').appendTo(el);
-		getValue(valueId);
+		getValue(valueId, Split.metadata, Split.currentValue);
 		el.dblclick(function () {
 			const data = $(this).data();
 			const valueData = $(this).find('.zwave-js-node-property-value').data();
@@ -3687,20 +3702,13 @@ const ZwaveJsUI = (function () {
 		return el;
 	}
 
-	function getValue(valueId) {
-		const MD = valueId.metadata;
-		const CV = valueId.currentValue;
+	function getValue(valueId, metadata, currentValue) {
+		updateValue({ ...valueId, currentValue: currentValue });
 
-		delete valueId.metadata;
-		delete valueId.currentValue;
-		delete valueId.normalizedObject;
-
-		updateValue({ ...valueId, currentValue: CV });
-
-		if (MD === undefined) {
+		if (metadata === undefined) {
 			return;
 		}
-		updateMeta(valueId, MD);
+		updateMeta(valueId, metadata);
 
 		/*
 		ControllerCMD(
