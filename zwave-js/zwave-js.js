@@ -1406,7 +1406,10 @@ module.exports = function (RED) {
 				case 'getLastSeenTimestamps':
 					const PL = {};
 					Driver.controller.nodes.forEach((N) => {
-						PL[N.id] = N.ZWNR_lastSeen || 0;
+						PL[N.id] = {};
+						PL[N.id].nodeName = getNodeInfoForPayload(N.id, 'name');
+						PL[N.id].nodeLocation = getNodeInfoForPayload(N.id, 'location');
+						PL[N.id].timestamp = N.ZWNR_lastSeen || 0;
 					});
 					Send(undefined, 'LAST_SEEN_TIMESTAMP_RESULT', PL, send);
 					break;
