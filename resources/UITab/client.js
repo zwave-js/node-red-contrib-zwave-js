@@ -3551,12 +3551,29 @@ const ZwaveJsUI = (function () {
 		CCList.sort((a, b) => a.commandClassName.localeCompare(b.commandClassName));
 
 		const Data = [];
-		CCList.forEach((V) => {
-			Data.push({ label: V.commandClassName, expanded: false, children: [] });
+		CCList.forEach((CC) => {
+			Data.push({
+				label: `${CC.commandClass} - ${CC.commandClassName}`,
+				expanded: false,
+				children: []
+			});
 		});
 
 		const propertyList = $('#zwave-js-node-properties');
 		propertyList.treeList('data', Data);
+
+		let Index = 0;
+		CCList.forEach((V) => {
+			const CCProps = valueIdList.filter(
+				(VID) => VID.commandClass === V.commandClass
+			);
+
+			CCProps.forEach((Prop) => {
+				const Child = renderPropertyElement(Prop);
+				propertyList.treeList('data')[Index].treeList.children.addChild(Child);
+				Index++;
+			});
+		});
 
 		/*
 
