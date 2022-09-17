@@ -1848,7 +1848,7 @@ module.exports = function (RED) {
 			];
 
 			if (TimestampSubjects.includes(Subject)) {
-				Driver.controller.node.get(Node.id).ZWNR_lastSeen = PL.timestamp;
+				Driver.controller.nodes.get(Node.id).ZWNR_lastSeen = PL.timestamp;
 			}
 
 			if (AllowedSubjectsForDNs.includes(Subject) && SendDNs) {
