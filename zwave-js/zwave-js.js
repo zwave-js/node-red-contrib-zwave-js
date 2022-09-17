@@ -1404,12 +1404,15 @@ module.exports = function (RED) {
 
 			switch (Method) {
 				case 'getLastSeenTimestamps':
-					const PL = {};
+					const PL = [];
 					Driver.controller.nodes.forEach((N) => {
-						PL[N.id] = {};
-						PL[N.id].nodeName = getNodeInfoForPayload(N.id, 'name');
-						PL[N.id].nodeLocation = getNodeInfoForPayload(N.id, 'location');
-						PL[N.id].timestamp = N.ZWNR_lastSeen || 0;
+						const I = {
+							node: N.id,
+							nodeName: getNodeInfoForPayload(N.id, 'name'),
+							nodeLocation: getNodeInfoForPayload(N.id, 'location'),
+							timestamp: N.ZWNR_lastSeen || 0
+						};
+						PL.push(I);
 					});
 					Send(undefined, 'LAST_SEEN_TIMESTAMP_RESULT', PL, send);
 					break;
