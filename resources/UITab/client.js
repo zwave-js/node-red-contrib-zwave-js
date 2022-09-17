@@ -3547,6 +3547,20 @@ const ZwaveJsUI = (function () {
 		}
 		updateNodeFetchStatus('');
 
+		const CCList = uniqBy(valueIdList, 'commandClass');
+		CCList.sort((a, b) => a.commandClassName.localeCompare(b.commandClassName));
+
+		const Data = [];
+		CCList.forEach((V) => {
+			Data.push({ label: V.commandClassName, expanded: false, children: [] });
+		});
+
+		const propertyList = $('#zwave-js-node-properties');
+		propertyList.treeList('data', Data);
+
+		/*
+
+
 		// Step 1: Make list of all supported command classes
 		const data = uniqBy(valueIdList, 'commandClass')
 			.sort((a, b) => a.commandClassName.localeCompare(b.commandClassName))
@@ -3615,7 +3629,10 @@ const ZwaveJsUI = (function () {
 						$('.zwave-js-node-property').closest('li').show();
 					})
 			);
+			
 		}
+
+		*/
 	}
 
 	function renderCommandClassElement(commandClass, commandClassName) {
