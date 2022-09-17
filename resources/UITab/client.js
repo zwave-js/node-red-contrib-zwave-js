@@ -3569,12 +3569,11 @@ const ZwaveJsUI = (function () {
 			const CCProps = valueIdList.filter(
 				(VID) => VID.commandClass === V.commandClass
 			);
-
 			CCProps.forEach((Prop) => {
 				const Child = renderPropertyElement(Prop);
 				propertyList.treeList('data')[Index].treeList.addChild({ element: Child });
-				Index++;
 			});
+			Index++;
 		});
 
 		/////
