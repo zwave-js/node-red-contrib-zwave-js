@@ -3553,7 +3553,7 @@ const ZwaveJsUI = (function () {
 		const Data = [];
 		CCList.forEach((CC) => {
 			Data.push({
-				label: `${CC.commandClass} - ${CC.commandClassName}`,
+				label: `${hexDisplay(CC.commandClass)} - ${CC.commandClassName}`,
 				expanded: false,
 				children: []
 			});
@@ -3570,7 +3570,7 @@ const ZwaveJsUI = (function () {
 
 			CCProps.forEach((Prop) => {
 				const Child = renderPropertyElement(Prop);
-				propertyList.treeList('data')[Index].treeList.children.addChild(Child);
+				propertyList.treeList('data')[Index].treeList.addChild(Child);
 				Index++;
 			});
 		});
