@@ -3688,12 +3688,19 @@ const ZwaveJsUI = (function () {
 	}
 
 	function getValue(valueId) {
-		updateValue({ ...valueId, currentValue: valueId.currentValue });
+		const MD = valueId.metadata;
+		const CV = valueId.currentValue;
 
-		if (!valueId.metadata) {
+		delete valueId.metadata;
+		delete valueId.currentValue;
+		delete valueId.normalizedObject;
+
+		updateValue({ ...valueId, currentValue: CV });
+
+		if (MD === undefined) {
 			return;
 		}
-		updateMeta(valueId, valueId.metadata);
+		updateMeta(valueId, MD);
 
 		/*
 		ControllerCMD(
