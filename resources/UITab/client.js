@@ -1004,6 +1004,7 @@ const ZwaveJsUI = (function () {
 						const _Node = {
 							controller: N.isControllerNode,
 							nodeId: N.nodeId,
+							lastSeen: N.lastSeen,
 							name: N.name,
 							location: N.location,
 							powerSource: N.powerSource,

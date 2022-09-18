@@ -27,6 +27,7 @@ function Render(Base) {
 					name: 'Controller',
 					nameOnly: `Controller`,
 					location: `Hopefully away from interference.`,
+					lastSeen: '0',
 					fontSize: '12px',
 					icon: `${Base}/Stick.png`,
 					powerSource: { type: 'bus' },
@@ -42,6 +43,7 @@ function Render(Base) {
 					name: `${N.nodeId} - ${N.name || 'No Name'}`,
 					nameOnly: `${N.name || 'No Name'}`,
 					location: `${N.location || 'No Location'}`,
+					lastSeen: new Date(N.lastSeen).toLocaleString(),
 					fontSize: '10px',
 					icon:
 						N.powerSource.type === 'battery'
@@ -308,6 +310,9 @@ function LoadData() {
 		$(`<li>Timeouts: ${this.data('statistics').timeoutResponse}</li>`).appendTo(
 			NetStatsDetails
 		);
+
+		// Node details addition
+		$(`<li>Last Seen: ${this.data('lastSeen')}</li>`).appendTo(NodeDetails);
 	}
 
 	$('#Details').html(Data);
