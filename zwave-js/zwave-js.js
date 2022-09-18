@@ -1406,6 +1406,9 @@ module.exports = function (RED) {
 				case 'getLastEvents':
 					const PL = [];
 					Driver.controller.nodes.forEach((N) => {
+						if(N.isControllerNode){
+							return;
+						}
 						const I = {
 							node: N.id,
 							nodeName: getNodeInfoForPayload(N.id, 'name'),
