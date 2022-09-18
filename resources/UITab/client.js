@@ -3288,6 +3288,17 @@ const ZwaveJsUI = (function () {
 	}
 
 	function renderNode(node) {
+		const NameCol = $('<div>')
+			.html(node.name)
+			.addClass('zwave-js-node-row-name');
+
+		if (node.lastSeen !== 0) {
+			const DT = new Date(node.lastSeen);
+			RED.popover.tooltip(NameCol, `Last seen: ${DT.toLocaleString()}`);
+		} else {
+			RED.popover.tooltip(NameCol, `Last seen: Never`);
+		}
+
 		return $('<div>')
 			.addClass('red-ui-treeList-label zwave-js-node-row')
 			.attr('data-nodeid', node.nodeId)
@@ -3318,7 +3329,7 @@ const ZwaveJsUI = (function () {
 			})
 			.append(
 				$('<div>').html(node.nodeId).addClass('zwave-js-node-row-id'),
-				$('<div>').html(node.name).addClass('zwave-js-node-row-name'),
+				NameCol,
 				$('<div>')
 					.html(renderStatusIcon(node.status.toUpperCase()))
 					.addClass('zwave-js-node-row-status'),
