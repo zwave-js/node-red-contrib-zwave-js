@@ -43,7 +43,6 @@ function Render(Base) {
 					name: `${N.nodeId} - ${N.name || 'No Name'}`,
 					nameOnly: `${N.name || 'No Name'}`,
 					location: `${N.location || 'No Location'}`,
-					lastSeen: new Date(N.lastSeen).toLocaleString(),
 					fontSize: '10px',
 					icon:
 						N.powerSource.type === 'battery'
@@ -54,6 +53,12 @@ function Render(Base) {
 					path: []
 				}
 			};
+			if(N.lastSeen > 0){
+				EL.data.lastSeen = new Date(N.lastSeen).toLocaleString();
+			}
+			else{
+				EL.data.lastSeen = 'Never';
+			}
 
 			Elements.push(EL);
 
