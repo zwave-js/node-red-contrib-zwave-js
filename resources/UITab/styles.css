@@ -309,4 +309,5 @@ table#zwave-js-associations-table tr:first-of-type {
 
 #FWForm #tabs ul li.ui-tabs-active {
 	background-color: #fff !important;
+	font-weight: bold;
 }
