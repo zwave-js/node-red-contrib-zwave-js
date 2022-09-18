@@ -20,6 +20,7 @@
         or alive accordingly.
       - Added a color chooser for color input types in the UI
       - Added a new **Driver** function **getLastEvents**  
+      - Device last seen timestamp is now shown in the UI
       - Node list now contains the date when the device was last seen.
 
     **Bug Fixes**

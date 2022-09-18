@@ -302,3 +302,11 @@ table#zwave-js-associations-table tr:first-of-type {
 .ui-slider-range {
 	background: rgba(200, 200, 200, 0.3);
 }
+
+#FWForm #tabs ul {
+	background-color: #fff !important;
+}
+
+#FWForm #tabs ul li.ui-tabs-active {
+	background-color: #fff !important;
+}
