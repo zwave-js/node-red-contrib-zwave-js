@@ -545,7 +545,7 @@ const ZwaveJsUI = (function () {
 	async function PerformUpdate() {
 		const CurrentFWMode = $('#tabs').tabs('option', 'active');
 
-		if (CurrentFWMode === 1) {
+		if (CurrentFWMode === 0) {
 			const SelectedFW = $('#NODE_FWCV').find(':selected').data('FWTarget');
 			PerformUpdateFromService(SelectedFW.node, SelectedFW.file);
 			return;

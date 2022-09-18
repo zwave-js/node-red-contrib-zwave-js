@@ -726,10 +726,43 @@
 	>
 	<div id="tabs">
 		<ul>
-			<li><a href="#tabs-1">Local File</a></li>
-			<li><a href="#tabs-2">Firmware Update Service</a></li>
+			<li><a href="#tabs-1">Firmware Update Service</a></li>
+			<li><a href="#tabs-2">Local File</a></li>
+
 		</ul>
-		  <div id="tabs-1" style="padding:20px">
+		<div id="tabs-1" style="padding:20px">
+			<table>
+				<tbody>
+					<tr>
+						<td>Target Node</td>
+						<td>
+							<select id='NODE_FWC' onchange="CheckForUpdate()">
+								<option>Select Node...</option>
+								{{#each nodes}}
+									{{#if this.length}}
+										<optgroup label=' --- {{@key}} --- '>
+											{{#each this}}
+												<option value='{{id}}'>{{id}} - {{name}}</option>
+											{{/each}}
+										</optgroup>
+									{{/if}}
+								{{/each}}
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td>Firmware Version</td>
+						<td>
+							<select id='NODE_FWCV'>
+								<option>Select Version & File...</option>
+							</select>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			<div id="ChangeLog"></div>
+		</div>
+		  <div id="tabs-2" style="padding:20px">
 			<table>
 				<tbody>
 					<tr>
@@ -762,38 +795,6 @@
 				</tbody>
 			</table>
 		  </div>
-		  <div id="tabs-2" style="padding:20px">
-			<table>
-				<tbody>
-					<tr>
-						<td>Target Node</td>
-						<td>
-							<select id='NODE_FWC' onchange="CheckForUpdate()">
-								<option>Select Node...</option>
-								{{#each nodes}}
-									{{#if this.length}}
-										<optgroup label=' --- {{@key}} --- '>
-											{{#each this}}
-												<option value='{{id}}'>{{id}} - {{name}}</option>
-											{{/each}}
-										</optgroup>
-									{{/if}}
-								{{/each}}
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td>Firmware Version</td>
-						<td>
-							<select id='NODE_FWCV'>
-								<option>Select Version & File...</option>
-							</select>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			<div id="ChangeLog"></div>
-		</div>
 	</div>
 	
 		<div class='progressbar' id='FWProgress'><div></div></div>
