@@ -166,6 +166,7 @@
 	border-color: rgb(75, 75, 75);
 	border-style: solid;
 }
+
 .zwave-js-ac i {
 	font-size: 16px !important;
 	color: #666;
@@ -216,7 +217,7 @@
 	margin-top: 50px;
 }
 
-.progressbar > div {
+.progressbar>div {
 	background-color: gray;
 	width: 0%;
 	height: 20px;
@@ -309,6 +310,9 @@ table#zwave-js-associations-table tr:first-of-type {
 
 #FWForm #tabs ul li.ui-tabs-active {
 	background-color: #fff !important;
-	font-weight: bold !important;
+}
+
+#FWForm #tabs ul li.ui-tabs-active a {
 	color: #555 !important;
+	font-weight: bold !important;
 }
