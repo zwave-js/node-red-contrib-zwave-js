@@ -11,6 +11,8 @@
         ]
         ```
         previously this was ```[<number>, <Desired Value>, <Number>]```
+      - **ValueAPI** is now default on the CMD Factory node.
+        If you have problems with this node after the update, please open it up, and select your API, then save.
 
     **New Features**
       - Default scales can now be applied inside the controller config
