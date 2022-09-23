@@ -27,6 +27,7 @@ function Render(Base) {
 					name: 'Controller',
 					nameOnly: `Controller`,
 					location: `Hopefully away from interference.`,
+					lastSeen: '0',
 					fontSize: '12px',
 					icon: `${Base}/Stick.png`,
 					powerSource: { type: 'bus' },
@@ -52,6 +53,12 @@ function Render(Base) {
 					path: []
 				}
 			};
+			if(N.lastSeen > 0){
+				EL.data.lastSeen = new Date(N.lastSeen).toLocaleString();
+			}
+			else{
+				EL.data.lastSeen = 'Never';
+			}
 
 			Elements.push(EL);
 
@@ -308,6 +315,9 @@ function LoadData() {
 		$(`<li>Timeouts: ${this.data('statistics').timeoutResponse}</li>`).appendTo(
 			NetStatsDetails
 		);
+
+		// Node details addition
+		$(`<li>Last Seen: ${this.data('lastSeen')}</li>`).appendTo(NodeDetails);
 	}
 
 	$('#Details').html(Data);

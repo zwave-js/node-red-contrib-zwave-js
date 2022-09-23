@@ -6,7 +6,7 @@ module.exports = function (RED) {
 		RedNode.on('input', Input);
 		async function Input(msg, send, done) {
 			try {
-				const API = config.api || 'CCAPI';
+				const API = config.api || 'ValueAPI';
 				switch (API) {
 					case 'CCAPI':
 						CCAPI(msg, send);
@@ -111,10 +111,12 @@ module.exports = function (RED) {
 				}
 			});
 
+			msg.payload = RM;
+
 			if (send) {
-				send({ payload: RM });
+				send(msg);
 			} else {
-				RedNode.send({ payload: RM });
+				RedNode.send(msg);
 			}
 		}
 
@@ -178,10 +180,12 @@ module.exports = function (RED) {
 				}
 			});
 
+			msg.payload = RM;
+
 			if (send) {
-				send({ payload: RM });
+				send(msg);
 			} else {
-				RedNode.send({ payload: RM });
+				RedNode.send(msg);
 			}
 		}
 	}

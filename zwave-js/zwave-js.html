@@ -31,6 +31,14 @@
 	rel="stylesheet"
 	href="resources/node-red-contrib-zwave-js/UITab/jquery-steps.css"
 />
+<link
+	rel="stylesheet"
+	href="resources/node-red-contrib-zwave-js/UITab/jquery.minicolors.css"
+/>
+<script
+	type="text/javascript"
+	src="resources/node-red-contrib-zwave-js/UITab/jquery.minicolors.min.js"
+></script>
 
 <!-- templates used for modal dialogs *-->
 
@@ -687,6 +695,7 @@
 	</table>
 	<div style='text-align: right;'>
 		<input
+		style="margin-right: 8px;margin-top: 5px;width: 70px"
 			id='AMAddBTN'
 			class='ui-button ui-corner-all ui-widget'
 			type='button'
@@ -715,39 +724,82 @@
 		id='FWForm'
 		style='width: 100%; box-sizing: border-box; margin-left: auto; margin-right: auto; margin-top: 10px; padding: 5px;'
 	>
-		<table>
-			<tbody>
-				<tr>
-					<td>Target Node</td>
-					<td>
-						<select id='NODE_FW'>
-							<option>Select Node...</option>
-							{{#each nodes}}
-								{{#if this.length}}
-									<optgroup label=' --- {{@key}} --- '>
-										{{#each this}}
-											<option value='{{id}}'>{{id}} - {{name}}</option>
-										{{/each}}
-									</optgroup>
-								{{/if}}
-							{{/each}}
-						</select>
-					</td>
-				</tr>
-				<tr>
-					<td>Firmware Update Target</td>
-					<td>
-						<input type='number' value='0' min='0' max='2' id='TARGET_FW' />
-					</td>
-				</tr>
-				<tr>
-					<td>Firmware Update File</td>
-					<td><input type='file' id='FILE_FW' /></td>
-				</tr>
-			</tbody>
-		</table>
+	<div id="tabs">
+		<ul>
+			<li><a href="#tabs-1">Firmware Update Service</a></li>
+			<li><a href="#tabs-2">Local File</a></li>
+
+		</ul>
+		<div id="tabs-1" style="padding:20px">
+			<table>
+				<tbody>
+					<tr>
+						<td>Target Node</td>
+						<td>
+							<select id='NODE_FWC' onchange="CheckForUpdate()">
+								<option>Select Node...</option>
+								{{#each nodes}}
+									{{#if this.length}}
+										<optgroup label=' --- {{@key}} --- '>
+											{{#each this}}
+												<option value='{{id}}'>{{id}} - {{name}}</option>
+											{{/each}}
+										</optgroup>
+									{{/if}}
+								{{/each}}
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td>Firmware Version</td>
+						<td>
+							<select id='NODE_FWCV'>
+								<option>Select Version & File...</option>
+							</select>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			<div id="ChangeLog"></div>
+		</div>
+		  <div id="tabs-2" style="padding:20px">
+			<table>
+				<tbody>
+					<tr>
+						<td>Target Node</td>
+						<td>
+							<select id='NODE_FW'>
+								<option>Select Node...</option>
+								{{#each nodes}}
+									{{#if this.length}}
+										<optgroup label=' --- {{@key}} --- '>
+											{{#each this}}
+												<option value='{{id}}'>{{id}} - {{name}}</option>
+											{{/each}}
+										</optgroup>
+									{{/if}}
+								{{/each}}
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td>Firmware Update Target</td>
+						<td>
+							<input type='number' value='0' min='0' id='TARGET_FW' />
+						</td>
+					</tr>
+					<tr>
+						<td>Firmware Update File</td>
+						<td><input type='file' id='FILE_FW' /></td>
+					</tr>
+				</tbody>
+			</table>
+		  </div>
+	</div>
+	
 		<div class='progressbar' id='FWProgress'><div></div></div>
 	</div>
+	<script type="text/javascript">$( "#tabs" ).tabs()</script>;
 </script>
 
 <!--RF Settings-->
@@ -981,7 +1033,10 @@
 			intvwUserCodes: { value: false },
 			softResetUSB: { value: false },
 			outputs: { value: 1 },
-			disableOptimisticValueUpdate: { value: false }
+			disableOptimisticValueUpdate: { value: false },
+			FWlicenseKey: { value: 'NON-COMMERCIAL' },
+			scalesTemp: { value: '0x00' },
+			scalesHumidity: { value: '0x00' }
 		},
 		inputs: 1,
 		outputs: 1,
@@ -1004,6 +1059,15 @@
 	}
 
 	function SortUI() {
+
+		if(this.scalesHumidity === undefined){
+			$('#node-input-scalesHumidity').val("0x00");
+		}
+
+		if(this.scalesTemp === undefined){
+			$('#node-input-scalesTemp').val("0x00");
+		}
+
 		$.getJSON(`zwave-js/cfg-getids`, (data) => {
 			data.UsedNIDs.forEach((ID) => {
 				$(`#Network${ID}`).css({ opacity: 0.5 });
@@ -1103,7 +1167,9 @@
 
 	<input type="hidden" id="node-input-networkIdentifier">
 
-	<p><strong>Z-Wave JS Analytics Reporting</strong></p>
+	<p class="zwave-js-config-section-title">
+		<strong>Z-Wave JS Analytics Reporting</strong>
+	</p>
 
 	<div class="form-tips" id="node-tip" style="margin-bottom: 10px; padding: 0px; background: none; border:none;min-width:480px">
 	Please allow the Z-Wave JS project to collect some anonymized data regarding the devices you own so that we can generate statistics that allow us to better focus our development efforts. This information is not tracked to any identifiable user or IP address and <strong>cannot be used to identify you</strong><br /><br />For more specifics about the data collected, click <a target="_blank" style="text-decoration:underline;color:blue" href="https://zwave-js.github.io/node-zwave-js/#/data-collection/user-disclosure">here</a>.
@@ -1114,7 +1180,20 @@
 	    <input type="checkbox" id="node-input-sendUsageStatistics">
 	</div>
 
-	<p>
+	<p class="zwave-js-config-section-title">
+		<strong>Z-Wave JS Firmware Update Service</strong>
+	</p>
+
+	<div class="form-tips" id="node-tip" style="margin-bottom: 10px; padding: 0px; background: none; border:none;min-width:480px">
+		Z-Wave JS offers a Firmware Update service, where a check can be made to ensure your devices are using the latest firmware. This service is free to use for non-commercial installations, If this describes the current installation, please simply enter <code>NON-COMMERCIAL</code> below. Otherwise, please enter your license key as issued by Z-Wave JS.<br /><br />To obtain a commercial key, click <a target="_blank" style="text-decoration:underline;color:blue" href="https://github.com/zwave-js/firmware-updates#api-keys">here</a>.
+	</div>
+
+	<div class="form-row">
+	    <label  for="node-input-FWlicenseKey" style="width:130px"><i class="fa fa-pencil"></i> License Key</label>
+	    <input type="text" id="node-input-FWlicenseKey">
+	</div>
+
+	<p class="zwave-js-config-section-title">
 	    <strong>Basic settings</strong>
 	</p>
 	<div class="form-row">
@@ -1135,7 +1214,7 @@
 	    </select>
 
 	</div>
-	<p>
+	<p class="zwave-js-config-section-title">
 	    <strong>Encryption Keys</strong>
 	</p>
 	<div class="form-row">
@@ -1159,7 +1238,7 @@
 		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
 	</div>
 	<br />
-	<p>
+	<p class="zwave-js-config-section-title">
 	    <strong>Timeouts (ms)</strong>
 	</p>
 	<div class="form-row">
@@ -1179,7 +1258,25 @@
 	    <input type="text" id="node-input-sendResponseTimeout" placeholder="Use Default" style="width: calc(100% - 135px)">
 	</div>
 	<br />
-	<p>
+	<p class="zwave-js-config-section-title">
+	    <strong>Value Scales</strong>
+	</p>
+	<div class="form-row">
+	    <label  for="node-input-scalesTemp" style="width:130px"><i class="fa fa-pencil"></i> Temperature</label>
+		<select id="node-input-scalesTemp" style="width: calc(100% - 135px)">
+	        <option value="0x00">Celsius (°C)</option>
+	        <option value="0x01">Fahrenheit (°F)</option>
+	    </select>
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-scalesHumidity" style="width:130px"><i class="fa fa-pencil"></i> Humidity</label>
+		<select id="node-input-scalesHumidity" style="width: calc(100% - 135px)">
+	        <option value="0x00">Percentage (%)</option>
+	        <option value="0x01">Absolute Humidity (g/m³)</option>
+	    </select>
+	</div>
+	<br />
+	<p class="zwave-js-config-section-title">
 	    <strong>Z-Wave JS Logging</strong>
 	</p>
 	<div class="form-row">
@@ -1215,7 +1312,7 @@
 	    <input type="text" id="node-input-logNodeFilter" placeholder="2,5,24" style="width: calc(100% - 135px)">
 	</div>
 	<br />
-	<p>
+	<p class="zwave-js-config-section-title">
 	    <strong>Advanced Driver Settings</strong>
 	</p>
 	<div class="form-row">
@@ -1247,7 +1344,7 @@
 	    <input type="text" id="node-input-serialAPIStarted" placeholder="Use Default" style="width: calc(100% - 135px)">
 	</div>
 	<br />
-	<p>
+	<p class="zwave-js-config-section-title">
 	    <strong>Version Information</strong>
 	</p>
 	<div class="form-row">

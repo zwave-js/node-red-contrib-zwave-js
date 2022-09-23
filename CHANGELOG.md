@@ -1,5 +1,45 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 8.0.0
+
+    **Breaking Changes**
+      - Dropped support for Node 12 (min required is now 14.13.0)
+      - If you use the **set** method of the **Configuration** CC in **CCAPI** mode, the arguments must now have one object (detailed below)
+        ```javascript
+        [
+          {"parameter": <number>, "value": <Desired Value>, "valueSize": <Number>}
+        ]
+        ```
+        previously this was ```[<number>, <Desired Value>, <Number>]```
+      - **ValueAPI** is now default on the CMD Factory node.
+        If you have problems with this node after the update, please open it up, and select your API, then save.
+
+    **New Features**
+      - Default scales can now be applied inside the controller config
+      - Added ability to export/import node name & location maps
+      - Implemented a Firmware Update Service, that allows to install Firmware on devices that have known updates - Please double click controller!
+      - 2 new event types have been added : **ALIVE**, **DEAD** - these allow you to monitor if a device has been marked dead
+        or alive accordingly.
+      - Added a color chooser for color input types in the UI
+      - Added a new **Driver** function **getLastEvents**  
+      - Device last seen timestamp is now shown in the UI
+      - Node list now contains the date when the device was last seen.
+
+    **Bug Fixes**
+      - Modal alerts are now rendering HTML content once again
+      - Missing `normalizedObject.label` for Thermostat devices
+      - Fix some data type odities in the UI editor
+      - `msg` properties are now carried through the CMD Factory node
+
+    **Changes**  
+      - Current Value(s) who's type is an object have been changed to prompt for a double click in the UI
+      - Association Management has been updated, and changes are now applied in batch.
+      - For battery operated devices, certain UI actions now ask you to wake up said device before anything is comitted.
+      - Various performance boosts in the UI
+      - Bump ZWave JS to V10
+      - Bump Winston
+      - Bump ESlint
+
   - 7.1.2
 
     **Changes**  

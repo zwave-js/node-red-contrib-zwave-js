@@ -45,6 +45,8 @@ module.exports = function (RED) {
 	const event_ValueAdded = new SanitizedEventName('value added');
 	const event_Wake = new SanitizedEventName('wake up');
 	const event_Sleep = new SanitizedEventName('sleep');
+	const event_Dead = new SanitizedEventName('dead');
+	const event_Alive = new SanitizedEventName('alive');
 	const event_InterviewStarted = new SanitizedEventName('interview started');
 	const event_InterviewFailed = new SanitizedEventName('interview failed');
 	const event_InterviewCompleted = new SanitizedEventName(
@@ -54,6 +56,8 @@ module.exports = function (RED) {
 	const event_HealNetworkProgress = new SanitizedEventName(
 		'heal network progress'
 	);
+	const FWK =
+		'127c49b6f2928a6579e82ecab64a83fc94a6436f03d5cb670b8ac44412687b75f0667843';
 
 	SetupGlobals(RED);
 
@@ -470,6 +474,74 @@ module.exports = function (RED) {
 		GetKey('encryptionKeyS2A', 'S2_Authenticated');
 		GetKey('encryptionKeyS2AC', 'S2_AccessControl');
 
+		// S2 Callbacks
+		DriverOptions.inclusionUserCallbacks = {
+			grantSecurityClasses: GrantSecurityClasses,
+			validateDSKAndEnterPIN: ValidateDSK,
+			abort: Abort
+		};
+
+		// Scales
+		DriverOptions.preferences = {
+			scales: { temperature: 0x00, humidity: 0x00 }
+		};
+		if (config.scalesTemp !== undefined) {
+			DriverOptions.preferences.scales.temperature = parseInt(
+				config.scalesTemp
+			);
+			Log(
+				'debug',
+				'NDERED',
+				undefined,
+				'[options] [preferences.scales.temperature]',
+				config.scalesTemp
+			);
+		}
+		if (config.scalesHumidity !== undefined) {
+			DriverOptions.preferences.scales.humidity = parseInt(
+				config.scalesHumidity
+			);
+			Log(
+				'debug',
+				'NDERED',
+				undefined,
+				'[options] [preferences.scales.humidity]',
+				config.scalesHumidity
+			);
+		}
+
+		// License Keys
+		DriverOptions.apiKeys = {};
+		if (config.FWlicenseKey !== undefined && config.FWlicenseKey.length > 0) {
+			if (config.FWlicenseKey.toUpperCase() !== 'NON-COMMERCIAL') {
+				DriverOptions.apiKeys.firmwareUpdateService = config.FWlicenseKey;
+				Log(
+					'debug',
+					'NDERED',
+					undefined,
+					'[FWUS]',
+					'Commercial license applied'
+				);
+			} else {
+				DriverOptions.apiKeys.firmwareUpdateService = FWK;
+				Log(
+					'debug',
+					'NDERED',
+					undefined,
+					'[FWUS]',
+					'Open source license applied'
+				);
+			}
+		} else {
+			Log(
+				'debug',
+				'NDERED',
+				undefined,
+				'[FWUS]',
+				'No key provided - Service may fail!'
+			);
+		}
+
 		function ShareNodeList() {
 			const NodeList = {};
 
@@ -644,12 +716,6 @@ module.exports = function (RED) {
 			const Method = msg.payload.method;
 			const Params = msg.payload.params || [];
 
-			const Callbacks = {
-				grantSecurityClasses: GrantSecurityClasses,
-				validateDSKAndEnterPIN: ValidateDSK,
-				abort: Abort
-			};
-
 			switch (Method) {
 				case 'checkKeyReq':
 					try {
@@ -703,7 +769,6 @@ module.exports = function (RED) {
 					break;
 
 				case 'beginInclusion':
-					Params[0].userCallbacks = Callbacks;
 					await Driver.controller.beginInclusion(Params[0]);
 					Send(
 						undefined,
@@ -714,7 +779,13 @@ module.exports = function (RED) {
 					break;
 
 				case 'beginExclusion':
-					await Driver.controller.beginExclusion(Params[0]);
+					const ExOptions = {
+						strategy: ZWaveJS.ExclusionStrategy.ExcludeOnly
+					};
+					if (Params[0]) {
+						ExOptions.strategy = ZWaveJS.ExclusionStrategy.Unprovision;
+					}
+					await Driver.controller.beginExclusion(ExOptions);
 					Send(
 						undefined,
 						'ACTION_DONE',
@@ -744,7 +815,6 @@ module.exports = function (RED) {
 					break;
 
 				case 'replaceFailedNode':
-					Params[1].userCallbacks = Callbacks;
 					await Driver.controller.replaceFailedNode(Params[0], Params[1]);
 					Send(
 						undefined,
@@ -836,6 +906,22 @@ module.exports = function (RED) {
 			let Result;
 
 			switch (Method) {
+				case 'getAvailableFirmwareUpdates':
+					NodeCheck(Params[0]);
+					ReturnNode.id = Params[0];
+					const FWU = await Driver.controller.getAvailableFirmwareUpdates(
+						Params[0]
+					);
+					Send(ReturnNode, 'FIRMWARE_UPDATE_CHECK_RESULT', FWU, send);
+					break;
+
+				case 'beginOTAFirmwareUpdate':
+					NodeCheck(Params[0]);
+					ReturnNode.id = Params[0];
+					await Driver.controller.beginOTAFirmwareUpdate(Params[0], Params[1]);
+					Send(ReturnNode, 'FIRMWARE_UPDATE_STARTED', Params[1], send);
+					break;
+
 				case 'restoreNVM':
 					Result = await Driver.controller.restoreNVM(
 						Params[0],
@@ -942,6 +1028,7 @@ module.exports = function (RED) {
 							isControllerNode: N.isControllerNode,
 							supportsBeaming: N.supportsBeaming,
 							keepAwake: N.keepAwake,
+							lastSeen: N.ZWNR_lastSeen || 0,
 							powerSource: {
 								type: N.supportsCC(CommandClasses.Battery)
 									? 'battery'
@@ -1198,11 +1285,7 @@ module.exports = function (RED) {
 					break;
 
 				case 'setValue':
-					if (Params.length > 2) {
-						await ZWaveNode.setValue(Params[0], Params[1], Params[2]);
-					} else {
-						await ZWaveNode.setValue(Params[0], Params[1]);
-					}
+					await ZWaveNode.setValue(...Params);
 					Send(
 						undefined,
 						'ACTION_DONE',
@@ -1320,6 +1403,25 @@ module.exports = function (RED) {
 			);
 
 			switch (Method) {
+				case 'getLastEvents':
+					const PL = [];
+					Driver.controller.nodes.forEach((N) => {
+						if(N.isControllerNode){
+							return;
+						}
+						const I = {
+							node: N.id,
+							nodeName: getNodeInfoForPayload(N.id, 'name'),
+							nodeLocation: getNodeInfoForPayload(N.id, 'location'),
+							timestamp: N.ZWNR_lastSeen || 0,
+							event: N.ZWNR_lastEvent,
+							object: N.ZWNR_lastObject
+						};
+						PL.push(I);
+					});
+					Send(undefined, 'LAST_EVENTS_RESULT', PL, send);
+					break;
+
 				case 'checkLifelineHealth':
 					const NID = Params[0];
 					const Rounds = Params[1] || undefined;
@@ -1390,12 +1492,14 @@ module.exports = function (RED) {
 						};
 						const VIDs = Driver.controller.nodes.get(NID).getDefinedValueIDs();
 						VIDs.forEach((VID) => {
+							const M = Driver.controller.nodes.get(NID).getValueMetadata(VID);
 							const V = Driver.controller.nodes.get(NID).getValue(VID);
 							const VI = {
 								...VID,
 								currentValue: V
 							};
 							VI.normalizedObject = buildNormalized(VI, NID);
+							VI.metadata = M;
 							G.values.push(VI);
 						});
 						Result.push(G);
@@ -1653,7 +1757,22 @@ module.exports = function (RED) {
 					}
 				}
 
-				NO.label = Meta.label;
+				if (Meta.label !== undefined) {
+					NO.label = Meta.label;
+				} else {
+					let Name;
+					switch (VID.commandClass) {
+						// Thermostat Setpoint
+						case 'Thermostat Setpoint':
+						case 67:
+							Name = ZWaveJS.getEnumMemberName(
+								ZWaveJS.ThermostatSetpointType,
+								VID.propertyKey
+							);
+					}
+					NO.label = Name;
+				}
+
 				if (Meta.unit !== undefined) NO.unit = Meta.unit;
 				if (Meta.description !== undefined) NO.description = Meta.description;
 
@@ -1724,10 +1843,26 @@ module.exports = function (RED) {
 				'VALUE_UPDATED',
 				'SLEEP',
 				'WAKE_UP',
+				'DEAD',
+				'ALIVE',
 				'VALUE_ID_LIST',
 				'GET_VALUE_RESPONSE',
 				'GET_VALUE_METADATA_RESPONSE'
 			];
+
+			const TimestampSubjects = [
+				'VALUE_NOTIFICATION',
+				'NOTIFICATION',
+				'VALUE_UPDATED',
+				'WAKE_UP',
+				'ALIVE'
+			];
+
+			if (TimestampSubjects.includes(Subject)) {
+				Driver.controller.nodes.get(Node.id).ZWNR_lastSeen = PL.timestamp;
+				Driver.controller.nodes.get(Node.id).ZWNR_lastEvent = PL.event;
+				Driver.controller.nodes.get(Node.id).ZWNR_lastObject = PL.object;
+			}
 
 			if (AllowedSubjectsForDNs.includes(Subject) && SendDNs) {
 				if (IsolatedNodeId !== undefined) {
@@ -1996,11 +2131,11 @@ module.exports = function (RED) {
 		}
 
 		function WireNodeEvents(Node) {
-			Node.once(event_Ready.zwaveName, (N) => {
-				if (N.isControllerNode) {
-					return;
-				}
+			if (Node.isControllerNode) {
+				return;
+			}
 
+			Node.once(event_Ready.zwaveName, () => {
 				Node.on(event_FirmwareUpdateFinished.zwaveName, (N, S) => {
 					Send(N, event_FirmwareUpdateFinished.redName, S);
 				});
@@ -2025,7 +2160,7 @@ module.exports = function (RED) {
 
 				Node.on(event_ValueAdded.zwaveName, (N, VL) => {
 					VL.normalizedObject = buildNormalized(VL, N.id);
-					Send(N, 'VALUE_UPDATED', VL); // we dont differentiate between added, update - cant see the need.
+					Send(N, event_ValueUpdated.redName, VL); // we dont differentiate between added, update - cant see the need.
 				});
 
 				Node.on(event_Wake.zwaveName, (N) => {
@@ -2034,6 +2169,14 @@ module.exports = function (RED) {
 
 				Node.on(event_Sleep.zwaveName, (N) => {
 					Send(N, event_Sleep.redName);
+				});
+
+				Node.on(event_Dead.zwaveName, (N) => {
+					Send(N, event_Dead.redName);
+				});
+
+				Node.on(event_Alive.zwaveName, (N) => {
+					Send(N, event_Alive.redName);
 				});
 			});
 

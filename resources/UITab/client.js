@@ -9,6 +9,9 @@ let StartReplace;
 let GrantSelected;
 let ValidateDSK;
 
+/* Firmware */
+let CheckForUpdate;
+
 /* UI RF Functions */
 let SetPowerLevel;
 let SetRegion;
@@ -203,6 +206,21 @@ const DCs = {
 		API: 'ValueAPI',
 		name: 'getValueMetadata',
 		noWait: false
+	},
+	getValueDB: {
+		API: 'DriverAPI',
+		name: 'getValueDB',
+		noWait: false
+	},
+	getAvailableFirmwareUpdates: {
+		API: 'ControllerAPI',
+		name: 'getAvailableFirmwareUpdates',
+		noWait: false
+	},
+	beginOTAFirmwareUpdate: {
+		API: 'ControllerAPI',
+		name: 'beginOTAFirmwareUpdate',
+		noWait: false
 	}
 };
 
@@ -234,7 +252,7 @@ JSONFormatter.json = {
 		var str = '<span class=json-string>';
 		var r = pIndent || '';
 		if (pKey) r = r + key + pKey + '</span>';
-		if (pVal) r = r + (pVal[0] == '"' ? str : val) + pVal + '</span>';
+		if (pVal) r = r + (pVal[0] === '"' ? str : val) + pVal + '</span>';
 		return r + (pEnd || '');
 	},
 	prettyPrint: function (obj) {
@@ -264,6 +282,9 @@ const ZwaveJsUI = (function () {
 	let HoveredNode = undefined; // Hovered Node
 	let selectedNode; // Selected Node
 	let LastTargetForBA; // BA TArget
+	let WakeResolver; // Resolve for wake wait
+	let WakeResolverTarget; // Target Wake Node
+	let NodesListed = false; // nodes listed
 
 	function modalAlert(message, title) {
 		const Buts = {
@@ -272,7 +293,7 @@ const ZwaveJsUI = (function () {
 		modalPrompt(message, title, Buts);
 	}
 
-	function modalPrompt(message, title, buttons, addCancel) {
+	function modalPrompt(message, title, buttons, addCancel, IsHTML) {
 		const Options = {
 			draggable: false,
 			modal: true,
@@ -296,11 +317,18 @@ const ZwaveJsUI = (function () {
 			};
 		}
 
-		const D = $('<div>')
-			.css({ padding: 10, maxWidth: 500, wordWrap: 'break-word' })
-			.text(message)
-			.dialog(Options);
+		const D = $('<div>').css({
+			padding: 10,
+			maxWidth: 500,
+			wordWrap: 'break-word'
+		});
 
+		if (IsHTML) {
+			D.html(message);
+		} else {
+			D.text(message);
+		}
+		D.dialog(Options);
 		return D;
 	}
 
@@ -392,8 +420,11 @@ const ZwaveJsUI = (function () {
 			DCs.checkLifelineHealth.noWait
 		)
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not start Health Check.');
-				throw new Error(err.responseText);
+				modalAlert(
+					err.responseText || err.message,
+					'Could not start Health Check.'
+				);
+				throw new Error(err.responseText || err.message);
 			})
 			.then(() => {
 				RED.comms.subscribe(
@@ -473,7 +504,7 @@ const ZwaveJsUI = (function () {
 				})
 				.catch((err) => {
 					FirmwareForm.dialog('destroy');
-					console.log(err.responseText);
+					console.error(err);
 				});
 		} else {
 			FirmwareForm.dialog('destroy');
@@ -481,12 +512,57 @@ const ZwaveJsUI = (function () {
 		FWRunning = false;
 	}
 
-	function PerformUpdate() {
+	async function PerformUpdateFromService(Node, File) {
+		const nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${Node}']`);
+		if (nodeRow.data().info.status.toUpperCase() === 'ASLEEP') {
+			const A = await WaitForNodeWake(Node);
+			if (!A) {
+				return;
+			}
+		}
+
+		ControllerCMD(
+			DCs.beginOTAFirmwareUpdate.API,
+			DCs.beginOTAFirmwareUpdate.name,
+			undefined,
+			[Node, File],
+			DCs.beginOTAFirmwareUpdate.noWait
+		)
+			.then(() => {
+				FWRunning = true;
+				selectNode(Node);
+				$(":button:contains('Begin Update')")
+					.prop('disabled', true)
+					.addClass('ui-state-disabled');
+				$('#FWProgress').css({ display: 'block' });
+			})
+			.catch((err) => {
+				modalAlert(err.responseText || err.message, 'Firmware rejected');
+				throw new Error(err.responseText || err.message);
+			});
+	}
+
+	async function PerformUpdate() {
+		const CurrentFWMode = $('#tabs').tabs('option', 'active');
+
+		if (CurrentFWMode === 0) {
+			const SelectedFW = $('#NODE_FWCV').find(':selected').data('FWTarget');
+			PerformUpdateFromService(SelectedFW.node, SelectedFW.file);
+			return;
+		}
+
 		const FE = $('#FILE_FW')[0].files[0];
 		const NID = parseInt($('#NODE_FW option:selected').val());
 		const Target = $('#TARGET_FW').val();
 
-		/* Test */
+		const nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${NID}']`);
+		if (nodeRow.data().info.status.toUpperCase() === 'ASLEEP') {
+			const A = await WaitForNodeWake(NID);
+			if (!A) {
+				return;
+			}
+		}
+
 		const FD = new FormData();
 		FD.append('Binary', FE);
 		FD.append('NodeID', NID);
@@ -509,7 +585,8 @@ const ZwaveJsUI = (function () {
 				$('#FWProgress').css({ display: 'block' });
 			})
 			.catch((err) => {
-				modalAlert(err.responseText, 'Firmware rejected');
+				modalAlert(err.responseText || err.message, 'Firmware rejected');
+				throw new Error(err.responseText || err.message);
 			});
 	}
 
@@ -526,7 +603,6 @@ const ZwaveJsUI = (function () {
 				'Begin Update': PerformUpdate,
 				Cancel: function () {
 					AbortUpdate();
-					$(this).dialog('destroy');
 				}
 			}
 		};
@@ -556,49 +632,34 @@ const ZwaveJsUI = (function () {
 
 		const Buttons = {
 			Add: function () {
-				const PL = [
-					{
-						nodeId: HoveredNode.nodeId,
-						endpoint: parseInt($('#NODE_EP').val())
-					},
-					parseInt($('#NODE_G').val()),
-					[{ nodeId: parseInt(NI.val()) }]
-				];
-
-				if (parseInt(EI.val()) > 0) {
-					PL[2][0].endpoint = parseInt(EI.val());
+				const EP = parseInt(EI.val());
+				const ND = parseInt(NI.val());
+				const AD = { nodeId: ND };
+				if (EP > 0) {
+					AD.endpoint = EP;
 				}
 
-				const D = modalPrompt(
-					'Adding Association...',
-					'Please wait.',
-					[],
-					false
-				);
+				const TR = $('<tr>');
+				$('<td>')
+					.html(
+						`<div class="zwave-js-ac" style="display:inline-block"><i class="fa fa-plus fa-lg"></i></div> ${ND}`
+					)
+					.appendTo(TR);
+				$('<td>')
+					.text(EP < 1 ? '0 (Root Device)' : EP)
+					.appendTo(TR);
+				const TD3 = $('<td>').css({ textAlign: 'right' }).appendTo(TR);
+				$('<input>')
+					.attr('type', 'button')
+					.addClass('ui-button ui-corner-all ui-widget')
+					.attr('value', 'Delete')
+					.attr('data-address', JSON.stringify(AD))
+					.attr('data-committed', false)
+					.attr('data-action', 'add')
+					.click(DeleteAssociation)
+					.appendTo(TD3);
 
-				ControllerCMD(
-					DCs.addAssociations.API,
-					DCs.addAssociations.name,
-					undefined,
-					PL,
-					DCs.addAssociations.noWait
-				)
-					.then(() => {
-						D.dialog('destroy');
-						GMGroupSelected();
-					})
-					.catch((err) => {
-						D.dialog('destroy');
-						if (err.status === 504) {
-							modalAlert(
-								'The device maybe in a sleeping state, the association will be added later.',
-								'Association change could not be confirmed'
-							);
-						} else {
-							modalAlert(err.responseText, 'Association could not be added.');
-							throw new Error(err.responseText);
-						}
-					});
+				$('#zwave-js-associations-table').append(TR);
 			}
 		};
 
@@ -607,50 +668,28 @@ const ZwaveJsUI = (function () {
 		HTML.append(' Endpoint: ');
 		EI.appendTo(HTML);
 
-		modalPrompt(HTML, 'New Association', Buttons, true);
+		modalPrompt(HTML, 'New Association', Buttons, true, true);
 	}
 
 	function DeleteAssociation() {
-		const Association = JSON.parse($(this).attr('data-address'));
-
-		const PL = [
-			{ nodeId: HoveredNode.nodeId, endpoint: parseInt($('#NODE_EP').val()) },
-			parseInt($('#NODE_G').val()),
-			[Association]
-		];
-
+		const Button = $(this);
 		const Buttons = {
 			Yes: function () {
-				const D = modalPrompt(
-					'Removing Association',
-					'Please wait.',
-					[],
-					false
-				);
+				const Committed =
+					Button.attr('data-committed') === 'true' ? true : false;
 
-				ControllerCMD(
-					DCs.removeAssociations.API,
-					DCs.removeAssociations.name,
-					undefined,
-					PL,
-					DCs.removeAssociations.noWait
-				)
-					.then(() => {
-						D.dialog('destroy');
-						GMGroupSelected();
-					})
-					.catch((err) => {
-						D.dialog('destroy');
-						if (err.status === 504) {
-							modalAlert(
-								'The device maybe in a sleeping state, the association will be removed later.',
-								'Association change could not be confirmed'
-							);
-						} else {
-							modalAlert(err.responseText, 'Association could not be removed.');
-							throw new Error(err.responseText);
-						}
-					});
+				if (Committed) {
+					Button.attr('data-committed', false);
+					Button.attr('data-action', 'remove');
+					Button.closest('tr')
+						.children('td:first')
+						.find('.zwave-js-ac')
+						.css({ display: 'inline-block' })
+						.html('<i class="fa fa-trash fa-lg"></i>');
+					Button.off('click');
+				} else {
+					Button.closest('tr').remove();
+				}
 			}
 		};
 
@@ -703,7 +742,11 @@ const ZwaveJsUI = (function () {
 				Targets.forEach((AG) => {
 					AG.AssociationAddress.forEach((AD) => {
 						const TR = $('<tr>');
-						$('<td>').html(AD.nodeId).appendTo(TR);
+						$('<td>')
+							.html(
+								`<div class="zwave-js-ac"><i class="fa fa-plus fa-lg"></i></div> ${AD.nodeId}`
+							)
+							.appendTo(TR);
 						$('<td>')
 							.html(AD.endpoint ?? '0 (Root Device)')
 							.appendTo(TR);
@@ -713,6 +756,7 @@ const ZwaveJsUI = (function () {
 							.addClass('ui-button ui-corner-all ui-widget')
 							.attr('value', 'Delete')
 							.attr('data-address', JSON.stringify(AD))
+							.attr('data-committed', true)
 							.click(DeleteAssociation)
 							.appendTo(TD3);
 
@@ -721,9 +765,44 @@ const ZwaveJsUI = (function () {
 				});
 			})
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not get associations.');
-				throw new Error(err.responseText);
+				modalAlert(
+					err.responseText || err.message,
+					'Could not get associations.'
+				);
+				throw new Error(err.responseText || err.message);
 			});
+	}
+
+	async function WaitForNodeWake(NodeID) {
+		const Buttons = {
+			Cancel: function () {
+				WakeResolver(false);
+			}
+		};
+
+		const WD = modalPrompt(
+			'This device is asleep, please wake it up...',
+			'Waiting for device to wake up',
+			Buttons,
+			false
+		);
+
+		WakeResolverTarget = NodeID;
+
+		const Result = await new Promise((res) => {
+			WakeResolver = res;
+		});
+
+		WakeResolver = undefined;
+		WakeResolverTarget = undefined;
+
+		try {
+			WD.dialog('destroy');
+		} catch (Err) {
+			// WD could already be destroyed
+		}
+
+		return Result;
 	}
 
 	function AssociationMGMT() {
@@ -744,6 +823,129 @@ const ZwaveJsUI = (function () {
 					title: `ZWave Association Management: Node ${HoveredNode.nodeId}`,
 					minHeight: 75,
 					buttons: {
+						'Commit Changes': async function () {
+							const nodeRow = $('#zwave-js-node-list').find(
+								`[data-nodeid='${HoveredNode.nodeId}']`
+							);
+
+							if (nodeRow.data().info.status.toUpperCase() === 'ASLEEP') {
+								const A = await WaitForNodeWake(HoveredNode.nodeId);
+								if (!A) {
+									return;
+								}
+							}
+
+							const Removals = $('#zwave-js-associations-table').find(
+								"input[data-committed='false'][data-action='remove']"
+							);
+							const Additions = $('#zwave-js-associations-table').find(
+								"input[data-committed='false'][data-action='add']"
+							);
+
+							const D = modalPrompt(
+								'Processing association changes...',
+								'Please wait.',
+								{},
+								false
+							);
+
+							const DoRemovals = () => {
+								return new Promise((resolve, reject) => {
+									const PL = [
+										{
+											nodeId: HoveredNode.nodeId,
+											endpoint: parseInt($('#NODE_EP').val())
+										},
+										parseInt($('#NODE_G').val()),
+										[]
+									];
+
+									Removals.each(function (index) {
+										PL[2].push(JSON.parse($(this).attr('data-address')));
+									});
+
+									if (Removals.length < 1) {
+										resolve();
+										return;
+									}
+
+									ControllerCMD(
+										DCs.removeAssociations.API,
+										DCs.removeAssociations.name,
+										undefined,
+										PL,
+										DCs.removeAssociations.noWait
+									)
+										.then(() => {
+											resolve();
+										})
+										.catch((err) => {
+											reject(err);
+										});
+								});
+							};
+
+							const DoAdditions = () => {
+								return new Promise((resolve, reject) => {
+									const PL = [
+										{
+											nodeId: HoveredNode.nodeId,
+											endpoint: parseInt($('#NODE_EP').val())
+										},
+										parseInt($('#NODE_G').val()),
+										[]
+									];
+
+									Additions.each(function (index) {
+										PL[2].push(JSON.parse($(this).attr('data-address')));
+									});
+
+									if (Additions.length < 1) {
+										resolve();
+										return;
+									}
+
+									ControllerCMD(
+										DCs.addAssociations.API,
+										DCs.addAssociations.name,
+										undefined,
+										PL,
+										DCs.addAssociations.noWait
+									)
+										.then(() => {
+											resolve();
+										})
+										.catch((err) => {
+											reject(err);
+										});
+								});
+							};
+
+							DoRemovals()
+								.then(() => {
+									DoAdditions()
+										.then(() => {
+											D.dialog('destroy');
+											GMGroupSelected();
+										})
+										.catch((err) => {
+											D.dialog('destroy');
+											modalAlert(
+												err.responseText || err.message,
+												'Could not process association changes.'
+											);
+											throw new Error(err.responseText || err.message);
+										});
+								})
+								.catch((err) => {
+									D.dialog('destroy');
+									modalAlert(
+										err.responseText || err.message,
+										'Could not process association changes.'
+									);
+									throw new Error(err.responseText || err.message);
+								});
+						},
 						Close: function () {
 							$(this).dialog('destroy');
 						}
@@ -778,8 +980,11 @@ const ZwaveJsUI = (function () {
 				});
 			})
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not get associtions.');
-				throw new Error(err.responseText);
+				modalAlert(
+					err.responseText || err.message,
+					'Could not get associtions.'
+				);
+				throw new Error(err.responseText || err.message);
 			});
 	}
 
@@ -799,6 +1004,7 @@ const ZwaveJsUI = (function () {
 						const _Node = {
 							controller: N.isControllerNode,
 							nodeId: N.nodeId,
+							lastSeen: N.lastSeen,
 							name: N.name,
 							location: N.location,
 							powerSource: N.powerSource,
@@ -819,11 +1025,11 @@ const ZwaveJsUI = (function () {
 							res(_Nodes);
 						})
 						.catch((err) => {
-							rej(err.responseText);
+							rej(err.responseText || err.message);
 						});
 				})
 				.catch((err) => {
-					rej(err.responseText);
+					rej(err.responseText || err.message);
 				});
 		});
 	}
@@ -848,8 +1054,8 @@ const ZwaveJsUI = (function () {
 					});
 			})
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not generate map.');
-				throw new Error(err.responseText);
+				modalAlert(err.responseText || err.message, 'Could not generate map.');
+				throw new Error(err.responseText || err.message);
 			});
 	}
 
@@ -866,7 +1072,10 @@ const ZwaveJsUI = (function () {
 
 	function IsNodeReady(Node) {
 		if (!Node.ready) {
-			modalAlert('This node is not ready', 'Node Not Ready');
+			modalAlert(
+				'This node is not ready. Shift + click to view options',
+				'Node Not Ready'
+			);
 			throw new Error('Node Not Ready');
 		}
 	}
@@ -1028,12 +1237,12 @@ const ZwaveJsUI = (function () {
 				} else {
 					Nodes.forEach((N) => $('#zwave-js-node-list').append(renderNode(N)));
 				}
-
+				NodesListed = true;
 				$('#zwave-js-node-properties').treeList('empty');
 			})
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not fetch nodes.');
-				throw new Error(err.responseText);
+				modalAlert(err.responseText || err.message, 'Could not fetch nodes.');
+				throw new Error(err.responseText || err.message);
 			});
 	}
 
@@ -1068,9 +1277,9 @@ const ZwaveJsUI = (function () {
 					$('#NVMProgress').css({ display: 'block' });
 				})
 				.catch((err) => {
-					modalAlert(err.responseText, 'Could not restore NVM.');
+					modalAlert(err.responseText || err.message, 'Could not restore NVM.');
 					EnableCritical(true);
-					throw new Error(err.responseText);
+					throw new Error(err.responseText || err.message);
 				});
 
 			$('#FILE_BU').off('change');
@@ -1089,9 +1298,9 @@ const ZwaveJsUI = (function () {
 			DCs.backupNVMRaw.noWait
 		)
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not back NVM.');
+				modalAlert(err.responseText || err.message, 'Could not back NVM.');
 				EnableCritical(true);
-				throw new Error(err.responseText);
+				throw new Error(err.responseText || err.message);
 			})
 			.then(() => {
 				$('#NVMProgressLabel').html('Backing up NVM...');
@@ -1109,9 +1318,9 @@ const ZwaveJsUI = (function () {
 			DCs.setRFRegion.noWait
 		)
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not set RF Region.');
+				modalAlert(err.responseText || err.message, 'Could not set RF Region.');
 				EnableCritical(true);
-				throw new Error(err.responseText);
+				throw new Error(err.responseText || err.message);
 			})
 			.then(({ object }) => {
 				EnableCritical(true);
@@ -1139,9 +1348,12 @@ const ZwaveJsUI = (function () {
 			DCs.setPowerlevel.noWait
 		)
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not set power level.');
+				modalAlert(
+					err.responseText || err.message,
+					'Could not set power level.'
+				);
 				EnableCritical(true);
-				throw new Error(err.responseText);
+				throw new Error(err.responseText || err.message);
 			})
 			.then(({ object }) => {
 				EnableCritical(true);
@@ -1191,8 +1403,8 @@ const ZwaveJsUI = (function () {
 			DCs.verifyDSK.noWait
 		)
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not verify DSK.');
-				throw new Error(err.responseText);
+				modalAlert(err.responseText || err.message, 'Could not verify DSK.');
+				throw new Error(err.responseText || err.message);
 			})
 			.then(() => {
 				$(B).html('Please wait...');
@@ -1218,8 +1430,11 @@ const ZwaveJsUI = (function () {
 			DCs.grantClasses.noWait
 		)
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not grant Security Classes.');
-				throw new Error(err.responseText);
+				modalAlert(
+					err.responseText || err.message,
+					'Could not grant Security Classes.'
+				);
+				throw new Error(err.responseText || err.message);
 			})
 			.then(() => {
 				$(B).html('Please wait...');
@@ -1266,9 +1481,13 @@ const ZwaveJsUI = (function () {
 						[parseInt(HoveredNode.nodeId), Request],
 						DCs.replaceFailedNode.noWait
 					).catch((err) => {
-						modalAlert(err.responseText, 'Could not replace Node.');
+						modalAlert(
+							err.responseText || err.message,
+							'Could not replace Node.'
+						);
 						$(B).html(OT);
 						$(B).prop('disabled', false);
+						throw new Error(err.responseText || err.message);
 					});
 				} else {
 					modalAlert(object.message, 'Could not replace Node.');
@@ -1279,8 +1498,8 @@ const ZwaveJsUI = (function () {
 			.catch((err) => {
 				$(B).html(OT);
 				$(B).prop('disabled', false);
-				modalAlert(err.responseText, 'Could not replace Node.');
-				throw new Error(err.responseText);
+				modalAlert(err.responseText || err.message, 'Could not replace Node.');
+				throw new Error(err.responseText || err.message);
 			});
 	};
 
@@ -1307,8 +1526,11 @@ const ZwaveJsUI = (function () {
 					method: 'GET',
 					dataType: 'json',
 					error: function (err) {
-						modalAlert(err.responseText, 'Could not fetch Smart Start list.');
-						throw new Error(err.responseText);
+						modalAlert(
+							err.responseText || err.message,
+							'Could not fetch Smart Start list.'
+						);
+						throw new Error(err.responseText || err.message);
 					},
 					success: function (List) {
 						List.forEach((Entry) => {
@@ -1344,10 +1566,10 @@ const ZwaveJsUI = (function () {
 											})
 											.catch((err) => {
 												modalAlert(
-													err.responseText,
+													err.responseText || err.message,
 													'Could not remove Smart Start entry.'
 												);
-												throw new Error(err.responseText);
+												throw new Error(err.responseText || err.message);
 											});
 									}
 								};
@@ -1377,8 +1599,11 @@ const ZwaveJsUI = (function () {
 					.catch((err) => {
 						$(B).html(OT);
 						$(B).prop('disabled', false);
-						modalAlert(err.responseText, 'Could not start Inclusion');
-						throw new Error(err.responseText);
+						modalAlert(
+							err.responseText || err.message,
+							'Could not start Inclusion'
+						);
+						throw new Error(err.responseText || err.message);
 					})
 					.then(({ object }) => {
 						if (object.ok) {
@@ -1387,8 +1612,11 @@ const ZwaveJsUI = (function () {
 								url: `zwave-js/${NetworkIdentifier}/smartstart/startserver`,
 								method: 'GET',
 								error: function (err) {
-									modalAlert(err.responseText, 'Could not start Inclusion');
-									throw new Error(err.responseText);
+									modalAlert(
+										err.responseText || err.message,
+										'Could not start Inclusion'
+									);
+									throw new Error(err.responseText || err.message);
 								},
 								success: function (QRData) {
 									StepsAPI.setStepIndex(StepList.SmartStart);
@@ -1435,8 +1663,11 @@ const ZwaveJsUI = (function () {
 				).catch((err) => {
 					$(B).html(OT);
 					$(B).prop('disabled', false);
-					modalAlert(err.responseText, 'Could not start Exclusion');
-					throw new Error(err.responseText);
+					modalAlert(
+						err.responseText || err.message,
+						'Could not start Exclusion'
+					);
+					throw new Error(err.responseText || err.message);
 				});
 				return;
 		}
@@ -1459,8 +1690,11 @@ const ZwaveJsUI = (function () {
 					).catch((err) => {
 						$(B).html(OT);
 						$(B).prop('disabled', false);
-						modalAlert(err.responseText, 'Could not start Inclusion');
-						throw new Error(err.responseText);
+						modalAlert(
+							err.responseText || err.message,
+							'Could not start Inclusion'
+						);
+						throw new Error(err.responseText || err.message);
 					});
 				} else {
 					$(B).html(OT);
@@ -1471,8 +1705,11 @@ const ZwaveJsUI = (function () {
 			.catch((err) => {
 				$(B).html(OT);
 				$(B).prop('disabled', false);
-				modalAlert(err.responseText, 'Could not start Inclusion');
-				throw new Error(err.responseText);
+				modalAlert(
+					err.responseText || err.message,
+					'Could not start Inclusion'
+				);
+				throw new Error(err.responseText || err.message);
 			});
 	};
 
@@ -1503,10 +1740,10 @@ const ZwaveJsUI = (function () {
 									.catch((err) => {
 										ParentDialog.dialog('destroy');
 										modalAlert(
-											err.responseText,
+											err.responseText || err.message,
 											'Could not purge Smart Start entries'
 										);
-										throw new Error(err.responseText);
+										throw new Error(err.responseText || err.message);
 									})
 									.then(() => {
 										ParentDialog.dialog('destroy');
@@ -1529,7 +1766,7 @@ const ZwaveJsUI = (function () {
 							url: `zwave-js/${NetworkIdentifier}/smartstart/stopserver`,
 							method: 'GET'
 						}).catch((err) => {
-							console.log(err.responseText);
+							console.error(err);
 						});
 						ClearIETimer();
 						ClearSecurityCountDown();
@@ -1540,7 +1777,7 @@ const ZwaveJsUI = (function () {
 							undefined,
 							DCs.stopIE.noWait
 						).catch((err) => {
-							console.log(err.responseText);
+							console.error(err);
 						});
 						ParentDialog.dialog('destroy');
 					}
@@ -1571,7 +1808,7 @@ const ZwaveJsUI = (function () {
 									url: `zwave-js/${NetworkIdentifier}/smartstart/stopserver`,
 									method: 'GET'
 								}).catch((err) => {
-									console.log(err.responseText);
+									console.error(err);
 								});
 							})
 							.catch((err) => {
@@ -1579,13 +1816,13 @@ const ZwaveJsUI = (function () {
 									url: `zwave-js/${NetworkIdentifier}/smartstart/stopserver`,
 									method: 'GET'
 								}).catch((err) => {
-									console.log(err.responseText);
+									console.error(err);
 								});
 								modalAlert(
-									err.responseText,
+									err.responseText || err.message,
 									'Could not commit Smart Start entries.'
 								);
-								throw new Error(err.responseText);
+								throw new Error(err.responseText || err.message);
 							});
 					}
 				},
@@ -1632,7 +1869,7 @@ const ZwaveJsUI = (function () {
 							undefined,
 							DCs.stopIE.noWait
 						).catch((err) => {
-							console.log(err.responseText);
+							console.error(err);
 						});
 						$(this).dialog('destroy');
 					}
@@ -1658,8 +1895,8 @@ const ZwaveJsUI = (function () {
 			[HoveredNode.nodeId],
 			DCs.healNode.noWait
 		).catch((err) => {
-			modalAlert(err.responseText, 'Could not start Node heal.');
-			throw new Error(err.responseText);
+			modalAlert(err.responseText || err.message, 'Could not start Node heal.');
+			throw new Error(err.responseText || err.message);
 		});
 	}
 
@@ -1671,8 +1908,11 @@ const ZwaveJsUI = (function () {
 			undefined,
 			DCs.beginHealingNetwork.noWait
 		).catch((err) => {
-			modalAlert(err.responseText, 'Could not start Network heal.');
-			throw new Error(err.responseText);
+			modalAlert(
+				err.responseText || err.message,
+				'Could not start Network heal.'
+			);
+			throw new Error(err.responseText || err.message);
 		});
 	}
 
@@ -1684,7 +1924,7 @@ const ZwaveJsUI = (function () {
 			undefined,
 			DCs.stopHealingNetwork.noWait
 		).catch((err) => {
-			console.log(err.responseText);
+			console.error(err);
 		});
 	}
 
@@ -1703,8 +1943,11 @@ const ZwaveJsUI = (function () {
 						GetNodes();
 					})
 					.catch((err) => {
-						modalAlert(err.responseText, 'Could not reset the Controller.');
-						throw new Error(err.responseText);
+						modalAlert(
+							err.responseText || err.message,
+							'Could not reset the Controller.'
+						);
+						throw new Error(err.responseText || err.message);
 					});
 			}
 		};
@@ -1724,8 +1967,11 @@ const ZwaveJsUI = (function () {
 			[HoveredNode.nodeId],
 			DCs.refreshInfo.noWait
 		).catch((err) => {
-			modalAlert(err.responseText, 'Could not interview the Node.');
-			throw new Error(err.responseText);
+			modalAlert(
+				err.responseText || err.message,
+				'Could not interview the Node.'
+			);
+			throw new Error(err.responseText || err.message);
 		});
 	}
 
@@ -1806,6 +2052,7 @@ const ZwaveJsUI = (function () {
 				})
 				.catch((err) => {
 					$('#RF_TR_POWER').css({ opacity: '0.3', pointerEvents: 'none' });
+					console.error(err);
 				});
 		};
 
@@ -1822,6 +2069,7 @@ const ZwaveJsUI = (function () {
 			})
 			.catch((err) => {
 				$('#RF_TR_REGION').css({ opacity: '0.3', pointerEvents: 'none' });
+				console.error(err);
 				GetPower();
 			});
 	}
@@ -1839,7 +2087,7 @@ const ZwaveJsUI = (function () {
 				const D = modalPrompt(
 					'Checking if Node has failed...',
 					'Please wait.',
-					[],
+					{},
 					false
 				);
 				Removing = true;
@@ -1852,8 +2100,12 @@ const ZwaveJsUI = (function () {
 				)
 					.catch((err) => {
 						D.dialog('destroy');
-						modalAlert(err.responseText, 'Could not remove the Node.');
+						modalAlert(
+							err.responseText || err.message,
+							'Could not remove the Node.'
+						);
 						Removing = false;
+						throw new Error(err.responseText || err.message);
 					})
 					.then(() => {
 						D.dialog('destroy');
@@ -1867,6 +2119,101 @@ const ZwaveJsUI = (function () {
 			Buttons,
 			true
 		);
+	}
+
+	function downloadObjectAsJSON(exportObj, exportName) {
+		const dataStr =
+			'data:text/json;charset=utf-8,' +
+			encodeURIComponent(JSON.stringify(exportObj));
+		const downloadAnchorNode = document.createElement('a');
+		downloadAnchorNode.setAttribute('href', dataStr);
+		downloadAnchorNode.setAttribute('download', exportName + '.json');
+		document.body.appendChild(downloadAnchorNode); // required for firefox
+		downloadAnchorNode.click();
+		downloadAnchorNode.remove();
+	}
+
+	function ExportNLMap() {
+		ControllerCMD(
+			DCs.getNodes.API,
+			DCs.getNodes.name,
+			undefined,
+			undefined,
+			DCs.getNodes.noWait
+		)
+			.then(({ object }) => {
+				const EXP = [];
+				const Count = object.length;
+				for (let i = 0; i < Count; i++) {
+					const Node = object[i];
+					if (!Node.isControllerNode) {
+						if (Node.name !== undefined || Node.location !== undefined) {
+							const Entry = {};
+							Entry.nodeId = Node.nodeId;
+							if (Node.name !== undefined) Entry.name = Node.name;
+							if (Node.location !== undefined) Entry.location = Node.location;
+							EXP.push(Entry);
+						}
+					}
+				}
+
+				downloadObjectAsJSON(
+					EXP,
+					`ZWave Name & Location Map NET${NetworkIdentifier}`
+				);
+			})
+			.catch((err) => {
+				modalAlert(err.responseText || err.message, 'Could not fetch nodes.');
+				throw new Error(err.responseText || err.message);
+			});
+	}
+
+	function ImportNLMap() {
+		const input = document.createElement('input');
+		input.type = 'file';
+
+		const OnLoad = async (e) => {
+			const Nodes = JSON.parse(e.target.result);
+
+			try {
+				for (let i = 0; i < Nodes.length; i++) {
+					const Node = Nodes[i];
+
+					if (Node.name !== undefined) {
+						await ControllerCMD(
+							DCs.setNodeName.API,
+							DCs.setNodeName.name,
+							undefined,
+							[Node.nodeId, Node.name],
+							DCs.setNodeName.noWait
+						);
+					}
+
+					if (Node.location !== undefined) {
+						await ControllerCMD(
+							DCs.setNodeLocation.API,
+							DCs.setNodeLocation.name,
+							undefined,
+							[Node.nodeId, Node.location],
+							DCs.setNodeLocation.noWait
+						);
+					}
+				}
+				input.remove();
+				GetNodes();
+			} catch (err) {
+				modalAlert(err.responseText || err.message, 'Could not finish import.');
+				throw new Error(err.responseText || err.message);
+			}
+		};
+
+		const OnChange = (e) => {
+			const reader = new FileReader();
+			reader.onload = OnLoad;
+			reader.readAsText(e.target.files[0]);
+		};
+		input.onchange = OnChange;
+		input.click();
 	}
 
 	function ShowOtherControllolerMenu(button) {
@@ -1895,6 +2242,20 @@ const ZwaveJsUI = (function () {
 					onselect: function () {
 						IsDriverReady();
 						StopHeal();
+					}
+				},
+				{
+					id: 'controller-option-menu-nl-export',
+					label: 'Export Name/Location Map',
+					onselect: function () {
+						ExportNLMap();
+					}
+				},
+				{
+					id: 'controller-option-menu-nl-import',
+					label: 'Import Name/Location Map',
+					onselect: function () {
+						ImportNLMap();
 					}
 				},
 				{
@@ -2270,6 +2631,88 @@ const ZwaveJsUI = (function () {
 				AttachToNetwork(data.UsedNIDs[0]);
 			}
 		});
+
+		CheckForUpdate = async () => {
+			const Node = parseInt($('#NODE_FWC option:selected').val());
+			const nodeRow = $('#zwave-js-node-list').find(`[data-nodeid='${Node}']`);
+
+			if (nodeRow.data().info.status.toUpperCase() === 'ASLEEP') {
+				const A = await WaitForNodeWake(Node);
+				if (!A) {
+					return;
+				}
+			}
+
+			const Wait = modalPrompt(
+				'Querying Firmware Update Service..',
+				'Please wait...',
+				{},
+				false
+			);
+
+			ControllerCMD(
+				DCs.getAvailableFirmwareUpdates.API,
+				DCs.getAvailableFirmwareUpdates.name,
+				undefined,
+				[Node],
+				DCs.getAvailableFirmwareUpdates.noWait
+			)
+				.then(({ object }) => {
+					Wait.dialog('destroy');
+
+					const ShowCL = function () {
+						const SelectedFW = $('#NODE_FWCV')
+							.find(':selected')
+							.data('FWTarget');
+						const List = $('<ul>');
+						for (let i = 0; i < SelectedFW.cl.length; i++) {
+							List.append(`<li>${SelectedFW.cl[i]}</li>`);
+						}
+
+						$('#ChangeLog').empty();
+						$('#ChangeLog').append(List);
+					};
+
+					$('#ChangeLog').empty();
+					$('#NODE_FWCV').empty();
+					$('#NODE_FWCV').append('<option>Select Version & File...</option>');
+					$('#NODE_FWCV').off('change');
+					$('#NODE_FWCV').change(ShowCL);
+
+					//
+					if (object.length > 0) {
+						const FWs = object;
+						FWs.forEach((FW) => {
+							const VG = $(`<optgroup label=' --- ${FW.version} --- '>`);
+							FW.files.forEach((F) => {
+								const FWF = $(`<option>`);
+								FWF.data('FWTarget', {
+									file: F,
+									node: Node,
+									cl: FW.changelog.split('\n')
+								});
+								FWF.text(`${FW.version} -> Target : ${F.target}`);
+								VG.append(FWF);
+							});
+							$('#NODE_FWCV').append(VG);
+						});
+					} else {
+						modalAlert(
+							'No firmware updates are available for this Node.',
+							'Firmware update check'
+						);
+					}
+					//
+				})
+				.catch((err) => {
+					Wait.dialog('destroy');
+					modalAlert(
+						err.responseText || err.message,
+						'Could not check for updates'
+					);
+					throw new Error(err.responseText || err.message);
+				});
+		};
 	}
 	// Init done
 
@@ -2456,14 +2899,29 @@ const ZwaveJsUI = (function () {
 				const nodeRow = $('#zwave-js-node-list').find(
 					`[data-nodeid='${data.node}']`
 				);
-				if (data.status == 'READY') {
+
+				if (NodesListed) {
+					nodeRow.data().info.status = data.status;
+				}
+
+				if (data.status === 'READY') {
 					if (DriverReady) {
 						GetNodesThrottled();
 					}
 				} else {
-					nodeRow
-						.find('.zwave-js-node-row-status')
-						.html(renderStatusIcon(data.status.toUpperCase()));
+					if (
+						data.node === WakeResolverTarget &&
+						WakeResolver !== undefined &&
+						(data.status.toUpperCase() === 'AWAKE' ||
+							data.status.toUpperCase() === 'ALIVE')
+					) {
+						WakeResolver(true);
+					}
+					if (NodesListed) {
+						nodeRow
+							.find('.zwave-js-node-row-status')
+							.html(renderStatusIcon(data.status.toUpperCase()));
+					}
 				}
 				break;
 		}
@@ -2623,7 +3081,7 @@ const ZwaveJsUI = (function () {
 								$(`.zwave-js-node-row[data-nodeid='${HoveredNode.nodeId}']`)
 									.find('.zwave-js-node-row-name')
 									.text(Name);
-								if (HoveredNode.nodeId == selectedNode) {
+								if (HoveredNode.nodeId === selectedNode) {
 									let Lable = `${HoveredNode.nodeId} - ${Name}`;
 									if (Location.length > 0) Lable += ` (${Location})`;
 									$('#zwave-js-selected-node-name').text(Lable);
@@ -2633,18 +3091,18 @@ const ZwaveJsUI = (function () {
 							})
 							.catch((err) => {
 								modalAlert(
-									err.responseText,
+									err.responseText || err.message,
 									'Could not set Node name and /or location.'
 								);
-								throw new Error(err.responseText);
+								throw new Error(err.responseText || err.message);
 							});
 					})
 					.catch((err) => {
 						modalAlert(
-							err.responseText,
+							err.responseText || err.message,
 							'Could not set Node name and /or location.'
 						);
-						throw new Error(err.responseText);
+						throw new Error(err.responseText || err.message);
 					});
 			}
 		};
@@ -2654,7 +3112,7 @@ const ZwaveJsUI = (function () {
 		HTML.append(' Location: ');
 		NL.appendTo(HTML);
 
-		modalPrompt(HTML, 'Set Node Name & Location', Buttons, true);
+		modalPrompt(HTML, 'Set Node Name & Location', Buttons, true, true);
 	}
 
 	function AddOverlayNodeButtons(Node, Row) {
@@ -2831,6 +3289,17 @@ const ZwaveJsUI = (function () {
 	}
 
 	function renderNode(node) {
+		const NameCol = $('<div>')
+			.html(node.name)
+			.addClass('zwave-js-node-row-name');
+
+		if (node.lastSeen !== 0) {
+			const DT = new Date(node.lastSeen);
+			RED.popover.tooltip(NameCol, `Last seen: ${DT.toLocaleString()}`);
+		} else {
+			RED.popover.tooltip(NameCol, `Last seen: Never`);
+		}
+
 		return $('<div>')
 			.addClass('red-ui-treeList-label zwave-js-node-row')
 			.attr('data-nodeid', node.nodeId)
@@ -2861,7 +3330,7 @@ const ZwaveJsUI = (function () {
 			})
 			.append(
 				$('<div>').html(node.nodeId).addClass('zwave-js-node-row-id'),
-				$('<div>').html(node.name).addClass('zwave-js-node-row-name'),
+				NameCol,
 				$('<div>')
 					.html(renderStatusIcon(node.status.toUpperCase()))
 					.addClass('zwave-js-node-row-status'),
@@ -2943,7 +3412,7 @@ const ZwaveJsUI = (function () {
 	}
 
 	function selectNode(id) {
-		if (selectedNode == id) return;
+		if (selectedNode === id) return;
 		deselectCurrentNode();
 
 		selectedNode = id;
@@ -3015,7 +3484,7 @@ const ZwaveJsUI = (function () {
 						break;
 					case 255:
 						modalAlert(
-							`The firmware for node ${nodeId} has been updated. A restart is required (which may happen automatically)`,
+							`The firmware for node ${nodeId} has been updated. The device will be restarted.`,
 							'ZWave Device Firmware Update'
 						);
 						break;
@@ -3039,16 +3508,19 @@ const ZwaveJsUI = (function () {
 		updateNodeFetchStatus('Fetching properties...');
 
 		ControllerCMD(
-			DCs.getDefinedValueIDs.API,
-			DCs.getDefinedValueIDs.name,
-			selectedNode,
+			DCs.getValueDB.API,
+			DCs.getValueDB.name,
 			undefined,
-			DCs.getDefinedValueIDs.noWait
+			[selectedNode],
+			DCs.getValueDB.noWait
 		)
-			.then(({ object }) => buildPropertyTree(object))
+			.then(({ object }) => buildPropertyTree(object[0].values))
 			.catch((err) => {
-				modalAlert(err.responseText, 'Could not fetch Node properties.');
-				throw new Error(err.responseText);
+				modalAlert(
+					err.responseText || err.message,
+					'Could not fetch Node properties.'
+				);
+				throw new Error(err.responseText || err.message);
 			});
 	}
 
@@ -3062,33 +3534,56 @@ const ZwaveJsUI = (function () {
 	};
 
 	function buildPropertyTree(valueIdList) {
-		if (valueIdList.length == 0) {
+		if (valueIdList.length === 0) {
 			updateNodeFetchStatus('No properties found');
 			return;
 		}
 		updateNodeFetchStatus('');
 
-		// Step 1: Make list of all supported command classes
-		const data = uniqBy(valueIdList, 'commandClass')
-			.sort((a, b) => a.commandClassName.localeCompare(b.commandClassName))
-			.map(({ commandClass, commandClassName }) => {
-				// Step 2: For each CC, get all associated properties
-				const propsInCC = valueIdList.filter(
-					(valueId) => valueId.commandClass == commandClass
-				);
+		const CCList = uniqBy(valueIdList, 'commandClass');
+		CCList.sort((a, b) => a.commandClassName.localeCompare(b.commandClassName));
 
-				return {
-					element: renderCommandClassElement(commandClass, commandClassName),
-					expanded: false,
-					children: propsInCC.map((valueId) => {
-						return { element: renderPropertyElement(valueId) };
-					})
-				};
+		const Data = [];
+		CCList.forEach((CC) => {
+			Data.push({
+				element: renderCommandClassElement(
+					CC.commandClass,
+					CC.commandClassName
+				),
+				expanded: false,
+				children: []
 			});
+		});
 
-		// Step 3: Render tree
 		const propertyList = $('#zwave-js-node-properties');
-		propertyList.treeList('data', data);
+		propertyList.treeList('data', Data);
+
+		let Index = 0;
+		CCList.forEach((V) => {
+			const CCProps = valueIdList.filter(
+				(VID) => VID.commandClass === V.commandClass
+			);
+			CCProps.forEach((Prop) => {
+				const Type = Prop.metadata.type;
+				const Writeable = Prop.metadata.writeable;
+				const CV = Prop.currentValue;
+
+				const Child = renderPropertyElement(Prop);
+				propertyList
+					.treeList('data')
+					[Index].treeList.addChild({ element: Child });
+
+				if (Writeable && Type !== 'any') {
+					const icon = Child.prev();
+					icon.empty();
+					$('<i>')
+						.addClass('fa fa-pencil zwave-js-node-property-edit-button')
+						.click(() => showEditor(Prop, CV))
+						.appendTo(icon);
+				}
+			});
+			Index++;
+		});
 
 		// Step 4: Add endpoint numbers where applicable
 		propertyList
@@ -3145,7 +3640,25 @@ const ZwaveJsUI = (function () {
 		return el;
 	}
 
+	function splitObject(valueId) {
+		// delete normalizedObject
+		delete valueId.normalizedObject;
+
+		// Value
+		const Value = valueId.currentValue;
+		delete valueId.currentValue;
+
+		// Meta
+		const MetaData = JSON.parse(JSON.stringify(valueId.metadata));
+		delete valueId.metadata;
+
+		return { valueId: valueId, currentValue: Value, metadata: MetaData };
+	}
+
 	function renderPropertyElement(valueId) {
+		const Split = splitObject(valueId);
+		valueId = Split.valueId;
+
 		const el = $('<div>')
 			.addClass('zwave-js-node-property')
 			.attr('data-endpoint', valueId.endpoint)
@@ -3166,7 +3679,7 @@ const ZwaveJsUI = (function () {
 			.text(label)
 			.appendTo(el);
 		$('<span>').addClass('zwave-js-node-property-value').appendTo(el);
-		getValue(valueId);
+		getValue(valueId, Split.metadata, Split.currentValue, el);
 		el.dblclick(function () {
 			const data = $(this).data();
 			const valueData = $(this).find('.zwave-js-node-property-value').data();
@@ -3205,41 +3718,12 @@ const ZwaveJsUI = (function () {
 		return el;
 	}
 
-	function getValue(valueId) {
-		ControllerCMD(
-			DCs.getValue.API,
-			DCs.getValue.name,
-			selectedNode,
-			[valueId],
-			DCs.getValue.noWait
-		)
-			.then(({ node, object }) => {
-				if (node != selectedNode) {
-					return;
-				}
-				updateValue({ ...valueId, currentValue: object.currentValue });
-				ControllerCMD(
-					DCs.getValueMetadata.API,
-					DCs.getValueMetadata.name,
-					selectedNode,
-					[valueId],
-					DCs.getValueMetadata.noWait
-				)
-					.then(({ node, object }) => {
-						if (!object.metadata || node != selectedNode) {
-							return;
-						}
-						updateMeta(valueId, object.metadata);
-					})
-					.catch((err) => {
-						modalAlert(err.responseText, 'Could not fetch value Metadata.');
-						throw new Error(err.responseText);
-					});
-			})
-			.catch((err) => {
-				modalAlert(err.responseText, 'Could not fetch value.');
-				throw new Error(err.responseText);
-			});
+	function getValue(valueId, metadata, currentValue, el) {
+		updateValue({ ...valueId, currentValue }, el);
+		if (metadata === undefined) {
+			return;
+		}
+		updateMeta(valueId, metadata, el);
 	}
 
 	function handleBattery(topic, data) {
@@ -3276,9 +3760,9 @@ const ZwaveJsUI = (function () {
 		}
 	}
 
-	function updateValue(valueId) {
+	function updateValue(valueId, El) {
 		// Assumes you already checked if this applies to selectedNode
-		const propertyRow = getPropertyRow(valueId);
+		const propertyRow = El || getPropertyRow(valueId);
 
 		if (!propertyRow) {
 			// AHHH!!! What do we do now?!
@@ -3312,10 +3796,10 @@ const ZwaveJsUI = (function () {
 			// If meta known, translate the value and add tooltip with raw value
 			propertyValue.text(meta?.states?.[value]);
 			RED.popover.tooltip(propertyValue, `Raw Value: ${value}`);
-		} else if (valueId.commandClass == 114) {
+		} else if (valueId.commandClass === 114) {
 			// If command class "Manufacturer Specific", show hex values
 			propertyValue.text(hexDisplay(value));
-			if (valueId.property == 'manufacturerId')
+			if (valueId.property === 'manufacturerId')
 				RED.popover.tooltip(
 					propertyValue,
 					$(`#zwave-js-node-list .selected`).data('info')?.deviceConfig
@@ -3326,7 +3810,20 @@ const ZwaveJsUI = (function () {
 			propertyValue.text(`${value} ${propertyValue.data('unit')}`);
 		} else {
 			// Otherwise just display raw value
-			propertyValue.text(value);
+
+			switch (typeof value) {
+				case 'object':
+					if (Array.isArray(value) && typeof value[0] !== 'object') {
+						propertyValue.text(value.join(', '));
+					} else {
+						propertyValue.text('(Object - Double click)');
+					}
+					break;
+
+				default:
+					propertyValue.text(value);
+					break;
+			}
 		}
 
 		// Some formatting
@@ -3338,10 +3835,10 @@ const ZwaveJsUI = (function () {
 		propertyValue.data('value', value);
 	}
 
-	function updateMeta(valueId, meta = {}) {
+	function updateMeta(valueId, meta = {}, El) {
 		// Assumes you already checked if this applies to selectedNode
 
-		const propertyRow = getPropertyRow(valueId);
+		const propertyRow = El || getPropertyRow(valueId);
 		const propertyValue = propertyRow.find('.zwave-js-node-property-value');
 
 		propertyRow.data('meta', meta);
@@ -3365,17 +3862,18 @@ const ZwaveJsUI = (function () {
 			propertyValue.text(`${value} ${meta.unit}`);
 		}
 
-		// Add "edit" icon, if applicable
-		const icon = propertyRow.prev();
-		icon.empty();
-		if (meta.writeable)
-			$('<i>')
-				.addClass('fa fa-pencil zwave-js-node-property-edit-button')
-				.click(() => showEditor(valueId))
-				.appendTo(icon);
+		if (El === undefined) {
+			const icon = propertyRow.prev();
+			icon.empty();
+			if (meta.writeable && meta.type !== 'any')
+				$('<i>')
+					.addClass('fa fa-pencil zwave-js-node-property-edit-button')
+					.click(() => showEditor(valueId, value))
+					.appendTo(icon);
+		}
 	}
 
-	function showEditor(valueId) {
+	function showEditor(valueId, value) {
 		const propertyRow = getPropertyRow(valueId);
 
 		// If editor is already displayed, close it instead
@@ -3386,7 +3884,11 @@ const ZwaveJsUI = (function () {
 		}
 
 		const meta = propertyRow.data('meta');
-		const input = $('<input>');
+
+		const input = $('<input id="zwave-js-value-input">');
+		const elementValue = meta.lastSetUIValue || value;
+		input.val(elementValue);
+		input.attr('value', elementValue);
 		input.keyup(() => {
 			if (event.which === 13) {
 				CommitNewVal();
@@ -3394,11 +3896,11 @@ const ZwaveJsUI = (function () {
 		});
 		let editor;
 		function CommitNewVal(val) {
-			if (val == undefined) {
+			if (val === undefined) {
 				val = input.val();
 			}
-			if (meta.type == 'number') {
-				val = +val;
+			if (meta.type === 'number') {
+				val = parseInt(val);
 			}
 			ControllerCMD(
 				DCs.setValue.API,
@@ -3407,13 +3909,14 @@ const ZwaveJsUI = (function () {
 				[valueId, val],
 				DCs.setValue.noWait
 			).catch((err) => {
-				modalAlert(err.responseText, 'Could not set value.');
-				throw new Error(err.responseText);
+				modalAlert(err.responseText || err.message, 'Could not set value.');
+				throw new Error(err.responseText || err.message);
 			});
+			meta.lastSetUIValue = val;
 			editor.remove();
 		}
 
-		if (meta.writeable) {
+		if (meta.writeable && meta.type !== 'any') {
 			// Step 1: Create editor block and add below value block
 
 			editor = $('<div>')
@@ -3457,7 +3960,7 @@ const ZwaveJsUI = (function () {
 			}
 
 			if (meta.allowManualEntry === undefined || meta.allowManualEntry) {
-				if (meta.type == 'number') {
+				if (meta.type === 'number') {
 					// Number
 					editor.append(
 						input,
@@ -3471,7 +3974,7 @@ const ZwaveJsUI = (function () {
 							)
 						)
 					);
-				} else if (meta.type == 'boolean') {
+				} else if (meta.type === 'boolean') {
 					// BOOLEAN
 					editor.append(
 						$('<div>').append(
@@ -3487,7 +3990,7 @@ const ZwaveJsUI = (function () {
 								.text('False')
 						)
 					);
-				} else if (meta.type == 'string') {
+				} else if (meta.type === 'string') {
 					// STRING
 					editor.append(
 						input,
@@ -3499,14 +4002,10 @@ const ZwaveJsUI = (function () {
 							)
 						)
 					);
-				} else if (meta.type == 'any') {
-					// ANY
-					editor.append(
-						input,
-						makeSetButton(),
-						$('<span>').html('Caution: ValueType is "Any"')
-					);
-					return;
+				} else if (meta.type === 'color') {
+					// COLOR
+					editor.append(input, makeSetButton());
+					input.minicolors();
 				} else {
 					// How did you get here?
 					editor.append('Missing ValueType');
