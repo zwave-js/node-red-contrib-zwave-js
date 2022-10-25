@@ -1,0 +1,405 @@
+﻿<script type="text/javascript">
+	RED.nodes.registerType('zwave-device', {
+		category: 'ZWave JS',
+		color: 'rgb(46,145,205)',
+		defaults: {
+			networkIdentifier: { value: undefined },
+			name: { value: 'ZWave Device' },
+			filteredNodeId: { value: 'All' },
+			multicast: { value: false },
+			datamode: { value: 'Send/Receive' },
+			messagesPerMS: { value: 1 },
+			messageInterval: { value: 250 },
+			isolated: { value: false },
+			outputs: { value: 1 },
+			inputs: { value: 1 },
+			showStatus: { value: true }
+		},
+		inputs: 1,
+		outputs: 1,
+		icon: 'Node.svg',
+		label: function () {
+			return this.name;
+		},
+		oneditprepare: SortUI,
+		oneditsave: SetIO,
+		paletteLabel: 'ZWave Device'
+	});
+
+	function SetIO() {
+		// Set Pins
+		switch ($('#node-input-datamode').val()) {
+			case 'Send':
+				this.outputs = 0;
+				this.inputs = 1;
+				break;
+
+			case 'Receive':
+				this.outputs = 1;
+				this.inputs = 0;
+				break;
+
+			default:
+				this.outputs = 1;
+				this.inputs = 1;
+				break;
+		}
+	}
+
+	function SortUI() {
+		$.getJSON(`zwave-js/cfg-getids`, (data) => {
+			// Disabled Unusned IDs
+			data.AvailableNIDs.forEach((ID) => {
+				$(`#Network${ID}`).css({ opacity: 0.5 });
+				$(`#Network${ID}`).prop('disabled', true);
+			});
+
+			// Default Network
+			if (this.networkIdentifier === undefined) {
+				$('#node-input-networkIdentifier').val(data.UsedNIDs[0]);
+				$('#Network' + data.UsedNIDs[0]).css({
+					backgroundColor: 'lightgray'
+				});
+				this.networkIdentifier = data.UsedNIDs[0];
+			} else {
+				// Select current Network
+				$(`#Network${this.networkIdentifier}`).css({
+					opacity: 1.0,
+					backgroundColor: 'lightgray'
+				});
+				$(`#Network${this.networkIdentifier}`).prop('disabled', false);
+			}
+
+			// Prop Refs
+			let Rate = $('#drate');
+			Rate.css({ display: 'none' });
+			let Mode = $('#node-input-filteredMode');
+			let Filter = $('#node-input-filteredNodeId');
+
+			// Subflow Options
+			const inSubflow = !!RED.nodes.subflow(this.z);
+			if (inSubflow) {
+				$('#node-input-filteredMode').append(
+					new Option('Subflow Variable: ZW_NODE_ID', 'Var')
+				);
+			}
+
+			// Set Pin S/R Config
+			if (this.datamode === 'Send/Receive') {
+				$('#IsolatedDiv').css({ display: 'block' });
+			} else {
+				$('#IsolatedDiv').css({ display: 'none' });
+			}
+
+			// Node List and Mode
+			$.getJSON(`zwave-js/${this.networkIdentifier}/cfg-nodelist`, (data) => {
+				Filter.empty();
+				let Locations = Object.keys(data);
+
+				Locations.forEach((L) => {
+					let Location = data[L];
+					if (Location.length > 0) {
+						let OG = $('<optgroup label=" --- ' + L + ' --- ">');
+						Location.forEach((node) => {
+							OG.append(
+								new Option(node.id + ' : ' + node.name, node.id.toString())
+							);
+						});
+						Filter.append(OG);
+					}
+				});
+
+				// Single
+				if (!isNaN(parseInt(this.filteredNodeId))) {
+					Filter.css('height', '');
+					Filter.attr('multiple', null);
+					Filter.val(this.filteredNodeId);
+					Filter.prop('disabled', false);
+					Mode.val('Single');
+				}
+
+				// Multiple, Multicast
+				if (Array.isArray(this.filteredNodeId)) {
+					Filter.css('height', '150px');
+					Filter.attr('multiple', '');
+					Filter.val(this.filteredNodeId);
+					Filter.prop('disabled', false);
+					if (this.multicast) {
+						Mode.val('Multicast');
+					} else {
+						Mode.val('Multiple');
+						Rate.css({ display: 'block' });
+					}
+				}
+
+				// All
+				if (this.filteredNodeId === 'All') {
+					Filter.css('height', '');
+					Filter.attr('multiple', null);
+					Filter.append(new Option('N/A', 'All'));
+					Filter.val('All');
+					Filter.prop('disabled', true);
+					Mode.val('All');
+				}
+
+				// As Specifed
+				if (this.filteredNodeId === 'AS') {
+					Filter.css('height', '');
+					Filter.attr('multiple', null);
+					Filter.append(new Option('N/A', 'AS'));
+					Filter.val('AS');
+					Filter.prop('disabled', true);
+					Mode.val('Message');
+				}
+
+				// Variable
+				if (this.filteredNodeId === 'Var') {
+					Filter.css('height', '');
+					Filter.attr('multiple', null);
+					Filter.append(new Option('N/A', 'Var'));
+					Filter.val('Var');
+					Filter.prop('disabled', true);
+					Mode.val('Var');
+				}
+			});
+		});
+	}
+
+	function SortFilterChange() {
+		let Mode = $('#node-input-filteredMode');
+		let Filter = $('#node-input-filteredNodeId');
+		let Rate = $('#drate');
+		Rate.css({ display: 'none' });
+
+		switch (Mode.val()) {
+			case 'All':
+				Filter.css('height', '');
+				Filter.find('[value="Select Node"]').remove();
+				Filter.find('[value="AS"]').remove();
+				Filter.find('[value="Var"]').remove();
+				Filter.prepend(new Option('N/A', 'All'));
+				Filter.val('All');
+				Filter.prop('disabled', true);
+				Filter.attr('multiple', null);
+				$('#node-input-multicast').prop('checked', false);
+				break;
+
+			case 'Message':
+				Filter.css('height', '');
+				Filter.find('[value="Select Node"]').remove();
+				Filter.find('[value="All"]').remove();
+				Filter.find('[value="Var"]').remove();
+				Filter.prepend(new Option('N/A', 'AS'));
+				Filter.val('AS');
+				Filter.prop('disabled', true);
+				Filter.attr('multiple', null);
+				$('#node-input-multicast').prop('checked', false);
+				break;
+
+			case 'Multiple':
+				Filter.css('height', '150px');
+				Filter.find('[value="Select Node"]').remove();
+				Filter.find('[value="All"]').remove();
+				Filter.find('[value="AS"]').remove();
+				Filter.find('[value="Var"]').remove();
+				Filter.prop('disabled', false);
+				Filter.attr('multiple', '');
+				$('#node-input-multicast').prop('checked', false);
+				Rate.css({ display: 'block' });
+				break;
+
+			case 'Multicast':
+				Filter.css('height', '150px');
+				Filter.find('[value="Select Node"]').remove();
+				Filter.find('[value="All"]').remove();
+				Filter.find('[value="AS"]').remove();
+				Filter.find('[value="Var"]').remove();
+				Filter.prop('disabled', false);
+				Filter.attr('multiple', '');
+				$('#node-input-multicast').prop('checked', true);
+				break;
+
+			case 'Var':
+				Filter.css('height', '');
+				Filter.find('[value="Select Node"]').remove();
+				Filter.find('[value="AS"]').remove();
+				Filter.prepend(new Option('N/A', 'Var'));
+				Filter.val('Var');
+				Filter.prop('disabled', true);
+				Filter.attr('multiple', null);
+				$('#node-input-multicast').prop('checked', false);
+				break;
+
+			default:
+				Filter.css('height', '');
+				Filter.find('[value="All"]').remove();
+				Filter.find('[value="AS"]').remove();
+				Filter.find('[value="Var"]').remove();
+				Filter.prepend(new Option('Select Node', 'Select Node'));
+				Filter.val('Select Node');
+				Filter.prop('disabled', false);
+				Filter.attr('multiple', null);
+				$('#node-input-multicast').prop('checked', false);
+				break;
+		}
+	}
+
+	function showIsolated() {
+		if ($('#node-input-datamode').val() == 'Send/Receive') {
+			$('#IsolatedDiv').css({ display: 'block' });
+		} else {
+			$('#IsolatedDiv').css({ display: 'none' });
+		}
+	}
+
+	function setID(ID) {
+		$('#Network1').css({ backgroundColor: '' });
+		$('#Network2').css({ backgroundColor: '' });
+		$('#Network3').css({ backgroundColor: '' });
+		$('#Network4').css({ backgroundColor: '' });
+
+		$('#node-input-networkIdentifier').val(ID);
+		$('#Network' + ID).css({
+			backgroundColor: 'lightgray'
+		});
+
+		$.getJSON(`zwave-js/${ID}/cfg-nodelist`, (data) => {
+			let Filter = $('#node-input-filteredNodeId');
+			Filter.empty();
+
+			let Locations = Object.keys(data);
+
+			Locations.forEach((L) => {
+				let Location = data[L];
+				if (Location.length > 0) {
+					let OG = $('<optgroup label=" --- ' + L + ' --- ">');
+					Location.forEach((node) => {
+						OG.append(
+							new Option(node.id + ' : ' + node.name, node.id.toString())
+						);
+					});
+					Filter.append(OG);
+				}
+			});
+
+			SortFilterChange();
+		});
+	}
+</script>
+
+<script type="text/x-red" data-template-name="zwave-device">
+
+	<input type="checkbox" id="node-input-multicast" style="display: none">
+	<input type="hidden" id="node-input-networkIdentifier">
+
+	<div class="form-row">
+	    <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
+	    <input type="text" id="node-input-name" placeholder="My ZWave Node" style="width: calc(100% - 135px)">
+	</div>
+	<div class="form-row">
+	    <label for="node-input-showStatus" style="width:130px"><i class="fa fa-pencil"></i> Show Status</label>
+	    <input type="checkbox" id="node-input-showStatus" />
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-networkIdentifier" style="width:130px"><i class="fa fa-pencil"></i> Network ID</label>
+		<button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network1" onclick="setID(1)">1</button>
+		<button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network2" onclick="setID(2)">2</button>
+		<button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network3" onclick="setID(3)">3</button>
+		<button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network4" onclick="setID(4)">4</button>
+
+	</div>
+	<div class="form-row">
+	    <label for="node-input-filteredMode" style="width:130px"><i class="fa fa-pencil"></i> Mode</label>
+	    <select id="node-input-filteredMode" onchange="SortFilterChange()" style="width: calc(100% - 135px)">
+	        <option value="All">All Nodes</option>
+	        <option value="Multiple">Multiple Nodes</option>
+	        <option value="Multicast">Multicast</option>
+	        <option value="Single">Specific Node</option>
+	        <option value="Message">As Specified</option>
+	    </select>
+	</div>
+	<div class="form-row" id="drate">
+	    <label for="node-input-messagesPerMS" style="width:130px"><i class="fa fa-pencil"></i> Distribution Rate</label>
+	    <input style="width:50px" type="text" id="node-input-messagesPerMS" placeholder="1"> node(s) / <input style="width:50px" type="text" id="node-input-messageInterval" placeholder="250"> ms
+	</div>
+	<div class="form-row">
+	    <label for="node-input-datamode" style="width:130px"><i class="fa fa-pencil"></i> Network Mode</label>
+	    <select id="node-input-datamode" onchange="showIsolated()" style="width: calc(100% - 135px)">
+	        <option value="Send/Receive">Send/Receive</option>
+	        <option value="Send">Send</option>
+	        <option value="Receive">Receive</option>
+	    </select>
+	</div>
+	<div class="form-row" id="IsolatedDiv">
+	    <label for="node-input-isolated" style="width:130px"><i class="fa fa-pencil"></i> Isolated getValue</label>
+	    <input type="checkbox" id="node-input-isolated" />
+	</div>
+	<div class="form-row">
+	    <label for="node-input-filteredNodeId" style="width:130px"><i class="fa fa-pencil"></i> Node ID(s)</label>
+	    <select id="node-input-filteredNodeId" style="width: calc(100% - 135px)">
+	    </select>
+	</div>
+	<div class="form-tips" id="node-tip">
+		    Note: This node works in conjunction with the main Z-Wave JS Controller node, therefore, ensure the controller node is in one of your flows and in a deployed state before using this node.
+		</div>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/markdown" data-help-name="zwave-device">
+<p>A Z-Wave device node.</p>
+
+This node works in conjuction with the main **ZWave Controller** node. It is used to send and/or receive messages to a single or multiple Z-Wave devices. Full details for the `ZWave Device` node are available [here](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Z-Wave-Device-Node). 
+
+### Setup
+
+The **Mode** will determine which Z-Wave device(s) this node will communicate with. See below for more information.
+
+The **Network Mode** will determine if the node will send, receive, or both. 
+
+`Send` mode will send messages *from* Node-RED *to* the Z-Wave device(s).  
+`Receive` mode means it will receive messages *from* the Z-Wave device(s) *to* your Node-RED flows.  
+`Send/Receive` will of course do both sending and receiving.
+
+### Mode Option Details
+
+**All Nodes** 
+ - Device node will Output messages for all Nodes 
+ - Messages Input to the Device node will require a `node` property
+ 
+**Multiple Nodes** 
+ - Device node will Output messages from the specified Nodes
+ - Input messages will be sent as individual messages to each selected node
+ - If a `node` property is specified in the Input, it will only address that node but will continue sending Output payloads for all selected nodes
+
+**Multicast**
+ - Like **Multiple Nodes**, but uses Z-Wave Multicast for Input messages
+ - The `node` property in your Input messages will be ignored
+ - Limited to **Value API** `setValue` and **CCAPI** `set` type commands
+ - Requires that the selected devices support Z-Wave Multicast methods
+
+**Specific Node**
+ - Will listen for updates on the specified node only
+ - If Input is sent with `node` property, it will be ignored
+
+**As Specified**
+ - Will listen for updates on the specified node, whichever node was specified most recently in an Input message
+ - Messages which are Input will need a `node` property specified
+
+**Subflow Variable**
+ - Like **Specific Node**, but the Node ID is taken from the `ZW_NODE_ID` subflow Variable
+ - The `node` property in an Input message is ignored
+
+### Input Messages
+
+It is *highly recommended* to form Input messages using the **CMD Factory** node.
+
+The input to this node is expected to be a `msg.payload` object containing a Z-Wave command. The device node can receive commands for the configured device(s) **Devices** on your Z-Wave network, as determined by the **Node ID(s)** field.
+
+The format of each `msg.payload` object is dependant on which API is being used. The device node will accept any command from either [Value API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Value-API) or [CC API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/CC-API). Follow the links for more details on the proper formatting and message options for each API.
+
+### Output Messages
+
+Messages will be Output from this node according to the **Mode** chosen. See above for details on each mode option.
+
+It is recommended to use the `Event Filter` node immediately after the `ZWave Device` node in order to filter and sort the messages coming from your devices.
+</script>

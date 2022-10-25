@@ -1,0 +1,1404 @@
+﻿<script
+	type="text/javascript"
+	src="resources/node-red-contrib-zwave-js/UITab/handlebars.min.js"
+></script>
+<script>
+	Handlebars.registerHelper('inc', function (value, options) {
+		return parseInt(value) + 1;
+	});
+</script>
+<script
+	type="text/javascript"
+	src="resources/node-red-contrib-zwave-js/UITab/client.js"
+></script>
+<script
+	type="text/javascript"
+	src="resources/node-red-contrib-zwave-js/UITab/jquery-steps.min.js"
+></script>
+<script
+	type="text/javascript"
+	src="resources/node-red-contrib-zwave-js/UITab/qrcode.min.js"
+></script>
+<script
+	type="text/javascript"
+	src="resources/node-red-contrib-zwave-js/UITab/FileSaver.min.js"
+></script>
+<link
+	rel="stylesheet"
+	href="resources/node-red-contrib-zwave-js/UITab/styles.css"
+/>
+<link
+	rel="stylesheet"
+	href="resources/node-red-contrib-zwave-js/UITab/jquery-steps.css"
+/>
+<link
+	rel="stylesheet"
+	href="resources/node-red-contrib-zwave-js/UITab/jquery.minicolors.css"
+/>
+<script
+	type="text/javascript"
+	src="resources/node-red-contrib-zwave-js/UITab/jquery.minicolors.min.js"
+></script>
+
+<!-- templates used for modal dialogs *-->
+
+<!-- Health Check Result-->
+<script id="TPL_HealthCheck" type="text/x-handlebars-template">
+	<table
+		style='width: 90%; margin: auto; margin-bottom: 40px;'
+		cellpadding='5'
+		cellspacing='0'
+	>
+		<tr style='font-size: 20px;'>
+			<td style='width: 16%; text-align: center;'>Worst</td>
+			<td
+				style='text-align: center;width: 16%;font-size: 38px; font-weight: bold; color:{{MC}};'
+			>{{Worst}}</td>
+			<td style='text-align: center;width: 16%;'>Average</td>
+			<td
+				style='text-align: center;width: 16%;font-size: 38px; font-weight: bold; color:{{AC}};'
+			>{{Average}}</td>
+			<td style='text-align: center;width: 16%;'>Best</td>
+			<td
+				style='text-align: center;width: 16%;font-size: 38px; font-weight: bold; color:{{MXC}}'
+			>{{Best}}</td>
+		</tr>
+	</table>
+
+	<div style='width: 90%; margin: auto;'>Health Check</div>
+	<table class='zwave-js-health-table' cellpadding='5' cellspacing='0'>
+		<tbody>
+			<tr style='background-color: lightgray;'>
+				<td>Round</td>
+				<td>Latency</td>
+				<td>Failed Pings</td>
+				<td>Neighbors</td>
+				<td>Route Changes</td>
+				<td>SNR Margin</td>
+				<td>Min Power level</td>
+				<td>Rating</td>
+			</tr>
+			{{#rounds}}
+				<tr>
+					<td>#{{inc @index}}</td>
+					<td>{{latency}} ms</td>
+					<td>{{failedPingsNode}}</td>
+					<td>{{numNeighbors}}</td>
+					<td>{{routeChanges}}</td>
+					<td>{{snrMargin}} dBm</td>
+					<td>-{{minPowerlevel}} dBm</td>
+					<td>{{rating}}</td>
+				</tr>
+			{{/rounds}}
+		</tbody>
+	</table>
+	<div style='width: 90%; margin: auto;'>Node Statistics</div>
+	<table class='zwave-js-health-table' cellpadding='5' cellspacing='0'>
+		<tbody>
+			<tr style='background-color: lightgray;'>
+				<td>Commands TX</td>
+				<td>Commands RX</td>
+				<td>Commands Dropped TX</td>
+				<td>Commands Dropped RX</td>
+				<td>Timeouts</td>
+			</tr>
+			<tr>
+				<td>{{TX}}</td>
+				<td>{{RX}}</td>
+				<td>{{TXD}}</td>
+				<td>{{RXD}}</td>
+				<td>{{TO}}</td>
+			</tr>
+		</tbody>
+	</table>
+	<div style='width: 90%; margin: auto;'>
+		<a
+			target='_blank'
+			href='https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Driver-API#checklifelinehealth'
+		>Please see the wiki for more information.</a>
+	</div>
+</script>
+
+<!--Inclusion-->
+<script id="TPL_Include" type="text/x-handlebars-template">
+	<div class='step-app' id='IncludeWizard'>
+		<ul class='step-steps' style='display: none;'>
+			<li data-step-target='SecurityMode'></li>
+			<li data-step-target='NIF'></li>
+			<li data-step-target='Remove'></li>
+			<li data-step-target='Classes'></li>
+			<li data-step-target='DSK'></li>
+			<li data-step-target='AddDone'></li>
+			<li data-step-target='AddDoneInsecure'></li>
+			<li data-step-target='RemoveDone'></li>
+			<li data-step-target='ReplaceSecurityMode'></li>
+			<li data-step-target='Aborted'></li>
+			<li data-step-target='SmartStart'></li>
+			<li data-step-target='SmartStartList'></li>
+			<li data-step-target='SmartStartListEdit'></li>
+			<li data-step-target='SmartStartDone'></li>
+			<li data-step-target='RemoveDoneUnconfirmed'></li>
+		</ul>
+		<div class='step-content' style='border: none;'>
+			<!-- Secuity Mode-->
+			<div class='step-tab-panel' data-step='SecurityMode'>
+				<br />
+				<table
+					style='width: 100%; height: 290px;'
+					cellpadding='5'
+					cellspacing='0'
+				>
+					<tr>
+						<td style='text-align: left;width: 200px;vertical-align: top; '>
+							<button
+								class='ui-button ui-corner-all ui-widget SecrutiyButton'
+								onclick="StartInclusionExclusion('Default')"
+							>Default</button><br />
+						</td>
+						<td style='text-align: left; vertical-align: middle; '>
+							S2 when supported, else S0 only when necessary, no encryption
+							otherwise (recommended).
+							<div style='height: 7px !important'></div>
+							<input type='checkbox' id='PS0' />
+							<label for='S0'>Prefer S0 over no encryption</label>
+						</td>
+					</tr>
+					<tr>
+						<td style='text-align: left;vertical-align: top; '>
+							<button
+								class='ui-button ui-corner-all ui-widget SecrutiyButton'
+								onclick="StartInclusionExclusion('SmartStart')"
+							>Smart Start</button>
+						</td>
+						<td style='text-align: left;vertical-align: middle; '>
+							Enroll devices quickly using their QR code.
+						</td>
+					</tr>
+					<tr>
+						<td style='text-align: left; vertical-align: top; '>
+							<button
+								class='ui-button ui-corner-all ui-widget SecrutiyButton'
+								onclick="StartInclusionExclusion('S0')"
+							>S0</button>
+						</td>
+						<td style='text-align: left; vertical-align: middle; '>
+							Use S0 only, evan if S2 is supported (not recommended)
+						</td>
+					</tr>
+					<tr>
+						<td style='text-align: left; vertical-align: top; '>
+							<button
+								class='ui-button ui-corner-all ui-widget SecrutiyButton'
+								onclick="StartInclusionExclusion('None')"
+							>No Encryption</button>
+						</td>
+						<td style='text-align: left; vertical-align: middle; '>
+							Add a node which will not use security (not recommended)
+						</td>
+					</tr>
+					<tr>
+						<td colspan='2'>
+							<hr />
+						</td>
+
+					</tr>
+					<tr>
+						<td style='text-align: left; vertical-align: top; '>
+							<button
+								class='ui-button ui-corner-all ui-widget SecrutiyButton'
+								onclick="StartInclusionExclusion('Remove')"
+							>Remove Node</button>
+						</td>
+						<td style='text-align: left; vertical-align: middle; '>
+							Remove a node from your Network
+							<div style='height: 7px !important'></div>
+							<input type='checkbox' id='ERP' />
+							<label for='ERP'>Remove from provisioning list also</label>
+						</td>
+					</tr>
+					<tr>
+						<td style='text-align: left; vertical-align: top; '>
+							<button
+								class='ui-button ui-corner-all ui-widget SecrutiyButton'
+								onclick="StartInclusionExclusion('EditSmartStart')"
+							>Smart Start Provision List</button>
+						</td>
+						<td style='text-align: left; vertical-align: middle; '>
+							Remove Smart Start Entries
+						</td>
+					</tr>
+				</table>
+			</div>
+			<!--Wait for NIF-->
+			<div class='step-tab-panel' data-step='NIF'>
+				<br />
+				<table style='width: 100%; height: 290px;'>
+					<tr>
+						<td style='text-align: center;'>
+							<img
+								src='resources/node-red-contrib-zwave-js/UITab/Include.png'
+								width='200px'
+							/>
+						</td>
+					</tr>
+					<tr>
+						<td style='text-align: center;'>
+							Place your ZWave device into 'Inclusion Mode'.<br />
+							Please ensure your device is within close proximity to the
+							controller.
+							<br />
+							<br />
+							<span
+								class='countdown'
+								style='color: darkgray; font-size: 18px;'
+							></span>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<!--Wait for Removal-->
+			<div class='step-tab-panel' data-step='Remove'>
+				<br />
+				<table style='width: 100%; height: 290px;'>
+					<tr>
+						<td style='text-align: center;'>
+							<img
+								src='resources/node-red-contrib-zwave-js/UITab/Exclude.png'
+								width='200px'
+							/>
+						</td>
+					</tr>
+					<tr>
+						<td style='text-align: center;'>
+							Place your ZWave device into 'Exclusion Mode'.<br />
+							Please ensure your device is within close proximity to the
+							controller.
+							<br />
+							<br />
+							<span
+								class='countdown'
+								style='color: darkgray; font-size: 18px;'
+							></span>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<!--Requested Security Classes-->
+			<div class='step-tab-panel' data-step='Classes'>
+				Select the S2 Security Classes you wish to grant!
+				<table
+					id='S2Classes'
+					style='width: 100%; padding: 10px;'
+					cellpadding='5'
+				>
+
+					<tr id='TR_2' style='opacity: 0.4;'>
+						<td style='width:130px'>
+							<input
+								type='checkbox'
+								id='SC_2'
+								class='SecurityClassCB'
+								disabled
+							/>
+						</td>
+						<td>
+							<lable
+								class='SCLable'
+								style='font-weight: bold;font-size: 18px;'
+								for='SC_2'
+							>S2 Access Control</lable><br />
+							S2 for door locks, garage doors, access control systems etc.
+						</td>
+					</tr>
+					<tr id='TR_1' style='opacity: 0.4;'>
+						<td style='width:130px'>
+							<input
+								type='checkbox'
+								id='SC_1'
+								class='SecurityClassCB'
+								disabled
+							/>
+						</td>
+						<td>
+							<lable
+								class='SCLable'
+								style='font-weight: bold;font-size: 18px;'
+								for='SC_1'
+							>S2 Authenticated</lable><br />
+							Allows the device that is being added, to be verifed that it is
+							the corect one.
+						</td>
+					</tr>
+					<tr id='TR_0' style='opacity: 0.4;'>
+						<td style='width:130px'>
+							<input
+								type='checkbox'
+								id='SC_0'
+								class='SecurityClassCB'
+								disabled
+							/>
+						</td>
+						<td>
+							<lable
+								class='SCLable'
+								style='font-weight: bold;font-size: 18px;'
+								for='SC_0'
+							>S2 Unauthenticated</lable><br />
+							Like S2 Authenticated, but without verification that the device
+							being added, is the correct one.
+						</td>
+					</tr>
+					<tr id='TR_7' style='opacity: 0.4;'>
+						<td style='width:130px'>
+							<input
+								type='checkbox'
+								id='SC_7'
+								class='SecurityClassCB'
+								disabled
+							/>
+						</td>
+						<td>
+							<lable
+								class='SCLable'
+								style='font-weight: bold;font-size: 18px;'
+								for='SC_7'
+							>S0 Legacy</lable><br />
+							S0 for devices that don't support S2.
+						</td>
+					</tr>
+
+				</table>
+				<button
+					class='ui-button ui-corner-all ui-widget SecrutiyButton'
+					style='margin-top: 10px; margin-left: 39%;'
+					onclick='GrantSelected()'
+				>Grant Selected</button>
+				<br />
+				<br />
+				<div
+					class='countdown'
+					style='color: darkgray; font-size: 18px; text-align: center;'
+				></div>
+			</div>
+			<!--DSK-->
+			<div class='step-tab-panel' data-step='DSK'>
+				<br />
+				Please enter the pin code as found on the device packaging/user manual,
+				Please also verify the DSK matches that of the device you're adding.
+				<br />
+				<table
+					id='S2DSK'
+					style='width: 100%; padding: 10px; margin-top: 100px;'
+					cellpadding='5'
+				>
+					<tr>
+						<td style='text-align: center;'>PIN</td>
+						<td style='text-align: center;'>DSK</td>
+					</tr>
+					<tr>
+						<td style='text-align: center;'><input
+								type='text'
+								id='SC_DSK'
+								style='width: 70px;text-align: center;'
+							/></td>
+						<td style='text-align: center;' id='DSK_Previw'></td>
+					</tr>
+
+				</table>
+				<button
+					class='ui-button ui-corner-all ui-widget SecrutiyButton'
+					style='margin-top: 20px; margin-left: 39%;'
+					onclick='ValidateDSK()'
+				>Verify</button>
+				<br />
+				<br />
+				<div
+					class='countdown'
+					style='color: darkgray; font-size: 18px; text-align: center;'
+				></div>
+			</div>
+			<!--Add Done-->
+			<div class='step-tab-panel' data-step='AddDone'>
+				<br />
+				<table style='width: 100%; height: 290px;'>
+					<tr>
+						<td style='text-align: center;'>
+							<img
+								src='resources/node-red-contrib-zwave-js/UITab/NodeAdded.png'
+								width='200px'
+							/>
+						</td>
+					</tr>
+					<tr>
+						<td style='text-align: center;'>
+							Your device has been added to the network. It will now be
+							interviewed.<br />
+							Please ensure it remains in close proximity, until the interview
+							completes.</td>
+					</tr>
+					<tr id='IR_Security_Row_OK'></tr>
+				</table>
+			</div>
+			<!--Add Done Insecure-->
+			<div class='step-tab-panel' data-step='AddDoneInsecure'>
+				<br />
+				<table style='width: 100%; height: 290px;'>
+					<tr>
+						<td style='text-align: center;'>
+							<img
+								src='resources/node-red-contrib-zwave-js/UITab/NodeError.png'
+								width='200px'
+							/>
+						</td>
+					</tr>
+					<tr>
+						<td style='text-align: center;'>
+							Your device has been added to the network,<br />
+							but the requested security class couldn't be achieved,<br /><br />
+							It will now be interviewed.<br />Please ensure it remains in close
+							proximity, until the interview completes.
+						</td>
+					</tr>
+					<tr id='IR_Security_Row_NOK'></tr>
+				</table>
+			</div>
+			<!--Remove Done-->
+			<div class='step-tab-panel' data-step='RemoveDone'>
+				<br />
+				<table style='width: 100%; height: 290px;'>
+					<tr>
+						<td style='text-align: center;'>
+							<img
+								src='resources/node-red-contrib-zwave-js/UITab/NodeRemoved.png'
+								width='200px'
+							/>
+						</td>
+					</tr>
+					<tr>
+						<td style='text-align: center;'>Your device has been removed from
+							the network.</td>
+					</tr>
+				</table>
+			</div>
+			<!--Replace Mode-->
+			<div class='step-tab-panel' data-step='ReplaceSecurityMode'>
+				<br />
+				<table style='width: 100%; height: 160px;'>
+					<tr>
+						<td style='text-align: left;width: 200px;vertical-align: top; '>
+							<button
+								class='ui-button ui-corner-all ui-widget SecrutiyButton'
+								onclick="StartReplace('S2')"
+							>S2</button>
+						</td>
+						<td style='text-align: left; vertical-align: middle; '>
+							The replacement node will use S2 Security. (Reccomended)
+						</td>
+					</tr>
+					<tr>
+						<td style='text-align: left;width: 200px;vertical-align: top; '>
+							<button
+								class='ui-button ui-corner-all ui-widget SecrutiyButton'
+								onclick="StartReplace('S0')"
+							>S0</button>
+						</td>
+						<td style='text-align: left; vertical-align: middle; '>
+							The replacement node will use S0 Security. (Not Reccomended)
+						</td>
+					</tr>
+					<tr>
+						<td style='text-align: left;width: 200px;vertical-align: top; '>
+							<button
+								class='ui-button ui-corner-all ui-widget SecrutiyButton'
+								onclick="StartReplace('None')"
+							>No Encryption</button>
+						</td>
+						<td style='text-align: left; vertical-align: middle; '>
+							The replacement node will not use Security. (Not Reccomended)
+						</td>
+					</tr>
+				</table>
+			</div>
+			<!--Aborted-->
+			<div class='step-tab-panel' data-step='Aborted'>
+				<br />
+				<table style='width: 100%; height: 290px;'>
+					<tr>
+						<td style='text-align: center;'>
+							<img
+								src='resources/node-red-contrib-zwave-js/UITab/NodeError.png'
+								width='200px'
+							/>
+						</td>
+					</tr>
+					<tr>
+						<td style='text-align: center;'>The inclusion routine was aborted.<br
+							/>
+							The device may or may not have been added to your network.</td>
+					</tr>
+				</table>
+			</div>
+			<!--Smart Start-->
+			<div class='step-tab-panel' data-step='SmartStart'>
+				<br />
+				<table style='width: 100%;'>
+					<tr>
+						<td style='width: 50%; vertical-align: top;'>
+							<p style='margin-top: 0px;'>Using your mobile phone, scan this QR
+								code, it will start up a web application hosted on your node-red
+								server.</p>
+							<p>Note: This web application running on node-red, uses a self
+								signed certificate, therefore, you will get a warning.</p>
+							<p>It is safe to visit this web application (its on your node red
+								server) so accept any secuity warning presented.</p>
+						</td>
+						<td style='vertical-align: top;'>
+							<div
+								style='margin: auto; display: block; width: 150px;'
+								id='SmartStartQR'
+							></div>
+						</td>
+					</tr>
+					<tr>
+						<td
+							colspan='2'
+							style='vertical-align: middle;height: 90px;text-align: center;'
+						>
+							<span id='SmartStartURL'></span>
+						</td>
+					</tr>
+
+				</table>
+
+			</div>
+			<!--Smart Start List-->
+			<div class='step-tab-panel' data-step='SmartStartList'>
+				<br />
+				Start scanning your device's, they will appear below.
+				<br />
+				<br />
+				<table
+					style='width:100%'
+					id='SmartStartScannedList'
+					cellpadding='5'
+					cellspacing='0'
+				>
+					<tr style='background-color:#eee;'>
+						<td>
+							DSK Pin
+						</td>
+						<td>
+							Manufacturer
+						</td>
+						<td>
+							Product
+						</td>
+						<td>
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+			</div>
+			<!--Smart Start List Edit-->
+			<div class='step-tab-panel' data-step='SmartStartListEdit'>
+				<br />
+				Below is the Smart Start Identifiers.
+				<br />
+				<br />
+				<table
+					style='width:100%'
+					id='SmartStartEditList'
+					cellpadding='5'
+					cellspacing='0'
+				>
+					<tr style='background-color:#eee;'>
+						<td>
+							DSK Pin
+						</td>
+						<td>
+							Manufacturer
+						</td>
+						<td>
+							Product
+						</td>
+						<td>
+							&nbsp;
+						</td>
+					</tr>
+				</table>
+			</div>
+			<!--Smart Start Done-->
+			<div class='step-tab-panel' data-step='SmartStartDone'>
+				<p>The scanned devices have now been added to a provisioning list.</p>
+				<p>Once the devices have been powered up, they should broadcast a 'Here
+					I Am' type message.</p>
+				<p>The rate at which this happens, is down to the device, but once the
+					broadcast has been recieved, the device should get interviewed and
+					added to your network.</p>
+			</div>
+			<!--Remove Done Uncofirmed-->
+			<div class='step-tab-panel' data-step='RemoveDoneUnconfirmed'>
+				<br />
+				<table style='width: 100%; height: 290px;'>
+					<tr>
+						<td style='text-align: center;'>
+							<img
+								src='resources/node-red-contrib-zwave-js/UITab/NodeError.png'
+								width='200px'
+							/>
+						</td>
+					</tr>
+					<tr>
+						<td style='text-align: center;'>Node exclusion has finished.<br />No
+							nodes were removed from this network.</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+</script>
+
+<!--Associations-->
+<script id="TPL_Associations" type="text/x-handlebars-template">
+	<table style='margin-bottom: 20px;'>
+		<tbody>
+			<tr>
+				<td>Endpoint</td>
+				<td>
+					<select id='NODE_EP' style='width: 150px;'>
+						<option>Select Endpoint...</option>
+						{{#endpoints}}
+							<option value='{{Endpoint}}'>{{Endpoint}}</option>
+						{{/endpoints}}
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td>Association Group</td>
+				<td>
+					<select id='NODE_G' style='width: 150px;'>
+						<option>Select Group...</option>
+					</select>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+
+	Target Node(s) for selected Endpoint &amp; Association Group
+	<table id='zwave-js-associations-table' cellpadding='5' cellspacing='0'>
+		<tr>
+			<td style='width: 33%;'>Node ID</td>
+			<td style='width: 33%;'>Endpoint</td>
+			<td style='width: 33%;'>&nbsp;</td>
+		</tr>
+
+	</table>
+	<div style='text-align: right;'>
+		<input
+		style="margin-right: 8px;margin-top: 5px;width: 70px"
+			id='AMAddBTN'
+			class='ui-button ui-corner-all ui-widget'
+			type='button'
+			value='Add'
+		/>
+	</div>
+</script>
+
+<!--Firmware-->
+<script id="TPL_Firmware" type="text/x-handlebars-template">
+	<div
+		style='border: 1px solid red; margin-top: 10px; width: 100%; box-sizing: border-box; margin-left: auto; margin-right: auto; padding: 10px;'
+	>
+		This software is provided as-is.<br />
+		<br />
+		The developer(s) of
+		<strong>node-red-contrib-zwave-js</strong>
+		or any libraries it uses,<br />
+		are not responsible for any damage that may result from your attempt to
+		upgrade the firmware.<br />
+		<br />
+		You are performing this upgrade, soley at your own risk.
+	</div>
+
+	<div
+		id='FWForm'
+		style='width: 100%; box-sizing: border-box; margin-left: auto; margin-right: auto; margin-top: 10px; padding: 5px;'
+	>
+	<div id="tabs">
+		<ul>
+			<li><a href="#tabs-1">Firmware Update Service</a></li>
+			<li><a href="#tabs-2">Local File</a></li>
+
+		</ul>
+		<div id="tabs-1" style="padding:20px">
+			<table>
+				<tbody>
+					<tr>
+						<td>Target Node</td>
+						<td>
+							<select id='NODE_FWC' onchange="CheckForUpdate()">
+								<option>Select Node...</option>
+								{{#each nodes}}
+									{{#if this.length}}
+										<optgroup label=' --- {{@key}} --- '>
+											{{#each this}}
+												<option value='{{id}}'>{{id}} - {{name}}</option>
+											{{/each}}
+										</optgroup>
+									{{/if}}
+								{{/each}}
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td>Firmware Version</td>
+						<td>
+							<select id='NODE_FWCV'>
+								<option>Select Version & File...</option>
+							</select>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			<div id="ChangeLog"></div>
+		</div>
+		  <div id="tabs-2" style="padding:20px">
+			<table>
+				<tbody>
+					<tr>
+						<td>Target Node</td>
+						<td>
+							<select id='NODE_FW'>
+								<option>Select Node...</option>
+								{{#each nodes}}
+									{{#if this.length}}
+										<optgroup label=' --- {{@key}} --- '>
+											{{#each this}}
+												<option value='{{id}}'>{{id}} - {{name}}</option>
+											{{/each}}
+										</optgroup>
+									{{/if}}
+								{{/each}}
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td>Firmware Update Target</td>
+						<td>
+							<input type='number' value='0' min='0' id='TARGET_FW' />
+						</td>
+					</tr>
+					<tr>
+						<td>Firmware Update File</td>
+						<td><input type='file' id='FILE_FW' /></td>
+					</tr>
+				</tbody>
+			</table>
+		  </div>
+	</div>
+	
+		<div class='progressbar' id='FWProgress'><div></div></div>
+	</div>
+	<script type="text/javascript">$( "#tabs" ).tabs()</script>;
+</script>
+
+<!--RF Settings-->
+<script id="TPL_RF" type="text/x-handlebars-template">
+	<div
+		style='border: 1px solid red; margin-top: 10px; width: 100%; box-sizing: border-box; margin-left: auto; margin-right: auto; padding: 10px;'
+	>
+		This software is provided as-is.<br />
+		<br />
+		The developer(s) of
+		<strong>node-red-contrib-zwave-js</strong>
+		or any libraries it uses,<br />
+		are not responsible for any damage that may result of your use of the below
+		functions.<br />
+		<br />
+		You are performing these actions, soley at your own risk, and are
+		responsible for ensuring any RF changes complies with all applicable laws
+		and regulations.
+	</div>
+	<table style='width:100%; padding: 15px;' cellpadding='10px'>
+		<tr id='RF_TR_REGION'>
+			<td>RF Region</td>
+			<td style='text-align:right'>
+				<select id='RF_REGION'>
+					<option value='0x02'>Australia/New Zealand</option>
+					<option value='0x08'>China</option>
+					<option value='0xff'>Default (EU)</option>
+					<option value='0x00'>Europe</option>
+					<option value='0x03'>Hong Kong</option>
+					<option value='0x05'>India</option>
+					<option value='0x06'>Israel</option>
+					<option value='0x20'>Japan</option>
+					<option value='0x21'>Korea</option>
+					<option value='0x07'>Russia</option>
+					<option value='0x01'>USA</option>
+					<option value='0x09'>USA (Long Range)</option>
+					<option value='0xfe' selected>Unknown</option>
+				</select>
+
+			</td>
+			<td style='text-align: right;'><button
+					style='width:70px; height:30px'
+					class='ui-button ui-corner-all ui-widget SecrutiyButton CriticalDisable'
+					onclick='SetRegion()'
+				>Apply</button></td>
+		</tr>
+		<tr id='RF_TR_POWER'>
+			<td>RF Power Level (dBm)</td>
+			<td style='text-align:right'>
+
+				<div
+					id='RF_POWER'
+					style='text-align:left;width: 270px;margin: 5px;height: 20px; float: right; line-height: 20px;'
+				>
+					&nbsp;&nbsp;Power Level
+					<div
+						id='RF_POWER_SLIDER'
+						class='ui-slider-handle'
+						style='width: 35px;height: 20px;line-height: 20px;font-size: 12px;'
+					></div>
+				</div>
+
+				<div
+					id='RF_0DBM'
+					style='text-align:left;width: 270px;margin: 5px;height: 20px; float: right; line-height: 20px;'
+				>
+					&nbsp;&nbsp;Measured 0dBm
+					<div
+						id='RF_0DBM_SLIDER'
+						class='ui-slider-handle'
+						style='width: 35px;height: 20px;line-height: 20px;font-size: 12px;'
+					></div>
+				</div>
+
+			</td>
+			<td style='text-align: right;'><button
+					style='width:70px; height:30px'
+					class='ui-button ui-corner-all ui-widget SecrutiyButton CriticalDisable'
+					onclick='SetPowerLevel()'
+				>Apply</button></td>
+		</tr>
+		<tr>
+			<td>Backup/Restore NVM<br />
+				<span style='font-size: 12px;'>Backups will be downloaded to your
+					computer.</span>
+			</td>
+			<td colspan='2' style='text-align:right'><button
+					style='width:120px; height:30px'
+					class='ui-button ui-corner-all ui-widget SecrutiyButton CriticalDisable'
+					onclick='restoreNVM()'
+				>Restore</button>
+				<button
+					button
+					style='width:120px; height:30px'
+					class='ui-button ui-corner-all ui-widget SecrutiyButton CriticalDisable'
+					onclick='backupNVMRaw()'
+				>Backup</button></td>
+		</tr>
+	</table>
+	<div
+		class='nmprogresslabel'
+		id='NVMProgressLabel'
+		style='margin-top:10px'
+	></div>
+	<div style='margin-top:5px' class='progressbar' id='NVMProgress'><div
+		></div></div>
+	<input type='file' id='FILE_BU' style='display:none' />
+</script>
+
+<script type="text/javascript">
+	function modalAlert(message, title) {
+		const Buts = {
+			Ok: function () {}
+		};
+		modalPrompt(message, title, Buts);
+	}
+
+	function modalPrompt(message, title, buttons, addCancel) {
+		const Options = {
+			draggable: false,
+			modal: true,
+			resizable: false,
+			width: 'auto',
+			title: title,
+			minHeight: 75,
+			buttons: {}
+		};
+
+		Object.keys(buttons).forEach((BT) => {
+			Options.buttons[BT] = function () {
+				$(this).dialog('destroy');
+				buttons[BT]();
+			};
+		});
+
+		if (addCancel) {
+			Options.buttons['Cancel'] = function () {
+				$(this).dialog('destroy');
+			};
+		}
+
+		$('<div>')
+			.css({ padding: 10, maxWidth: 500, wordWrap: 'break-word' })
+			.html(message)
+			.dialog(Options);
+	}
+
+	function handleNetworkKeyPaste(e) {
+		e.stopPropagation();
+		e.preventDefault();
+
+		const clipboardData = e.clipboardData || window.clipboardData;
+		let pastedData = clipboardData.getData('Text');
+
+		if (pastedData) {
+			pastedData = pastedData
+				.trim()
+				.replace(/0x/g, '')
+				.replace(/\[/g, '')
+				.replace(/\]/g, '')
+				.replace(/[^0-9a-fA-F]+/g, '')
+				.toLowerCase()
+				.slice(0, 32);
+		}
+		$(event.target).val(pastedData);
+	}
+
+	function genKey() {
+		const bytes = new Uint8Array(16);
+		window.crypto.getRandomValues(bytes);
+		const hexKey = [...bytes]
+			.map((x) => x.toString(16).padStart(2, '0'))
+			.join('');
+		$(event.target).prev().val(hexKey);
+	}
+
+	function DBUpdate() {
+		const Button = $(event.target);
+
+		Button.prop('disabled', true);
+		Button.html('Please Wait');
+
+		ZwaveJsUI.ControllerCMD('DriverAPI', 'installConfigUpdate')
+			.then(({ object }) => {
+				if (object.installed) {
+					modalAlert(
+						'The Device Database has been updated to ' +
+							object.version +
+							', please restart Node Red, to complete the update.',
+						'DB Updated'
+					);
+					$('#ZWJS_CFGVersion').val(object.version);
+					Button.prop('disabled', false);
+					Button.html('Check For Updates');
+				} else {
+					modalAlert('No DB update is availbale.', 'No Updates Available');
+					Button.prop('disabled', false);
+					Button.html('Check For Updates');
+				}
+			})
+			.catch((err) => {
+				modalAlert(err.responseText, 'DB Update Failed');
+				Button.prop('disabled', false);
+				Button.html('Check For Updates');
+			});
+	}
+
+	RED.nodes.registerType('zwave-js', {
+		category: 'ZWave JS',
+		color: 'rgb(46,145,205)',
+		defaults: {
+			networkIdentifier: { value: undefined },
+			serialPort: { value: undefined },
+			name: { value: 'ZWave Controller' },
+			encryptionKey: { value: undefined },
+			encryptionKeyS2U: { value: undefined },
+			encryptionKeyS2A: { value: undefined },
+			encryptionKeyS2AC: { value: undefined },
+			ackTimeout: { value: undefined },
+			controllerTimeout: { value: undefined },
+			sendResponseTimeout: { value: undefined },
+			sendDataCallback: { value: undefined },
+			serialAPIStarted: { value: undefined },
+			logLevelPin: { value: 'none' },
+			logLevel: { value: 'none' },
+			logFile: { value: undefined },
+			logNodeFilter: { value: undefined },
+			sendUsageStatistics: { value: true },
+			valueCacheDiskThrottle: { value: 'normal' },
+			customConfigPath: { value: undefined },
+			intvwUserCodes: { value: false },
+			softResetUSB: { value: false },
+			outputs: { value: 1 },
+			disableOptimisticValueUpdate: { value: false },
+			FWlicenseKey: { value: 'NON-COMMERCIAL' },
+			scalesTemp: { value: '0x00' },
+			scalesHumidity: { value: '0x00' }
+		},
+		inputs: 1,
+		outputs: 1,
+		icon: 'ZWJS.svg',
+		label: function () {
+			return this.name;
+		},
+		onpaletteadd: ZwaveJsUI.init,
+		oneditprepare: SortUI,
+		oneditsave: SortIO,
+		paletteLabel: 'ZWave Controller'
+	});
+
+	function SortIO() {
+		if ($('#node-input-logLevelPin').val() !== 'none') {
+			this.outputs = 2;
+		} else {
+			this.outputs = 1;
+		}
+	}
+
+	function SortUI() {
+
+		if(this.scalesHumidity === undefined){
+			$('#node-input-scalesHumidity').val("0x00");
+		}
+
+		if(this.scalesTemp === undefined){
+			$('#node-input-scalesTemp').val("0x00");
+		}
+
+		$.getJSON(`zwave-js/cfg-getids`, (data) => {
+			data.UsedNIDs.forEach((ID) => {
+				$(`#Network${ID}`).css({ opacity: 0.5 });
+				$(`#Network${ID}`).prop('disabled', true);
+			});
+
+			const SameNodes = RED.nodes.filterNodes({ type: 'zwave-js' }).length;
+
+			if (this.networkIdentifier === undefined) {
+				if (data.UsedNIDs.length === 1 && SameNodes === 1) {
+					$('#node-input-networkIdentifier').val(data.UsedNIDs[0]);
+					$('#Network' + data.UsedNIDs[0]).css({
+						opacity: 1.0,
+						backgroundColor: 'lightgray'
+					});
+					$(`#Network${data.UsedNIDs[0]}`).prop('disabled', false);
+				} else {
+					$('#node-input-networkIdentifier').val(data.AvailableNIDs[0]);
+					$('#Network' + data.AvailableNIDs[0]).css({
+						opacity: 1.0,
+						backgroundColor: 'lightgray'
+					});
+					$(`#Network${data.AvailableNIDs[0]}`).prop('disabled', false);
+				}
+			} else {
+				$(`#Network${this.networkIdentifier}`).css({
+					opacity: 1.0,
+					backgroundColor: 'lightgray'
+				});
+				$(`#Network${this.networkIdentifier}`).prop('disabled', false);
+			}
+
+			$.getJSON(`zwave-js/cfg-serialports`, (data) => {
+				$('#node-input-serialPort').empty();
+				$('#node-input-serialPort').append(
+					new Option('Select Port', 'Select Port')
+				);
+				$('#node-input-serialPort').append(
+					new Option('Custom Path...', 'Custom Path...')
+				);
+
+				$('#node-input-serialPort').append(
+					data.map(function (option) {
+						return new Option(option, option);
+					})
+				);
+
+				if (this.serialPort !== undefined) {
+					if (data.indexOf(this.serialPort) < 0) {
+						$('#node-input-serialPort').append(
+							new Option(this.serialPort, this.serialPort)
+						);
+					}
+
+					$('#node-input-serialPort').val(this.serialPort);
+				} else {
+					$('#node-input-serialPort').val('Select Port');
+				}
+
+				const OV = this.serialPort ?? '';
+
+				$('#node-input-serialPort').change(function (event) {
+					var Value = event.target.value;
+
+					if (Value === 'Custom Path...') {
+						Value = prompt('Enter custom serial path.', OV);
+						if (Value !== null) {
+							Value = Value.trim();
+							$('#node-input-serialPort').append(new Option(Value, Value));
+							$('#node-input-serialPort').val(Value);
+						}
+					}
+				});
+				$.getJSON(`zwave-js/cfg-version`, (data) => {
+					$('#MOD_Version').val(data.moduleversion);
+					$('#ZWJS_Version').val(data.zwjsversion);
+					$('#ZWJS_CFGVersion').val(data.zwjscfgversion);
+				});
+			});
+		});
+	}
+
+	function setID(ID) {
+		$('#Network1').css({ backgroundColor: '' });
+		$('#Network2').css({ backgroundColor: '' });
+		$('#Network3').css({ backgroundColor: '' });
+		$('#Network4').css({ backgroundColor: '' });
+
+		$('#node-input-networkIdentifier').val(ID);
+		$('#Network' + ID).css({
+			backgroundColor: 'lightgray'
+		});
+	}
+</script>
+
+<script type="text/x-red" data-template-name="zwave-js">
+
+	<input type="hidden" id="node-input-networkIdentifier">
+
+	<p class="zwave-js-config-section-title">
+		<strong>Z-Wave JS Analytics Reporting</strong>
+	</p>
+
+	<div class="form-tips" id="node-tip" style="margin-bottom: 10px; padding: 0px; background: none; border:none;min-width:480px">
+	Please allow the Z-Wave JS project to collect some anonymized data regarding the devices you own so that we can generate statistics that allow us to better focus our development efforts. This information is not tracked to any identifiable user or IP address and <strong>cannot be used to identify you</strong><br /><br />For more specifics about the data collected, click <a target="_blank" style="text-decoration:underline;color:blue" href="https://zwave-js.github.io/node-zwave-js/#/data-collection/user-disclosure">here</a>.
+	</div>
+
+	<div class="form-row">
+	    <label  for="node-input-sendUsageStatistics" style="width:130px"><i class="fa fa-pencil"></i> Send Analytics</label>
+	    <input type="checkbox" id="node-input-sendUsageStatistics">
+	</div>
+
+	<p class="zwave-js-config-section-title">
+		<strong>Z-Wave JS Firmware Update Service</strong>
+	</p>
+
+	<div class="form-tips" id="node-tip" style="margin-bottom: 10px; padding: 0px; background: none; border:none;min-width:480px">
+		Z-Wave JS offers a Firmware Update service, where a check can be made to ensure your devices are using the latest firmware. This service is free to use for non-commercial installations, If this describes the current installation, please simply enter <code>NON-COMMERCIAL</code> below. Otherwise, please enter your license key as issued by Z-Wave JS.<br /><br />To obtain a commercial key, click <a target="_blank" style="text-decoration:underline;color:blue" href="https://github.com/zwave-js/firmware-updates#api-keys">here</a>.
+	</div>
+
+	<div class="form-row">
+	    <label  for="node-input-FWlicenseKey" style="width:130px"><i class="fa fa-pencil"></i> License Key</label>
+	    <input type="text" id="node-input-FWlicenseKey">
+	</div>
+
+	<p class="zwave-js-config-section-title">
+	    <strong>Basic settings</strong>
+	</p>
+	<div class="form-row">
+	    <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
+	    <input type="text" id="node-input-name" placeholder="Zwave Controller" style="width: calc(100% - 135px)">
+	</div>
+	<div class="form-row">
+	    <label for="node-input-networkIdentifier" style="width:130px"><i class="fa fa-pencil"></i> Network ID</label>
+	    <button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network1" onclick="setID(1)">1</button>
+		<button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network2" onclick="setID(2)">2</button>
+		<button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network3" onclick="setID(3)">3</button>
+		<button class="red-ui-button red-ui-button-small zwave-js-round-square" style="width: 30px; height: 30px; margin-right: 2px;" id="Network4" onclick="setID(4)">4</button>
+
+	</div>
+	<div class="form-row">
+	    <label for="node-input-serialPort" style="width:130px"><i class="fa fa-pencil"></i> Serial Port</label>
+	    <select id="node-input-serialPort" style="width: calc(100% - 135px)">
+	    </select>
+
+	</div>
+	<p class="zwave-js-config-section-title">
+	    <strong>Encryption Keys</strong>
+	</p>
+	<div class="form-row">
+	    <label for="node-input-encryptionKey" style="width:130px"><i class="fa fa-pencil"></i> S0</label>
+	    <input type="text" id="node-input-encryptionKey" placeholder="32 character hexadecimal" style="width: calc(100% - 290px)" onpaste="handleNetworkKeyPaste(event)">
+		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
+	</div>
+	<div class="form-row">
+	    <label for="node-input-encryptionKeyS2U" style="width:130px"><i class="fa fa-pencil"></i> S2 Unauth</label>
+	    <input type="text" id="node-input-encryptionKeyS2U" placeholder="32 character hexadecimal" style="width: calc(100% - 290px)" onpaste="handleNetworkKeyPaste(event)">
+		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
+	</div>
+	<div class="form-row">
+	    <label for="node-input-encryptionKeyS2A" style="width:130px"><i class="fa fa-pencil"></i> S2 Auth</label>
+	    <input type="text" id="node-input-encryptionKeyS2A" placeholder="32 character hexadecimal" style="width: calc(100% - 290px)" onpaste="handleNetworkKeyPaste(event)">
+		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
+	</div>
+	<div class="form-row">
+	    <label for="node-input-encryptionKeyS2AC" style="width:130px"><i class="fa fa-pencil"></i> S2 Access Ctrl</label>
+	    <input type="text" id="node-input-encryptionKeyS2AC" placeholder="32 character hexadecimal" style="width: calc(100% - 290px)" onpaste="handleNetworkKeyPaste(event)">
+		<button class="ui-button ui-corner-all ui-widget" style="width:152px"  onclick="genKey()">Generate</button>
+	</div>
+	<br />
+	<p class="zwave-js-config-section-title">
+	    <strong>Timeouts (ms)</strong>
+	</p>
+	<div class="form-row">
+	    <label  for="node-input-ackTimeout" style="width:130px"><i class="fa fa-pencil"></i> ACK</label>
+	    <input type="text" id="node-input-ackTimeout" placeholder="Use Default" style="width: calc(100% - 135px)">
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-controllerTimeout" style="width:130px"><i class="fa fa-pencil"></i> Controller</label>
+	    <input type="text" id="node-input-controllerTimeout" placeholder="Use Default" style="width: calc(100% - 135px)">
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-sendDataCallback" style="width:130px"><i class="fa fa-pencil"></i> Callback</label>
+	    <input type="text" id="node-input-sendDataCallback" placeholder="Use Default" style="width: calc(100% - 135px)">
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-sendResponseTimeout" style="width:130px"><i class="fa fa-pencil"></i> Req -> Res</label>
+	    <input type="text" id="node-input-sendResponseTimeout" placeholder="Use Default" style="width: calc(100% - 135px)">
+	</div>
+	<br />
+	<p class="zwave-js-config-section-title">
+	    <strong>Value Scales</strong>
+	</p>
+	<div class="form-row">
+	    <label  for="node-input-scalesTemp" style="width:130px"><i class="fa fa-pencil"></i> Temperature</label>
+		<select id="node-input-scalesTemp" style="width: calc(100% - 135px)">
+	        <option value="0x00">Celsius (°C)</option>
+	        <option value="0x01">Fahrenheit (°F)</option>
+	    </select>
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-scalesHumidity" style="width:130px"><i class="fa fa-pencil"></i> Humidity</label>
+		<select id="node-input-scalesHumidity" style="width: calc(100% - 135px)">
+	        <option value="0x00">Percentage (%)</option>
+	        <option value="0x01">Absolute Humidity (g/m³)</option>
+	    </select>
+	</div>
+	<br />
+	<p class="zwave-js-config-section-title">
+	    <strong>Z-Wave JS Logging</strong>
+	</p>
+	<div class="form-row">
+	    <label  for="node-input-logLevelPin" style="width:130px"><i class="fa fa-pencil"></i> Level (Pin 2)</label>
+	    <select id="node-input-logLevelPin" style="width: calc(100% - 135px)">
+	        <option value="none">Logging Disabled</option>
+	        <option value="error">Error</option>
+	        <option value="warn">Warn</option>
+	        <option value="info">Info</option>
+	        <option value="verbose">Verbose</option>
+	        <option value="debug">Debug</option>
+	        <option value="silly">Silly</option>
+	    </select>
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-logLevel" style="width:130px"><i class="fa fa-pencil"></i> Level (File)</label>
+	    <select id="node-input-logLevel" style="width: calc(100% - 135px)">
+	        <option value="none">Logging Disabled</option>
+	        <option value="error">Error</option>
+	        <option value="warn">Warn</option>
+	        <option value="info">Info</option>
+	        <option value="verbose">Verbose</option>
+	        <option value="debug">Debug</option>
+	        <option value="silly">Silly</option>
+	    </select>
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-logFile" style="width:130px"><i class="fa fa-pencil"></i> Log File</label>
+	    <input type="text" id="node-input-logFile" placeholder="zwave-js.log" style="width: calc(100% - 135px)">
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-logFile" style="width:130px"><i class="fa fa-pencil"></i> Node Filter</label>
+	    <input type="text" id="node-input-logNodeFilter" placeholder="2,5,24" style="width: calc(100% - 135px)">
+	</div>
+	<br />
+	<p class="zwave-js-config-section-title">
+	    <strong>Advanced Driver Settings</strong>
+	</p>
+	<div class="form-row">
+	    <label  for="node-input-customConfigPath" style="width:130px"><i class="fa fa-pencil"></i> Custom CFG Dir</label>
+	    <input type="text" id="node-input-customConfigPath" placeholder="/some/directory" style="width: calc(100% - 135px)">
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-valueCacheDiskThrottle" style="width:130px"><i class="fa fa-pencil"></i> Disk IO Throttle</label>
+	    <select id="node-input-valueCacheDiskThrottle" style="width: calc(100% - 135px)">
+	        <option value="normal">Normal</option>
+	        <option value="slow">Slow</option>
+	        <option value="fast">Fast</option>
+	    </select>
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-disableOptimisticValueUpdate" style="width:130px"><i class="fa fa-pencil"></i> No Optimistic</label>
+	    <input type="checkbox" id="node-input-disableOptimisticValueUpdate">
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-intvwUserCodes" style="width:130px"><i class="fa fa-pencil"></i> Lock Code Intvw</label>
+	    <input type="checkbox" id="node-input-intvwUserCodes">
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-softResetUSB" style="width:130px"><i class="fa fa-pencil"></i> Soft Reset USB</label>
+	    <input type="checkbox" id="node-input-softResetUSB" style="width: calc(100% - 135px)">
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-serialAPIStarted" style="width:130px"><i class="fa fa-pencil"></i> SR Timeout</label>
+	    <input type="text" id="node-input-serialAPIStarted" placeholder="Use Default" style="width: calc(100% - 135px)">
+	</div>
+	<br />
+	<p class="zwave-js-config-section-title">
+	    <strong>Version Information</strong>
+	</p>
+	<div class="form-row">
+	    <label  for="MOD_Version" style="width:130px"><i class="fa fa-info"></i> Module Version</label>
+	    <input type="text" id="MOD_Version" readonly style="width: calc(100% - 135px)">
+	</div>
+	<div class="form-row">
+	    <label  for="ZWJS_Version" style="width:130px"><i class="fa fa-info"></i> Driver Version</label>
+	    <input type="text" id="ZWJS_Version" readonly style="width: calc(100% - 135px)">
+	</div>
+	<div class="form-row">
+	    <label  for="ZWJS_CFGVersion" style="width:130px"><i class="fa fa-info"></i> DB Version</label>
+	    <input type="text" id="ZWJS_CFGVersion" style="width: calc(100% - 290px)" readonly>
+		<button class="ui-button ui-corner-all ui-widget" style="width:152px" id="node-dialog-updates" onclick="DBUpdate()">Check For Updates</button>
+	</div>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/markdown" data-help-name="zwave-js">
+<p>A Z-Wave controller for Node-RED.</p>
+ 
+Based on [Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/), this is the main node, it is responsible for everything and serves as the configuration for your USB Z-Wave radio.
+
+### Setup
+
+The only **required** field is "Serial Port", where you must select the location of your USB Z-Wave radio (typically `/dev/ttyACM0` on most Linux setups).
+
+Encryption keys are required only if you are pairing devices in secure mode. They may be entered manually as hex strings or generated randomly using the "Generate" button on the right of each field. If these keys are lost, all devices paired in secure mode will need to be reset to factory and paired again as new devices.
+
+Other settings for logging and more advanced use are available. Please visit our [wiki page](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Controller-Node-Setup) for more information on the advanced settings.
+
+<div class="form-tips" id="node-tip">
+Once this node is properly linked to a USB controller, the Z-Wave network setup will be available in the UI panel on the right side of your Node-RED editor. Click <a href="https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/User-Interface">here</a> for more information about this user interface.
+</div>
+
+### Inputs
+
+The input to this node is expected to be a `msg.payload` object containing a Z-Wave command. The **ZWave Controller** node can receive commands for the **Controller** itself or for any of the **Devices** on your Z-Wave network.
+
+The format of each `msg.payload` object is dependant on which API is being used. The **ZWave Controller** node will accept any command from any of the APIs available. Follow the links below for more details on the proper formatting and message options for each API.
+
+**[Controller API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Controller-API)** is used for network wide operations such as healing your network, manual firmware updates, removing failed nodes, and more.
+
+**[Associations API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Associations-API)** is used to manage advanced associations between specific devices.
+
+**[Driver API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Driver-API)** is a small set of methods which can pull data from the Z-Wave JS library. It allows to get the full (locally stored) Value Database and some statistics.
+
+**[CC API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/CC-API)** is option 1 of 2 for communication to a single Z-Wave device (node) on your network. These messages can be formed using the **CMD Factory** node.
+
+**[Value API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Value-API)** is option 2 of 2 for communication to a single Z-Wave device (node) on your network. These messages can be formed using the **CMD Factory** node.
+
+### Outputs
+
+The first output from this node will consist of **all** messages. This includes messages related to the controller and any Z-Wave device on your network. There is no internal filter, all messages from the controller and all nodes will always be output from this node. Detailed information about the messages from Z-Wave into Node-RED is available [here](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Payload-Messaging-Format).
+
+A second output is provided when the **Z-Wave JS Logging** from Pin 2 is enabled. Select a log level in the "Level (Pin 2)" field to enable JSON logs being output into your Node-RED flows.
+</script>

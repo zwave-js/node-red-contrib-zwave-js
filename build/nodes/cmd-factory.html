@@ -1,0 +1,244 @@
+﻿<script type="text/javascript">
+	RED.nodes.registerType('cmd-factory', {
+		category: 'ZWave JS',
+		color: 'rgb(46,145,205)',
+		defaults: {
+			name: { value: 'ZWave CMD Factory' },
+			node: { value: 'topic' },
+			endpoint: { value: 'endpoint' },
+			cc: { value: 'Select Command Class' },
+			method: { value: 'Select Method' },
+			params: { value: 'payload' },
+			noEvent: { value: false },
+			forceUpdate: { value: 'forceUpdate' },
+			api: { value: 'ValueAPI' },
+			vapiMode: { value: 'setValue' },
+			vapiValue: { value: 'payload' },
+			vapiValueId: { value: 'valueId' },
+			vapiOptions: { value: 'options' }
+		},
+		inputs: 1,
+		outputs: 1,
+		icon: 'CMDF.svg',
+		label: function () {
+			return this.name;
+		},
+		oneditprepare: SortUI,
+		paletteLabel: 'CMD Factory'
+	});
+
+	function GoToInfo() {
+		event.preventDefault();
+		const CC = $('#node-input-cc').val().replace(/ /g, '');
+		const Method = $('#node-input-method').val().toLowerCase();
+		const URL = `https://zwave-js.github.io/node-zwave-js/#/api/CCs/${CC}?id=${Method}`;
+		window.open(URL, '_blank');
+	}
+
+	function SortUI() {
+		$.getJSON('zwave-js/cfg-cclist', (data) => {
+			data.forEach((CC) => {
+				$('#node-input-cc').append(new Option(CC, CC));
+			});
+			$('#node-input-cc').val(this.cc);
+			GetMethods(() => {
+				$('#node-input-method').val(this.method);
+			});
+		});
+
+		$('#node-input-node').typedInput({ types: ['jsonata'] });
+		$('#node-input-node')
+			.next('.red-ui-typedInput-container')
+			.css({ width: 'calc(100% - 135px)' });
+		$('#node-input-endpoint').typedInput({ types: ['jsonata'] });
+		$('#node-input-endpoint')
+			.next('.red-ui-typedInput-container')
+			.css({ width: 'calc(100% - 135px)' });
+		$('#node-input-params').typedInput({ types: ['jsonata'] });
+		$('#node-input-params')
+			.next('.red-ui-typedInput-container')
+			.css({ width: 'calc(100% - 135px)' });
+		$('#node-input-forceUpdate').typedInput({ types: ['jsonata'] });
+		$('#node-input-forceUpdate')
+			.next('.red-ui-typedInput-container')
+			.css({ width: 'calc(100% - 135px)' });
+		$('#node-input-vapiValue').typedInput({ types: ['jsonata'] });
+		$('#node-input-vapiValue')
+			.next('.red-ui-typedInput-container')
+			.css({ width: 'calc(100% - 135px)' });
+		$('#node-input-vapiValueId').typedInput({ types: ['jsonata'] });
+		$('#node-input-vapiValueId')
+			.next('.red-ui-typedInput-container')
+			.css({ width: 'calc(100% - 135px)' });
+		$('#node-input-vapiOptions').typedInput({ types: ['jsonata'] });
+		$('#node-input-vapiOptions')
+			.next('.red-ui-typedInput-container')
+			.css({ width: 'calc(100% - 135px)' });
+
+		if (this.api !== undefined) {
+			SortAPI(this.api);
+		} else {
+			$('#node-input-api').val('CCAPI');
+			$("[forapi='ValueID']").css({ display: 'none' });
+		}
+	}
+
+	function GetMethods(cb) {
+		const CC = $('#node-input-cc').val();
+		if (CC) {
+			$.getJSON('zwave-js/cfg-cclist/' + CC.replace(/ /g, '-'), (data) => {
+				$('#node-input-method').empty();
+				$('#node-input-method').append(
+					new Option('Select Method', 'Select Method')
+				);
+				data.forEach((M) => {
+					$('#node-input-method').append(new Option(M, M));
+				});
+				if (typeof cb === 'function') {
+					cb();
+				}
+			});
+		}
+	}
+
+	function SortAPI(Value) {
+		const API = Value || $('#node-input-api').val();
+		switch (API) {
+			case 'CCAPI':
+				$("[forapi='ValueAPI']").css({ display: 'none' });
+				$("[forapi='CCAPI']").css({ display: 'block' });
+				break;
+
+			case 'ValueAPI':
+				$("[forapi='ValueAPI']").css({ display: 'block' });
+				$("[forapi='CCAPI']").css({ display: 'none' });
+				break;
+		}
+	}
+</script>
+
+<script type="text/x-red" data-template-name="cmd-factory">
+
+	<p class="zwave-js-config-section-title">
+	    <strong>Basic Settings</strong>
+	</p>
+	<div class="form-row">
+	    <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
+	    <input type="text" id="node-input-name" placeholder="ZWave CMD Factory" style="width: calc(100% - 135px)">
+	</div>
+	<div class="form-row">
+	    <label for="node-input-api" style="width:130px"><i class="fa fa-pencil"></i> API</label>
+	    <select id="node-input-api" onchange="SortAPI()" style="width: calc(100% - 135px)">
+	        <option value="CCAPI">CCAPI</option>
+			<option value="ValueAPI">ValueAPI</option>
+	    </select>
+	</div>
+	<p class="zwave-js-config-section-title" forapi="ValueAPI">
+	    <strong>ValueAPI Command Settings</strong>
+	</p>
+	<div class="form-row" forapi="ValueAPI">
+	    <label for="node-input-vapiMode" style="width:130px"><i class="fa fa-pencil"></i> Method</label>
+		<select id="node-input-vapiMode" style="width: calc(100% - 135px)">
+	        <option value="setValue">Set</option>
+			<option value="getValue">Get</option>
+	    </select>
+	</div>
+	<div class="form-row" forapi="ValueAPI">
+	    <label for="node-input-vapiValueId" style="width:130px"><i class="fa fa-pencil"></i> ValueID { }</label>
+	    <input style="width: calc(100% - 135px)" type="text" id="node-input-vapiValueId" placeholder="valueId">
+	</div>
+	<p class="zwave-js-config-section-title" forapi="CCAPI">
+	    <strong>CCAPI Settings</strong>
+	</p>
+	<div class="form-row" forapi="CCAPI">
+	    <label for="node-input-cc" style="width:130px"><i class="fa fa-pencil"></i> CC</label>
+		<select id="node-input-cc" onchange="GetMethods()" style="width: calc(100% - 135px)">
+	        <option value="Select Command Class">Select Command Class</option>
+	    </select>
+	</div>
+	<div class="form-row" forapi="CCAPI">
+	    <label for="node-input-method" style="width:130px"><i class="fa fa-pencil"></i> Method</label>
+		<select id="node-input-method" style="width: calc(100% - 135px);margin-bottom:5px">
+	        <option value="Select Method">Select Method</option>
+	    </select><br />
+		<a style="margin-left:135px; color: blue;text-decoration: underline;" onclick="GoToInfo()" href="#">View Parameter Definition</a>
+	</div>
+	<div class="form-row" forapi="CCAPI">
+	    <label for="node-input-noEvent" style="width:130px"><i class="fa fa-pencil"></i> Await Result (Get)</label>
+	    <input type="checkbox" id="node-input-noEvent">
+	</div>
+	<div class="form-row" forapi="CCAPI">
+	    <label for="node-input-forceUpdate" style="width:130px"><i class="fa fa-pencil"></i> Force Update { }</label>
+	    <input style="width: calc(100% - 135px)" type="text" id="node-input-forceUpdate" placeholder="forceUpdate">
+	</div>
+	<p class="zwave-js-config-section-title">
+	    <strong>Command Parameters</strong>
+	</p>
+	<div class="form-row">
+	    <label for="node-input-node" style="width:130px"><i class="fa fa-pencil"></i> Node</label>
+	    <input style="width: calc(100% - 135px)" type="text" id="node-input-node" placeholder="topic">
+	</div>
+	<div class="form-row">
+	    <label for="node-input-endpoint" style="width:130px"><i class="fa fa-pencil"></i> Endpoint</label>
+	    <input style="width: calc(100% - 135px)" type="text" id="node-input-endpoint" placeholder="endpoint">
+	</div>
+	<div class="form-row" forapi="CCAPI">
+	    <label for="node-input-params" style="width:130px"><i class="fa fa-pencil"></i> Params [ ]</label>
+	    <input style="width: calc(100% - 135px)" type="text" id="node-input-params" placeholder="payload">
+	</div>
+	<div class="form-row" forapi="ValueAPI">
+	    <label for="node-input-vapiOptions" style="width:130px"><i class="fa fa-pencil"></i> Set Options { }</label>
+	    <input style="width: calc(100% - 135px)" type="text" id="node-input-vapiOptions" placeholder="options">
+	</div>
+	<div class="form-row" forapi="ValueAPI">
+	    <label for="node-input-vapiValue" style="width:130px"><i class="fa fa-pencil"></i> Value</label>
+	    <input style="width: calc(100% - 135px)" type="text" id="node-input-vapiValue" placeholder="payload">
+	</div>
+	<div class="form-tips" id="node-tip">
+		    All JSONata expressions are based on the root path of <code>msg</code>, i.e specifying <code>payload</code> will yield the object stored at <code>msg.payload</code>.
+		</div>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/markdown" data-help-name="cmd-factory">
+<p>A Z-Wave command generator node.</p>
+
+The `CMD Factory` node is used to formulate messages which are ready to be sent to your ZWave Device nodes. Messages output from this node should be passed directly to the Input of a `ZWave Device` or `ZWave Controller` node. Details and examples are available on [this](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Command-Factory) wiki page.
+
+<div class="form-tips" id="node-tip">
+    Fields labeled with the symbol <img src="red/images/typedInput/expr.svg" style="margin-right: 4px;height: 18px;"> must be either valid  <a href="http://jsonata.org/" target="_blank">JSONata</a> expressions or left empty if not used.
+</div>
+
+### Setup
+
+The node can formulate messages to a Z-Wave device using either [Value API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Value-API) or [CC API](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/CC-API). Little to no knowledge of the inner workings of Z-Wave JS are needed in order to use this node.
+
+Generally it is recommended to use the `ValueAPI` option, as it is simpler to put together the commands.
+
+
+### Command Class (CCAPI)
+
+Please choose the `CC` which you would like to control (see the UI on your device to learn which it supports). Choose the `Method` which corresponds to the message you are wanting to send.
+
+`Await Result (Get)` Some CC **Get** type methods do not return a value via the event mechanism. Therefore, we need to wait for the value as part of the command instead of depending on an event.
+
+`Force Update` causes a poll on the property contained in this object (it must evaluate to a partial ValueID). This is needed if your target device does not acknowledge a recently updated value.
+
+### ValueAPI Command Settings (ValueAPI)
+
+Please choose the `Method` which you would like to use, either setting a value or retrieving a value.
+
+`ValueID` should evaluate to a valid Value ID. Value ID's can be viewed by double clicking a value title in the UI.
+
+### Command Parameters
+
+`Node` - this field should evaluate to an integer which will determine to which node the output message is sent. This may evaluate to `undefined` if you are sending to a device node set to `Specific Node`, `Multicast`, or `Multiple Nodes`.
+
+`Endpoint` - this field should evaluate to an integer which matches your device endpoint, if using `ValueAPI`, this will take priority of the `endpoint` contained in said `ValueID`
+
+`Params` (CCAPI) - this field should evaluate to an array containing the parameters for your selected `Method` under **Command Class**. Click the link "View Parameter Definition" for details on how the specific Params array should be formatted for this message.
+
+`Set Options` (ValueAPI) - this value should evaluate to an object specifying  parameters around your **Set** operation, i.e setting a duration for a brightness change being one example.
+
+`Value` (ValueAPI) - this field should evaluate to the value you are providing. It is only required for the **Set** method
+</script>

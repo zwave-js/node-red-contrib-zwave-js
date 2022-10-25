@@ -1,0 +1,283 @@
+﻿<script type="text/javascript">
+	let Changed = false;
+	let ActiveFilter = undefined;
+	let IndexMap = undefined;
+
+	RED.nodes.registerType('event-filter', {
+		category: 'ZWave JS',
+		color: 'rgb(46,145,205)',
+		defaults: {
+			name: { value: 'ZWave Event Filter' },
+			filters: { value: [] },
+			outputs: { value: 0 },
+			changeDate: { value: undefined },
+			showStatus: { value: true }
+		},
+		inputs: 1,
+		outputs: 0,
+		icon: 'rbe.png',
+		label: function () {
+			return this.name;
+		},
+		oneditprepare: SortUI,
+		oneditsave: DoSave,
+		oneditcancel: function () {
+			Changed = false;
+			ActiveFilter = undefined;
+		},
+		outputLabels: function (index) {
+			return this.filters[index].name;
+		},
+		paletteLabel: 'Event Filter',
+		oneditresize: function (size) {
+			$('#filtersets').editableList('height', size.height - 70);
+		}
+	});
+
+	function compare(a, b) {
+		if (a.index < b.index) {
+			return -1;
+		}
+		if (a.index > b.index) {
+			return 1;
+		}
+		return 0;
+	}
+
+	function SortUI() {
+		IndexMap = {};
+		$('#filtersets').editableList({
+			header: $('<div>').append(
+				'<div>Filter Sets - order defines outputs</div>'
+			),
+			sortable: true,
+			removable: true,
+			addButton: 'Add Filter Set',
+			addItem: AddItem,
+			sortItems: SortItems,
+			removeItem: RemoveItem
+		});
+
+		this.filters.sort(compare).forEach((Item) => {
+			$('#filtersets').editableList('addItem', Item);
+		});
+	}
+
+	function SortItems(Items) {
+		for (let i = 0; i < Items.length; i++) {
+			IndexMap[Items[i].data('data').originalIndex] = i;
+			Items[i].data('data').index = i;
+		}
+	}
+
+	function RemoveItem(Item) {
+		IndexMap[Item.originalIndex] = -1;
+		const Items = $('#filtersets').editableList('items');
+		for (let i = 0; i < Items.length; i++) {
+			IndexMap[Items[i].data('data').originalIndex] = i;
+			Items[i].data('data').index = i;
+		}
+	}
+
+	function AddItem(container, index, data) {
+		if (Object.keys(data).length === 0) {
+			data.index = index;
+			data.name = 'Filter Name';
+			data.valueIds = [];
+			data.events = ['VALUE_UPDATED'];
+			data.strict = false;
+			data.id = Math.floor((0x99999 - 0x10000) * Math.random()).toString();
+		}
+
+		data.originalIndex = index;
+		IndexMap[data.originalIndex] = index;
+
+		$(container).data('data', data);
+		$(container).click(SetActiveFilter);
+		$(container).css({ minWidth: '400px' });
+		$(container).parent().css({ height: '45px', overflow: 'hidden' });
+
+		const HTML = `
+            <table style="width:100%">
+                <tr>
+                    <td>Name</td>
+                    <td><input class="data-name" value="${data.name}" type="text"></td>
+                </tr>
+                <tr>
+                    <td>ValueIDs <span class="data-vid-count">${data.valueIds.length}</span> </td>
+                    <td><input class="data-valueid-editor" value="" type="text"></td>
+                </tr>
+                <tr>
+                    <td>Strict (Match Endpoint)</td>
+                    <td><input class="data-event-Endpoint" type="checkbox"></td>
+                </tr>
+                <tr>
+                    <td>Events</td>
+                    <td>
+                        <input class="data-event-VALUE_UPDATED" type="checkbox"> VALUE_UPDATED<br />
+                        <input class="data-event-VALUE_NOTIFICATION" type="checkbox"> VALUE_NOTIFICATION<br />
+                        <input class="data-event-NOTIFICATION" type="checkbox"> NOTIFICATION<br />
+                        <input class="data-event-GET_VALUE_RESPONSE" type="checkbox"> GET_VALUE_RESPONSE
+                    </td>
+                </tr>
+            
+            `;
+
+		$(container).html(HTML);
+		$('<button>')
+			.addClass('ui-button')
+			.addClass('ui-corner-all')
+			.addClass('ui-widget')
+			.addClass('rightButton')
+			.html('&#8635;')
+			.click(() => {
+				SyncEdits();
+			})
+			.insertAfter($(container).find('.data-valueid-editor'));
+		$(container)
+			.find('.data-valueid-editor')
+			.typedInput({
+				types: ['json'],
+				default: 'json'
+			});
+		$(container)
+			.find('.data-valueid-editor')
+			.typedInput('value', JSON.stringify(data.valueIds));
+		SortChecbox($(container));
+	}
+
+	function SyncEdits() {
+		const JSONs = ActiveFilter.find('.data-valueid-editor').typedInput('value');
+		const NewObject = JSON.parse(JSONs);
+
+		ActiveFilter.data('data').valueIds = NewObject;
+		const Count = NewObject.length;
+		ActiveFilter.find('.data-vid-count').html(Count);
+
+		Changed = true;
+	}
+
+	function SetActiveFilter() {
+		if (
+			ActiveFilter === undefined ||
+			ActiveFilter.data('data').id !== $(this).data('data').id
+		) {
+			const Items = $('#filtersets').editableList('items');
+			for (let i = 0; i < Items.length; i++) {
+				Items[i].parent().animate({ height: '45px' }, 200);
+			}
+			ActiveFilter = $(this);
+			$(this).parent().animate({ height: '200px' }, 200);
+		}
+	}
+
+	function SortChecbox(El) {
+		const Data = El.data('data');
+		Data.events.forEach((EV) => {
+			El.find('.data-event-' + EV).prop('checked', true);
+		});
+		if (Data.strict) {
+			El.find('.data-event-Endpoint').prop('checked', true);
+		}
+	}
+
+	function DoSave() {
+		if (Changed) {
+			this.changeDate = new Date();
+			Changed = false;
+		}
+		const Items = $('#filtersets').editableList('items').sort(compare);
+		const Events = [
+			'VALUE_UPDATED',
+			'VALUE_NOTIFICATION',
+			'NOTIFICATION',
+			'GET_VALUE_RESPONSE'
+		];
+		this.filters = [];
+
+		for (let i = 0; i < Items.length; i++) {
+			const El = $(Items[i]);
+			const ItemData = Items[i].data('data');
+
+			ItemData.events = [];
+			Events.forEach((EV) => {
+				if (El.find('.data-event-' + EV).prop('checked')) {
+					ItemData.events.push(EV);
+				}
+			});
+
+			ItemData.name = El.find('.data-name').val();
+			ItemData.strict = El.find('.data-event-Endpoint').prop('checked');
+			delete ItemData.originalIndex;
+			this.filters.push(ItemData);
+		}
+
+		ActiveFilter = undefined;
+
+		$('#node-input-outputs').val(JSON.stringify(IndexMap));
+	}
+
+	function AddValueIDToFilter(ValueID) {
+		if (ActiveFilter !== undefined) {
+			const VIDs = ActiveFilter.data('data').valueIds;
+
+			VIDs.push(ValueID);
+			const Count = VIDs.length;
+
+			ActiveFilter.find('.data-vid-count').html(Count);
+			ActiveFilter.find('.data-valueid-editor').typedInput(
+				'value',
+				JSON.stringify(VIDs)
+			);
+
+			Changed = true;
+			return true;
+		} else {
+			return false;
+		}
+	}
+</script>
+
+<script type="text/x-red" data-template-name="event-filter">
+
+	<input type="hidden" id="node-input-outputs">
+
+
+	  <div class="form-row">
+	      <label for="node-input-name" style="width:130px"><i class="fa fa-pencil"></i> Name</label>
+	      <input type="text" id="node-input-name" placeholder="Filter Name" style="width: calc(100% - 135px)">
+	  </div>
+	  <div class="form-row">
+	    <label for="node-input-showStatus" style="width:130px"><i class="fa fa-pencil"></i> Show Status</label>
+	    <input type="checkbox" id="node-input-showStatus" />
+	</div>
+
+	  <div>
+	      <ol id="filtersets" style="min-height:450px;min-width:400px"> </ol>
+	  </div>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/markdown" data-help-name="event-filter">
+<p>A Z-Wave event filter.</p>
+
+This node allows advanced filtration of the various value events that a node may send. It further allows filtering the type of data that was updated i.e. a Motion Event, Air Temp changes, Door Sensors, etc.
+
+The UI panel on the right can be used to provide the filter values, removing the need to write them yourself, but of course you can use manual entries if you prefer. Please visit our [event filter](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Event-Filter-Node) wiki page for a detailed walkthrough on how to set up your filters.
+
+Essentially this node is a `switch` node with specific sorting for the values found in Z-Wave messages. The Input of this node should be from a `ZWave Controller` node or a `ZWave Device` node.
+
+### Message Handling
+
+Inputs are unfiltered Z-Wave messages. The filter settings are used to decide if the message will be output from the node. The message will be output on the pin corresponding to the matched filter set. If there is a match, the node will stop searching for additional matches. If there is no match, the input message will stop with this node and nothing will be output.
+
+### Filter Options
+
+**Name** - is a name for your filter. The output pin will match this name, and will be included in the output as `msg.filter.name`.
+
+**ValueIDs** - can include zero or more Value IDs for this filter set. Value IDs may be added using the UI or manually. See our [event filter](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Event-Filter-Node) wiki page for more details.
+
+**Strict** - if checked it will require the `Endpoint` property of the Input message to match the selected ValueIDs.
+
+**Events** - the four event types which may be output from a Z-Wave Device. At least one must be selected for any message to be output. See details about these events on [this](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/Payload-Messaging-Format) wiki page.
+</script>
