@@ -44,7 +44,7 @@ module.exports = {
 		'no-invalid-regexp': 2,
 		'no-irregular-whitespace': 2,
 		'no-misleading-character-class': 2,
-		'no-mixed-spaces-and-tabs': 2,
+		'no-mixed-spaces-and-tabs': 0,
 		'no-new-symbol': 2,
 		'no-obj-calls': 2,
 		'no-octal': 2,

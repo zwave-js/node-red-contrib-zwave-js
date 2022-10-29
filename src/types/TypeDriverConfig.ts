@@ -23,7 +23,10 @@ export type TypeDriverConfig = NodeDef & {
 	enableSoftReset: boolean;
 	interview_queryAllUserCodes: boolean;
 
-	apiKeys_firmwareUpdateService : string | undefined
-	
+	apiKeys_firmwareUpdateService: string | undefined;
+
+	enableStatistics: boolean;
+
+	//
 	USBSoftResetTimeout: number | undefined;
 };

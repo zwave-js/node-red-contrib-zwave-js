@@ -19,7 +19,9 @@
 		"@typescript-eslint/parser": "5.41.0"
 	},
 	"scripts": {
-		"validate": "node-red-dev validate -o validation_result.json"
+		"validate": "node-red-dev validate -o validation_result.json",
+		"build": "npm run clean && tsc",
+        "clean": "rimraf build/**/*.js"
 	},
 	"engines": {
 		"node": ">=14.13.0"
