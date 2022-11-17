@@ -39,11 +39,8 @@
 	"node-red": {
 		"version": ">=2.0.0",
 		"nodes": {
-			"zwave-js-driver": "build/nodes/zwave-js-driver.js",
-			"zwave-js-controller": "build/nodes/zwave-js-driver.js",
-			"zwave-device": "build/nodes/zwave-device.js",
-			"event-filter": "build/nodes/event-filter.js",
-			"cmd-factory": "build/nodes/cmd-factory.js"
+			"zwavejs-runtime": "build/nodes/ZWaveJSRuntime.js",
+			"zwavejs-controller": "build/nodes/ZWaveJSController.js"
 		}
 	},
 	"repository": {

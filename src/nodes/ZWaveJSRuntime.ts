@@ -1,13 +1,15 @@
+import path from 'path';
 import { NodeAPI } from 'node-red';
-import { TypeDriverConfig } from '../types/TypeDriverConfig';
+import { Type_ZWaveJSRuntimeConfig } from '../types/Type_ZWaveJSRuntimeConfig';
 import {
-	TypeDriver,
+	Type_ZWaveJSRuntime,
 	MessageType,
 	DeviceCallback,
 	ControllerCallback,
 	ControllerCallbackObject,
-	DeviceCallbackObject
-} from '../types/TypeDriver';
+	DeviceCallbackObject,
+	API
+} from '../types/Type_ZWaveJSRuntime';
 import {
 	Driver,
 	InclusionGrant,
@@ -17,10 +19,15 @@ import {
 	ZWaveNodeValueNotificationArgs,
 	ZWaveNodeValueUpdatedArgs,
 	NodeInterviewFailedEventArgs,
-	ZWaveNodeValueAddedArgs
+	ZWaveNodeValueAddedArgs,
+	ValueID
 } from 'zwave-js';
+import { getNodes, getValueDB } from '../lib/Fetchers';
+import { process } from '../lib/ControllerAPI';
+
 const APP_NAME = 'node-red-contrib-zwave-js';
 const APP_VERSION = '9.0.0';
+const FWK = '127c49b6f2928a6579e82ecab64a83fc94a6436f03d5cb670b8ac44412687b75f0667843';
 
 // Event hook class
 class SanitizedEventName {
@@ -38,9 +45,6 @@ class SanitizedEventName {
 		};
 	}
 }
-
-// Update Service OS Key
-const FWK = '127c49b6f2928a6579e82ecab64a83fc94a6436f03d5cb670b8ac44412687b75f0667843';
 
 // Create event objects (creates easy to use event hooks)
 const event_DriverReady = new SanitizedEventName('driver ready');
@@ -70,50 +74,150 @@ const event_Ready = new SanitizedEventName('ready');
 const event_HealNetworkProgress = new SanitizedEventName('heal network progress');
 
 module.exports = (RED: NodeAPI) => {
-	const Init = function (this: TypeDriver, config: TypeDriverConfig) {
+	const init = function (this: Type_ZWaveJSRuntime, config: Type_ZWaveJSRuntimeConfig) {
 		const self = this;
 		RED.nodes.createNode(self, config);
+		self.config = config;
 
 		// Controller and Device Nodes
-		let ControllerNodes: { [ControllerNodeID: string]: ControllerCallback } = {};
-		let DeviceNodes: { [DeviceNodeID: string]: { NodeIDs?: number[]; Callback: DeviceCallback } } = {};
+		let controllerNodes: { [ControllerNodeID: string]: ControllerCallback } = {};
+		let deviceNodes: { [DeviceNodeID: string]: { NodeIDs?: number[]; Callback: DeviceCallback } } = {};
 
 		// Public methods (used by config clients)
 		self.registerDeviceNode = (DeviceNodeID, NodeIDs, Callback) => {
-			DeviceNodes[DeviceNodeID] = { NodeIDs, Callback };
+			deviceNodes[DeviceNodeID] = { NodeIDs, Callback };
 		};
 		self.deregisterDeviceNode = (DeviceNodeID) => {
-			delete DeviceNodes[DeviceNodeID];
+			delete deviceNodes[DeviceNodeID];
 		};
 
 		self.registerControllerNode = (ControllerNodeID, Callback) => {
-			ControllerNodes[ControllerNodeID] = Callback;
+			controllerNodes[ControllerNodeID] = Callback;
 		};
 		self.deregisterControllerNode = (ControllerNodeID) => {
-			delete ControllerNodes[ControllerNodeID];
+			delete controllerNodes[ControllerNodeID];
+		};
+
+		self.controllerCommand = (APITarget, Method, Params): Promise<ControllerCallbackObject | boolean | undefined> => {
+			switch (APITarget) {
+				case API.CONTROLLER_API:
+					return process(self.driverInstance!, Method, Params);
+
+				default:
+					return Promise.reject('Invalid API');
+			}
+		};
+
+		// Last status of network
+		let lastStatus: string;
+
+		// Send latest Status to UI and update current
+		const updateLatestStatus = (Status: string) => {
+			lastStatus = Status;
+			RED.comms.publish(`zwave-js/ui/${self.id}/status`, { status: lastStatus }, false);
+		};
+
+		// Create Global API
+		const exposeGlobalAPI = () => {
+			if (self.config.enableGlobalAPI) {
+				const API = {
+					Utilities: {
+						getValueDB: function (Nodes?: number[]) {
+							return getValueDB(self.driverInstance!, Nodes);
+						},
+						getNodes: function () {
+							return getNodes(self.driverInstance!);
+						},
+						ping: function (Node: number) {
+							return self.driverInstance?.controller.nodes.get(Node)?.ping();
+						}
+					},
+					CCAPI: {
+						invokeCCAPI: function (Node: number, CC: number, Method: string, ...Args: any[]) {
+							return self.driverInstance?.controller.nodes.get(Node)?.invokeCCAPI(CC, Method, Args);
+						},
+						supportsCC: function (Node: number, CC: number) {
+							return self.driverInstance?.controller.nodes.get(Node)?.supportsCC(CC);
+						},
+						supportsCCAPI: function (Node: number, CC: number) {
+							return self.driverInstance?.controller.nodes.get(Node)?.supportsCCAPI(CC);
+						}
+					},
+					ValueAPI: {
+						getValue: function (Node: number, VID: ValueID) {
+							return self.driverInstance?.controller.nodes.get(Node)?.getValue(VID);
+						},
+						setValue: function (Node: number, VID: ValueID, Value: any) {
+							return self.driverInstance?.controller.nodes.get(Node)?.setValue(VID, Value);
+						},
+						pollValue: function (Node: number, VID: ValueID) {
+							return self.driverInstance?.controller.nodes.get(Node)?.pollValue(VID);
+						},
+						getDefinedValueIDs: function (Node: number) {
+							return self.driverInstance?.controller.nodes.get(Node)?.getDefinedValueIDs();
+						},
+						getValueMetadata: function (Node: number, VID: ValueID) {
+							return self.driverInstance?.controller.nodes.get(Node)?.getValueMetadata(VID);
+						}
+					}
+				};
+
+				Object.defineProperty(API, 'Utilities', {
+					writable: false
+				});
+				Object.defineProperty(API, 'CCAPI', {
+					writable: false
+				});
+				Object.defineProperty(API, 'ValueAPI', {
+					writable: false
+				});
+
+				const Name = self.config.globalAPIName || self.id;
+				self.context().global.set(`ZWJS-${Name}`, API);
+			}
+		};
+
+		const removeGlobalAPI = () => {
+			const Name = self.config.globalAPIName || self.id;
+			self.context().global.set(`ZWJS-${Name}`, undefined);
 		};
 
 		// Create HTTP API
-		const CreateHTTPAPI = () => {
-			RED.httpAdmin.get(`/zwave-js/${self.id}/nodes`, RED.auth.needsPermission('flows.write'), (_, response) => {
-				response.json(self.driverInstance?.controller.nodes);
+		const createHTTPAPI = () => {
+			RED.comms.publish('zwave-js/ui/global/addnetwork', { name: self.config.name, id: self.id }, false);
+			RED.httpAdmin.get(`/zwave-js/ui/${self.id}/nodes`, RED.auth.needsPermission('flows.write'), (_, response) => {
+				response.json(getNodes(self.driverInstance!));
+			});
+			RED.httpAdmin.get(
+				`/zwave-js/ui/${self.id}/getValueDB/:Node`,
+				RED.auth.needsPermission('flows.write'),
+				(request, response) => {
+					const Node = parseInt(request.params.Node);
+					response.json(getValueDB(self.driverInstance!, [Node]));
+				}
+			);
+			RED.httpAdmin.get(`/zwave-js/ui/${self.id}/status`, RED.auth.needsPermission('flows.write'), (_, response) => {
+				response.json({ status: lastStatus });
 			});
 		};
 
 		// Remove HTTP API
-		const RemoveHTTPAPI = () => {
-			RED.httpNode._router.stack.forEach(function (route: any, i: number, routes: any[]) {
-				if (route.route && route.route.path.startsWith(`/zwave-js/${self.id}`)) {
-					routes.splice(i, 1);
-				}
-			});
+		const removeHTTPAPI = () => {
+			const Check = (Route: any) => {
+				if (Route.route === undefined) return true;
+				if (!Route.route.path.startsWith(`/zwave-js/ui/${self.id}`)) return true;
+				return false;
+			};
+			RED.comms.publish('zwave-js/ui/global/removenetwork', { id: self.id }, false);
+			RED.httpAdmin._router.stack = RED.httpAdmin._router.stack.filter(Check);
 		};
 
 		// On close
 		self.on('close', (_: boolean, done: () => void) => {
-			RemoveHTTPAPI();
-			ControllerNodes = {};
-			DeviceNodes = {};
+			removeGlobalAPI();
+			removeHTTPAPI();
+			controllerNodes = {};
+			deviceNodes = {};
 			if (self.driverInstance) {
 				self.driverInstance?.destroy().then(() => {
 					self.driverInstance = undefined;
@@ -125,36 +229,24 @@ module.exports = (RED: NodeAPI) => {
 		});
 
 		// S2 Callbacks
-		const S2Void = (): void => {};
-		const GrantSecurityClasses = (Request: InclusionGrant): Promise<InclusionGrant | false> => {
+		const s2Void = (): void => {};
+		const grantSecurityClasses = (Request: InclusionGrant): Promise<InclusionGrant | false> => {
 			return new Promise((resolve) => {
 				resolve(Request);
 			});
 		};
-		const ValidateDSKAndEnterPIN = (DSK: string): Promise<string | false> => {
+		const validateDSKAndEnterPIN = (DSK: string): Promise<string | false> => {
 			return new Promise((resolve) => {
 				resolve(DSK);
 			});
 		};
 
 		// Driver settings
-		const loggingEnabled = self.config.logConfig_level !== 'off';
-		const loggingLevel = loggingEnabled ? self.config.logConfig_level : undefined;
-		let nodeLogFilter: number[] | undefined;
-		if (self.config.LogConfig_nodeFilter) {
-			nodeLogFilter = self.config.LogConfig_nodeFilter.split(',').map((N) => parseInt(N.trim()));
-		}
-		const ZWaveOptions = {
-			logConfig: {
-				enabled: loggingEnabled,
-				logToFile: loggingEnabled,
-				level: loggingLevel,
-				nodeFilter: nodeLogFilter,
-				filename: self.config.logConfig_filename
-			},
+		const ZWaveOptions: Record<string, any> = {
+			logConfig: {},
 			storage: {
-				deviceConfigPriorityDir: self.config.storage_deviceConfigPriorityDir,
-				throttle: self.config.storage_throttle
+				throttle: self.config.storage_throttle,
+				cacheDir: path.join(RED.settings.userDir!, 'zwave-js-cache')
 			},
 			preferences: {
 				scales: {
@@ -165,37 +257,49 @@ module.exports = (RED: NodeAPI) => {
 			interview: {
 				queryAllUserCodes: self.config.interview_queryAllUserCodes
 			},
-			securityKeys: {
-				S0_Legacy: self.config.securityKeys_S0_Legacy
-					? Buffer.from(self.config.securityKeys_S0_Legacy, 'hex')
-					: undefined,
-				S2_Unauthenticated: self.config.security_S2_Unauthenticated
-					? Buffer.from(self.config.security_S2_Unauthenticated, 'hex')
-					: undefined,
-				S2_Authenticated: self.config.security_S2_Authenticated
-					? Buffer.from(self.config.security_S2_Authenticated, 'hex')
-					: undefined,
-				S2_AccessControl: self.config.security_S2_AccessControl
-					? Buffer.from(self.config.security_S2_AccessControl, 'hex')
-					: undefined
-			},
+			securityKeys: {},
 			apiKeys: {
 				firmwareUpdateService: self.config.apiKeys_firmwareUpdateService || FWK
 			},
 			inclusionUserCallbacks: {
-				grantSecurityClasses: GrantSecurityClasses,
-				validateDSKAndEnterPIN: ValidateDSKAndEnterPIN,
-				abort: S2Void
+				grantSecurityClasses: grantSecurityClasses,
+				validateDSKAndEnterPIN: validateDSKAndEnterPIN,
+				abort: s2Void
 			},
-			disableOptimisticValueUpdate: self.config.disableOptimisticValueUpdate,
+			disableOptimisticValueUpdate: !self.config.disableOptimisticValueUpdate,
 			enableSoftReset: self.config.enableSoftReset
 		};
 
+		// Cleanup Logging config
+		ZWaveOptions.logConfig.enabled = self.config.logConfig_level !== 'off';
+		ZWaveOptions.logConfig.logToFile = self.config.logConfig_level !== 'off';
+		ZWaveOptions.logConfig.filename = self.config.logConfig_filename || path.join(RED.settings.userDir!, 'zwavejs');
+		if (ZWaveOptions.logConfig.enabled) ZWaveOptions.logConfig.level = self.config.logConfig_level;
+		let nodeLogFilter: number[] | undefined;
+		if (self.config.LogConfig_nodeFilter) {
+			nodeLogFilter = self.config.LogConfig_nodeFilter.split(',').map((N) => parseInt(N.trim()));
+			ZWaveOptions.logConfig.nodeFilter = nodeLogFilter;
+		}
+
+		// Cleanup Keys
+		if (self.config.securityKeys_S0_Legacy)
+			ZWaveOptions.securityKeys.S0_Legacy = Buffer.from(self.config.securityKeys_S0_Legacy, 'hex');
+		if (self.config.securityKeys_S2_AccessControl)
+			ZWaveOptions.securityKeys.S2_AccessControl = Buffer.from(self.config.securityKeys_S2_AccessControl, 'hex');
+		if (self.config.securityKeys_S2_Authenticated)
+			ZWaveOptions.securityKeys.S2_Authenticated = Buffer.from(self.config.securityKeys_S2_Authenticated, 'hex');
+		if (self.config.securityKeys_S2_Unauthenticated)
+			ZWaveOptions.securityKeys.S2_Unauthenticated = Buffer.from(self.config.securityKeys_S2_Unauthenticated, 'hex');
+
 		// Driver callback subscriptions
-		const WireDriverEvents = (): void => {
+		const wireDriverEvents = (): void => {
 			// Driver ready
 			self.driverInstance?.once(event_DriverReady.driverName, () => {
-				const ControllerNodeIDs = Object.keys(ControllerNodes);
+				exposeGlobalAPI();
+				createHTTPAPI();
+				wireSubDriverEvents();
+
+				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Status: ControllerCallbackObject = {
 					Type: MessageType.STATUS,
 					Status: {
@@ -204,22 +308,23 @@ module.exports = (RED: NodeAPI) => {
 						text: 'Initializing network...'
 					}
 				};
+				updateLatestStatus('Initializing network...');
 				ControllerNodeIDs.forEach((ID) => {
-					ControllerNodes[ID](Status);
+					controllerNodes[ID](Status);
 				});
-				WireSubDriverEvents();
 				self.driverInstance?.controller.nodes.forEach((Node) => {
-					WireNodeEvents(Node);
+					wireNodeEvents(Node);
 				});
 			});
 		};
 
 		// Driver callback subscriptions that occure after driver ready
-		const WireSubDriverEvents = () => {
+		const wireSubDriverEvents = () => {
 			// Al Nodes Ready
+
 			self.driverInstance?.on(event_AllNodesReady.driverName, () => {
 				const Timestamp = new Date().getTime();
-				const ControllerNodeIDs = Object.keys(ControllerNodes);
+				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Event: ControllerCallbackObject = {
 					Type: MessageType.EVENT,
 					Event: { event: event_AllNodesReady.redEventName, timestamp: Timestamp }
@@ -233,16 +338,17 @@ module.exports = (RED: NodeAPI) => {
 						clearTime: 5000
 					}
 				};
+				updateLatestStatus(event_AllNodesReady.nodeStatusName);
 				ControllerNodeIDs.forEach((ID) => {
-					ControllerNodes[ID](Event);
-					ControllerNodes[ID](Status);
+					controllerNodes[ID](Event);
+					controllerNodes[ID](Status);
 				});
 			});
 
 			// Node Added
-			self.driverInstance?.on(event_NodeAdded.driverName, (Node: ZWaveNode) => {
+			self.driverInstance?.controller.on(event_NodeAdded.driverName, (Node: ZWaveNode) => {
 				const Timestamp = new Date().getTime();
-				const ControllerNodeIDs = Object.keys(ControllerNodes);
+				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Event: ControllerCallbackObject = {
 					Type: MessageType.EVENT,
 					Event: { event: event_NodeAdded.redEventName, timestamp: Timestamp, nodeId: Node.id }
@@ -256,17 +362,18 @@ module.exports = (RED: NodeAPI) => {
 						clearTime: 5000
 					}
 				};
+				updateLatestStatus(event_NodeAdded.statusNameWithNode(Node));
 				ControllerNodeIDs.forEach((ID) => {
-					ControllerNodes[ID](Event);
-					ControllerNodes[ID](Status);
+					controllerNodes[ID](Event);
+					controllerNodes[ID](Status);
 				});
-				WireNodeEvents(Node);
+				wireNodeEvents(Node);
 			});
 
 			// Node Removed
-			self.driverInstance?.on(event_NodeRemoved.driverName, (Node: ZWaveNode) => {
+			self.driverInstance?.controller.on(event_NodeRemoved.driverName, (Node: ZWaveNode) => {
 				const Timestamp = new Date().getTime();
-				const ControllerNodeIDs = Object.keys(ControllerNodes);
+				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Event: ControllerCallbackObject = {
 					Type: MessageType.EVENT,
 					Event: { event: event_NodeRemoved.redEventName, timestamp: Timestamp, nodeId: Node.id }
@@ -280,16 +387,17 @@ module.exports = (RED: NodeAPI) => {
 						clearTime: 5000
 					}
 				};
+				updateLatestStatus(event_NodeRemoved.statusNameWithNode(Node));
 				ControllerNodeIDs.forEach((ID) => {
-					ControllerNodes[ID](Event);
-					ControllerNodes[ID](Status);
+					controllerNodes[ID](Event);
+					controllerNodes[ID](Status);
 				});
 			});
 
 			// inclusion started
-			self.driverInstance?.on(event_InclusionStarted.driverName, (IsSecure: boolean) => {
+			self.driverInstance?.controller.on(event_InclusionStarted.driverName, (IsSecure: boolean) => {
 				const Timestamp = new Date().getTime();
-				const ControllerNodeIDs = Object.keys(ControllerNodes);
+				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Body = {
 					isSecureInclude: IsSecure
 				};
@@ -305,16 +413,17 @@ module.exports = (RED: NodeAPI) => {
 						text: event_InclusionStarted.nodeStatusName
 					}
 				};
+				updateLatestStatus(event_InclusionStarted.nodeStatusName);
 				ControllerNodeIDs.forEach((ID) => {
-					ControllerNodes[ID](Event);
-					ControllerNodes[ID](Status);
+					controllerNodes[ID](Event);
+					controllerNodes[ID](Status);
 				});
 			});
 
 			// inclusion failed
-			self.driverInstance?.on(event_InclusionFailed.driverName, () => {
+			self.driverInstance?.controller.on(event_InclusionFailed.driverName, () => {
 				const Timestamp = new Date().getTime();
-				const ControllerNodeIDs = Object.keys(ControllerNodes);
+				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Event: ControllerCallbackObject = {
 					Type: MessageType.EVENT,
 					Event: { event: event_InclusionFailed.redEventName, timestamp: Timestamp }
@@ -328,16 +437,17 @@ module.exports = (RED: NodeAPI) => {
 						clearTime: 5000
 					}
 				};
+				updateLatestStatus(event_InclusionFailed.nodeStatusName);
 				ControllerNodeIDs.forEach((ID) => {
-					ControllerNodes[ID](Event);
-					ControllerNodes[ID](Status);
+					controllerNodes[ID](Event);
+					controllerNodes[ID](Status);
 				});
 			});
 
 			// inclusion stopped
-			self.driverInstance?.on(event_InclusionStopped.driverName, () => {
+			self.driverInstance?.controller.on(event_InclusionStopped.driverName, () => {
 				const Timestamp = new Date().getTime();
-				const ControllerNodeIDs = Object.keys(ControllerNodes);
+				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Event: ControllerCallbackObject = {
 					Type: MessageType.EVENT,
 					Event: { event: event_InclusionStopped.redEventName, timestamp: Timestamp }
@@ -351,16 +461,17 @@ module.exports = (RED: NodeAPI) => {
 						clearTime: 5000
 					}
 				};
+				updateLatestStatus(event_InclusionStopped.nodeStatusName);
 				ControllerNodeIDs.forEach((ID) => {
-					ControllerNodes[ID](Event);
-					ControllerNodes[ID](Status);
+					controllerNodes[ID](Event);
+					controllerNodes[ID](Status);
 				});
 			});
 
 			// exclusion started
-			self.driverInstance?.on(event_ExclusionStarted.driverName, () => {
+			self.driverInstance?.controller.on(event_ExclusionStarted.driverName, () => {
 				const Timestamp = new Date().getTime();
-				const ControllerNodeIDs = Object.keys(ControllerNodes);
+				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Event: ControllerCallbackObject = {
 					Type: MessageType.EVENT,
 					Event: { event: event_ExclusionStarted.redEventName, timestamp: Timestamp }
@@ -373,16 +484,17 @@ module.exports = (RED: NodeAPI) => {
 						text: event_ExclusionStarted.nodeStatusName
 					}
 				};
+				updateLatestStatus(event_ExclusionStarted.nodeStatusName);
 				ControllerNodeIDs.forEach((ID) => {
-					ControllerNodes[ID](Event);
-					ControllerNodes[ID](Status);
+					controllerNodes[ID](Event);
+					controllerNodes[ID](Status);
 				});
 			});
 
 			// exclusion failed
-			self.driverInstance?.on(event_ExclusionFailed.driverName, () => {
+			self.driverInstance?.controller.on(event_ExclusionFailed.driverName, () => {
 				const Timestamp = new Date().getTime();
-				const ControllerNodeIDs = Object.keys(ControllerNodes);
+				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Event: ControllerCallbackObject = {
 					Type: MessageType.EVENT,
 					Event: { event: event_ExclusionFailed.redEventName, timestamp: Timestamp }
@@ -396,16 +508,17 @@ module.exports = (RED: NodeAPI) => {
 						clearTime: 5000
 					}
 				};
+				updateLatestStatus(event_ExclusionFailed.nodeStatusName);
 				ControllerNodeIDs.forEach((ID) => {
-					ControllerNodes[ID](Event);
-					ControllerNodes[ID](Status);
+					controllerNodes[ID](Event);
+					controllerNodes[ID](Status);
 				});
 			});
 
 			// exclusion stopped
-			self.driverInstance?.on(event_ExclusionStopped.driverName, () => {
+			self.driverInstance?.controller.on(event_ExclusionStopped.driverName, () => {
 				const Timestamp = new Date().getTime();
-				const ControllerNodeIDs = Object.keys(ControllerNodes);
+				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Event: ControllerCallbackObject = {
 					Type: MessageType.EVENT,
 					Event: { event: event_ExclusionStopped.redEventName, timestamp: Timestamp }
@@ -419,64 +532,73 @@ module.exports = (RED: NodeAPI) => {
 						clearTime: 5000
 					}
 				};
+				updateLatestStatus(event_ExclusionStopped.nodeStatusName);
 				ControllerNodeIDs.forEach((ID) => {
-					ControllerNodes[ID](Event);
-					ControllerNodes[ID](Status);
+					controllerNodes[ID](Event);
+					controllerNodes[ID](Status);
 				});
 			});
 
 			// Heal finnished
-			self.driverInstance?.on(event_NetworkHealDone.driverName, (Result: ReadonlyMap<number, HealNodeStatus>) => {
-				const Timestamp = new Date().getTime();
-				const ControllerNodeIDs = Object.keys(ControllerNodes);
-				const Event: ControllerCallbackObject = {
-					Type: MessageType.EVENT,
-					Event: { event: event_NetworkHealDone.redEventName, timestamp: Timestamp, eventBody: Result }
-				};
-				const Status: ControllerCallbackObject = {
-					Type: MessageType.STATUS,
-					Status: {
-						fill: 'green',
-						shape: 'dot',
-						text: event_NetworkHealDone.nodeStatusName,
-						clearTime: 5000
-					}
-				};
-				ControllerNodeIDs.forEach((ID) => {
-					ControllerNodes[ID](Event);
-					ControllerNodes[ID](Status);
-				});
-			});
+			self.driverInstance?.controller.on(
+				event_NetworkHealDone.driverName,
+				(Result: ReadonlyMap<number, HealNodeStatus>) => {
+					const Timestamp = new Date().getTime();
+					const ControllerNodeIDs = Object.keys(controllerNodes);
+					const Event: ControllerCallbackObject = {
+						Type: MessageType.EVENT,
+						Event: { event: event_NetworkHealDone.redEventName, timestamp: Timestamp, eventBody: Result }
+					};
+					const Status: ControllerCallbackObject = {
+						Type: MessageType.STATUS,
+						Status: {
+							fill: 'green',
+							shape: 'dot',
+							text: event_NetworkHealDone.nodeStatusName,
+							clearTime: 5000
+						}
+					};
+					updateLatestStatus(event_NetworkHealDone.nodeStatusName);
+					ControllerNodeIDs.forEach((ID) => {
+						controllerNodes[ID](Event);
+						controllerNodes[ID](Status);
+					});
+				}
+			);
 
 			// Heal Progress
-			self.driverInstance?.on(event_HealNetworkProgress.driverName, (Progress: ReadonlyMap<number, HealNodeStatus>) => {
-				const Timestamp = new Date().getTime();
-				const ControllerNodeIDs = Object.keys(ControllerNodes);
-				const Event: ControllerCallbackObject = {
-					Type: MessageType.EVENT,
-					Event: { event: event_HealNetworkProgress.redEventName, timestamp: Timestamp, eventBody: Progress }
-				};
-				const Count = Progress.size;
-				const Remain = [...Progress.values()].filter((V) => V === 'pending').length;
-				const Completed = Count - Remain;
-				const CompletedPercentage = Math.round((100 * Completed) / (Completed + Remain));
-				const Status: ControllerCallbackObject = {
-					Type: MessageType.STATUS,
-					Status: {
-						fill: 'yellow',
-						shape: 'dot',
-						text: `Heal network progress : ${CompletedPercentage}%`
-					}
-				};
-				ControllerNodeIDs.forEach((ID) => {
-					ControllerNodes[ID](Event);
-					ControllerNodes[ID](Status);
-				});
-			});
+			self.driverInstance?.controller.on(
+				event_HealNetworkProgress.driverName,
+				(Progress: ReadonlyMap<number, HealNodeStatus>) => {
+					const Timestamp = new Date().getTime();
+					const ControllerNodeIDs = Object.keys(controllerNodes);
+					const Event: ControllerCallbackObject = {
+						Type: MessageType.EVENT,
+						Event: { event: event_HealNetworkProgress.redEventName, timestamp: Timestamp, eventBody: Progress }
+					};
+					const Count = Progress.size;
+					const Remain = [...Progress.values()].filter((V) => V === 'pending').length;
+					const Completed = Count - Remain;
+					const CompletedPercentage = Math.round((100 * Completed) / (Completed + Remain));
+					const Status: ControllerCallbackObject = {
+						Type: MessageType.STATUS,
+						Status: {
+							fill: 'yellow',
+							shape: 'dot',
+							text: `Heal network progress : ${CompletedPercentage}%`
+						}
+					};
+					updateLatestStatus(`Heal network progress : ${CompletedPercentage}%`);
+					ControllerNodeIDs.forEach((ID) => {
+						controllerNodes[ID](Event);
+						controllerNodes[ID](Status);
+					});
+				}
+			);
 		};
 
 		// Node callback subscriptions
-		const WireNodeEvents = (Node: ZWaveNode) => {
+		const wireNodeEvents = (Node: ZWaveNode) => {
 			if (Node.isControllerNode) {
 				return;
 			}
@@ -485,7 +607,7 @@ module.exports = (RED: NodeAPI) => {
 			[event_Ready, event_Alive, event_Dead, event_Wake, event_Sleep].forEach((ThisEvent) => {
 				Node.on(ThisEvent.driverName, (ThisNode: ZWaveNode) => {
 					const Timestamp = new Date().getTime();
-					const InterestedDeviceNodes = Object.values(DeviceNodes).filter(
+					const InterestedDeviceNodes = Object.values(deviceNodes).filter(
 						(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
 					);
 					const Event: DeviceCallbackObject = {
@@ -505,10 +627,10 @@ module.exports = (RED: NodeAPI) => {
 			// Interview Started
 			Node.on(event_InterviewStarted.driverName, (ThisNode: ZWaveNode) => {
 				const Timestamp = new Date().getTime();
-				const ControllerNodeIDs = Object.keys(ControllerNodes);
+				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Event: ControllerCallbackObject = {
 					Type: MessageType.EVENT,
-					Event: { event: event_NetworkHealDone.redEventName, timestamp: Timestamp }
+					Event: { event: event_InterviewStarted.redEventName, timestamp: Timestamp }
 				};
 				const Status: ControllerCallbackObject = {
 					Type: MessageType.STATUS,
@@ -518,19 +640,20 @@ module.exports = (RED: NodeAPI) => {
 						text: event_InterviewStarted.statusNameWithNode(ThisNode)
 					}
 				};
+				updateLatestStatus(event_InterviewStarted.statusNameWithNode(ThisNode));
 				ControllerNodeIDs.forEach((ID) => {
-					ControllerNodes[ID](Event);
-					ControllerNodes[ID](Status);
+					controllerNodes[ID](Event);
+					controllerNodes[ID](Status);
 				});
 			});
 
 			// Interview Completed
 			Node.on(event_InterviewCompleted.driverName, (ThisNode: ZWaveNode) => {
 				const Timestamp = new Date().getTime();
-				const ControllerNodeIDs = Object.keys(ControllerNodes);
+				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Event: ControllerCallbackObject = {
 					Type: MessageType.EVENT,
-					Event: { event: event_NetworkHealDone.redEventName, timestamp: Timestamp }
+					Event: { event: event_InterviewCompleted.redEventName, timestamp: Timestamp }
 				};
 				const Status: ControllerCallbackObject = {
 					Type: MessageType.STATUS,
@@ -541,16 +664,17 @@ module.exports = (RED: NodeAPI) => {
 						clearTime: 5000
 					}
 				};
+				updateLatestStatus(event_InterviewCompleted.statusNameWithNode(ThisNode));
 				ControllerNodeIDs.forEach((ID) => {
-					ControllerNodes[ID](Event);
-					ControllerNodes[ID](Status);
+					controllerNodes[ID](Event);
+					controllerNodes[ID](Status);
 				});
 			});
 
 			// Interview Failed
 			Node.on(event_InterviewFailed.driverName, (ThisNode: ZWaveNode, Args: NodeInterviewFailedEventArgs) => {
 				const Timestamp = new Date().getTime();
-				const ControllerNodeIDs = Object.keys(ControllerNodes);
+				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Event: ControllerCallbackObject = {
 					Type: MessageType.EVENT,
 					Event: { event: event_InterviewFailed.redEventName, timestamp: Timestamp, eventBody: Args }
@@ -564,16 +688,17 @@ module.exports = (RED: NodeAPI) => {
 						clearTime: 5000
 					}
 				};
+				updateLatestStatus(event_InterviewFailed.statusNameWithNode(ThisNode));
 				ControllerNodeIDs.forEach((ID) => {
-					ControllerNodes[ID](Event);
-					ControllerNodes[ID](Status);
+					controllerNodes[ID](Event);
+					controllerNodes[ID](Status);
 				});
 			});
 
 			// Value Notification
 			Node.on(event_ValueNotification.driverName, (ThisNode: ZWaveNode, Args: ZWaveNodeValueNotificationArgs) => {
 				const Timestamp = new Date().getTime();
-				const InterestedDeviceNodes = Object.values(DeviceNodes).filter(
+				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
 				);
 				const Event: DeviceCallbackObject = {
@@ -593,7 +718,7 @@ module.exports = (RED: NodeAPI) => {
 			// Value updated
 			Node.on(event_ValueUpdated.driverName, (ThisNode: ZWaveNode, Args: ZWaveNodeValueUpdatedArgs) => {
 				const Timestamp = new Date().getTime();
-				const InterestedDeviceNodes = Object.values(DeviceNodes).filter(
+				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
 				);
 				const Event: DeviceCallbackObject = {
@@ -613,7 +738,7 @@ module.exports = (RED: NodeAPI) => {
 			// Value Added
 			Node.on(event_ValueAdded.driverName, (ThisNode: ZWaveNode, Args: ZWaveNodeValueAddedArgs) => {
 				const Timestamp = new Date().getTime();
-				const InterestedDeviceNodes = Object.values(DeviceNodes).filter(
+				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
 				);
 				const Event: DeviceCallbackObject = {
@@ -633,7 +758,7 @@ module.exports = (RED: NodeAPI) => {
 			// Notification
 			Node.on(event_Notification.driverName, (ThisNode: ZWaveNode, CC: number, Args: Record<string, any>) => {
 				const Timestamp = new Date().getTime();
-				const InterestedDeviceNodes = Object.values(DeviceNodes).filter(
+				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
 				);
 				const Event: DeviceCallbackObject = {
@@ -652,7 +777,7 @@ module.exports = (RED: NodeAPI) => {
 		};
 
 		try {
-			self.driverInstance = new Driver(self.config.SerialPort, ZWaveOptions);
+			self.driverInstance = new Driver(self.config.serialPort, ZWaveOptions);
 		} catch (err) {
 			self.error(err);
 			return;
@@ -667,17 +792,20 @@ module.exports = (RED: NodeAPI) => {
 			self.driverInstance?.disableStatistics();
 		}
 
-		WireDriverEvents();
+		wireDriverEvents();
+
+		self.driverInstance?.on('error', (Err) => {
+			console.log(Err);
+		});
+
 		self.driverInstance
 			.start()
 			.catch((e) => {
 				self.error(e);
 				return;
 			})
-			.then(() => {
-				CreateHTTPAPI();
-			});
+			.then(() => {});
 	};
 
-	RED.nodes.registerType('zwave-js-driver', Init);
+	RED.nodes.registerType('zwavejs-runtime', init);
 };

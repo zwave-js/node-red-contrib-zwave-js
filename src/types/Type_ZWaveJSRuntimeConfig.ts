@@ -1,13 +1,14 @@
 import { NodeDef } from 'node-red';
-export type TypeDriverConfig = NodeDef & {
-	FWLicenseKey: string | undefined;
-	Name: string;
-	SerialPort: string;
+export type Type_ZWaveJSRuntimeConfig = NodeDef & {
+	name: string;
+	serialPort: string;
+	enableGlobalAPI: boolean;
+	globalAPIName: string | undefined;
 
 	securityKeys_S0_Legacy: string | undefined;
-	security_S2_Unauthenticated: string | undefined;
-	security_S2_Authenticated: string | undefined;
-	security_S2_AccessControl: string | undefined;
+	securityKeys_S2_Unauthenticated: string | undefined;
+	securityKeys_S2_Authenticated: string | undefined;
+	securityKeys_S2_AccessControl: string | undefined;
 
 	preferences_scales_temperature: number;
 	preferences_scales_humidity: number;
@@ -26,7 +27,4 @@ export type TypeDriverConfig = NodeDef & {
 	apiKeys_firmwareUpdateService: string | undefined;
 
 	enableStatistics: boolean;
-
-	//
-	USBSoftResetTimeout: number | undefined;
 };

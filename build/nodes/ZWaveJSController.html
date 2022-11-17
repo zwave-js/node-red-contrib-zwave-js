@@ -1,0 +1,48 @@
+<script type="text/javascript" src="resources/node-red-contrib-zwave-js/UITab/SideBar.js"></script>
+<link rel="stylesheet" href="resources/node-red-contrib-zwave-js/UITab/styles.css">
+<script type="text/javascript">
+	const ControllerSettings = {
+		category: 'ZWave JS',
+		color: 'rgb(46,145,205)',
+		defaults: {
+			name: {
+				value: 'ZWave JS Controller',
+				required: true
+			},
+			runtimeId:{
+				value: '',
+				required: true,
+				type:'zwavejs-runtime'
+			}	
+		},
+		inputs: 1,
+		outputs: 1,
+		icon: 'ZWJS.svg',
+		label: function () {
+			return this.name;
+		},
+		paletteLabel: 'ZWave Controller',
+		onpaletteadd: ZWaveJSUI.init
+	};
+
+	RED.nodes.registerType('zwavejs-controller', ControllerSettings);
+
+</script>
+
+<script type="text/x-red" data-template-name="zwavejs-controller">
+	<h3>Basic</h3>
+	<hr />
+	<div class="form-row">
+	    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+	    <input type="text" id="node-input-name">
+	</div>
+	<div class="form-row">
+	    <label for="node-input-runtimeId"><i class="fa fa-cog"></i> Runtime</label>
+	    <input type="text" id="node-input-runtimeId">
+	</div>
+</script>
+
+<script type="text/markdown" data-help-name="zwavejs-controller">
+<p>A ZWave JS node for managing your network</p>
+
+</script>

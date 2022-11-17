@@ -1,318 +1,95 @@
-.zwave-js-header-table {
-	width: 97%;
-	margin: auto;
-	white-space: break-spaces;
-	padding: 5px;
-	display: block;
-	box-sizing: content-box;
+/* Alert Flash */
+.zwavejs-controller-button-blink {
+	animation: blinker 1s linear infinite;
+}
+@keyframes blinker {
+	0% {
+		color: gray;
+	}
+	49% {
+		color: gray;
+	}
+	50% {
+		color: red;
+	}
+	100% {
+		color: red;
+	}
 }
 
-.zwave-js-config-section-title {
-	background-color: lightgray;
-	padding: 5px;
-	-webkit-border-radius: 5px !important;
-	-moz-border-radius: 5px !important;
-	border-radius: 5px !important;
+/* Controller Info Header */
+.zwavejs-info-header {
+	height: 40px;
+	padding: 10px;
+	text-align: left;
 }
 
-.zwave-js-header-table td:first-of-type {
-	width: 50px;
-}
-
-.zwave-js-id-box {
-	width: 30px;
-	height: 30px;
-	line-height: 30px;
-	background-color: lightgray;
-	border-style: solid;
-	border-width: 1px;
-	-webkit-border-radius: 5px !important;
-	-moz-border-radius: 5px !important;
-	border-radius: 5px !important;
-	text-align: center;
-	padding: 3px;
-	box-sizing: content-box;
-	font-size: 12px;
-	border-color: rgb(75, 75, 75);
-	font-weight: bold;
-}
-
-.zwave-js-info-box {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	font-weight: normal;
-	padding: 3px;
-}
-
-.zwave-js-round-square {
-	-webkit-border-radius: 4px !important;
-	-moz-border-radius: 4px !important;
-	border-radius: 4px !important;
-}
-
-.zwave-js-node-row {
-	border-bottom: dotted 1px gray;
-	display: flex;
-	height: 30px;
-}
-
-.zwave-js-node-row.currentNode .zwave-js-node-row-id {
-	background-color: lightgray;
-}
-
-.zwave-js-node-row-id {
-	width: 20px;
-	height: 20px;
-	margin-left: 15px;
-	margin-right: 10px;
-	border-style: solid;
-	border-width: 1px;
-	border-radius: 5px;
-	text-align: center;
-	padding: 3px;
-	box-sizing: content-box;
-	font-size: 12px;
-	border-color: rgb(75, 75, 75);
-}
-
-.zwave-js-node-row-name {
-	width: 45%;
-}
-
-.zwave-js-node-row-status {
-	width: 11%;
-	font-size: x-small;
-	text-align: center;
-}
-
-.zwave-js-node-row-ready {
-	width: 11%;
-	text-align: center;
-}
-
-.zwave-js-node-row-security {
-	width: 11%;
-	text-align: center;
-}
-
-.zwave-js-node-row-battery {
-	width: 11%;
-	text-align: center;
-}
-
-.zwave-js-status-box {
-	margin-left: 5px;
-	font-size: smaller;
-}
-
-.zwave-js-node-fetch-status {
-	font-style: italic;
-}
-
-.zwave-js-node-fetch-status:hover {
-	background-color: inherit !important;
-}
-
-#zwave-js-node-properties .red-ui-treeList-label {
-	cursor: default;
-	display: block !important;
-	/* NR 2 fix */
-	align-items: unset !important;
-	/* NR 2 fix */
-}
-
-.zwave-js-node-property-endpoint {
-	margin-left: 5px;
-	padding: 2px;
-	border-width: 1px;
-	border-style: solid;
-	border-radius: 8px;
-}
-
-.zwave-js-node-property {
-	display: inline-flex;
-	justify-content: space-between;
-	gap: 10px;
-	word-break: keep-all;
-}
-
-.zwave-js-node-property-edit-button {
-	cursor: pointer;
-}
-
-.zwave-js-node-property-value {
-	text-align: right;
-	margin-right: 10px;
-}
-
-.zwave-js-property-value-type-boolean {
-	text-transform: uppercase;
-	font-size: smaller;
-}
-
-.zwave-js-ac {
-	display: none;
-	width: 15px;
-	height: 15px;
-	padding: 5px;
-	line-height: 15px;
-	border-width: 1px;
-	-webkit-border-radius: 5px;
-	-moz-border-radius: 5px;
-	border-radius: 5px;
-	text-align: center;
-	background-color: lightgray;
-	border-color: rgb(75, 75, 75);
-	border-style: solid;
-}
-
-.zwave-js-ac i {
-	font-size: 16px !important;
-	color: #666;
-}
-
-.zwave-js-selected-node-map-info {
-	width: 300px;
-	font-size: 12px;
-	height: 260px;
-	background-color: whitesmoke;
-	border-style: solid;
-	border-width: 1px;
-	border-color: black;
-	padding: 5px;
-	overflow: hidden;
-	-webkit-border-radius: 4px;
-	-moz-border-radius: 4px;
-	border-radius: 4px;
-	-webkit-box-shadow: 10px 10px 24px -15px rgba(0, 0, 0, 0.9);
-	-moz-box-shadow: 10px 10px 24px -15px rgba(0, 0, 0, 0.9);
-	box-shadow: 10px 10px 24px -15px rgba(0, 0, 0, 0.9);
+/* Info icon */
+.zwavejs-info-header > i {
 	position: absolute;
-	top: 20px;
-	left: 20px;
-	z-index: 200;
-	opacity: 0.7;
-	transition-duration: 0.5s;
+	font-size: 30px;
+	margin-top: 5px;
+	color: gray;
 }
 
-.zwave-js-selected-node-map-info:hover {
-	opacity: 1;
+/* Info Container */
+.zwavejs-info-container {
+	margin-left: 50px;
 }
 
-.nmprogresslabel {
-	width: 70%;
-	margin: auto;
-	margin-top: 50px;
+/* Controller Info Lables */
+.zwavejs-info-container span:first-of-type {
+	font-size: 18px;
+	font-weight: bold;
+	color: gray;
+}
+.zwavejs-info-container span {
+	font-size: 14px;
+	color: gray;
 }
 
-.progressbar {
-	background-color: #bbb;
-	-webkit-border-radius: 8px;
-	-moz-border-radius: 8px;
-	border-radius: 8px;
-	padding: 3px;
-	width: 70%;
-	margin: auto;
-	margin-top: 50px;
-}
-
-.progressbar>div {
-	background-color: gray;
-	width: 0%;
+/* Controller Menu header */
+.zwavejs-controller-menu-header {
 	height: 20px;
-	-webkit-border-radius: 6px;
-	-moz-border-radius: 6px;
-	border-radius: 6px;
-}
-
-table.zwave-js-health-table {
-	width: 90%;
-	margin: auto;
-	border-style: solid;
-	border-width: 2px;
-	border-radius: 4px;
-	margin-bottom: 30px;
-	margin-top: 10px;
-}
-
-table#zwave-js-associations-table {
-	margin-top: 10px;
-	width: 100%;
-	border-radius: 4px;
-	border-style: solid;
-	border-width: 2px;
-}
-
-table#zwave-js-associations-table tr:first-of-type {
-	background-color: #eee;
-	border-bottom: 1px solid black;
-}
-
-.ui-button.ui-corner-all.ui-widget.ui-button-icon-only.ui-dialog-titlebar-close {
-	display: none;
-}
-
-.SecrutiyButton {
-	width: 130px;
-	height: 45px;
-}
-
-#CommandLog {
-	z-index: -100;
-}
-
-.MonitorEntry {
-	background-color: rgb(245, 245, 245);
-	border-style: solid;
-	border-width: 2px;
-	border-color: rgb(210, 210, 210);
-	padding: 5px;
-	-webkit-border-radius: 8px;
-	-moz-border-radius: 8px;
-	border-radius: 8px;
-}
-
-.json-key {
-	color: rgb(199, 48, 53);
-}
-
-.json-value {
-	color: rgb(243, 135, 48);
-}
-
-.json-string {
-	color: rgb(130, 152, 52);
-}
-
-.ui-slider-handle {
-	position: relative;
-	width: 3em;
-	height: 1.6em;
-	top: 50%;
 	text-align: center;
-	line-height: 1.6em;
-	border-color: rgba(140, 140, 140, 1) !important;
-	background: rgba(180, 180, 180, 1) !important;
-	color: white !important;
-	margin-top: 2px;
-	transform: translateX(-10px);
-	cursor: pointer !important;
 }
 
-.ui-slider-range {
-	background: rgba(200, 200, 200, 0.3);
+/* Controller Menu buttons */
+.zwavejs-controller-menu-header a {
+	position: relative;
+	margin-right: 15px;
+}
+.zwavejs-controller-menu-header a i {
+	font-size: 18px;
+	color: gray;
 }
 
-#FWForm #tabs ul {
-	background-color: #fff !important;
+/* Options Panel */
+.zwavejs-options-panel {
+	background: #f3f3f3;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+	padding-top: 20px;
 }
 
-#FWForm #tabs ul li.ui-tabs-active {
-	background-color: #fff !important;
+.zwavejs-options-panel > span:first-of-type {
+	font-weight: bold;
+	font-size: 18px;
+	color: gray;
+	margin-bottom: 20px;
+	display: block;
 }
 
-#FWForm #tabs ul li.ui-tabs-active a {
-	color: #555 !important;
-	font-weight: bold !important;
+.zwavejs-options-panel button.zwavejs-full-width-button {
+	width: 70%;
+	display: block;
+	margin: auto;
+	margin-bottom: 5px;
+	color: gray;
+}
+
+.zwavejs-options-panel button.zwavejs-cancel{
+	color: red;
+	margin-top: 10px;
 }
