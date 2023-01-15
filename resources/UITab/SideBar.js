@@ -6,18 +6,30 @@
 
 // UI Function placholders
 let IE;
+let Grant;
+let ValidateDSK;
+
+// Globals
+const StepList = {
+	IEMode: 0,
+	NIF: 1,
+	Grant: 2
+};
+
+const Classes = {
+	0: 'S2 Unauthenticated',
+	1: 'S2 Authenticated',
+	2: 'S2 AccessControl',
+	7: 'S0 Legacy'
+};
+
+const modalWidth = 800;
+const modalHeight = 600;
 
 const ZWaveJSUI = (function () {
 	// Vars
 	let networkId;
 	let stepsAPI;
-	const modalWidth = 800;
-	const modalHeight = 600;
-
-	const StepList = {
-		IEMode: 0,
-		NIF: 1
-	};
 
 	// Prompt
 	const prompt = async (Message, Buttons, NoCancel = false) => {
@@ -260,7 +272,9 @@ const ZWaveJSUI = (function () {
 	const networkSelected = function () {
 		// Remove Subscriptions
 		if (networkId) {
-			RED.comms.unsubscribe(`zwave-js/ui/${this.vale}/status`);
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/status`);
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/s2/grant`);
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/s2/dsk`);
 			networkId = undefined;
 		}
 
@@ -300,6 +314,20 @@ const ZWaveJSUI = (function () {
 		// subscribe
 		RED.comms.subscribe(`zwave-js/ui/${networkId}/status`, (event, data) => {
 			$('#zwavejs-radio-status').text(data.status);
+		});
+
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/s2/grant`, (event, data) => {
+			data.securityClasses.forEach((SC) => {
+				$('#S2ClassesTable').append(
+					`<tr><td>${Classes[SC]}</td><td><input type="checkbox" value="${SC}" class="S2Class" /></td></tr>`
+				);
+			});
+
+			stepsAPI.setStepIndex(StepList.Grant);
+		});
+
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/s2/dsk`, (event, data) => {
+			//
 		});
 	};
 

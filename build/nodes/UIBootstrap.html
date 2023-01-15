@@ -44,6 +44,7 @@
 				<ul class="step-steps" style="display: none">
 					<li data-step-target="IEMode"></li>
 					<li data-step-target="NIF"></li>
+          <li data-step-target="Grant"></li>
 				</ul>
 				<div class="step-content" style="border: none">
 
@@ -61,6 +62,14 @@
 						<i class="fa fa-rss zwave-js-ie-state-icon"></i>
 						<span class="zwave-js-ie-state-text">Waiting for Node Information Frame...</span>
 					</div>
+
+          <div class="step-tab-panel" data-step="Grant">
+						Below are the S2 Secuity classes, that the new node is asking for. Please verify the classes you wish to allow.
+            <table id="S2ClassesTable" class="zwave-js-info-table" style="margin-top: 10px;"></table>
+            </table>
+            <button class="zwave-js-save">Grant</button>
+					</div>
+
 				</div>
 			</div>
 		</div>
