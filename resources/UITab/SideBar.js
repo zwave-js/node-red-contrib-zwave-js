@@ -4,159 +4,259 @@
 /* eslint no-undef: "warn"*/
 /* eslint no-unused-vars: "warn"*/
 
-const ZWaveJSUI = (function () {
-	let networkId;
-	let displayedOptionsPanel;
+// UI Function placholders
+let IE;
 
-	const restoreDisplay = function () {
-		if (displayedOptionsPanel) {
-			displayedOptionsPanel.remove();
+const ZWaveJSUI = (function () {
+	// Vars
+	let networkId;
+	let stepsAPI;
+	const modalWidth = 800;
+	const modalHeight = 600;
+
+	const StepList = {
+		IEMode: 0,
+		NIF: 1
+	};
+
+	// Prompt
+	const prompt = async (Message, Buttons, NoCancel = false) => {
+		return new Promise((resolve) => {
+			Prompt = $('<div>');
+			Prompt.append(Message);
+
+			const Options = {
+				title: 'Question',
+				buttons: [],
+				draggable: false,
+				resizable: false,
+				modal: true
+			};
+
+			if (!NoCancel) {
+				Options.buttons.push({
+					text: 'Cancel',
+					click: function () {
+						resolve(-1);
+						$(this).dialog('close');
+					}
+				});
+			}
+			Buttons.forEach(function (V, I) {
+				Options.buttons.push({
+					text: V,
+					click: function () {
+						resolve(I);
+						$(this).dialog('close');
+					}
+				});
+			});
+
+			Prompt.dialog(Options);
+		});
+	};
+
+	// Runtime Communication Methods
+	const Runtime = {
+		Get: async function (API, Method) {
+			return new Promise((resolve) => {
+				$.ajax({
+					type: 'GET',
+					url: `zwave-js/ui/${networkId}/${API}/${Method}`,
+					success: (data) => resolve(data),
+					error: (jqXHR, textStatus, errorThrown) =>
+						resolve({ callSuccess: false, response: `${textStatus}: ${errorThrown}` }),
+					dataType: 'json'
+				});
+			});
+		},
+		Post: async function (API, Method, Data) {
+			return new Promise((resolve) => {
+				$.ajax({
+					type: 'POST',
+					data: JSON.stringify(Data),
+					url: `zwave-js/ui/${networkId}/${API}/${Method}`,
+					success: (data) => resolve(data),
+					error: (jqXHR, textStatus, errorThrown) =>
+						resolve({ callSuccess: false, response: `${textStatus}: ${errorThrown}` }),
+					dataType: 'json',
+					contentType: 'application/json'
+				});
+			});
+		}
+	};
+
+	// Node Managemnt fucntions
+	IE = (Mode) => {
+		let Request;
+
+		if (Mode === 'EX') {
+			prompt(
+				'If the device you wish to exclude is found on the Smart Start Provisioning List, would you like it to be removed?',
+				['Yes', 'No']
+			).then((answer) => {
+				Request = {
+					strategy: answer === 0 ? 2 : 0
+				};
+				Runtime.Post('CONTROLLER', 'beginExclusion', [Request]).then((data) => {
+					if (data.callSuccess) {
+						stepsAPI.setStepIndex(StepList.NIF);
+					} else {
+						alert(data.response);
+					}
+				});
+			});
 		}
 
-		$('#zwavejs-panel-stack').css({ display: 'flex' });
+		if (Mode === 'Default') {
+			prompt(
+				"If the device you're including does not support S2, S0 will be used ONLY if its necessary. Would you like to fallback to S0 regarldess?",
+				['Yes', 'No']
+			).then((answer) => {
+				if (answer > -1) {
+					Request = {
+						strategy: 0,
+						forceSecurity: answer === 0
+					};
+					Runtime.Post('CONTROLLER', 'beginInclusion', [Request]).then((data) => {
+						if (data.callSuccess) {
+							stepsAPI.setStepIndex(StepList.NIF);
+						} else {
+							alert(data.response);
+						}
+					});
+				}
+			});
+		}
+
+		if (Mode === 'S2') {
+			Request = {
+				strategy: 4
+			};
+			Runtime.Post('CONTROLLER', 'beginInclusion', [Request]).then((data) => {
+				if (data.callSuccess) {
+					stepsAPI.setStepIndex(StepList.NIF);
+				} else {
+					alert(data.response);
+				}
+			});
+		}
+
+		if (Mode === 'S0') {
+			Request = {
+				strategy: 3
+			};
+			Runtime.Post('CONTROLLER', 'beginInclusion', [Request]).then((data) => {
+				if (data.callSuccess) {
+					stepsAPI.setStepIndex(StepList.NIF);
+				} else {
+					alert(data.response);
+				}
+			});
+		}
+
+		if (Mode === 'NS') {
+			Request = {
+				strategy: 2
+			};
+			Runtime.Post('CONTROLLER', 'beginInclusion', [Request]).then((data) => {
+				if (data.callSuccess) {
+					stepsAPI.setStepIndex(StepList.NIF);
+				} else {
+					alert(data.response);
+				}
+			});
+		}
 	};
 
-	const showRadioSettings = () => {
-		restoreDisplay();
-		const Parent = $('#zwavejs-panel-stack').parent();
-		$('#zwavejs-panel-stack').css({ display: 'none' });
+	// Show Include Options
+	const showNetworkManagement = () => {
+		const HTML = $('#TPL_NetworkManagement').html();
+		const Panel = $('<div>');
+		Panel.append(HTML);
 
-		displayedOptionsPanel = $('<div>').addClass('zwavejs-options-panel');
-		displayedOptionsPanel.append('<span>Advanced Transceiver Settings</span>');
+		const Settings = {
+			title: 'Network Management',
+			modal: true,
+			width: modalWidth,
+			height: modalHeight,
+			resizable: false,
+			draggable: false,
+			close: function () {
+				Panel.remove();
+			}
+		};
+
+		Panel.dialog(Settings);
+		$('#TPL_NetworkManagementTabs').tabs().addClass('zwave-js-vertical-tabs ui-helper-clearfix');
+		$('#TPL_NetworkManagementTabs li').removeClass('ui-corner-top').addClass('ui-corner-left');
+
+		// Basic CI Info
+		Runtime.Get('CONTROLLER', 'getNodes').then((data) => {
+			if (data.callSuccess) {
+				const Controller = data.response.Event.eventBody.find((N) => N.isControllerNode);
+
+				const CITable = $('#CITable');
+				CITable.append(`<tr><td>Device</td><td>${Controller.deviceConfig.description}</td>`);
+				CITable.append(`<tr><td>Manufacturer</td><td>${Controller.deviceConfig.manufacturer}</td>`);
+				CITable.append(`<tr><td>Firmware Version</td><td>${Controller.firmwareVersion}</td>`);
+				CITable.append(`<tr><td>Supported Data Rates</td><td>${Controller.supportedDataRates.toString()}</td>`);
+
+				const CIStatsTable = $('#CIStatsTable');
+				for (const [key, value] of Object.entries(Controller.statistics)) {
+					CIStatsTable.append(`<tr><td>${key}</td><td>${value}</td>`);
+				}
+			} else {
+				alert(data.response);
+			}
+		});
+
+		// Power Level
+		Runtime.Get('CONTROLLER', 'getPowerlevel').then((data) => {
+			if (data.callSuccess) {
+				$('#CSettings_PL').val(data.response.powerlevel);
+				$('#CSettings_0DBM').val(data.response.measured0dBm);
+			} else {
+				alert(data.response);
+			}
+		});
 
 		// Region
-		const Region = $('<div>').addClass('form-row');
-		$('<label>').attr('for', 'tx-region').text('RF Region').css({ textAlign: 'left', width: '70%' }).appendTo(Region);
-		$('<select>')
-			.attr('id', 'tx-region')
-			.css({ width: '70%' })
-			.append('<option value="0x00">Europe</option>')
-			.append('<option value="0x01">USA</option>')
-			.append('<option value="0x02">Australia/New Zealand</option>')
-			.append('<option value="0x03">Hong Kong</option>')
-			.append('<option value="0x05">India</option>')
-			.append('<option value="0x06">Israel</option>')
-			.append('<option value="0x07">Russia</option>')
-			.append('<option value="0x08">China</option>')
-			.append('<option value="0x09">USA (Long Range)</option>')
-			.append('<option value="0x20">Japan</option>')
-			.append('<option value="0x21">Korea</option>')
-			.append('<option value="0xfe">Unknown</option>')
-			.append('<option value="0xff">Default (EU)</option>')
-			.appendTo(Region);
-		displayedOptionsPanel.append(Region);
+		Runtime.Get('CONTROLLER', 'getRFRegion').then((data) => {
+			if (data.callSuccess) {
+				//
+			} else {
+				$('#CSettings_Regions').prop('disabled', 'disabled');
+			}
+		});
 
-		// POwer Level
-		const Power = $('<div>').addClass('form-row');
-		$('<label>')
-			.attr('for', 'tx-power')
-			.text('RF Power Level (dBm)')
-			.css({ textAlign: 'left', width: '70%' })
-			.appendTo(Power);
-		$('<input>').attr('type', 'number').attr('id', 'tx-power').attr('step', '.1').val(0).appendTo(Power);
-		$('<input>').attr('type', 'number').attr('id', 'tx-0measured').attr('step', '.1').val(6.4).appendTo(Power);
-		displayedOptionsPanel.append(Power);
-
-		$('<button>')
-			.addClass('ui-button')
-			.addClass('ui-corner-all')
-			.addClass('ui-widget')
-			.addClass('zwavejs-full-width-button')
-			.text('Backup NVM')
-			.click()
-			.appendTo(displayedOptionsPanel);
-
-		$('<button>')
-			.addClass('ui-button')
-			.addClass('ui-corner-all')
-			.addClass('ui-widget')
-			.addClass('zwavejs-full-width-button')
-			.text('Restore NVM')
-			.click()
-			.appendTo(displayedOptionsPanel);
-
-		$('<button>')
-			.addClass('ui-button')
-			.addClass('ui-corner-all')
-			.addClass('ui-widget')
-			.addClass('zwavejs-full-width-button')
-			.addClass('zwavejs-cancel')
-			.text('Cancel')
-			.click(restoreDisplay)
-			.appendTo(displayedOptionsPanel);
-
-		Parent.append(displayedOptionsPanel);
+		const Steps = $('#IEWizard').steps({ showFooterButtons: false });
+		stepsAPI = Steps.data('plugin_Steps');
 	};
 
-	const showInclusionOptions = () => {
-		restoreDisplay();
-		const Parent = $('#zwavejs-panel-stack').parent();
-		$('#zwavejs-panel-stack').css({ display: 'none' });
+	const showNodeManagement = () => {
+		const HTML = $('#TPL_NodeManagement').html();
+		const Panel = $('<div>');
+		Panel.append(HTML);
 
-		displayedOptionsPanel = $('<div>').addClass('zwavejs-options-panel');
-		displayedOptionsPanel.append('<span>Inclusion/Exclusion Options</span>');
+		const Settings = {
+			title: 'Node Management',
+			modal: true,
+			width: modalWidth,
+			height: modalHeight,
+			resizable: false,
+			draggable: false,
+			close: function () {
+				Panel.remove();
+			}
+		};
 
-		$('<button>')
-			.addClass('ui-button')
-			.addClass('ui-corner-all')
-			.addClass('ui-widget')
-			.addClass('zwavejs-full-width-button')
-			.text('Default')
-			.appendTo(displayedOptionsPanel);
-
-		$('<button>')
-			.addClass('ui-button')
-			.addClass('ui-corner-all')
-			.addClass('ui-widget')
-			.addClass('zwavejs-full-width-button')
-			.text('Smart Start')
-			.appendTo(displayedOptionsPanel);
-
-		$('<button>')
-			.addClass('ui-button')
-			.addClass('ui-corner-all')
-			.addClass('ui-widget')
-			.addClass('zwavejs-full-width-button')
-			.text('S0')
-			.appendTo(displayedOptionsPanel);
-
-		$('<button>')
-			.addClass('ui-button')
-			.addClass('ui-corner-all')
-			.addClass('ui-widget')
-			.addClass('zwavejs-full-width-button')
-			.text('No Encryption')
-			.appendTo(displayedOptionsPanel);
-
-		$('<button>')
-			.addClass('ui-button')
-			.addClass('ui-corner-all')
-			.addClass('ui-widget')
-			.addClass('zwavejs-full-width-button')
-			.text('Remove Node')
-			.appendTo(displayedOptionsPanel);
-
-		$('<button>')
-			.addClass('ui-button')
-			.addClass('ui-corner-all')
-			.addClass('ui-widget')
-			.addClass('zwavejs-full-width-button')
-			.text('Provisioning List')
-			.appendTo(displayedOptionsPanel);
-
-		$('<button>')
-			.addClass('ui-button')
-			.addClass('ui-corner-all')
-			.addClass('ui-widget')
-			.addClass('zwavejs-full-width-button')
-			.addClass('zwavejs-cancel')
-			.text('Cancel')
-			.click(restoreDisplay)
-			.appendTo(displayedOptionsPanel);
-
-		Parent.append(displayedOptionsPanel);
+		Panel.dialog(Settings);
+		$('#TPL_NodeManagementTabs').tabs().addClass('zwave-js-vertical-tabs ui-helper-clearfix');
+		$('#TPL_NodeManagementTabs li').removeClass('ui-corner-top').addClass('ui-corner-left');
 	};
 
+	// Network Selecetd
 	const networkSelected = function () {
 		// Remove Subscriptions
 		if (networkId) {
@@ -167,24 +267,30 @@ const ZWaveJSUI = (function () {
 		networkId = this.value;
 
 		// get Nodes ansd Info
-		$.getJSON(`zwave-js/ui/${networkId}/nodes`, (data) => {
-			const Controller = data.filter((N) => N.isControllerNode)[0];
-			$('#zwavejs-radio-model').text(Controller.deviceConfig.label);
-			$('#zwavejs-radio-manufacture').text(`${Controller.deviceConfig.manufacturer}, `);
-			$('#zwavejs-radio-version').text(`v${Controller.firmwareVersion}, `);
+		Runtime.Get('CONTROLLER', 'getNodes').then((data) => {
+			if (data.callSuccess) {
+				data = data.response.Event.eventBody;
 
-			const Nodes = data.filter((N) => !N.isControllerNode);
+				const Controller = data.filter((N) => N.isControllerNode)[0];
+				$('#zwavejs-radio-model').text(Controller.deviceConfig.label);
+				$('#zwavejs-radio-manufacture').text(`${Controller.deviceConfig.manufacturer}, `);
+				$('#zwavejs-radio-version').text(`v${Controller.firmwareVersion}, `);
 
-			// Render List
-			const TreeData = [];
-			Nodes.forEach((N) => {
-				TreeData.push({
-					label: `${N.nodeId} - ${N.nodeName || N.deviceConfig.label}`,
-					nodeData: N
-					//icon: 'fa fa-circle'
+				const Nodes = data.filter((N) => !N.isControllerNode);
+
+				// Render List
+				const TreeData = [];
+				Nodes.forEach((N) => {
+					TreeData.push({
+						label: `${N.nodeId} - ${N.nodeName || N.deviceConfig.label}`,
+						nodeData: N
+						//icon: 'fa fa-circle'
+					});
 				});
-			});
-			$('#zwavejs-node-list').treeList('data', TreeData);
+				$('#zwavejs-node-list').treeList('data', TreeData);
+			} else {
+				alert(data.response);
+			}
 		});
 
 		$.getJSON(`zwave-js/ui/${networkId}/status`, (data) => {
@@ -197,6 +303,7 @@ const ZWaveJSUI = (function () {
 		});
 	};
 
+	// Node Selected
 	const nodeSelected = (event, item) => {
 		$('#zwavejs-node-model').text(
 			`${item.nodeData.nodeId} - ${item.nodeData.nodeName || item.nodeData.deviceConfig.label}`
@@ -205,67 +312,66 @@ const ZWaveJSUI = (function () {
 		$('#zwavejs-node-version').text(`${item.nodeData.firmwareVersion}, `);
 		$('#zwavejs-node-status').text(`${item.nodeData.status}`);
 
-		$.getJSON(`zwave-js/ui/${networkId}/getValueDB/${item.nodeData.nodeId}`, (data) => {
-			data = data[0];
-			const ListOfCCs = [];
-			data.values.forEach((PL) => {
-				if (!ListOfCCs.includes(PL.valueId.commandClassName)) {
-					ListOfCCs.push(PL.valueId.commandClassName);
-				}
-			});
-			ListOfCCs.sort();
-
-			const Items = [];
-
-			ListOfCCs.forEach((CC) => {
-				const Item = {
-					label: CC,
-					children: []
-				};
-
-				const Properties = data.values.filter((V) => V.valueId.commandClassName === CC);
-				Item.label = `0x${Properties[0].valueId.commandClass.toString(16)} - ${Item.label}`;
-				Properties.forEach((P) => {
-					const Label = P.metadata !== undefined ? P.metadata.label || P.valueId.property : P.valueId.property;
-					const Writeable = P.metadata !== undefined ? (P.metadata.writeable ? 'fa fa-pencil' : '') : '';
-					const LabelDiv = $('<div>')
-						.text(Label)
-						.append(
-							`<span style="float:right;padding-right:20px">${P.currentValue || ''} ${P.metadata.unit || ''}</span>`
-						);
-					Item.children.push({
-						element: LabelDiv,
-						icon: Writeable
-					});
+		Runtime.Post('CONTROLLER', 'getValueDB', [item.nodeData.nodeId]).then((data) => {
+			if (data.callSuccess) {
+				data = data.response.Event.eventBody[0];
+				const ListOfCCs = [];
+				data.values.forEach((PL) => {
+					if (!ListOfCCs.includes(PL.valueId.commandClassName)) {
+						ListOfCCs.push(PL.valueId.commandClassName);
+					}
 				});
-				Items.push(Item);
-			});
+				ListOfCCs.sort();
 
-			$('#zwavejz-cc-list-list').treeList('data', Items);
+				const Items = [];
+
+				ListOfCCs.forEach((CC) => {
+					const Item = {
+						label: CC,
+						children: []
+					};
+
+					const Properties = data.values.filter((V) => V.valueId.commandClassName === CC);
+					Item.label = `0x${Properties[0].valueId.commandClass.toString(16)} - ${Item.label}`;
+					Properties.forEach((P) => {
+						const Label = P.metadata !== undefined ? P.metadata.label || P.valueId.property : P.valueId.property;
+						const Writeable = P.metadata !== undefined ? (P.metadata.writeable ? 'fa fa-pencil' : '') : '';
+						const LabelDiv = $('<div>')
+							.text(Label)
+							.append(
+								`<span style="float:right;padding-right:20px">${P.currentValue || ''} ${P.metadata.unit || ''}</span>`
+							);
+						Item.children.push({
+							element: LabelDiv,
+							icon: Writeable
+						});
+					});
+					Items.push(Item);
+				});
+
+				$('#zwavejz-cc-list-list').treeList('data', Items);
+			} else {
+				alert(data.response);
+			}
 		});
 	};
 
 	const addNodeMenuItems = (MenuHeader) => {
+		const Network = $('<a>')
+			.addClass('red-ui-tab-link-button')
+			.addClass('ui-draggable')
+			.addClass('ui-draggable-handle')
+			.css({ cursor: 'pointer' })
+			.append('<i class="fa fa-cogs"></i>')
+			.click(showNodeManagement);
+		MenuHeader.append(Network);
+
 		const Inclusion = $('<a>')
 			.addClass('red-ui-tab-link-button')
 			.addClass('ui-draggable')
 			.addClass('ui-draggable-handle')
 			.append('<i class="fa fa-handshake-o"></i>');
 		MenuHeader.append(Inclusion);
-
-		const EditName = $('<a>')
-			.addClass('red-ui-tab-link-button')
-			.addClass('ui-draggable')
-			.addClass('ui-draggable-handle')
-			.append('<i class="fa fa-pencil"></i>');
-		MenuHeader.append(EditName);
-
-		const Associate = $('<a>')
-			.addClass('red-ui-tab-link-button')
-			.addClass('ui-draggable')
-			.addClass('ui-draggable-handle')
-			.append('<i class="fa fa-code-fork"></i>');
-		MenuHeader.append(Associate);
 
 		const Repair = $('<a>')
 			.addClass('red-ui-tab-link-button')
@@ -274,51 +380,23 @@ const ZWaveJSUI = (function () {
 			.append('<i class="fa fa-medkit"></i>');
 		MenuHeader.append(Repair);
 
-		const Health = $('<a>')
-			.addClass('red-ui-tab-link-button')
-			.addClass('ui-draggable')
-			.addClass('ui-draggable-handle')
-			.append('<i class="fa fa-stethoscope"></i>');
-		MenuHeader.append(Health);
-
-		const Replace = $('<a>')
-			.addClass('red-ui-tab-link-button')
-			.addClass('ui-draggable')
-			.addClass('ui-draggable-handle')
-			.append('<i class="fa fa-chain-broken"></i>');
-		MenuHeader.append(Replace);
-
 		const Remove = $('<a>')
 			.addClass('red-ui-tab-link-button')
 			.addClass('ui-draggable')
 			.addClass('ui-draggable-handle')
 			.append('<i class="fa fa-trash-o"></i>');
 		MenuHeader.append(Remove);
-
-		const Firmware = $('<a>')
-			.addClass('red-ui-tab-link-button')
-			.addClass('ui-draggable')
-			.addClass('ui-draggable-handle')
-			.append('<i class="fa fa-download"></i>');
-		MenuHeader.append(Firmware);
 	};
 
 	const addControllerMenuItems = (MenuHeader) => {
-		const Inclusion = $('<a>')
+		const Network = $('<a>')
 			.addClass('red-ui-tab-link-button')
 			.addClass('ui-draggable')
 			.addClass('ui-draggable-handle')
 			.css({ cursor: 'pointer' })
-			.append('<i class="fa fa-handshake-o"></i>')
-			.click(showInclusionOptions);
-		MenuHeader.append(Inclusion);
-
-		const Map = $('<a>')
-			.addClass('red-ui-tab-link-button')
-			.addClass('ui-draggable')
-			.addClass('ui-draggable-handle')
-			.append('<i class="fa fa-globe"></i>');
-		MenuHeader.append(Map);
+			.append('<i class="fa fa-cogs"></i>')
+			.click(showNetworkManagement);
+		MenuHeader.append(Network);
 
 		const Refresh = $('<a>')
 			.addClass('red-ui-tab-link-button')
@@ -333,15 +411,6 @@ const ZWaveJSUI = (function () {
 			.addClass('ui-draggable-handle')
 			.append('<i class="fa fa-medkit"></i>');
 		MenuHeader.append(Repair);
-
-		const Settings = $('<a>')
-			.addClass('red-ui-tab-link-button')
-			.addClass('ui-draggable')
-			.addClass('ui-draggable-handle')
-			.css({ cursor: 'pointer' })
-			.append('<i class="fa fa-cog"></i>')
-			.click(showRadioSettings);
-		MenuHeader.append(Settings);
 	};
 
 	const init = () => {
@@ -389,6 +458,7 @@ const ZWaveJSUI = (function () {
 		const stackContainer = $('<div>')
 			.addClass('red-ui-sidebar-info-stack')
 			.attr('id', 'zwavejs-panel-stack')
+			.css({ height: '100%', width: '100%' })
 			.appendTo(Content);
 
 		// Node list
@@ -475,7 +545,7 @@ const ZWaveJSUI = (function () {
 		// Load current networks
 		setTimeout(() => {
 			RED.nodes.eachConfig((R) => {
-				if (R.type === 'zwavejs-runtime') {
+				if (R.type === 'zwavejs-runtime' && !R.d) {
 					Select.append(`<option id="${R.id}" value="${R.id}">${R.name}</option>`);
 				}
 			});

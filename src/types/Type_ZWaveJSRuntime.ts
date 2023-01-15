@@ -1,5 +1,5 @@
 import { Node } from 'node-red';
-import { Type_ZWaveJSRuntimeConfig } from './Type_ZWaveJSRuntimeConfig';
+import { Type_ZWaveJSRuntimeConfig, Type_ZWaveJSRuntimeCredentialConfig } from './Type_ZWaveJSRuntimeConfig';
 import { Driver } from 'zwave-js';
 
 export enum MessageType {
@@ -8,9 +8,9 @@ export enum MessageType {
 }
 
 export enum API {
-	CONTROLLER_API = 0,
-	VALUE_API,
-	CC_API
+	CONTROLLER = 0,
+	VALUE,
+	COMMAND_CLASS
 }
 
 export interface StatusMessage {
@@ -42,10 +42,11 @@ export type DeviceCallback = (Data: DeviceCallbackObject) => void;
 
 export type Type_ZWaveJSRuntime = Node & {
 	config: Type_ZWaveJSRuntimeConfig;
+	credentials: Type_ZWaveJSRuntimeCredentialConfig;
 	driverInstance?: Driver;
 	registerDeviceNode(deviceNodeId: string, nodeIds: number[], callback: DeviceCallback): void;
 	deregisterDeviceNode(deviceNodeId: string): void;
 	registerControllerNode(controllerNodeId: string, callback: ControllerCallback): void;
 	deregisterControllerNode(controllerNodeId: string): void;
-	controllerCommand(API: API, Method: string, Params?: any[]): Promise<ControllerCallbackObject | boolean | undefined>;
+	controllerCommand(API: API, Method: string, Params?: any[]): Promise<any>;
 };

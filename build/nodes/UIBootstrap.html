@@ -1,0 +1,174 @@
+<!--Core-->
+<link rel="stylesheet" href="resources/node-red-contrib-zwave-js/UITab/styles.css" />
+<link rel="stylesheet" href="resources/node-red-contrib-zwave-js/UITab/jquery-steps.css" />
+<script type="text/javascript" src="resources/node-red-contrib-zwave-js/UITab/jquery-steps.min.js"></script>
+<script type="text/javascript" src="resources/node-red-contrib-zwave-js/UITab/SideBar.js"></script>
+
+
+<script>
+	ZWaveJSUI.init();
+</script>
+
+<!--Network Management-->
+<template id="TPL_NetworkManagement">
+	<div id="TPL_NetworkManagementTabs">
+		<ul>
+			<li>
+				<a href="#tabs-1"><i class="fa fa-info-circle"></i> Controller Information</a>
+			</li>
+			<li>
+				<a href="#tabs-2"><i class="fa fa-list"></i> Node Management</a>
+			</li>
+			<li>
+				<a href="#tabs-3"><i class="fa fa-cog"></i> Controller Settings</a>
+			</li>
+			<li>
+				<a href="#tabs-4"><i class="fa fa-microchip"></i> Firmware Updates</a>
+			</li>
+			<li>
+				<a href="#tabs-5"><i class="fa fa-floppy-o"></i> NVM Backup/Restore</a>
+			</li>
+		</ul>
+
+		<div id="tabs-1">
+			<h2>Controller Information</h2>
+			<table id="CITable" class="zwave-js-info-table"></table>
+
+			<h2>Statistics</h2>
+			<table id="CIStatsTable" class="zwave-js-info-table"></table>
+		</div>
+
+		<div id="tabs-2">
+			<h2>Node Management</h2>
+			<div class="step-app" id="IEWizard">
+				<ul class="step-steps" style="display: none">
+					<li data-step-target="IEMode"></li>
+					<li data-step-target="NIF"></li>
+				</ul>
+				<div class="step-content" style="border: none">
+
+					<div class="step-tab-panel" data-step="IEMode">
+            <button class="zwavejs-full-width-button" onclick="IE('Default')">Add New Device : Default (S2, S0)</button>
+						<button class="zwavejs-full-width-button" onclick="IE('S2')">Add New Device : S2</button>
+						<button class="zwavejs-full-width-button" onclick="IE('S0')">Add New Device : S0</button>
+						<button class="zwavejs-full-width-button" onclick="IE('SS')">Add New Device : Smart Start</button>
+						<button class="zwavejs-full-width-button" onclick="IE('NS')">Add New Device : Unsecured</button>
+						<button class="zwavejs-full-width-button" onclick="IE('EX')">Exclude A Device</button>
+						<button class="zwavejs-full-width-button" onclick="IE('PL')">Smart Start Provisioning List</button>
+					</div>
+
+					<div class="step-tab-panel" data-step="NIF">
+						<i class="fa fa-rss zwave-js-ie-state-icon"></i>
+						<span class="zwave-js-ie-state-text">Waiting for Node Information Frame...</span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="tabs-3">
+			<h2>Controller Settings</h2>
+			<table class="zwave-js-info-table">
+				<tr>
+					<td>RF Region</td>
+					<td>
+						<select id="CSettings_Regions">
+							<option value="0x02">Australia/New Zealand</option>
+							<option value="0x08">China</option>
+							<option value="0xff">Default (EU)</option>
+							<option value="0x00">Europe</option>
+							<option value="0x03">Hong Kong</option>
+							<option value="0x05">India</option>
+							<option value="0x06">Israel</option>
+							<option value="0x20">Japan</option>
+							<option value="0x21">Korea</option>
+							<option value="0x07">Russia</option>
+							<option value="0x01">USA</option>
+							<option value="0x09">USA (Long Range)</option>
+							<option value="0xfe" selected>Unknown</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">&nbsp;</td>
+				</tr>
+				<tr>
+					<td>Power Level</td>
+					<td>
+						<input type="number" step="0.1" value="0.0" id="CSettings_PL" min="-12.8" max="12.7" />
+					</td>
+				</tr>
+				<tr>
+					<td>Measured @ 0dBm</td>
+					<td>
+						<input type="number" step="0.1" value="0.0" id="CSettings_0DBM" min="-12.8" max="12.7" />
+					</td>
+				</tr>
+			</table>
+
+			<button class="zwave-js-save">Save Changes</button>
+		</div>
+
+		<div id="tabs-4">
+			<h2>Firmware Updates</h2>
+		</div>
+
+		<div id="tabs-5">
+			<h2>NVM Backup/Restore</h2>
+		</div>
+	</div>
+</template>
+
+<!--Node Managment-->
+<template id="TPL_NodeManagement">
+	<div id="TPL_NodeManagementTabs">
+		<ul>
+			<li>
+				<a href="#tabs-1"><i class="fa fa-info-circle"></i> Node Information</a>
+			</li>
+			<li>
+				<a href="#tabs-2"><i class="fa fa-pencil"></i> Name / Location</a>
+			</li>
+			<li>
+				<a href="#tabs-3"><i class="fa fa-code-fork"></i> Associations</a>
+			</li>
+			<li>
+				<a href="#tabs-4"><i class="fa fa-heartbeat"></i> Health Check</a>
+			</li>
+			<li>
+				<a href="#tabs-5"><i class="fa fa-clone"></i> Replace</a>
+			</li>
+			<li>
+				<a href="#tabs-6"><i class="fa fa-microchip"></i> Firmware Updates</a>
+			</li>
+		</ul>
+		<div id="tabs-1">
+			<h2>Node Information</h2>
+		</div>
+		<div id="tabs-2">
+			<h2>Name / Location</h2>
+			<table class="zwave-js-info-table">
+				<tr>
+					<td>Node Name</td>
+					<td><input type="text" /></td>
+				</tr>
+				<tr>
+					<td>Node Location</td>
+					<td><input type="text" /></td>
+				</tr>
+			</table>
+			<button class="zwave-js-save">Save Changes</button>
+		</div>
+		<div id="tabs-3">
+			<h2>Associations</h2>
+		</div>
+		<div id="tabs-4">
+			<h2>Health Check</h2>
+		</div>
+		<div id="tabs-5">
+			<h2>Replace</h2>
+		</div>
+		<div id="tabs-6">
+			<h2>Firmware Updates</h2>
+		</div>
+	</div>
+</template>

@@ -13,17 +13,14 @@ import {
 import {
 	Driver,
 	InclusionGrant,
-	// @ts-ignore
 	ZWaveNode,
 	HealNodeStatus,
 	ZWaveNodeValueNotificationArgs,
 	ZWaveNodeValueUpdatedArgs,
 	NodeInterviewFailedEventArgs,
-	ZWaveNodeValueAddedArgs,
-	ValueID
+	ZWaveNodeValueAddedArgs
 } from 'zwave-js';
-import { getNodes, getValueDB } from '../lib/Fetchers';
-import { process } from '../lib/ControllerAPI';
+import { process as ControllerAPI_Process } from '../lib/ControllerAPI';
 
 const APP_NAME = 'node-red-contrib-zwave-js';
 const APP_VERSION = '9.0.0';
@@ -79,6 +76,10 @@ module.exports = (RED: NodeAPI) => {
 		RED.nodes.createNode(self, config);
 		self.config = config;
 
+		// S2 Promise Resolvers
+		let grantPromise: (Value: InclusionGrant | false) => void;
+		let dskPromise: (Value: string | false) => void;
+
 		// Controller and Device Nodes
 		let controllerNodes: { [ControllerNodeID: string]: ControllerCallback } = {};
 		let deviceNodes: { [DeviceNodeID: string]: { NodeIDs?: number[]; Callback: DeviceCallback } } = {};
@@ -98,14 +99,17 @@ module.exports = (RED: NodeAPI) => {
 			delete controllerNodes[ControllerNodeID];
 		};
 
-		self.controllerCommand = (APITarget, Method, Params): Promise<ControllerCallbackObject | boolean | undefined> => {
-			switch (APITarget) {
-				case API.CONTROLLER_API:
-					return process(self.driverInstance!, Method, Params);
+		self.controllerCommand = (APITarget, Method, Params): Promise<any> => {
+			if (self.driverInstance) {
+				switch (APITarget) {
+					case API.CONTROLLER:
+						return ControllerAPI_Process(self.driverInstance, Method, Params);
 
-				default:
-					return Promise.reject('Invalid API');
+					default:
+						return Promise.reject('Invalid API');
+				}
 			}
+			return Promise.reject('Driver Instance');
 		};
 
 		// Last status of network
@@ -119,86 +123,108 @@ module.exports = (RED: NodeAPI) => {
 
 		// Create Global API
 		const exposeGlobalAPI = () => {
-			if (self.config.enableGlobalAPI) {
+			if (self.config.enableGlobalAPI && self.driverInstance) {
+				let Name = self.config.globalAPIName || self.id;
+				Name = Name.replace(/ /g, '_');
+
 				const API = {
-					Utilities: {
-						getValueDB: function (Nodes?: number[]) {
-							return getValueDB(self.driverInstance!, Nodes);
-						},
-						getNodes: function () {
-							return getNodes(self.driverInstance!);
-						},
-						ping: function (Node: number) {
-							return self.driverInstance?.controller.nodes.get(Node)?.ping();
-						}
-					},
-					CCAPI: {
-						invokeCCAPI: function (Node: number, CC: number, Method: string, ...Args: any[]) {
-							return self.driverInstance?.controller.nodes.get(Node)?.invokeCCAPI(CC, Method, Args);
-						},
-						supportsCC: function (Node: number, CC: number) {
-							return self.driverInstance?.controller.nodes.get(Node)?.supportsCC(CC);
-						},
-						supportsCCAPI: function (Node: number, CC: number) {
-							return self.driverInstance?.controller.nodes.get(Node)?.supportsCCAPI(CC);
-						}
-					},
-					ValueAPI: {
-						getValue: function (Node: number, VID: ValueID) {
-							return self.driverInstance?.controller.nodes.get(Node)?.getValue(VID);
-						},
-						setValue: function (Node: number, VID: ValueID, Value: any) {
-							return self.driverInstance?.controller.nodes.get(Node)?.setValue(VID, Value);
-						},
-						pollValue: function (Node: number, VID: ValueID) {
-							return self.driverInstance?.controller.nodes.get(Node)?.pollValue(VID);
-						},
-						getDefinedValueIDs: function (Node: number) {
-							return self.driverInstance?.controller.nodes.get(Node)?.getDefinedValueIDs();
-						},
-						getValueMetadata: function (Node: number, VID: ValueID) {
-							return self.driverInstance?.controller.nodes.get(Node)?.getValueMetadata(VID);
-						}
+					Driver: this.driverInstance,
+					toJSON: function () {
+						return {
+							Driver: 'Sorry, The Driver cannot be represented here. It can only be used by Function nodes.'
+						};
 					}
 				};
 
-				Object.defineProperty(API, 'Utilities', {
-					writable: false
-				});
-				Object.defineProperty(API, 'CCAPI', {
-					writable: false
-				});
-				Object.defineProperty(API, 'ValueAPI', {
+				Object.defineProperty(API, 'Driver', {
 					writable: false
 				});
 
-				const Name = self.config.globalAPIName || self.id;
-				self.context().global.set(`ZWJS-${Name}`, API);
+				Object.defineProperty(API, 'toJSON', {
+					writable: false
+				});
+
+				self.context().global.set(`${Name}`, API);
 			}
 		};
 
 		const removeGlobalAPI = () => {
-			const Name = self.config.globalAPIName || self.id;
-			self.context().global.set(`ZWJS-${Name}`, undefined);
+			let Name = self.config.globalAPIName || self.id;
+			Name = Name.replace(/ /g, '_');
+			self.context().global.set(`${Name}`, undefined);
 		};
 
 		// Create HTTP API
 		const createHTTPAPI = () => {
 			RED.comms.publish('zwave-js/ui/global/addnetwork', { name: self.config.name, id: self.id }, false);
-			RED.httpAdmin.get(`/zwave-js/ui/${self.id}/nodes`, RED.auth.needsPermission('flows.write'), (_, response) => {
-				response.json(getNodes(self.driverInstance!));
-			});
-			RED.httpAdmin.get(
-				`/zwave-js/ui/${self.id}/getValueDB/:Node`,
-				RED.auth.needsPermission('flows.write'),
-				(request, response) => {
-					const Node = parseInt(request.params.Node);
-					response.json(getValueDB(self.driverInstance!, [Node]));
-				}
-			);
+
 			RED.httpAdmin.get(`/zwave-js/ui/${self.id}/status`, RED.auth.needsPermission('flows.write'), (_, response) => {
 				response.json({ status: lastStatus });
 			});
+
+			RED.httpAdmin.get(
+				`/zwave-js/ui/${self.id}/:api/:action`,
+				RED.auth.needsPermission('flows.write'),
+				(request, response) => {
+					const TypedAPIString: keyof typeof API = request.params.api as any;
+					const TargetAPI = API[TypedAPIString];
+					const Method = request.params.action;
+
+					switch (TargetAPI) {
+						case API.CONTROLLER:
+							self
+								.controllerCommand(TargetAPI, Method)
+								.then((R) => {
+									response.json({ callSuccess: true, response: R });
+								})
+								.catch((error) => {
+									response.json({ callSuccess: false, response: error.message });
+								});
+							break;
+					}
+				}
+			);
+
+			RED.httpAdmin.post(
+				`/zwave-js/ui/${self.id}/:api/:action`,
+				RED.auth.needsPermission('flows.write'),
+				(request, response) => {
+					const TypedAPIString: keyof typeof API = request.params.api as any;
+					const TargetAPI = API[TypedAPIString];
+					const Method = request.params.action;
+
+					switch (TargetAPI) {
+						case API.CONTROLLER:
+							self
+								.controllerCommand(TargetAPI, Method, request.body)
+								.then((R) => {
+									response.json({ callSuccess: true, response: R });
+								})
+								.catch((error) => {
+									response.json({ callSuccess: false, response: error.message });
+								});
+							break;
+					}
+				}
+			);
+
+			RED.httpAdmin.post(
+				`/zwave-js/ui/${self.id}/s2/grant`,
+				RED.auth.needsPermission('flows.write'),
+				(request, response) => {
+					grantPromise(request.body);
+					response.status(202).end();
+				}
+			);
+
+			RED.httpAdmin.post(
+				`/zwave-js/ui/${self.id}/s2/dsk`,
+				RED.auth.needsPermission('flows.write'),
+				(request, response) => {
+					dskPromise(request.body);
+					response.status(202).end();
+				}
+			);
 		};
 
 		// Remove HTTP API
@@ -229,24 +255,29 @@ module.exports = (RED: NodeAPI) => {
 		});
 
 		// S2 Callbacks
-		const s2Void = (): void => {};
+		const s2Void = (): void => {
+			RED.comms.publish(`zwave-js/ui/${self.id}/s2/void`, {}, false);
+		};
 		const grantSecurityClasses = (Request: InclusionGrant): Promise<InclusionGrant | false> => {
 			return new Promise((resolve) => {
-				resolve(Request);
+				RED.comms.publish(`zwave-js/ui/${self.id}/s2/grant`, Request, false);
+				grantPromise = resolve;
 			});
 		};
 		const validateDSKAndEnterPIN = (DSK: string): Promise<string | false> => {
 			return new Promise((resolve) => {
-				resolve(DSK);
+				RED.comms.publish(`zwave-js/ui/${self.id}/s2/dsk`, { dsk: DSK }, false);
+				dskPromise = resolve;
 			});
 		};
 
 		// Driver settings
 		const ZWaveOptions: Record<string, any> = {
 			logConfig: {},
+			securityKeys: {},
 			storage: {
 				throttle: self.config.storage_throttle,
-				cacheDir: path.join(RED.settings.userDir!, 'zwave-js-cache')
+				cacheDir: path.join(RED.settings.userDir || '', 'zwave-js-cache')
 			},
 			preferences: {
 				scales: {
@@ -257,7 +288,7 @@ module.exports = (RED: NodeAPI) => {
 			interview: {
 				queryAllUserCodes: self.config.interview_queryAllUserCodes
 			},
-			securityKeys: {},
+
 			apiKeys: {
 				firmwareUpdateService: self.config.apiKeys_firmwareUpdateService || FWK
 			},
@@ -270,11 +301,20 @@ module.exports = (RED: NodeAPI) => {
 			enableSoftReset: self.config.enableSoftReset
 		};
 
+		if (self.config.storage_deviceConfigPriorityDir) {
+			ZWaveOptions.storage.deviceConfigPriorityDir = self.config.storage_deviceConfigPriorityDir;
+		}
+
 		// Cleanup Logging config
-		ZWaveOptions.logConfig.enabled = self.config.logConfig_level !== 'off';
-		ZWaveOptions.logConfig.logToFile = self.config.logConfig_level !== 'off';
-		ZWaveOptions.logConfig.filename = self.config.logConfig_filename || path.join(RED.settings.userDir!, 'zwavejs');
-		if (ZWaveOptions.logConfig.enabled) ZWaveOptions.logConfig.level = self.config.logConfig_level;
+		const LogEnabled = self.config.logConfig_level !== 'off';
+
+		ZWaveOptions.logConfig.enabled = LogEnabled;
+		ZWaveOptions.logConfig.logToFile = LogEnabled;
+		ZWaveOptions.logConfig.filename =
+			self.config.logConfig_filename || path.join(RED.settings.userDir || '', 'zwavejs');
+		if (ZWaveOptions.logConfig.enabled) {
+			ZWaveOptions.logConfig.level = self.config.logConfig_level;
+		}
 		let nodeLogFilter: number[] | undefined;
 		if (self.config.LogConfig_nodeFilter) {
 			nodeLogFilter = self.config.LogConfig_nodeFilter.split(',').map((N) => parseInt(N.trim()));
@@ -282,14 +322,17 @@ module.exports = (RED: NodeAPI) => {
 		}
 
 		// Cleanup Keys
-		if (self.config.securityKeys_S0_Legacy)
-			ZWaveOptions.securityKeys.S0_Legacy = Buffer.from(self.config.securityKeys_S0_Legacy, 'hex');
-		if (self.config.securityKeys_S2_AccessControl)
-			ZWaveOptions.securityKeys.S2_AccessControl = Buffer.from(self.config.securityKeys_S2_AccessControl, 'hex');
-		if (self.config.securityKeys_S2_Authenticated)
-			ZWaveOptions.securityKeys.S2_Authenticated = Buffer.from(self.config.securityKeys_S2_Authenticated, 'hex');
-		if (self.config.securityKeys_S2_Unauthenticated)
-			ZWaveOptions.securityKeys.S2_Unauthenticated = Buffer.from(self.config.securityKeys_S2_Unauthenticated, 'hex');
+		if (self.credentials.securityKeys_S0_Legacy)
+			ZWaveOptions.securityKeys.S0_Legacy = Buffer.from(self.credentials.securityKeys_S0_Legacy, 'hex');
+		if (self.credentials.securityKeys_S2_AccessControl)
+			ZWaveOptions.securityKeys.S2_AccessControl = Buffer.from(self.credentials.securityKeys_S2_AccessControl, 'hex');
+		if (self.credentials.securityKeys_S2_Authenticated)
+			ZWaveOptions.securityKeys.S2_Authenticated = Buffer.from(self.credentials.securityKeys_S2_Authenticated, 'hex');
+		if (self.credentials.securityKeys_S2_Unauthenticated)
+			ZWaveOptions.securityKeys.S2_Unauthenticated = Buffer.from(
+				self.credentials.securityKeys_S2_Unauthenticated,
+				'hex'
+			);
 
 		// Driver callback subscriptions
 		const wireDriverEvents = (): void => {
@@ -804,8 +847,17 @@ module.exports = (RED: NodeAPI) => {
 				self.error(e);
 				return;
 			})
-			.then(() => {});
+			.then(() => {
+				//
+			});
 	};
 
-	RED.nodes.registerType('zwavejs-runtime', init);
+	RED.nodes.registerType('zwavejs-runtime', init, {
+		credentials: {
+			securityKeys_S0_Legacy: { type: 'text' },
+			securityKeys_S2_Unauthenticated: { type: 'text' },
+			securityKeys_S2_Authenticated: { type: 'text' },
+			securityKeys_S2_AccessControl: { type: 'text' }
+		}
+	});
 };

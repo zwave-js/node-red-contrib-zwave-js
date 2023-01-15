@@ -1,30 +1,36 @@
 <script type="text/javascript">
 	const RuntimeNodeSettings = {
 		category: 'config',
+		credentials: {
+			securityKeys_S0_Legacy: {
+				value: '',
+				required: false,
+				type: 'text'
+			},
+			securityKeys_S2_Unauthenticated: {
+				value: '',
+				required: false,
+				type: 'text'
+			},
+			securityKeys_S2_Authenticated: {
+				value: '',
+				required: false,
+				type: 'text'
+			},
+			securityKeys_S2_AccessControl: {
+				value: '',
+				required: false,
+				type: 'text'
+			}
+		},
 		defaults: {
 			name: {
 				value: 'ZWave JS Runtime',
 				required: true
 			},
 			serialPort: {
-				value: undefined,
+				value: '',
 				required: true
-			},
-			securityKeys_S0_Legacy: {
-				value: undefined,
-				required: false
-			},
-			securityKeys_S2_Unauthenticated: {
-				value: undefined,
-				required: false
-			},
-			securityKeys_S2_Authenticated: {
-				value: undefined,
-				required: false
-			},
-			securityKeys_S2_AccessControl: {
-				value: undefined,
-				required: false
 			},
 			preferences_scales_temperature: {
 				value: 0,
@@ -41,15 +47,15 @@
 				required: true
 			},
 			logConfig_filename: {
-				value: undefined,
+				value: '',
 				required: false
 			},
 			LogConfig_nodeFilter: {
-				value: undefined,
+				value: '',
 				required: false
 			},
 			storage_deviceConfigPriorityDir: {
-				value: undefined,
+				value: '',
 				required: false
 			},
 			storage_throttle: {
@@ -69,7 +75,7 @@
 				required: true
 			},
 			apiKeys_firmwareUpdateService: {
-				value: undefined,
+				value: '',
 				required: false
 			},
 			enableStatistics: {
@@ -81,70 +87,40 @@
 				required: true
 			},
 			globalAPIName: {
-				value: undefined,
+				value: '',
 				required: false
 			}
 		},
 		label: function () {
 			return this.name;
 		},
-		oneditprepare: restoreValue,
-		oneditsave: cleanValues
+		oneditprepare: restoreNumericValues,
+		oneditsave: formatNumericValues
 	};
 
 	RED.nodes.registerType('zwavejs-runtime', RuntimeNodeSettings);
 
-	function restoreValue() {
-		const Undefinable = [
-			'securityKeys_S0_Legacy',
-			'securityKeys_S2_Unauthenticated',
-			'securityKeys_S2_Authenticated',
-			'securityKeys_S2_AccessControl',
-			'logConfig_filename',
-			'LogConfig_nodeFilter',
-			'storage_deviceConfigPriorityDir',
-			'apiKeys_firmwareUpdateService',
-			'globalAPIName'
-		];
-
-		Undefinable.forEach((K) => {
-			if (this[K] !== undefined) {
-				$(`#el-node-config-input-${K}`).val(this[K]);
-			}
-		});
-
+	function restoreNumericValues() {
 		const Numericle = ['preferences_scales_temperature', 'preferences_scales_humidity'];
 		Numericle.forEach((K) => {
 			$(`#el-node-config-input-${K}`).val(this[K].toString());
 		});
 	}
 
-	function cleanValues() {
-		const Undefinable = [
-			'securityKeys_S0_Legacy',
-			'securityKeys_S2_Unauthenticated',
-			'securityKeys_S2_Authenticated',
-			'securityKeys_S2_AccessControl',
-			'logConfig_filename',
-			'LogConfig_nodeFilter',
-			'storage_deviceConfigPriorityDir',
-			'apiKeys_firmwareUpdateService',
-			'globalAPIName'
-		];
-
-		Undefinable.forEach((K) => {
-			if ($(`#el-node-config-input-${K}`).val().length < 1) {
-				this[K] = undefined;
-			} else {
-				this[K] = $(`#el-node-config-input-${K}`).val();
-			}
-		});
-
+	function formatNumericValues() {
 		const Numericle = ['preferences_scales_temperature', 'preferences_scales_humidity'];
 		Numericle.forEach((K) => {
 			this[K] = parseInt($(`#el-node-config-input-${K}`).val());
 		});
 	}
+
+	function genKey() {
+		const bytes = new Uint8Array(16);
+		window.crypto.getRandomValues(bytes);
+		const hexKey = [...bytes].map((x) => x.toString(16).padStart(2, '0')).join('');
+		$(event.target).prev().val(hexKey);
+	}
+
 </script>
 
 <script type="text/x-red" data-template-name="zwavejs-runtime">
@@ -166,20 +142,20 @@
 	<h3>Security Keys</h3>
 	<hr />
 	<div class="form-row">
-	    <label for="el-node-config-input-securityKeys_S0_Legacy"><i class="fa fa-lock"></i> S0</label>
-	    <input type="text" id="el-node-config-input-securityKeys_S0_Legacy">
+	    <label for="node-config-input-securityKeys_S0_Legacy"><i class="fa fa-lock"></i> S0</label>
+	    <input type="text" id="node-config-input-securityKeys_S0_Legacy"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()">Generate</button>
 	</div>
 	<div class="form-row">
-	    <label for="el-node-config-input-securityKeys_S2_Unauthenticated"><i class="fa fa-lock"></i> S2 UAuth</label>
-	    <input type="text" id="el-node-config-input-securityKeys_S2_Unauthenticated">
+	    <label for="node-config-input-securityKeys_S2_Unauthenticated"><i class="fa fa-lock"></i> S2 UAuth</label>
+	    <input type="text" id="node-config-input-securityKeys_S2_Unauthenticated"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()">Generate</button>
 	</div>
 	<div class="form-row">
-	    <label for="el-node-config-input-securityKeys_S2_Authenticated"><i class="fa fa-lock"></i> S2 Auth</label>
-	    <input type="text" id="el-node-config-input-securityKeys_S2_Authenticated">
+	    <label for="node-config-input-securityKeys_S2_Authenticated"><i class="fa fa-lock"></i> S2 Auth</label>
+	    <input type="text" id="node-config-input-securityKeys_S2_Authenticated"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()">Generate</button>
 	</div>
 	<div class="form-row">
-	    <label for="el-node-config-input-securityKeys_S2_AccessControl"><i class="fa fa-lock"></i> S2 Acc Ctrl</label>
-	    <input type="text" id="el-node-config-input-securityKeys_S2_AccessControl">
+	    <label for="node-config-input-securityKeys_S2_AccessControl"><i class="fa fa-lock"></i> S2 Acc Ctrl</label>
+	    <input type="text" id="node-config-input-securityKeys_S2_AccessControl"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()">Generate</button>
 	</div>
 
 	<h3>Scales</h3>
@@ -214,19 +190,19 @@
 	    </select>
 	</div>
 	<div class="form-row">
-	    <label for="el-node-config-input-logConfig_filename"><i class="fa fa-file"></i> Log File</label>
-	    <input type="text" id="el-node-config-input-logConfig_filename">
+	    <label for="node-config-input-logConfig_filename"><i class="fa fa-file"></i> Log File</label>
+	    <input type="text" id="node-config-input-logConfig_filename">
 	</div>
 	   <div class="form-row">
-	    <label for="el-node-config-input-LogConfig_nodeFilter"><i class="fa fa-filter"></i> Node Filter</label>
-	    <input type="text" id="el-node-config-input-LogConfig_nodeFilter">
+	    <label for="node-config-input-LogConfig_nodeFilter"><i class="fa fa-filter"></i> Node Filter</label>
+	    <input type="text" id="node-config-input-LogConfig_nodeFilter">
 	</div>
 
 	<h3>Firmware Update Service</h3>
 	<hr />
 	<div class="form-row">
-	    <label for="el-node-config-input-apiKeys_firmwareUpdateService"><i class="fa fa-key"></i> License Key</label>
-	    <input type="text" id="el-node-config-input-apiKeys_firmwareUpdateService">
+	    <label for="node-config-input-apiKeys_firmwareUpdateService"><i class="fa fa-key"></i> License Key</label>
+	    <input type="text" id="node-config-input-apiKeys_firmwareUpdateService">
 	</div>
 
 	<h3>Advanced Settings</h3>
@@ -240,8 +216,8 @@
 	    </select>
 	</div>
 	<div class="form-row">
-	    <label for="el-node-config-input-storage_deviceConfigPriorityDir"><i class="fa fa-folder"></i> CFG Dir</label>
-	    <input type="text" id="el-node-config-input-storage_deviceConfigPriorityDir">
+	    <label for="node-config-input-storage_deviceConfigPriorityDir"><i class="fa fa-folder"></i> CFG Dir</label>
+	    <input type="text" id="node-config-input-storage_deviceConfigPriorityDir">
 	</div>
 	<div class="form-row">
 	    <label for="node-config-input-disableOptimisticValueUpdate"><i class="fa fa-check"></i> Optimistic</label>
@@ -259,7 +235,7 @@
 	<h3>Global API Access</h3>
 	<hr />
 	<div class="form-tips" id="node-tip">
-		Enabling this option, will expose utility methods that can be used directly in nodes that support the Global Context: <code>function</code>, <code>switch</code>, <code>change</code> etc. 
+		Enabling this option, will expose an untethered Driver instance in Global Context, that can be used in <code>Function</code> nodes. Care should be taken here, and a read up on the zwave-js documentation is highly encouraged before accessing any methods. Misuse can result in a crashed Driver Instance.
 	</div>
 	<br />
 	<div class="form-row">
@@ -267,8 +243,8 @@
 	    <input type="checkbox" id="node-config-input-enableGlobalAPI">
 	</div>
 	<div class="form-row">
-	    <label for="el-node-config-input-globalAPIName"><i class="fa fa-tag"></i> Identifiyer</label>
-	    <input type="text" id="el-node-config-input-globalAPIName">
+	    <label for="node-config-input-globalAPIName"><i class="fa fa-tag"></i> Identifiyer</label>
+	    <input type="text" id="node-config-input-globalAPIName">
 	</div>
 </script>
 

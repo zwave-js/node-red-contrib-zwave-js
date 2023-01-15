@@ -36,20 +36,25 @@ module.exports = (RED: NodeAPI) => {
 		self.on('input', (msg, send, done) => {
 			const Payload = msg.payload as Record<string, any>;
 			const TypedAPIString: keyof typeof API = Payload.api;
+			const TargetAPI = API[TypedAPIString];
 
-			self.runtime.controllerCommand(API[TypedAPIString], Payload.method, Payload.params).then((Result) => {
-				if (Result && typeof Result !== 'boolean') {
-					Result = Result as ControllerCallbackObject;
-					switch (Result.Type) {
-						case MessageType.EVENT:
-							send({ payload: Result.Event });
-							done();
-							break;
+			self.runtime
+				.controllerCommand(TargetAPI, Payload.method, Payload.params)
+				.then((Result) => {
+					if (Result.Type !== undefined) {
+						switch (Result.Type) {
+							case MessageType.EVENT:
+								send({ payload: Result.Event });
+								done();
+								break;
+						}
+					} else {
+						done();
 					}
-				} else {
-					done();
-				}
-			});
+				})
+				.catch((Error) => {
+					done(Error);
+				});
 		});
 	};
 	RED.nodes.registerType('zwavejs-controller', init);
