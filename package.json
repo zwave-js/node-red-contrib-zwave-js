@@ -9,7 +9,7 @@
 		"serialport": "^10.4.0",
 		"winston": "^3.8.2",
 		"winston-transport": "^4.5.0",
-		"zwave-js": "^10.3.0"
+		"zwave-js": "^10.4.0"
 	},
 	"devDependencies": {
 		"eslint": "^8.25.1",
