@@ -144,11 +144,15 @@ button.zwavejs-full-width-button:hover {
 	display: block;
 	text-align: center;
 	color: rgb(46, 145, 205);
-	margin-top: 50px;
+	margin-top: 150px;
 }
 .zwave-js-ie-state-text {
 	text-align: center;
 	display: block;
-	font-size: 22px;
+	font-size: 18px;
 	margin-top: 10px;
+}
+
+.zwave-js-dsk {
+	width: 40px;
 }

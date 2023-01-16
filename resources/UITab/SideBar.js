@@ -13,10 +13,14 @@ let ValidateDSK;
 const StepList = {
 	IEMode: 0,
 	NIF: 1,
-	Grant: 2
+	Grant: 2,
+	DSK: 3,
+	Added: 4,
+	Removed: 5
 };
 
-const Classes = {
+const S2Classes = {
+	'-1': 'None',
 	0: 'S2 Unauthenticated',
 	1: 'S2 Authenticated',
 	2: 'S2 AccessControl',
@@ -30,6 +34,7 @@ const ZWaveJSUI = (function () {
 	// Vars
 	let networkId;
 	let stepsAPI;
+	let clientSideAuth = false;
 
 	// Prompt
 	const prompt = async (Message, Buttons, NoCancel = false) => {
@@ -70,11 +75,11 @@ const ZWaveJSUI = (function () {
 
 	// Runtime Communication Methods
 	const Runtime = {
-		Get: async function (API, Method) {
+		Get: async function (API, Method, URL) {
 			return new Promise((resolve) => {
 				$.ajax({
 					type: 'GET',
-					url: `zwave-js/ui/${networkId}/${API}/${Method}`,
+					url: URL || `zwave-js/ui/${networkId}/${API}/${Method}`,
 					success: (data) => resolve(data),
 					error: (jqXHR, textStatus, errorThrown) =>
 						resolve({ callSuccess: false, response: `${textStatus}: ${errorThrown}` }),
@@ -82,12 +87,12 @@ const ZWaveJSUI = (function () {
 				});
 			});
 		},
-		Post: async function (API, Method, Data) {
+		Post: async function (API, Method, Data, URL) {
 			return new Promise((resolve) => {
 				$.ajax({
 					type: 'POST',
 					data: JSON.stringify(Data),
-					url: `zwave-js/ui/${networkId}/${API}/${Method}`,
+					url: URL || `zwave-js/ui/${networkId}/${API}/${Method}`,
 					success: (data) => resolve(data),
 					error: (jqXHR, textStatus, errorThrown) =>
 						resolve({ callSuccess: false, response: `${textStatus}: ${errorThrown}` }),
@@ -99,6 +104,35 @@ const ZWaveJSUI = (function () {
 	};
 
 	// Node Managemnt fucntions
+	Grant = () => {
+		const GrantObject = {
+			securityClasses: [],
+			clientSideAuth: clientSideAuth
+		};
+
+		$(':checkbox:checked').each(function () {
+			GrantObject.securityClasses.push(parseInt($(this).val()));
+		});
+
+		Runtime.Post(undefined, undefined, [GrantObject], `zwave-js/ui/${networkId}/s2/grant`)
+			.then((data) => {
+				// wait?
+			})
+			.catch((Error) => {
+				alert(Error.message);
+			});
+	};
+
+	ValidateDSK = () => {
+		Runtime.Post(undefined, undefined, [$('#DSK').val()], `zwave-js/ui/${networkId}/s2/dsk`)
+			.then((data) => {
+				// Wait?
+			})
+			.catch((Error) => {
+				alert(Error.message);
+			});
+	};
+
 	IE = (Mode) => {
 		let Request;
 
@@ -275,6 +309,8 @@ const ZWaveJSUI = (function () {
 			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/status`);
 			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/s2/grant`);
 			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/s2/dsk`);
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/added`);
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/removed`);
 			networkId = undefined;
 		}
 
@@ -312,22 +348,53 @@ const ZWaveJSUI = (function () {
 		});
 
 		// subscribe
+
+		/* Status */
 		RED.comms.subscribe(`zwave-js/ui/${networkId}/status`, (event, data) => {
 			$('#zwavejs-radio-status').text(data.status);
 		});
 
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/added`, (event, data) => {
+			const NodeID = data.nodeId;
+			const HSC = data.highestSecurityClass;
+			const LS = data.lowSecurity;
+
+			let Message = `The Node was successfully added to the network.<br />It will now be interviewed!<br /><br /><strong>Node ID:</strong> ${NodeID}, <strong>Security Mode:</strong> ${S2Classes[HSC]}`;
+
+			if (LS) {
+				Message += ' (lower than requested)';
+				$('#NodeAddedIcon').css({ color: 'orange' });
+				$('#NodeAddedIcon').addClass('fa-exclamation-triangle');
+			} else {
+				$('#NodeAddedIcon').addClass('fa-check-circle');
+			}
+
+			$('#NodeAddedMessage').html(Message);
+			stepsAPI.setStepIndex(StepList.Added);
+		});
+
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/removed`, (event, data) => {
+			stepsAPI.setStepIndex(StepList.Removed);
+		});
+
+		/* S2 Grant */
 		RED.comms.subscribe(`zwave-js/ui/${networkId}/s2/grant`, (event, data) => {
+			clientSideAuth = data.clientSideAuth;
 			data.securityClasses.forEach((SC) => {
 				$('#S2ClassesTable').append(
-					`<tr><td>${Classes[SC]}</td><td><input type="checkbox" value="${SC}" class="S2Class" /></td></tr>`
+					`<tr><td>${S2Classes[SC]}</td><td><input type="checkbox" value="${SC}" class="S2Class" /></td></tr>`
 				);
 			});
-
 			stepsAPI.setStepIndex(StepList.Grant);
 		});
 
+		/* S2 DSk */
 		RED.comms.subscribe(`zwave-js/ui/${networkId}/s2/dsk`, (event, data) => {
-			//
+			const Parts = data.dsk.split('-');
+			for (let i = 1; i < Parts.length; i++) {
+				$(`#DSK_Hint${i}`).val(Parts[i]);
+			}
+			stepsAPI.setStepIndex(StepList.DSK);
 		});
 	};
 

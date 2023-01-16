@@ -4,7 +4,6 @@
 <script type="text/javascript" src="resources/node-red-contrib-zwave-js/UITab/jquery-steps.min.js"></script>
 <script type="text/javascript" src="resources/node-red-contrib-zwave-js/UITab/SideBar.js"></script>
 
-
 <script>
 	ZWaveJSUI.init();
 </script>
@@ -44,12 +43,14 @@
 				<ul class="step-steps" style="display: none">
 					<li data-step-target="IEMode"></li>
 					<li data-step-target="NIF"></li>
-          <li data-step-target="Grant"></li>
+					<li data-step-target="Grant"></li>
+					<li data-step-target="DSK"></li>
+					<li data-step-target="Added"></li>
+					<li data-step-target="Removed"></li>
 				</ul>
 				<div class="step-content" style="border: none">
-
 					<div class="step-tab-panel" data-step="IEMode">
-            <button class="zwavejs-full-width-button" onclick="IE('Default')">Add New Device : Default (S2, S0)</button>
+						<button class="zwavejs-full-width-button" onclick="IE('Default')">Add New Device : Default (S2, S0)</button>
 						<button class="zwavejs-full-width-button" onclick="IE('S2')">Add New Device : S2</button>
 						<button class="zwavejs-full-width-button" onclick="IE('S0')">Add New Device : S0</button>
 						<button class="zwavejs-full-width-button" onclick="IE('SS')">Add New Device : Smart Start</button>
@@ -60,16 +61,41 @@
 
 					<div class="step-tab-panel" data-step="NIF">
 						<i class="fa fa-rss zwave-js-ie-state-icon"></i>
-						<span class="zwave-js-ie-state-text">Waiting for Node Information Frame...</span>
+						<span class="zwave-js-ie-state-text">Waiting for Node Information Frame (NIF)...</span>
 					</div>
 
-          <div class="step-tab-panel" data-step="Grant">
-						Below are the S2 Secuity classes, that the new node is asking for. Please verify the classes you wish to allow.
-            <table id="S2ClassesTable" class="zwave-js-info-table" style="margin-top: 10px;"></table>
-            </table>
-            <button class="zwave-js-save">Grant</button>
+					<div class="step-tab-panel" data-step="Grant">
+						Below are the S2 Secuity classes, that the new node is asking for. Please verify the classes you wish to
+						allow.
+						<table id="S2ClassesTable" class="zwave-js-info-table" style="margin-top: 10px"></table>
+
+						<button class="zwave-js-save" onclick="Grant()">Grant</button>
 					</div>
 
+					<div class="step-tab-panel" data-step="DSK">
+						S2 Authenticated Security requires validating the 'DSK', please provide the first set of digits below, these
+						may be printed on the device, and / or documentation.
+						<br />
+						<br />
+						<input type="text" id="DSK" class="zwave-js-dsk" /> -
+						<input type="text" id="DSK_Hint1" class="zwave-js-dsk" disabled /> -
+						<input type="text" id="DSK_Hint2" class="zwave-js-dsk" disabled /> -
+						<input type="text" id="DSK_Hint3" class="zwave-js-dsk" disabled /> -
+						<input type="text" id="DSK_Hint4" class="zwave-js-dsk" disabled /> -
+						<input type="text" id="DSK_Hint5" class="zwave-js-dsk" disabled /> -
+						<input type="text" id="DSK_Hint6" class="zwave-js-dsk" disabled /> -
+						<input type="text" id="DSK_Hint7" class="zwave-js-dsk" disabled />
+						<button class="zwave-js-save" onclick="ValidateDSK()">Validate</button>
+					</div>
+
+					<div class="step-tab-panel" data-step="Added">
+						<i class="fa zwave-js-ie-state-icon" id="NodeAddedIcon"></i>
+						<span class="zwave-js-ie-state-text" id="NodeAddedMessage">&nbsp;</span>
+					</div>
+					<div class="step-tab-panel" data-step="Removed">
+						<i class="fa fa-minus-circle zwave-js-ie-state-icon"></i>
+						<span class="zwave-js-ie-state-text">The Node was successfully removed from it's network.</span>
+					</div>
 				</div>
 			</div>
 		</div>

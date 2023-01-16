@@ -18,7 +18,8 @@ import {
 	ZWaveNodeValueNotificationArgs,
 	ZWaveNodeValueUpdatedArgs,
 	NodeInterviewFailedEventArgs,
-	ZWaveNodeValueAddedArgs
+	ZWaveNodeValueAddedArgs,
+	InclusionResult
 } from 'zwave-js';
 import { process as ControllerAPI_Process } from '../lib/ControllerAPI';
 
@@ -162,6 +163,24 @@ module.exports = (RED: NodeAPI) => {
 				response.json({ status: lastStatus });
 			});
 
+			RED.httpAdmin.post(
+				`/zwave-js/ui/${self.id}/s2/grant`,
+				RED.auth.needsPermission('flows.write'),
+				(request, response) => {
+					grantPromise(request.body[0]);
+					response.status(202).end();
+				}
+			);
+
+			RED.httpAdmin.post(
+				`/zwave-js/ui/${self.id}/s2/dsk`,
+				RED.auth.needsPermission('flows.write'),
+				(request, response) => {
+					dskPromise(request.body[0]);
+					response.status(202).end();
+				}
+			);
+
 			RED.httpAdmin.get(
 				`/zwave-js/ui/${self.id}/:api/:action`,
 				RED.auth.needsPermission('flows.write'),
@@ -205,24 +224,6 @@ module.exports = (RED: NodeAPI) => {
 								});
 							break;
 					}
-				}
-			);
-
-			RED.httpAdmin.post(
-				`/zwave-js/ui/${self.id}/s2/grant`,
-				RED.auth.needsPermission('flows.write'),
-				(request, response) => {
-					grantPromise(request.body);
-					response.status(202).end();
-				}
-			);
-
-			RED.httpAdmin.post(
-				`/zwave-js/ui/${self.id}/s2/dsk`,
-				RED.auth.needsPermission('flows.write'),
-				(request, response) => {
-					dskPromise(request.body);
-					response.status(202).end();
 				}
 			);
 		};
@@ -364,7 +365,6 @@ module.exports = (RED: NodeAPI) => {
 		// Driver callback subscriptions that occure after driver ready
 		const wireSubDriverEvents = () => {
 			// Al Nodes Ready
-
 			self.driverInstance?.on(event_AllNodesReady.driverName, () => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
@@ -389,13 +389,15 @@ module.exports = (RED: NodeAPI) => {
 			});
 
 			// Node Added
-			self.driverInstance?.controller.on(event_NodeAdded.driverName, (Node: ZWaveNode) => {
-				const Timestamp = new Date().getTime();
+			self.driverInstance?.controller.on(event_NodeAdded.driverName, (Node: ZWaveNode, Result: InclusionResult) => {
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: ControllerCallbackObject = {
-					Type: MessageType.EVENT,
-					Event: { event: event_NodeAdded.redEventName, timestamp: Timestamp, nodeId: Node.id }
-				};
+
+				RED.comms.publish(
+					`zwave-js/ui/${this.id}/nodes/added`,
+					{ nodeId: Node.id, highestSecurityClass: Node.getHighestSecurityClass(), lowSecurity: Result.lowSecurity },
+					false
+				);
+
 				const Status: ControllerCallbackObject = {
 					Type: MessageType.STATUS,
 					Status: {
@@ -407,7 +409,6 @@ module.exports = (RED: NodeAPI) => {
 				};
 				updateLatestStatus(event_NodeAdded.statusNameWithNode(Node));
 				ControllerNodeIDs.forEach((ID) => {
-					controllerNodes[ID](Event);
 					controllerNodes[ID](Status);
 				});
 				wireNodeEvents(Node);
@@ -415,12 +416,10 @@ module.exports = (RED: NodeAPI) => {
 
 			// Node Removed
 			self.driverInstance?.controller.on(event_NodeRemoved.driverName, (Node: ZWaveNode) => {
-				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: ControllerCallbackObject = {
-					Type: MessageType.EVENT,
-					Event: { event: event_NodeRemoved.redEventName, timestamp: Timestamp, nodeId: Node.id }
-				};
+
+				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/removed`, { nodeId: Node.id }, false);
+
 				const Status: ControllerCallbackObject = {
 					Type: MessageType.STATUS,
 					Status: {
@@ -432,7 +431,6 @@ module.exports = (RED: NodeAPI) => {
 				};
 				updateLatestStatus(event_NodeRemoved.statusNameWithNode(Node));
 				ControllerNodeIDs.forEach((ID) => {
-					controllerNodes[ID](Event);
 					controllerNodes[ID](Status);
 				});
 			});
