@@ -117,7 +117,13 @@ button.zwavejs-full-width-button:hover {
 	width: calc(100% - 250px);
 	vertical-align: top;
 	display: inline-block;
+
 }
+
+.zwave-js-vertical-tabs .ui-tabs-panel h2:first-of-type {
+	margin-top: 0px;
+}
+
 
 .zwave-js-info-table tr td:first-of-type {
 	width: 150px;

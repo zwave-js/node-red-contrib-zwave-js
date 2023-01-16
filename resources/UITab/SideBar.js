@@ -10,6 +10,49 @@ let Grant;
 let ValidateDSK;
 
 // Globals
+
+const toTitleCase = (str) => {
+	return str.replace(/\w\S*/g, function (txt) {
+		return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+	});
+};
+
+const prompt = async (Message, Buttons, NoCancel = false) => {
+	return new Promise((resolve) => {
+		let Prompt = $('<div>');
+		Prompt.append(Message);
+
+		const Options = {
+			title: 'Question',
+			buttons: [],
+			draggable: false,
+			resizable: false,
+			modal: true
+		};
+
+		if (!NoCancel) {
+			Options.buttons.push({
+				text: 'Cancel',
+				click: function () {
+					resolve(-1);
+					$(this).dialog('close');
+				}
+			});
+		}
+		Buttons.forEach(function (V, I) {
+			Options.buttons.push({
+				text: V,
+				click: function () {
+					resolve(I);
+					$(this).dialog('close');
+				}
+			});
+		});
+
+		Prompt.dialog(Options);
+	});
+};
+
 const StepList = {
 	IEMode: 0,
 	NIF: 1,
@@ -33,45 +76,9 @@ const modalHeight = 600;
 const ZWaveJSUI = (function () {
 	// Vars
 	let networkId;
+	let selectedNode;
 	let stepsAPI;
 	let clientSideAuth = false;
-
-	// Prompt
-	const prompt = async (Message, Buttons, NoCancel = false) => {
-		return new Promise((resolve) => {
-			Prompt = $('<div>');
-			Prompt.append(Message);
-
-			const Options = {
-				title: 'Question',
-				buttons: [],
-				draggable: false,
-				resizable: false,
-				modal: true
-			};
-
-			if (!NoCancel) {
-				Options.buttons.push({
-					text: 'Cancel',
-					click: function () {
-						resolve(-1);
-						$(this).dialog('close');
-					}
-				});
-			}
-			Buttons.forEach(function (V, I) {
-				Options.buttons.push({
-					text: V,
-					click: function () {
-						resolve(I);
-						$(this).dialog('close');
-					}
-				});
-			});
-
-			Prompt.dialog(Options);
-		});
-	};
 
 	// Runtime Communication Methods
 	const Runtime = {
@@ -215,7 +222,7 @@ const ZWaveJSUI = (function () {
 		}
 	};
 
-	// Show Include Options
+	// Show Network Options
 	const showNetworkManagement = () => {
 		const HTML = $('#TPL_NetworkManagement').html();
 		const Panel = $('<div>');
@@ -237,7 +244,7 @@ const ZWaveJSUI = (function () {
 		$('#TPL_NetworkManagementTabs').tabs().addClass('zwave-js-vertical-tabs ui-helper-clearfix');
 		$('#TPL_NetworkManagementTabs li').removeClass('ui-corner-top').addClass('ui-corner-left');
 
-		// Basic CI Info
+		// Basic Controller Info
 		Runtime.Get('CONTROLLER', 'getNodes').then((data) => {
 			if (data.callSuccess) {
 				const Controller = data.response.Event.eventBody.find((N) => N.isControllerNode);
@@ -280,26 +287,59 @@ const ZWaveJSUI = (function () {
 		stepsAPI = Steps.data('plugin_Steps');
 	};
 
+	// Show Node  Options
 	const showNodeManagement = () => {
-		const HTML = $('#TPL_NodeManagement').html();
-		const Panel = $('<div>');
-		Panel.append(HTML);
+		if (selectedNode) {
+			const HTML = $('#TPL_NodeManagement').html();
+			const Panel = $('<div>');
+			Panel.append(HTML);
 
-		const Settings = {
-			title: 'Node Management',
-			modal: true,
-			width: modalWidth,
-			height: modalHeight,
-			resizable: false,
-			draggable: false,
-			close: function () {
-				Panel.remove();
-			}
-		};
+			const Settings = {
+				title: 'Node Management',
+				modal: true,
+				width: modalWidth,
+				height: modalHeight,
+				resizable: false,
+				draggable: false,
+				close: function () {
+					Panel.remove();
+				}
+			};
 
-		Panel.dialog(Settings);
-		$('#TPL_NodeManagementTabs').tabs().addClass('zwave-js-vertical-tabs ui-helper-clearfix');
-		$('#TPL_NodeManagementTabs li').removeClass('ui-corner-top').addClass('ui-corner-left');
+			Panel.dialog(Settings);
+			$('#TPL_NodeManagementTabs').tabs().addClass('zwave-js-vertical-tabs ui-helper-clearfix');
+			$('#TPL_NodeManagementTabs li').removeClass('ui-corner-top').addClass('ui-corner-left');
+
+			// Basic Node Info
+			Runtime.Get('CONTROLLER', 'getNodes').then((data) => {
+				if (data.callSuccess) {
+					const Node = data.response.Event.eventBody.find((N) => N.nodeId === selectedNode);
+
+					const NITable = $('#NITable');
+					NITable.append(`<tr><td>Device</td><td>${Node.deviceConfig.description}</td>`);
+					NITable.append(`<tr><td>Manufacturer</td><td>${Node.deviceConfig.manufacturer}</td>`);
+					NITable.append(`<tr><td>Firmware Version</td><td>${Node.firmwareVersion}</td>`);
+
+					const NSTable = $('#NSTable');
+					NSTable.append(`<tr><td>Interview Stage</td><td>${Node.interviewStage}</td>`);
+					NSTable.append(`<tr><td>Power Source</td><td>${toTitleCase(Node.powerSource.type)}</td>`);
+					if (Node.powerSource === 'battery') {
+						NSTable.append(`<tr><td>Battery Level</td><td>${Node.powerSource.level}</td>`);
+					}
+					NSTable.append(`<tr><td>Status</td><td>${Node.status}</td>`);
+					NSTable.append(`<tr><td>Ready</td><td>${Node.ready}</td>`);
+					NSTable.append(`<tr><td>Security Mode</td><td>${S2Classes[Node.highestSecurityClass]}</td>`);
+
+					const NSTTable = $('#NSTTable');
+					delete Node.statistics.lwr;
+					for (const [key, value] of Object.entries(Node.statistics)) {
+						NSTTable.append(`<tr><td>${key}</td><td>${value}</td>`);
+					}
+				} else {
+					alert(data.response);
+				}
+			});
+		}
 	};
 
 	// Network Selecetd
@@ -332,7 +372,7 @@ const ZWaveJSUI = (function () {
 				const TreeData = [];
 				Nodes.forEach((N) => {
 					TreeData.push({
-						label: `${N.nodeId} - ${N.nodeName || N.deviceConfig.label}`,
+						label: `${N.nodeId}: ${N.nodeName || N.deviceConfig.label}`,
 						nodeData: N
 						//icon: 'fa fa-circle'
 					});
@@ -348,7 +388,6 @@ const ZWaveJSUI = (function () {
 		});
 
 		// subscribe
-
 		/* Status */
 		RED.comms.subscribe(`zwave-js/ui/${networkId}/status`, (event, data) => {
 			$('#zwavejs-radio-status').text(data.status);
@@ -400,6 +439,8 @@ const ZWaveJSUI = (function () {
 
 	// Node Selected
 	const nodeSelected = (event, item) => {
+		selectedNode = item.nodeData.nodeId;
+
 		$('#zwavejs-node-model').text(
 			`${item.nodeData.nodeId} - ${item.nodeData.nodeName || item.nodeData.deviceConfig.label}`
 		);
@@ -451,6 +492,7 @@ const ZWaveJSUI = (function () {
 		});
 	};
 
+	// Add Node Menu Items
 	const addNodeMenuItems = (MenuHeader) => {
 		const Network = $('<a>')
 			.addClass('red-ui-tab-link-button')
@@ -483,6 +525,7 @@ const ZWaveJSUI = (function () {
 		MenuHeader.append(Remove);
 	};
 
+	// Add Controller Menu Items
 	const addControllerMenuItems = (MenuHeader) => {
 		const Network = $('<a>')
 			.addClass('red-ui-tab-link-button')
@@ -508,6 +551,7 @@ const ZWaveJSUI = (function () {
 		MenuHeader.append(Repair);
 	};
 
+	// Init
 	const init = () => {
 		// Container
 		const Content = $('<div>').addClass('red-ui-sidebar-info').css({
