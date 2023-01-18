@@ -22,6 +22,7 @@ import {
 	InclusionResult
 } from 'zwave-js';
 import { process as ControllerAPI_Process } from '../lib/ControllerAPI';
+import { Tail } from 'tail';
 
 const APP_NAME = 'node-red-contrib-zwave-js';
 const APP_VERSION = '9.0.0';
@@ -76,6 +77,9 @@ module.exports = (RED: NodeAPI) => {
 		const self = this;
 		RED.nodes.createNode(self, config);
 		self.config = config;
+
+		// Tail Log
+		let tailLog: Tail | undefined;
 
 		// S2 Promise Resolvers
 		let grantPromise: (Value: InclusionGrant | false) => void;
@@ -160,15 +164,39 @@ module.exports = (RED: NodeAPI) => {
 			RED.comms.publish('zwave-js/ui/global/addnetwork', { name: self.config.name, id: self.id }, false);
 
 			RED.httpAdmin.get(`/zwave-js/ui/${self.id}/status`, RED.auth.needsPermission('flows.write'), (_, response) => {
-				response.json({ status: lastStatus });
+				response.json({ callSuccess: true, response: lastStatus });
 			});
+
+			RED.httpAdmin.post(
+				`/zwave-js/ui/${self.id}/log`,
+				RED.auth.needsPermission('flows.write'),
+				(request, response) => {
+					if (request.body.stream) {
+						if (self.config.logConfig_level !== 'off') {
+							tailLog = new Tail(path.join(RED.settings.userDir || '', 'zwavejs_current.log'));
+							tailLog.on('line', (data) => {
+								RED.comms.publish(`zwave-js/ui/${self.id}/log`, { log: `${data.toString()}\r\n` }, false);
+							});
+							response.json({ callSuccess: true, response: true });
+						} else {
+							response.json({ callSuccess: true, response: false });
+						}
+					} else {
+						if (tailLog) {
+							tailLog.unwatch();
+							tailLog = undefined;
+						}
+						response.json({ callSuccess: true });
+					}
+				}
+			);
 
 			RED.httpAdmin.post(
 				`/zwave-js/ui/${self.id}/s2/grant`,
 				RED.auth.needsPermission('flows.write'),
 				(request, response) => {
 					grantPromise(request.body[0]);
-					response.status(202).end();
+					response.json({ callSuccess: true });
 				}
 			);
 
@@ -177,7 +205,7 @@ module.exports = (RED: NodeAPI) => {
 				RED.auth.needsPermission('flows.write'),
 				(request, response) => {
 					dskPromise(request.body[0]);
-					response.status(202).end();
+					response.json({ callSuccess: true });
 				}
 			);
 
@@ -245,6 +273,10 @@ module.exports = (RED: NodeAPI) => {
 			removeHTTPAPI();
 			controllerNodes = {};
 			deviceNodes = {};
+			if (tailLog) {
+				tailLog.unwatch();
+				tailLog = undefined;
+			}
 			if (self.driverInstance) {
 				self.driverInstance?.destroy().then(() => {
 					self.driverInstance = undefined;
@@ -275,6 +307,7 @@ module.exports = (RED: NodeAPI) => {
 		// Driver settings
 		const ZWaveOptions: Record<string, any> = {
 			logConfig: {},
+			timeouts: {},
 			securityKeys: {},
 			storage: {
 				throttle: self.config.storage_throttle,
@@ -308,12 +341,10 @@ module.exports = (RED: NodeAPI) => {
 
 		// Cleanup Logging config
 		const LogEnabled = self.config.logConfig_level !== 'off';
-
 		ZWaveOptions.logConfig.enabled = LogEnabled;
 		ZWaveOptions.logConfig.logToFile = LogEnabled;
-		ZWaveOptions.logConfig.filename =
-			self.config.logConfig_filename || path.join(RED.settings.userDir || '', 'zwavejs');
-		if (ZWaveOptions.logConfig.enabled) {
+		ZWaveOptions.logConfig.filename = path.join(RED.settings.userDir || '', 'zwavejs');
+		if (LogEnabled) {
 			ZWaveOptions.logConfig.level = self.config.logConfig_level;
 		}
 		let nodeLogFilter: number[] | undefined;
@@ -321,6 +352,15 @@ module.exports = (RED: NodeAPI) => {
 			nodeLogFilter = self.config.LogConfig_nodeFilter.split(',').map((N) => parseInt(N.trim()));
 			ZWaveOptions.logConfig.nodeFilter = nodeLogFilter;
 		}
+
+		// Cleanup Timeouts
+		if (self.config.timeouts_ack) ZWaveOptions.timeouts.ack = self.config.timeouts_ack;
+		if (self.config.timeouts_report) ZWaveOptions.timeouts.report = self.config.timeouts_report;
+		if (self.config.timeouts_response) ZWaveOptions.timeouts.response = self.config.timeouts_response;
+		if (self.config.timeouts_serialAPIStarted)
+			ZWaveOptions.timeouts.serialAPIStarted = self.config.timeouts_serialAPIStarted;
+		if (self.config.timeouts_sendDataCallback)
+			ZWaveOptions.timeouts.sendDataCallback = self.config.timeouts_sendDataCallback;
 
 		// Cleanup Keys
 		if (self.credentials.securityKeys_S0_Legacy)
@@ -849,6 +889,16 @@ module.exports = (RED: NodeAPI) => {
 				//
 			});
 	};
+
+	RED.httpAdmin.get('/zwave-js/ui/global/getports', RED.auth.needsPermission('flows.write'), (_, response) => {
+		Driver.enumerateSerialPorts()
+			.then((data) => {
+				response.json({ callSuccess: true, response: data });
+			})
+			.catch((Error) => {
+				response.json({ callSuccess: false, response: Error.message });
+			});
+	});
 
 	RED.nodes.registerType('zwavejs-runtime', init, {
 		credentials: {

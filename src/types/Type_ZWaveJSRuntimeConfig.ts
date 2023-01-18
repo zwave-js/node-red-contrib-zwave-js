@@ -8,7 +8,6 @@ export type Type_ZWaveJSRuntimeConfig = NodeDef & {
 	preferences_scales_humidity: number;
 
 	logConfig_level: string;
-	logConfig_filename: string;
 	LogConfig_nodeFilter: string;
 
 	storage_deviceConfigPriorityDir: string;

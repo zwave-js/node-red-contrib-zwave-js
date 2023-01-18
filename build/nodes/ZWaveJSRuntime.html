@@ -32,6 +32,31 @@
 				value: '',
 				required: true
 			},
+			timeouts_ack: {
+				value: 0,
+				required: true,
+				validate: RED.validators.number()
+			},
+			timeouts_response: {
+				value: 0,
+				required: true,
+				validate: RED.validators.number()
+			},
+			timeouts_sendDataCallback: {
+				value: 0,
+				required: true,
+				validate: RED.validators.number()
+			},
+			timeouts_report: {
+				value: 0,
+				required: true,
+				validate: RED.validators.number()
+			},
+			timeouts_serialAPIStarted: {
+				value: 0,
+				required: true,
+				validate: RED.validators.number()
+			},
 			preferences_scales_temperature: {
 				value: 0,
 				required: true,
@@ -45,10 +70,6 @@
 			logConfig_level: {
 				value: 'off',
 				required: true
-			},
-			logConfig_filename: {
-				value: '',
-				required: false
 			},
 			LogConfig_nodeFilter: {
 				value: '',
@@ -94,21 +115,48 @@
 		label: function () {
 			return this.name;
 		},
-		oneditprepare: restoreNumericValues,
+		oneditprepare: prepEditor,
 		oneditsave: formatNumericValues
 	};
 
 	RED.nodes.registerType('zwavejs-runtime', RuntimeNodeSettings);
 
-	function restoreNumericValues() {
-		const Numericle = ['preferences_scales_temperature', 'preferences_scales_humidity'];
+	function prepEditor() {
+		const Numericle = [
+			'preferences_scales_temperature',
+			'preferences_scales_humidity',
+			'timeouts_ack',
+			'timeouts_response',
+			'timeouts_sendDataCallback',
+			'timeouts_report',
+			'timeouts_serialAPIStarted'
+		];
 		Numericle.forEach((K) => {
-			$(`#el-node-config-input-${K}`).val(this[K].toString());
+			const Value = this[K] || K.startsWith('timeouts') ? 0 : '';
+			$(`#el-node-config-input-${K}`).val(Value.toString());
+		});
+
+		$.getJSON('zwave-js/ui/global/getports', (data) => {
+			if (data.callSuccess) {
+				data.response.forEach((SP) => {
+					$('#node-config-input-serialPort').append(new Option(SP, SP));
+				});
+			} else {
+				alert(data.response);
+			}
 		});
 	}
 
 	function formatNumericValues() {
-		const Numericle = ['preferences_scales_temperature', 'preferences_scales_humidity'];
+		const Numericle = [
+			'preferences_scales_temperature',
+			'preferences_scales_humidity',
+			'timeouts_ack',
+			'timeouts_response',
+			'timeouts_sendDataCallback',
+			'timeouts_report',
+			'timeouts_serialAPIStarted'
+		];
 		Numericle.forEach((K) => {
 			this[K] = parseInt($(`#el-node-config-input-${K}`).val());
 		});
@@ -120,7 +168,6 @@
 		const hexKey = [...bytes].map((x) => x.toString(16).padStart(2, '0')).join('');
 		$(event.target).prev().val(hexKey);
 	}
-
 </script>
 
 <script type="text/x-red" data-template-name="zwavejs-runtime">
@@ -132,7 +179,10 @@
 	</div>
 	<div class="form-row">
 	    <label for="node-config-input-serialPort"><i class="fa fa-terminal"></i> Serial Port</label>
-	    <input type="text" id="node-config-input-serialPort">
+		<select id="node-config-input-serialPort">
+			<option value="">Select Port</option>
+			<option value="Custom">--Use Custom Path --</option>
+		</select>
 	</div>
 	<div class="form-row">
 	    <label for="node-config-input-enableStatistics"><i class="fa fa-line-chart"></i> Analytics</label>
@@ -190,10 +240,6 @@
 	    </select>
 	</div>
 	<div class="form-row">
-	    <label for="node-config-input-logConfig_filename"><i class="fa fa-file"></i> Log File</label>
-	    <input type="text" id="node-config-input-logConfig_filename">
-	</div>
-	   <div class="form-row">
 	    <label for="node-config-input-LogConfig_nodeFilter"><i class="fa fa-filter"></i> Node Filter</label>
 	    <input type="text" id="node-config-input-LogConfig_nodeFilter">
 	</div>
@@ -230,6 +276,29 @@
 	<div class="form-row">
 	    <label for="node-config-input-enableSoftReset"><i class="fa fa-usb"></i> Soft Reset</label>
 	    <input type="checkbox" id="node-config-input-enableSoftReset">
+	</div>
+
+	<h3>Timeouts</h3>
+	<hr />
+	<div class="form-row">
+	    <label for="el-node-config-input-timeouts_ack"><i class="fa fa-clock-o"></i> ACK</label>
+	    <input type="number" id="el-node-config-input-timeouts_ack">
+	</div>
+	<div class="form-row">
+	    <label for="el-node-config-input-timeouts_response"><i class="fa fa-clock-o"></i> Response</label>
+	    <input type="number" id="el-node-config-input-timeouts_response">
+	</div>
+	<div class="form-row">
+	    <label for="el-node-config-input-timeouts_sendDataCallback"><i class="fa fa-clock-o"></i> Callback</label>
+	    <input type="number" id="el-node-config-input-timeouts_sendDataCallback">
+	</div>
+	<div class="form-row">
+	    <label for="el-node-config-input-timeouts_report"><i class="fa fa-clock-o"></i> Report</label>
+	    <input type="number" id="el-node-config-input-timeouts_report">
+	</div>
+	<div class="form-row">
+	    <label for="el-node-config-input-timeouts_serialAPIStarted"><i class="fa fa-clock-o"></i> Serial API</label>
+	    <input type="number" id="el-node-config-input-timeouts_serialAPIStarted">
 	</div>
 
 	<h3>Global API Access</h3>

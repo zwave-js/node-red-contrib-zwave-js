@@ -8,6 +8,74 @@
 	ZWaveJSUI.init();
 </script>
 
+<!-- Side Panel Template-->
+<template id="TPL_SidePanel">
+	<!--Network Selector-->
+	<div class="red-ui-sidebar-header" id="zwave-js-network-header" style="display: none; text-align: center; height: 20px">
+		<i class="fa fa-cog" aria-hidden="true"></i>
+		Network/Runtime :
+		<select id="zwave-js-network" onchange="NetworkSelected()" style="height: 25px; vertical-align: baseline">
+			<option>Select Network</option>
+		</select>
+	</div>
+
+	<!--Controller Info-->
+	<div class="red-ui-sidebar-header" style="text-align: left">
+		<table>
+			<tr>
+				<td rowspan="3"><i class="fa fa-rss" style="color: grey; font-size: 40px"></i></td>
+			</tr>
+			<tr>
+				<td style="padding-left: 10px">
+					<span style="font-size: 14px; font-weight: bold; color: gray" id="zwave-js-controller-info">No Network Selected</span><br />
+					<span id="zwave-js-controller-status"></span>
+				</td>
+			</tr>
+		</table>
+	</div>
+
+	<!--Controller Menu-->
+	<div class="red-ui-sidebar-header zwavejs-controller-menu-header">
+		<a class="red-ui-tab-link-button" onclick="ShowNetworkManagement()"><i class="fa fa-cogs"></i></a>
+		<a class="red-ui-tab-link-button"><i class="fa fa-refresh"></i></a>
+		<a class="red-ui-tab-link-button"><i class="fa fa-medkit"></i></a>
+	</div>
+
+	<!--Stack-->
+	<div class="red-ui-sidebar-info-stack" id="zwavejs-panel-stack" style="width: 100%; height: 100%">
+		<!-- Node List-->
+		<div>
+			<div id="zwavejs-node-list" style="width: 100%; height: 100%"></div>
+		</div>
+		<!--Node Info-->
+		<div>
+			<div class="red-ui-sidebar-header" style="text-align: left">
+				<table>
+					<tr>
+						<td rowspan="3">
+							<span class="zwave-js-node-id-list" id="zwave-js-node-info-id" style="width: 40px; height: 30px; line-height: 30px; font-size: 20px">--</span>
+						</td>
+					</tr>
+					<tr>
+						<td style="padding-left: 10px">
+							<span style="font-size: 14px; font-weight: bold; color: gray" id="zwave-js-node-info">No Node Selected</span><br />
+							<span id="zwave-js-node-status"></span>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div class="red-ui-sidebar-header zwavejs-controller-menu-header">
+				<a class="red-ui-tab-link-button" onclick="ShowNodeManagement()"><i class="fa fa-cogs"></i></a>
+				<a class="red-ui-tab-link-button"><i class="fa fa-handshake-o"></i></a>
+				<a class="red-ui-tab-link-button"><i class="fa fa-medkit"></i></a>
+				<a class="red-ui-tab-link-button"><i class="fa fa-trash-o"></i></a>
+			</div>
+
+			<div id="zwavejz-cc-list-list" style="width: 100%; height: 100%;"></div>
+		</div>
+	</div>
+</template>
+
 <!--Network Management-->
 <template id="TPL_NetworkManagement">
 	<div id="TPL_NetworkManagementTabs">
@@ -26,6 +94,9 @@
 			</li>
 			<li>
 				<a href="#tabs-5"><i class="fa fa-floppy-o"></i> NVM Backup/Restore</a>
+			</li>
+			<li>
+				<a href="#tabs-6"><i class="fa fa-file-text"></i> Real Time Log</a>
 			</li>
 		</ul>
 
@@ -149,6 +220,13 @@
 
 		<div id="tabs-5">
 			<h2>NVM Backup/Restore</h2>
+		</div>
+
+		<div id="tabs-6">
+			<h2>Real Time Log</h2>
+			<div class="zwave-js-log">
+				<pre id="zwave-js-log"></pre>
+			</div>
 		</div>
 	</div>
 </template>

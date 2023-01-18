@@ -86,11 +86,12 @@ button.zwavejs-full-width-button:hover {
 
 .zwave-js-vertical-tabs {
 	width: 100%;
+	height: 98%;
 }
 .zwave-js-vertical-tabs .ui-tabs-nav {
 	padding-right: 3px;
-	width: 200px;
-	height: 500px;
+	width: 190px;
+	height: 100%;
 	display: inline-block;
 }
 .zwave-js-vertical-tabs .ui-tabs-nav li {
@@ -114,16 +115,15 @@ button.zwavejs-full-width-button:hover {
 }
 .zwave-js-vertical-tabs .ui-tabs-panel {
 	padding: 1em;
-	width: calc(100% - 250px);
+	width: calc(100% - 240px);
 	vertical-align: top;
 	display: inline-block;
-
+	height: 90%;
 }
 
 .zwave-js-vertical-tabs .ui-tabs-panel h2:first-of-type {
 	margin-top: 0px;
 }
-
 
 .zwave-js-info-table tr td:first-of-type {
 	width: 150px;
@@ -161,4 +161,28 @@ button.zwavejs-full-width-button:hover {
 
 .zwave-js-dsk {
 	width: 40px;
+}
+
+.zwave-js-log {
+	background-color: rgb(0, 0, 50);
+	color: darkgray;
+	width: 100%;
+	height: 95%;
+	border-radius: 8px;
+	overflow: hidden;
+	overflow-y: scroll;
+	font-size: 12px;
+	padding: 5px;
+}
+
+.zwave-js-node-id-list {
+	background-color: gray;
+	color: white;
+	padding: 3px;
+	border-radius: 4px;
+	width: 30px;
+	height: 20px;
+	display: inline-block;
+	text-align: center;
+	line-height: 20px;
 }

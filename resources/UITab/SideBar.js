@@ -8,9 +8,11 @@
 let IE;
 let Grant;
 let ValidateDSK;
+let NetworkSelected;
+let ShowNetworkManagement;
+let ShowNodeManagement;
 
 // Globals
-
 const toTitleCase = (str) => {
 	return str.replace(/\w\S*/g, function (txt) {
 		return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
@@ -71,7 +73,8 @@ const S2Classes = {
 };
 
 const modalWidth = 800;
-const modalHeight = 600;
+const modalHeight = 620;
+const maxModalWidth = 1120;
 
 const ZWaveJSUI = (function () {
 	// Vars
@@ -80,29 +83,77 @@ const ZWaveJSUI = (function () {
 	let stepsAPI;
 	let clientSideAuth = false;
 
+	// Runtime event Callbacks
+	const commsLog = (event, data) => {
+		$('#zwave-js-log').append(data.log);
+		if ($('.zwave-js-log').scrollTop() > parseInt($('.zwave-js-log').prop('scrollHeight')) - 1000) {
+			$('.zwave-js-log').scrollTop(parseInt($('.zwave-js-log').prop('scrollHeight')));
+		}
+	};
+	const commsStatus = (event, data) => {
+		$('#zwavejs-radio-status').text(data.status);
+	};
+	const commsNodeAdded = (event, data) => {
+		const NodeID = data.nodeId;
+		const HSC = data.highestSecurityClass;
+		const LS = data.lowSecurity;
+
+		let Message = `The Node was successfully added to the network.<br />It will now be interviewed!<br /><br /><strong>Node ID:</strong> ${NodeID}, <strong>Security Mode:</strong> ${S2Classes[HSC]}`;
+
+		if (LS) {
+			Message += ' (lower than requested)';
+			$('#NodeAddedIcon').css({ color: 'orange' });
+			$('#NodeAddedIcon').addClass('fa-exclamation-triangle');
+		} else {
+			$('#NodeAddedIcon').addClass('fa-check-circle');
+		}
+
+		$('#NodeAddedMessage').html(Message);
+		stepsAPI.setStepIndex(StepList.Added);
+	};
+	const commsNodeRemoved = (event, data) => {
+		stepsAPI.setStepIndex(StepList.Removed);
+	};
+	const commsGrant = (event, data) => {
+		clientSideAuth = data.clientSideAuth;
+		data.securityClasses.forEach((SC) => {
+			$('#S2ClassesTable').append(
+				`<tr><td>${S2Classes[SC]}</td><td><input type="checkbox" value="${SC}" class="S2Class" /></td></tr>`
+			);
+		});
+		stepsAPI.setStepIndex(StepList.Grant);
+	};
+	const commsDSK = (event, data) => {
+		const Parts = data.dsk.split('-');
+		for (let i = 1; i < Parts.length; i++) {
+			$(`#DSK_Hint${i}`).val(Parts[i]);
+		}
+		stepsAPI.setStepIndex(StepList.DSK);
+	};
+
 	// Runtime Communication Methods
 	const Runtime = {
 		Get: async function (API, Method, URL) {
-			return new Promise((resolve) => {
+			return new Promise((resolve, reject) => {
 				$.ajax({
 					type: 'GET',
 					url: URL || `zwave-js/ui/${networkId}/${API}/${Method}`,
 					success: (data) => resolve(data),
 					error: (jqXHR, textStatus, errorThrown) =>
-						resolve({ callSuccess: false, response: `${textStatus}: ${errorThrown}` }),
+						reject(new Error(`${textStatus}: ${errorThrown}`)) /* Transport error */,
 					dataType: 'json'
 				});
 			});
 		},
 		Post: async function (API, Method, Data, URL) {
-			return new Promise((resolve) => {
+			return new Promise((resolve, reject) => {
 				$.ajax({
 					type: 'POST',
 					data: JSON.stringify(Data),
 					url: URL || `zwave-js/ui/${networkId}/${API}/${Method}`,
 					success: (data) => resolve(data),
 					error: (jqXHR, textStatus, errorThrown) =>
-						resolve({ callSuccess: false, response: `${textStatus}: ${errorThrown}` }),
+						reject(new Error(`${textStatus}: ${errorThrown}`)) /* Transport error */,
 					dataType: 'json',
 					contentType: 'application/json'
 				});
@@ -123,7 +174,9 @@ const ZWaveJSUI = (function () {
 
 		Runtime.Post(undefined, undefined, [GrantObject], `zwave-js/ui/${networkId}/s2/grant`)
 			.then((data) => {
-				// wait?
+				if (!data.callSuccess) {
+					alert(data.response);
+				}
 			})
 			.catch((Error) => {
 				alert(Error.message);
@@ -133,7 +186,9 @@ const ZWaveJSUI = (function () {
 	ValidateDSK = () => {
 		Runtime.Post(undefined, undefined, [$('#DSK').val()], `zwave-js/ui/${networkId}/s2/dsk`)
 			.then((data) => {
-				// Wait?
+				if (!data.callSuccess) {
+					alert(data.response);
+				}
 			})
 			.catch((Error) => {
 				alert(Error.message);
@@ -151,13 +206,17 @@ const ZWaveJSUI = (function () {
 				Request = {
 					strategy: answer === 0 ? 2 : 0
 				};
-				Runtime.Post('CONTROLLER', 'beginExclusion', [Request]).then((data) => {
-					if (data.callSuccess) {
-						stepsAPI.setStepIndex(StepList.NIF);
-					} else {
-						alert(data.response);
-					}
-				});
+				Runtime.Post('CONTROLLER', 'beginExclusion', [Request])
+					.then((data) => {
+						if (data.callSuccess) {
+							stepsAPI.setStepIndex(StepList.NIF);
+						} else {
+							alert(data.response);
+						}
+					})
+					.catch((Error) => {
+						alert(Error.message);
+					});
 			});
 		}
 
@@ -171,13 +230,17 @@ const ZWaveJSUI = (function () {
 						strategy: 0,
 						forceSecurity: answer === 0
 					};
-					Runtime.Post('CONTROLLER', 'beginInclusion', [Request]).then((data) => {
-						if (data.callSuccess) {
-							stepsAPI.setStepIndex(StepList.NIF);
-						} else {
-							alert(data.response);
-						}
-					});
+					Runtime.Post('CONTROLLER', 'beginInclusion', [Request])
+						.then((data) => {
+							if (data.callSuccess) {
+								stepsAPI.setStepIndex(StepList.NIF);
+							} else {
+								alert(data.response);
+							}
+						})
+						.catch((Error) => {
+							alert(Error.message);
+						});
 				}
 			});
 		}
@@ -186,44 +249,56 @@ const ZWaveJSUI = (function () {
 			Request = {
 				strategy: 4
 			};
-			Runtime.Post('CONTROLLER', 'beginInclusion', [Request]).then((data) => {
-				if (data.callSuccess) {
-					stepsAPI.setStepIndex(StepList.NIF);
-				} else {
-					alert(data.response);
-				}
-			});
+			Runtime.Post('CONTROLLER', 'beginInclusion', [Request])
+				.then((data) => {
+					if (data.callSuccess) {
+						stepsAPI.setStepIndex(StepList.NIF);
+					} else {
+						alert(data.response);
+					}
+				})
+				.catch((Error) => {
+					alert(Error.message);
+				});
 		}
 
 		if (Mode === 'S0') {
 			Request = {
 				strategy: 3
 			};
-			Runtime.Post('CONTROLLER', 'beginInclusion', [Request]).then((data) => {
-				if (data.callSuccess) {
-					stepsAPI.setStepIndex(StepList.NIF);
-				} else {
-					alert(data.response);
-				}
-			});
+			Runtime.Post('CONTROLLER', 'beginInclusion', [Request])
+				.then((data) => {
+					if (data.callSuccess) {
+						stepsAPI.setStepIndex(StepList.NIF);
+					} else {
+						alert(data.response);
+					}
+				})
+				.catch((Error) => {
+					alert(Error.message);
+				});
 		}
 
 		if (Mode === 'NS') {
 			Request = {
 				strategy: 2
 			};
-			Runtime.Post('CONTROLLER', 'beginInclusion', [Request]).then((data) => {
-				if (data.callSuccess) {
-					stepsAPI.setStepIndex(StepList.NIF);
-				} else {
-					alert(data.response);
-				}
-			});
+			Runtime.Post('CONTROLLER', 'beginInclusion', [Request])
+				.then((data) => {
+					if (data.callSuccess) {
+						stepsAPI.setStepIndex(StepList.NIF);
+					} else {
+						alert(data.response);
+					}
+				})
+				.catch((Error) => {
+					alert(Error.message);
+				});
 		}
 	};
 
 	// Show Network Options
-	const showNetworkManagement = () => {
+	ShowNetworkManagement = () => {
 		const HTML = $('#TPL_NetworkManagement').html();
 		const Panel = $('<div>');
 		Panel.append(HTML);
@@ -233,9 +308,18 @@ const ZWaveJSUI = (function () {
 			modal: true,
 			width: modalWidth,
 			height: modalHeight,
-			resizable: false,
-			draggable: false,
+			maxWidth: maxModalWidth,
+			resizable: true,
+			draggable: true,
 			close: function () {
+				Runtime.Post(undefined, undefined, { stream: false }, `zwave-js/ui/${networkId}/log`)
+					.then((data) => {
+						RED.comms.unsubscribe(`zwave-js/ui/${networkId}/log`, commsLog);
+						$('#zwave-js-log').empty();
+					})
+					.catch((Error) => {
+						//
+					});
 				Panel.remove();
 			}
 		};
@@ -245,50 +329,79 @@ const ZWaveJSUI = (function () {
 		$('#TPL_NetworkManagementTabs li').removeClass('ui-corner-top').addClass('ui-corner-left');
 
 		// Basic Controller Info
-		Runtime.Get('CONTROLLER', 'getNodes').then((data) => {
-			if (data.callSuccess) {
-				const Controller = data.response.Event.eventBody.find((N) => N.isControllerNode);
+		Runtime.Get('CONTROLLER', 'getNodes')
+			.then((data) => {
+				if (data.callSuccess) {
+					const Controller = data.response.Event.eventBody.find((N) => N.isControllerNode);
 
-				const CITable = $('#CITable');
-				CITable.append(`<tr><td>Device</td><td>${Controller.deviceConfig.description}</td>`);
-				CITable.append(`<tr><td>Manufacturer</td><td>${Controller.deviceConfig.manufacturer}</td>`);
-				CITable.append(`<tr><td>Firmware Version</td><td>${Controller.firmwareVersion}</td>`);
-				CITable.append(`<tr><td>Supported Data Rates</td><td>${Controller.supportedDataRates.toString()}</td>`);
+					const CITable = $('#CITable');
+					CITable.append(`<tr><td>Device</td><td>${Controller.deviceConfig.description}</td>`);
+					CITable.append(`<tr><td>Manufacturer</td><td>${Controller.deviceConfig.manufacturer}</td>`);
+					CITable.append(`<tr><td>Firmware Version</td><td>${Controller.firmwareVersion}</td>`);
+					CITable.append(`<tr><td>Supported Data Rates</td><td>${Controller.supportedDataRates.toString()}</td>`);
 
-				const CIStatsTable = $('#CIStatsTable');
-				for (const [key, value] of Object.entries(Controller.statistics)) {
-					CIStatsTable.append(`<tr><td>${key}</td><td>${value}</td>`);
+					const CIStatsTable = $('#CIStatsTable');
+					for (const [key, value] of Object.entries(Controller.statistics)) {
+						CIStatsTable.append(`<tr><td>${key}</td><td>${value}</td>`);
+					}
+				} else {
+					alert(data.response);
 				}
-			} else {
-				alert(data.response);
-			}
-		});
+			})
+			.catch((Error) => {
+				alert(Error.message);
+			});
 
 		// Power Level
-		Runtime.Get('CONTROLLER', 'getPowerlevel').then((data) => {
-			if (data.callSuccess) {
-				$('#CSettings_PL').val(data.response.powerlevel);
-				$('#CSettings_0DBM').val(data.response.measured0dBm);
-			} else {
-				alert(data.response);
-			}
-		});
+		Runtime.Get('CONTROLLER', 'getPowerlevel')
+			.then((data) => {
+				if (data.callSuccess) {
+					$('#CSettings_PL').val(data.response.powerlevel);
+					$('#CSettings_0DBM').val(data.response.measured0dBm);
+				} else {
+					alert(data.response);
+				}
+			})
+			.catch((Error) => {
+				alert(Error.message);
+			});
 
 		// Region
-		Runtime.Get('CONTROLLER', 'getRFRegion').then((data) => {
-			if (data.callSuccess) {
-				//
-			} else {
-				$('#CSettings_Regions').prop('disabled', 'disabled');
-			}
-		});
+		Runtime.Get('CONTROLLER', 'getRFRegion')
+			.then((data) => {
+				if (data.callSuccess) {
+					//
+				} else {
+					$('#CSettings_Regions').prop('disabled', 'disabled');
+				}
+			})
+			.catch((Error) => {
+				alert(Error.message);
+			});
 
 		const Steps = $('#IEWizard').steps({ showFooterButtons: false });
 		stepsAPI = Steps.data('plugin_Steps');
+
+		/* Logs */
+		Runtime.Post(undefined, undefined, { stream: true }, `zwave-js/ui/${networkId}/log`)
+			.then((data) => {
+				if (data.callSuccess) {
+					if (data.response) {
+						RED.comms.subscribe(`zwave-js/ui/${networkId}/log`, commsLog);
+					} else {
+						$('#TPL_NetworkManagementTabs').tabs({ disabled: [5] });
+					}
+				} else {
+					alert(data.response);
+				}
+			})
+			.catch((Error) => {
+				alert(Error.message);
+			});
 	};
 
 	// Show Node  Options
-	const showNodeManagement = () => {
+	ShowNodeManagement = () => {
 		if (selectedNode) {
 			const HTML = $('#TPL_NodeManagement').html();
 			const Panel = $('<div>');
@@ -299,8 +412,9 @@ const ZWaveJSUI = (function () {
 				modal: true,
 				width: modalWidth,
 				height: modalHeight,
-				resizable: false,
-				draggable: false,
+				maxWidth: maxModalWidth,
+				resizable: true,
+				draggable: true,
 				close: function () {
 					Panel.remove();
 				}
@@ -311,244 +425,169 @@ const ZWaveJSUI = (function () {
 			$('#TPL_NodeManagementTabs li').removeClass('ui-corner-top').addClass('ui-corner-left');
 
 			// Basic Node Info
-			Runtime.Get('CONTROLLER', 'getNodes').then((data) => {
-				if (data.callSuccess) {
-					const Node = data.response.Event.eventBody.find((N) => N.nodeId === selectedNode);
+			Runtime.Get('CONTROLLER', 'getNodes')
+				.then((data) => {
+					if (data.callSuccess) {
+						const Node = data.response.Event.eventBody.find((N) => N.nodeId === selectedNode);
 
-					const NITable = $('#NITable');
-					NITable.append(`<tr><td>Device</td><td>${Node.deviceConfig.description}</td>`);
-					NITable.append(`<tr><td>Manufacturer</td><td>${Node.deviceConfig.manufacturer}</td>`);
-					NITable.append(`<tr><td>Firmware Version</td><td>${Node.firmwareVersion}</td>`);
+						const NITable = $('#NITable');
+						NITable.append(`<tr><td>Device</td><td>${Node.deviceConfig.description}</td>`);
+						NITable.append(`<tr><td>Manufacturer</td><td>${Node.deviceConfig.manufacturer}</td>`);
+						NITable.append(`<tr><td>Firmware Version</td><td>${Node.firmwareVersion}</td>`);
 
-					const NSTable = $('#NSTable');
-					NSTable.append(`<tr><td>Interview Stage</td><td>${Node.interviewStage}</td>`);
-					NSTable.append(`<tr><td>Power Source</td><td>${toTitleCase(Node.powerSource.type)}</td>`);
-					if (Node.powerSource === 'battery') {
-						NSTable.append(`<tr><td>Battery Level</td><td>${Node.powerSource.level}</td>`);
+						const NSTable = $('#NSTable');
+						NSTable.append(`<tr><td>Interview Stage</td><td>${Node.interviewStage}</td>`);
+						NSTable.append(`<tr><td>Power Source</td><td>${toTitleCase(Node.powerSource.type)}</td>`);
+						if (Node.powerSource.type === 'battery') {
+							NSTable.append(`<tr><td>Battery Level</td><td>${Node.powerSource.level}</td>`);
+							NSTable.append(`<tr><td>Is Low</td><td>${Node.powerSource.isLow}</td>`);
+						}
+						NSTable.append(`<tr><td>Status</td><td>${Node.status}</td>`);
+						NSTable.append(`<tr><td>Ready</td><td>${Node.ready}</td>`);
+						NSTable.append(`<tr><td>Security Mode</td><td>${S2Classes[Node.highestSecurityClass]}</td>`);
+
+						const NSTTable = $('#NSTTable');
+						delete Node.statistics.lwr;
+						for (const [key, value] of Object.entries(Node.statistics)) {
+							NSTTable.append(`<tr><td>${key}</td><td>${value}</td>`);
+						}
+					} else {
+						alert(data.response);
 					}
-					NSTable.append(`<tr><td>Status</td><td>${Node.status}</td>`);
-					NSTable.append(`<tr><td>Ready</td><td>${Node.ready}</td>`);
-					NSTable.append(`<tr><td>Security Mode</td><td>${S2Classes[Node.highestSecurityClass]}</td>`);
-
-					const NSTTable = $('#NSTTable');
-					delete Node.statistics.lwr;
-					for (const [key, value] of Object.entries(Node.statistics)) {
-						NSTTable.append(`<tr><td>${key}</td><td>${value}</td>`);
-					}
-				} else {
-					alert(data.response);
-				}
-			});
+				})
+				.catch((Error) => {
+					alert(Error.message);
+				});
 		}
 	};
 
 	// Network Selecetd
-	const networkSelected = function () {
+	NetworkSelected = function () {
 		// Remove Subscriptions
 		if (networkId) {
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/status`);
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/s2/grant`);
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/s2/dsk`);
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/added`);
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/removed`);
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/status`, commsStatus);
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/s2/grant`, commsGrant);
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/s2/dsk`, commsDSK);
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/added`, commsNodeAdded);
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/removed`, commsNodeRemoved);
 			networkId = undefined;
 		}
 
-		networkId = this.value;
+		networkId = $('#zwave-js-network').val();
 
 		// get Nodes ansd Info
-		Runtime.Get('CONTROLLER', 'getNodes').then((data) => {
-			if (data.callSuccess) {
-				data = data.response.Event.eventBody;
+		Runtime.Get('CONTROLLER', 'getNodes')
+			.then((data) => {
+				if (data.callSuccess) {
+					data = data.response.Event.eventBody;
 
-				const Controller = data.filter((N) => N.isControllerNode)[0];
-				$('#zwavejs-radio-model').text(Controller.deviceConfig.label);
-				$('#zwavejs-radio-manufacture').text(`${Controller.deviceConfig.manufacturer}, `);
-				$('#zwavejs-radio-version').text(`v${Controller.firmwareVersion}, `);
+					const Controller = data.filter((N) => N.isControllerNode)[0];
 
-				const Nodes = data.filter((N) => !N.isControllerNode);
+					const Info = `${Controller.deviceConfig.manufacturer} | ${Controller.deviceConfig.label} | v${Controller.firmwareVersion}`;
+					$('#zwave-js-controller-info').text(Info);
 
-				// Render List
-				const TreeData = [];
-				Nodes.forEach((N) => {
-					TreeData.push({
-						label: `${N.nodeId}: ${N.nodeName || N.deviceConfig.label}`,
-						nodeData: N
-						//icon: 'fa fa-circle'
+					const Nodes = data.filter((N) => !N.isControllerNode);
+
+					// Render List
+					const TreeData = [];
+					Nodes.forEach((N) => {
+						const Label = $('<div>');
+						Label.append(`<span class="zwave-js-node-id-list">${N.nodeId}</span> `);
+						Label.append(N.nodeName || 'No Name');
+
+						TreeData.push({
+							element: Label,
+							nodeData: N
+							//icon: 'fa fa-circle'
+						});
 					});
-				});
-				$('#zwavejs-node-list').treeList('data', TreeData);
-			} else {
-				alert(data.response);
-			}
-		});
+					$('#zwavejs-node-list').treeList('data', TreeData);
+				} else {
+					alert(data.response);
+				}
+			})
+			.catch((Error) => {
+				alert(Error.message);
+			});
 
-		$.getJSON(`zwave-js/ui/${networkId}/status`, (data) => {
-			$('#zwavejs-radio-status').text(data.status);
-		});
+		Runtime.Get(undefined, undefined, `zwave-js/ui/${networkId}/status`)
+			.then((data) => {
+				if (data.callSuccess) {
+					$('#zwave-js-controller-status').text(data.response);
+				} else {
+					alert(data.response);
+				}
+			})
+			.catch((Error) => {
+				alert(Error.message);
+			});
 
 		// subscribe
-		/* Status */
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/status`, (event, data) => {
-			$('#zwavejs-radio-status').text(data.status);
-		});
 
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/added`, (event, data) => {
-			const NodeID = data.nodeId;
-			const HSC = data.highestSecurityClass;
-			const LS = data.lowSecurity;
-
-			let Message = `The Node was successfully added to the network.<br />It will now be interviewed!<br /><br /><strong>Node ID:</strong> ${NodeID}, <strong>Security Mode:</strong> ${S2Classes[HSC]}`;
-
-			if (LS) {
-				Message += ' (lower than requested)';
-				$('#NodeAddedIcon').css({ color: 'orange' });
-				$('#NodeAddedIcon').addClass('fa-exclamation-triangle');
-			} else {
-				$('#NodeAddedIcon').addClass('fa-check-circle');
-			}
-
-			$('#NodeAddedMessage').html(Message);
-			stepsAPI.setStepIndex(StepList.Added);
-		});
-
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/removed`, (event, data) => {
-			stepsAPI.setStepIndex(StepList.Removed);
-		});
-
-		/* S2 Grant */
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/s2/grant`, (event, data) => {
-			clientSideAuth = data.clientSideAuth;
-			data.securityClasses.forEach((SC) => {
-				$('#S2ClassesTable').append(
-					`<tr><td>${S2Classes[SC]}</td><td><input type="checkbox" value="${SC}" class="S2Class" /></td></tr>`
-				);
-			});
-			stepsAPI.setStepIndex(StepList.Grant);
-		});
-
-		/* S2 DSk */
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/s2/dsk`, (event, data) => {
-			const Parts = data.dsk.split('-');
-			for (let i = 1; i < Parts.length; i++) {
-				$(`#DSK_Hint${i}`).val(Parts[i]);
-			}
-			stepsAPI.setStepIndex(StepList.DSK);
-		});
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/status`, commsStatus);
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/added`, commsNodeAdded);
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/removed`, commsNodeRemoved);
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/s2/grant`, commsGrant);
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/s2/dsk`, commsDSK);
 	};
 
 	// Node Selected
 	const nodeSelected = (event, item) => {
+		if (!item.nodeData) return;
+
 		selectedNode = item.nodeData.nodeId;
 
-		$('#zwavejs-node-model').text(
-			`${item.nodeData.nodeId} - ${item.nodeData.nodeName || item.nodeData.deviceConfig.label}`
-		);
-		$('#zwavejs-node-manufacture').text(`${item.nodeData.deviceConfig.manufacturer}, `);
-		$('#zwavejs-node-version').text(`${item.nodeData.firmwareVersion}, `);
-		$('#zwavejs-node-status').text(`${item.nodeData.status}`);
+		const Info = `${item.nodeData.deviceConfig.manufacturer} | ${item.nodeData.deviceConfig.label} | v${item.nodeData.firmwareVersion}`;
+		$('#zwave-js-node-info').text(Info);
+		$('#zwave-js-node-status').text(item.nodeData.status);
+		$('#zwave-js-node-info-id').text(selectedNode);
 
-		Runtime.Post('CONTROLLER', 'getValueDB', [item.nodeData.nodeId]).then((data) => {
-			if (data.callSuccess) {
-				data = data.response.Event.eventBody[0];
-				const ListOfCCs = [];
-				data.values.forEach((PL) => {
-					if (!ListOfCCs.includes(PL.valueId.commandClassName)) {
-						ListOfCCs.push(PL.valueId.commandClassName);
-					}
-				});
-				ListOfCCs.sort();
-
-				const Items = [];
-
-				ListOfCCs.forEach((CC) => {
-					const Item = {
-						label: CC,
-						children: []
-					};
-
-					const Properties = data.values.filter((V) => V.valueId.commandClassName === CC);
-					Item.label = `0x${Properties[0].valueId.commandClass.toString(16)} - ${Item.label}`;
-					Properties.forEach((P) => {
-						const Label = P.metadata !== undefined ? P.metadata.label || P.valueId.property : P.valueId.property;
-						const Writeable = P.metadata !== undefined ? (P.metadata.writeable ? 'fa fa-pencil' : '') : '';
-						const LabelDiv = $('<div>')
-							.text(Label)
-							.append(
-								`<span style="float:right;padding-right:20px">${P.currentValue || ''} ${P.metadata.unit || ''}</span>`
-							);
-						Item.children.push({
-							element: LabelDiv,
-							icon: Writeable
-						});
+		Runtime.Post('CONTROLLER', 'getValueDB', [item.nodeData.nodeId])
+			.then((data) => {
+				if (data.callSuccess) {
+					data = data.response.Event.eventBody[0];
+					const ListOfCCs = [];
+					data.values.forEach((PL) => {
+						if (!ListOfCCs.includes(PL.valueId.commandClassName)) {
+							ListOfCCs.push(PL.valueId.commandClassName);
+						}
 					});
-					Items.push(Item);
-				});
+					ListOfCCs.sort();
 
-				$('#zwavejz-cc-list-list').treeList('data', Items);
-			} else {
-				alert(data.response);
-			}
-		});
-	};
+					const Items = [];
 
-	// Add Node Menu Items
-	const addNodeMenuItems = (MenuHeader) => {
-		const Network = $('<a>')
-			.addClass('red-ui-tab-link-button')
-			.addClass('ui-draggable')
-			.addClass('ui-draggable-handle')
-			.css({ cursor: 'pointer' })
-			.append('<i class="fa fa-cogs"></i>')
-			.click(showNodeManagement);
-		MenuHeader.append(Network);
+					ListOfCCs.forEach((CC) => {
+						const Item = {
+							label: CC,
+							children: []
+						};
 
-		const Inclusion = $('<a>')
-			.addClass('red-ui-tab-link-button')
-			.addClass('ui-draggable')
-			.addClass('ui-draggable-handle')
-			.append('<i class="fa fa-handshake-o"></i>');
-		MenuHeader.append(Inclusion);
+						const Properties = data.values.filter((V) => V.valueId.commandClassName === CC);
+						Item.label = `0x${Properties[0].valueId.commandClass.toString(16)} - ${Item.label}`;
+						Properties.forEach((P) => {
+							const Label = P.metadata !== undefined ? P.metadata.label || P.valueId.property : P.valueId.property;
+							const Writeable = P.metadata !== undefined ? (P.metadata.writeable ? 'fa fa-pencil' : '') : '';
+							const LabelDiv = $('<div>')
+								.text(Label)
+								.append(
+									`<span style="float:right;padding-right:20px">${P.currentValue || ''} ${P.metadata.unit || ''}</span>`
+								);
+							Item.children.push({
+								element: LabelDiv,
+								icon: Writeable
+							});
+						});
+						Items.push(Item);
+					});
 
-		const Repair = $('<a>')
-			.addClass('red-ui-tab-link-button')
-			.addClass('ui-draggable')
-			.addClass('ui-draggable-handle')
-			.append('<i class="fa fa-medkit"></i>');
-		MenuHeader.append(Repair);
-
-		const Remove = $('<a>')
-			.addClass('red-ui-tab-link-button')
-			.addClass('ui-draggable')
-			.addClass('ui-draggable-handle')
-			.append('<i class="fa fa-trash-o"></i>');
-		MenuHeader.append(Remove);
-	};
-
-	// Add Controller Menu Items
-	const addControllerMenuItems = (MenuHeader) => {
-		const Network = $('<a>')
-			.addClass('red-ui-tab-link-button')
-			.addClass('ui-draggable')
-			.addClass('ui-draggable-handle')
-			.css({ cursor: 'pointer' })
-			.append('<i class="fa fa-cogs"></i>')
-			.click(showNetworkManagement);
-		MenuHeader.append(Network);
-
-		const Refresh = $('<a>')
-			.addClass('red-ui-tab-link-button')
-			.addClass('ui-draggable')
-			.addClass('ui-draggable-handle')
-			.append('<i class="fa fa-refresh"></i>');
-		MenuHeader.append(Refresh);
-
-		const Repair = $('<a>')
-			.addClass('red-ui-tab-link-button')
-			.addClass('ui-draggable')
-			.addClass('ui-draggable-handle')
-			.append('<i class="fa fa-medkit"></i>');
-		MenuHeader.append(Repair);
+					$('#zwavejz-cc-list-list').treeList('data', Items);
+				} else {
+					alert(data.response);
+				}
+			})
+			.catch((Error) => {
+				alert(Error.message);
+			});
 	};
 
 	// Init
@@ -562,87 +601,7 @@ const ZWaveJSUI = (function () {
 			flexDirection: 'column'
 		});
 
-		// Select Header
-		const NetworkSelectHeader = $('<div>')
-			.addClass('red-ui-sidebar-header')
-			.css({ height: '20px', textAlign: 'center', display: 'none' });
-		NetworkSelectHeader.append('<i class="fa fa-cog" aria-hidden="true"></i> Network/Runtime : ');
-		const Select = $('<select><option>Select Network</option>')
-			.attr('id', 'selectedNetwork')
-			.css({ height: '25px', verticalAlign: 'baseline' })
-			.on('change', networkSelected);
-		NetworkSelectHeader.append(Select);
-		Content.append(NetworkSelectHeader);
-
-		// Controller info header
-		const ControllerInfoHeader = $('<div>').addClass('red-ui-sidebar-header').addClass('zwavejs-info-header');
-		ControllerInfoHeader.append('<i class="fa fa-wifi"></i>');
-		Content.append(ControllerInfoHeader);
-
-		// Controller info container
-		const ControllerInfoContainer = $('<div>').addClass('zwavejs-info-container');
-		ControllerInfoContainer.append('<span id="zwavejs-radio-model">No network selected</span>');
-		ControllerInfoContainer.append('<br />');
-		ControllerInfoContainer.append('<span id="zwavejs-radio-manufacture">&nbsp;</span>');
-		ControllerInfoContainer.append('<span id="zwavejs-radio-version">&nbsp;</span>');
-		ControllerInfoContainer.append('<span id="zwavejs-radio-status">&nbsp;</span>');
-		ControllerInfoHeader.append(ControllerInfoContainer);
-
-		// Menu Header
-		const MenuHeader = $('<div>').addClass('red-ui-sidebar-header').addClass('zwavejs-controller-menu-header');
-		Content.append(MenuHeader);
-		addControllerMenuItems(MenuHeader);
-
-		// Stack
-		const stackContainer = $('<div>')
-			.addClass('red-ui-sidebar-info-stack')
-			.attr('id', 'zwavejs-panel-stack')
-			.css({ height: '100%', width: '100%' })
-			.appendTo(Content);
-
-		// Node list
-		const NodeListSection = $('<div>');
-		NodeListSection.appendTo(stackContainer);
-
-		$('<div>')
-			.attr('id', 'zwavejs-node-list')
-			.css({ width: '100%', height: '100%' })
-			.treeList({ data: [] })
-			.appendTo(NodeListSection);
-
-		// Node Info
-		const NodeInfoSection = $('<div>');
-		NodeInfoSection.appendTo(stackContainer);
-
-		const NodeInfoHeader = $('<div>').addClass('red-ui-sidebar-header').addClass('zwavejs-info-header');
-		NodeInfoHeader.append('<i class="fa fa-microchip"></i>');
-		NodeInfoHeader.appendTo(NodeInfoSection);
-
-		const NodeInfoContainer = $('<div>').addClass('zwavejs-info-container');
-		NodeInfoContainer.append('<span id="zwavejs-node-model">No node selected</span>');
-		NodeInfoContainer.append('<br />');
-		NodeInfoContainer.append('<span id="zwavejs-node-manufacture">&nbsp;</span>');
-		NodeInfoContainer.append('<span id="zwavejs-node-version">&nbsp;</span>');
-		NodeInfoContainer.append('<span id="zwavejs-node-status">&nbsp;</span>');
-		NodeInfoContainer.appendTo(NodeInfoHeader);
-
-		const NodeMenuHeader = $('<div>').addClass('red-ui-sidebar-header').addClass('zwavejs-controller-menu-header');
-		NodeInfoSection.append(NodeMenuHeader);
-		addNodeMenuItems(NodeMenuHeader);
-
-		$('<div>')
-			.attr('id', 'zwavejz-cc-list-list')
-			.css({ width: '100%', height: '100%' })
-			.treeList({ data: [] })
-			.appendTo(NodeInfoSection);
-
-		const panels = RED.panels.create({ container: stackContainer });
-		panels.ratio(0.4);
-
-		const resizeStack = () => panels.resize(Content.height());
-		RED.events.on('sidebar:resize', resizeStack);
-		$(window).on('resize', resizeStack);
-		$(window).on('focus', resizeStack);
+		Content.append($('#TPL_SidePanel').html());
 
 		// Add tab
 		RED.sidebar.addTab({
@@ -655,26 +614,42 @@ const ZWaveJSUI = (function () {
 			onchange: () => setTimeout(resizeStack, 0)
 		});
 
+		$('#zwavejs-node-list').treeList({ data: [] });
+		$('#zwavejz-cc-list-list').treeList({ data: [] });
+
+		const panels = RED.panels.create({ container: $('#zwavejs-panel-stack') });
+		panels.ratio(0.4);
+
+		const resizeStack = () => panels.resize(Content.height());
+		RED.events.on('sidebar:resize', resizeStack);
+		$(window).on('resize', resizeStack);
+		$(window).on('focus', resizeStack);
+
 		// Show/Hide/pre-Select
 		const processSelectAccess = () => {
+			const Select = $('#zwave-js-network');
+			const SelectHeader = $('#zwave-js-network-header');
+
 			// why 2 - the first is a prompt
 			if (Select.children().length === 2) {
-				NetworkSelectHeader.css({ display: 'none' });
-				$('#selectedNetwork option:eq(1)').attr('selected', 'selected');
+				SelectHeader.css({ display: 'none' });
+				$('#zwave-js-network option:eq(1)').attr('selected', 'selected');
 				Select.trigger('change');
 			}
 
 			if (Select.children().length > 2) {
-				NetworkSelectHeader.css({ display: 'block' });
+				SelectHeader.css({ display: 'block' });
 			}
 		};
 
 		// Live Adding/removing
 		const addNetwork = (Event, data) => {
+			const Select = $('#zwave-js-network');
 			Select.append(`<option id="${data.id}" value="${data.id}">${data.name}</option>`);
 			processSelectAccess();
 		};
 		const removeNetwork = (Event, data) => {
+			const Select = $('#zwave-js-network');
 			Select.children(`option[id="${data.id}"]`).remove();
 			processSelectAccess();
 		};
@@ -683,6 +658,7 @@ const ZWaveJSUI = (function () {
 
 		// Load current networks
 		setTimeout(() => {
+			const Select = $('#zwave-js-network');
 			RED.nodes.eachConfig((R) => {
 				if (R.type === 'zwavejs-runtime' && !R.d) {
 					Select.append(`<option id="${R.id}" value="${R.id}">${R.name}</option>`);
