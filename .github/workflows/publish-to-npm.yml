@@ -1,22 +1,27 @@
 name: Publish to NPM
-
-on:
+'on':
   release:
-    types: [published]
-
+    types:
+      - published
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
     if: github.actor == 'marcus-j-davies'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
       - name: Setup Node
         uses: actions/setup-node@v2
         with:
           node-version: 14
-          registry-url: https://registry.npmjs.org/
-      - name: Publish package on NPM
+          registry-url: 'https://registry.npmjs.org/'
+
+      - name: Build
+        run: npm run build
+        
+      - name: Publish package to NPM
         run: npm publish --access public
         env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          NODE_AUTH_TOKEN: '${{secrets.NPM_TOKEN}}'

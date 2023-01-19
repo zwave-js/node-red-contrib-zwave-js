@@ -531,6 +531,53 @@ const ZWaveJSUI = (function () {
 		RED.comms.subscribe(`zwave-js/ui/${networkId}/s2/dsk`, commsDSK);
 	};
 
+	// Value Editor
+	const edit = (VID) => {
+		const HTML = $('#TPL_ValueEditor').html();
+		const Panel = $('<div>');
+		Panel.append(HTML);
+
+		const Settings = {
+			title: 'Edit Value',
+			modal: false,
+			width: 300,
+			height: 350,
+			resizable: false,
+			draggable: true,
+			close: function () {
+				Panel.remove();
+			}
+		};
+
+		Panel.dialog(Settings);
+
+		const Label = VID.metadata ? VID.metadata.label || VID.valueId.property : VID.valueId.property;
+		let CurrentValue = VID.currentValue;
+		const Unit = VID.metadata ? VID.metadata.unit || '' : '';
+
+		if (VID.metadata && VID.metadata.states && VID.currentValue !== undefined) {
+			CurrentValue = VID.metadata.states[VID.currentValue];
+		}
+
+		$('#zwave-js-value-command-class').text(VID.valueId.commandClassName);
+		$('#zwave-js-value-name').text(Label);
+		if (VID.metadata) {
+			$('#zwave-js-value-description').text(VID.metadata.description);
+		}
+
+		$('#zwave-js-value-current').text(`${CurrentValue} ${Unit}`);
+
+
+		
+		const Select = $('<select>');
+
+		for (const [key, value] of Object.entries(VID.metadata.states)) {
+			Select.append(new Option(value, key));
+		}
+
+		$('#zwave-js-value-new').append(Select);
+	};
+
 	// Node Selected
 	const nodeSelected = (event, item) => {
 		if (!item.nodeData) return;
@@ -548,33 +595,49 @@ const ZWaveJSUI = (function () {
 					data = data.response.Event.eventBody[0];
 					const ListOfCCs = [];
 					data.values.forEach((PL) => {
-						if (!ListOfCCs.includes(PL.valueId.commandClassName)) {
-							ListOfCCs.push(PL.valueId.commandClassName);
+						if (ListOfCCs.filter((CC) => CC.commandClass === PL.valueId.commandClass).length < 1) {
+							ListOfCCs.push({ commandClassName: PL.valueId.commandClassName, commandClass: PL.valueId.commandClass });
 						}
 					});
-					ListOfCCs.sort();
+					ListOfCCs.sort((a, b) => a.commandClassName > b.commandClassName);
 
 					const Items = [];
 
 					ListOfCCs.forEach((CC) => {
 						const Item = {
-							label: CC,
+							label: `0x${CC.commandClass.toString(16).toUpperCase()} - ${CC.commandClassName}`,
 							children: []
 						};
 
-						const Properties = data.values.filter((V) => V.valueId.commandClassName === CC);
-						Item.label = `0x${Properties[0].valueId.commandClass.toString(16)} - ${Item.label}`;
+						const Properties = data.values.filter((V) => V.valueId.commandClass === CC.commandClass);
+
 						Properties.forEach((P) => {
-							const Label = P.metadata !== undefined ? P.metadata.label || P.valueId.property : P.valueId.property;
-							const Writeable = P.metadata !== undefined ? (P.metadata.writeable ? 'fa fa-pencil' : '') : '';
+							let Label = P.metadata ? P.metadata.label || P.valueId.property : P.valueId.property;
+							let CurrentValue = P.currentValue;
+							const Unit = P.metadata ? P.metadata.unit || '' : '';
+							const Writeable = P.metadata ? P.metadata.writeable || false : false;
+
+							if (P.metadata && P.metadata.states && P.currentValue !== undefined) {
+								CurrentValue = P.metadata.states[P.currentValue];
+							}
+
 							const LabelDiv = $('<div>')
 								.text(Label)
-								.append(
-									`<span style="float:right;padding-right:20px">${P.currentValue || ''} ${P.metadata.unit || ''}</span>`
-								);
+								.append(`<span style="float:right;padding-right:20px">${CurrentValue} ${Unit}</span>`);
+
+							if (Writeable) {
+								const Edit = $('<i>')
+									.addClass('fa')
+									.addClass('fa-pencil')
+									.attr('aria-hidden', 'true')
+									.css({ marginRight: '5px' })
+									.click(() => edit(P));
+
+								LabelDiv.prepend(Edit);
+							}
+
 							Item.children.push({
-								element: LabelDiv,
-								icon: Writeable
+								element: LabelDiv
 							});
 						});
 						Items.push(Item);
