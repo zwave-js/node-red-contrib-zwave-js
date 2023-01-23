@@ -532,7 +532,16 @@ const ZWaveJSUI = (function () {
 	};
 
 	// Value Editor
-	const edit = (VID) => {
+	const edit = (VID, EL) => {
+
+
+		const Send = (Value) =>{
+			Runtime.Post('VALUE','setValue'[selectedNode,VID.valueId,Value].then((data) => {
+				//
+			}))
+		}
+
+
 		const HTML = $('#TPL_ValueEditor').html();
 		const Panel = $('<div>');
 		Panel.append(HTML);
@@ -540,24 +549,23 @@ const ZWaveJSUI = (function () {
 		const Settings = {
 			title: 'Edit Value',
 			modal: false,
-			width: 300,
-			height: 350,
+			width: 400,
+			height: 260,
 			resizable: false,
 			draggable: true,
 			close: function () {
 				Panel.remove();
+			},
+			position: {
+				my: 'left bottom', 
+				at: 'right top-10', 
+				of: EL
 			}
 		};
 
 		Panel.dialog(Settings);
 
-		const Label = VID.metadata ? VID.metadata.label || VID.valueId.property : VID.valueId.property;
-		let CurrentValue = VID.currentValue;
-		const Unit = VID.metadata ? VID.metadata.unit || '' : '';
-
-		if (VID.metadata && VID.metadata.states && VID.currentValue !== undefined) {
-			CurrentValue = VID.metadata.states[VID.currentValue];
-		}
+		const Label = VID.metadata.label || VID.valueId.property;
 
 		$('#zwave-js-value-command-class').text(VID.valueId.commandClassName);
 		$('#zwave-js-value-name').text(Label);
@@ -565,17 +573,55 @@ const ZWaveJSUI = (function () {
 			$('#zwave-js-value-description').text(VID.metadata.description);
 		}
 
-		$('#zwave-js-value-current').text(`${CurrentValue} ${Unit}`);
+		if (VID.metadata.states) {
+			const Input = $('<select>');
+			Input.append(new Option('Select...', ''));
+			for (const [value, key] of Object.entries(VID.metadata.states)) {
+				Input.append(new Option(key, value));
+			}
 
+			Send
+			
 
-		
-		const Select = $('<select>');
-
-		for (const [key, value] of Object.entries(VID.metadata.states)) {
-			Select.append(new Option(value, key));
+			$('#zwave-js-value-input').append(
+				`<tr><td>Predefined Value</td><td>${
+					Input.get(0).outerHTML
+				}</td><td><button class="zwavejs-full-width-button" style="height:20px;border-radius:2px;width:50px">Send</button></td></tr>`
+			);
 		}
 
-		$('#zwave-js-value-new').append(Select);
+		if (VID.valueId.commandClass !== 0x70 || VID.metadata.allowManualEntry) {
+			let ManualInput;
+
+			switch (VID.metadata.type) {
+				case 'number':
+					ManualInput = $('<input>');
+					ManualInput.attr('type', 'number');
+					if (VID.metadata.min !== undefined) ManualInput.attr('min', VID.metadata.min);
+					if (VID.metadata.max !== undefined) ManualInput.attr('max', VID.metadata.max);
+					break;
+
+				case 'boolean':
+					ManualInput = $('<input>');
+					ManualInput.attr('type', 'checkbox');
+					ManualInput.attr('name', 'value');
+					break;
+
+				case 'string':
+					ManualInput = $('<input>');
+					ManualInput.attr('type', 'text');
+					break;
+
+				case 'color':
+					break;
+			}
+
+			$('#zwave-js-value-input').append(
+				`<tr><td>Custom Value</td><td>${
+					ManualInput.get(0).outerHTML
+				}</td><td><button class="zwavejs-full-width-button" style="height:20px;border-radius:2px;width:50px">Send</button></td></tr>`
+			);
+		}
 	};
 
 	// Node Selected
@@ -631,7 +677,7 @@ const ZWaveJSUI = (function () {
 									.addClass('fa-pencil')
 									.attr('aria-hidden', 'true')
 									.css({ marginRight: '5px' })
-									.click(() => edit(P));
+									.click(() => edit(P, Edit));
 
 								LabelDiv.prepend(Edit);
 							}

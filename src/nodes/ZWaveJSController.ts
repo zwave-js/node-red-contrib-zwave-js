@@ -34,27 +34,41 @@ module.exports = (RED: NodeAPI) => {
 		});
 
 		self.on('input', (msg, send, done) => {
-			const Payload = msg.payload as Record<string, any>;
-			const TypedAPIString: keyof typeof API = Payload.api;
+			const MSG = msg as Record<string, any>;
+			const TypedAPIString: keyof typeof API = MSG.topic;
 			const TargetAPI = API[TypedAPIString];
 
-			self.runtime
-				.controllerCommand(TargetAPI, Payload.method, Payload.params)
-				.then((Result) => {
-					if (Result.Type !== undefined) {
-						switch (Result.Type) {
-							case MessageType.EVENT:
-								send({ payload: Result.Event });
+			switch (TargetAPI) {
+				case API.VALUE:
+					self.runtime
+						.valueCommand(MSG.cmd, MSG.nodeId, MSG.valueId, MSG.payload, MSG.options)
+						.then((Result) => {
+							done();
+						})
+						.catch((Error) => {
+							done(Error);
+						});
+					break;
+				case API.CONTROLLER:
+					self.runtime
+						.controllerCommand(MSG.cmd, MSG.payload)
+						.then((Result) => {
+							if (Result.Type !== undefined) {
+								switch (Result.Type) {
+									case MessageType.EVENT:
+										send({ payload: Result.Event });
+										done();
+										break;
+								}
+							} else {
 								done();
-								break;
-						}
-					} else {
-						done();
-					}
-				})
-				.catch((Error) => {
-					done(Error);
-				});
+							}
+						})
+						.catch((Error) => {
+							done(Error);
+						});
+					break;
+			}
 		});
 	};
 	RED.nodes.registerType('zwavejs-controller', init);

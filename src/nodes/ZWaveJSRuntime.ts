@@ -19,9 +19,11 @@ import {
 	ZWaveNodeValueUpdatedArgs,
 	NodeInterviewFailedEventArgs,
 	ZWaveNodeValueAddedArgs,
-	InclusionResult
+	InclusionResult,
+	ValueID
 } from 'zwave-js';
 import { process as ControllerAPI_Process } from '../lib/ControllerAPI';
+import { process as ValueAPI_Process } from '../lib/ValueAPI';
 import { Tail } from 'tail';
 
 const APP_NAME = 'node-red-contrib-zwave-js';
@@ -104,15 +106,16 @@ module.exports = (RED: NodeAPI) => {
 			delete controllerNodes[ControllerNodeID];
 		};
 
-		self.controllerCommand = (APITarget, Method, Params): Promise<any> => {
+		self.controllerCommand = (Method, Params): Promise<any> => {
 			if (self.driverInstance) {
-				switch (APITarget) {
-					case API.CONTROLLER:
-						return ControllerAPI_Process(self.driverInstance, Method, Params);
+				return ControllerAPI_Process(self.driverInstance, Method, Params);
+			}
+			return Promise.reject('Driver Instance');
+		};
 
-					default:
-						return Promise.reject('Invalid API');
-				}
+		self.valueCommand = (Method, NodeID, VID, Value?, Options?): Promise<any> => {
+			if (self.driverInstance) {
+				return ValueAPI_Process(self.driverInstance, Method, NodeID, VID, Value, Options);
 			}
 			return Promise.reject('Driver Instance');
 		};
@@ -220,7 +223,7 @@ module.exports = (RED: NodeAPI) => {
 					switch (TargetAPI) {
 						case API.CONTROLLER:
 							self
-								.controllerCommand(TargetAPI, Method)
+								.controllerCommand(Method)
 								.then((R) => {
 									response.json({ callSuccess: true, response: R });
 								})
@@ -233,17 +236,33 @@ module.exports = (RED: NodeAPI) => {
 			);
 
 			RED.httpAdmin.post(
-				`/zwave-js/ui/${self.id}/:api/:action`,
+				`/zwave-js/ui/${self.id}/:api/:method`,
 				RED.auth.needsPermission('flows.write'),
 				(request, response) => {
 					const TypedAPIString: keyof typeof API = request.params.api as any;
 					const TargetAPI = API[TypedAPIString];
-					const Method = request.params.action;
+					const Method = request.params.method;
 
 					switch (TargetAPI) {
+						case API.VALUE:
+							self
+								.valueCommand(
+									Method,
+									request.body.nodeId as number,
+									request.body.valueId as ValueID,
+									request.body.value
+								)
+								.then((R) => {
+									response.json({ callSuccess: true, response: R });
+								})
+								.catch((error) => {
+									response.json({ callSuccess: false, response: error.message });
+								});
+							break;
+
 						case API.CONTROLLER:
 							self
-								.controllerCommand(TargetAPI, Method, request.body)
+								.controllerCommand(Method, request.body)
 								.then((R) => {
 									response.json({ callSuccess: true, response: R });
 								})

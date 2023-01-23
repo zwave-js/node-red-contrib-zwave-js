@@ -1,0 +1,64 @@
+{
+  "currentValue": 100,
+  "valueId": {
+    "commandClassName": "Configuration",
+    "commandClass": 112,
+    "endpoint": 0,
+    "property": 9,
+    "propertyName": "Key Backlight Brightness"
+  },
+  "metadata": {
+    "type": "number",
+    "readable": true,
+    "writeable": true,
+    "valueSize": 1,
+    "min": 0,
+    "max": 100,
+    "default": 100,
+    "unit": "%",
+    "format": 0,
+    "allowManualEntry": true,
+    "label": "Key Backlight Brightness",
+    "description": "Adjusts the brightness of the keypad backlight",
+    "isFromConfig": true
+  }
+}
+
+
+{
+  "currentValue": 0,
+  "valueId": {
+    "commandClassName": "Configuration",
+    "commandClass": 112,
+    "endpoint": 0,
+    "property": 22,
+    "propertyName": "Language"
+  },
+  "metadata": {
+    "type": "number",
+    "readable": true,
+    "writeable": true,
+    "valueSize": 1,
+    "min": 0,
+    "max": 11,
+    "default": 0,
+    "format": 0,
+    "allowManualEntry": false,
+    "states": {
+      "0": "US English",
+      "1": "UK English",
+      "2": "French",
+      "3": "German",
+      "4": "Italian",
+      "5": "Spanish",
+      "6": "Dutch",
+      "7": "Danish",
+      "8": "Norwegian",
+      "9": "Swedish",
+      "10": "Finnish",
+      "11": "Arabic"
+    },
+    "label": "Language",
+    "isFromConfig": true
+  }
+}
