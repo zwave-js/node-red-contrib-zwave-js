@@ -24,6 +24,7 @@ import {
 } from 'zwave-js';
 import { process as ControllerAPI_Process } from '../lib/ControllerAPI';
 import { process as ValueAPI_Process } from '../lib/ValueAPI';
+import { process as CC_Process } from '../lib/CCAPI';
 import { Tail } from 'tail';
 
 const APP_NAME = 'node-red-contrib-zwave-js';
@@ -116,6 +117,13 @@ module.exports = (RED: NodeAPI) => {
 		self.valueCommand = (Method, NodeID, VID, Value?, Options?): Promise<any> => {
 			if (self.driverInstance) {
 				return ValueAPI_Process(self.driverInstance, Method, NodeID, VID, Value, Options);
+			}
+			return Promise.reject('Driver Instance');
+		};
+
+		self.ccCommand = (CC, CCMethod, NodeID, Endpoint?, Arguments?): Promise<any> => {
+			if (self.driverInstance) {
+				return CC_Process(self.driverInstance, CC, CCMethod, NodeID, Endpoint, Arguments);
 			}
 			return Promise.reject('Driver Instance');
 		};

@@ -67,6 +67,18 @@ export const process = async (DriverInstance: Driver, Method: string, Params?: a
 					});
 			});
 
+		case 'stopExclusion':
+			return new Promise((resolve, reject) => {
+				DriverInstance.controller
+					.stopExclusion()
+					.then((result) => {
+						resolve(result);
+					})
+					.catch((error) => {
+						reject(error);
+					});
+			});
+
 		case 'getValueDB':
 			return new Promise((resolve, reject) => {
 				try {

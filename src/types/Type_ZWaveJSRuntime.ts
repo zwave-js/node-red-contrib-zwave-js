@@ -1,6 +1,7 @@
 import { Node } from 'node-red';
 import { Type_ZWaveJSRuntimeConfig, Type_ZWaveJSRuntimeCredentialConfig } from './Type_ZWaveJSRuntimeConfig';
 import { Driver, ValueID } from 'zwave-js';
+import { CommandClasses } from '@zwave-js/core';
 
 export enum MessageType {
 	STATUS = 0,
@@ -10,7 +11,7 @@ export enum MessageType {
 export enum API {
 	CONTROLLER = 0,
 	VALUE,
-	COMMAND_CLASS
+	CC
 }
 
 export interface StatusMessage {
@@ -56,4 +57,5 @@ export type Type_ZWaveJSRuntime = Node & {
 		Value?: any,
 		ValueOptions?: Record<string, any>
 	): Promise<any>;
+	ccCommand(CC: CommandClasses, CCMethod: string, NodeID: number, Endpoint?: number, Argumnets?: any[]): Promise<any>;
 };
