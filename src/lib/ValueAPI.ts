@@ -5,45 +5,49 @@ export const process = async (
 	Method: string,
 	NodeID: number,
 	VID: ValueID,
-	Value?: any,
-	ValueOptions?: Record<string, any>
-): Promise<any> => {
-	let Result: any;
-	switch (Method) {
-		case 'getValue':
-			return new Promise((resolve, reject) => {
-				try {
-					Result = DriverInstance.controller.nodes.get(NodeID)?.getValue(VID);
-					resolve(Result);
-				} catch (Err) {
-					reject(Err);
-				}
-			});
+	Value?: unknown,
+	ValueOptions?: Record<string, unknown>
+): Promise<unknown> => {
+	let Result: unknown;
 
-		case 'setValue':
-			return new Promise((resolve, reject) => {
-				DriverInstance.controller.nodes
-					.get(NodeID)
-					?.setValue(VID, Value, ValueOptions)
-					.then((Result) => {
-						resolve(Result);
-					})
-					.catch((Error) => {
-						reject(Error);
-					});
-			});
-
-		case 'pollValue':
-			return new Promise((resolve, reject) => {
-				DriverInstance.controller.nodes
-					.get(NodeID)
-					?.pollValue(VID)
-					.then((Result) => {
-						resolve(Result);
-					})
-					.catch((Error) => {
-						reject(Error);
-					});
-			});
+	if (Method === 'getValue') {
+		return new Promise((resolve, reject) => {
+			try {
+				Result = DriverInstance.controller.nodes.get(NodeID)?.getValue(VID);
+				resolve({ nodeId: NodeID, value: Result });
+			} catch (Err) {
+				reject(Err);
+			}
+		});
 	}
+
+	if (Method === 'setValue') {
+		return new Promise((resolve, reject) => {
+			DriverInstance.controller.nodes
+				.get(NodeID)
+				?.setValue(VID, Value, ValueOptions)
+				.then((Result) => {
+					resolve({ nodeId: NodeID, Result: Result });
+				})
+				.catch((Error) => {
+					reject(Error);
+				});
+		});
+	}
+
+	if (Method === 'pollValue') {
+		return new Promise((resolve, reject) => {
+			DriverInstance.controller.nodes
+				.get(NodeID)
+				?.pollValue(VID)
+				.then((Result) => {
+					resolve({ nodeId: NodeID, value: Result });
+				})
+				.catch((Error) => {
+					reject(Error);
+				});
+		});
+	}
+
+	return Promise.reject(new Error('Invalid Method'));
 };

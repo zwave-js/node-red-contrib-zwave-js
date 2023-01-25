@@ -1,7 +1,8 @@
 import { NodeAPI } from 'node-red';
 import { ControllerCallbackObject, Type_ZWaveJSRuntime, MessageType, API } from '../types/Type_ZWaveJSRuntime';
 import { Type_ZWaveJSControllerConfig } from '../types/Type_ZWaveJSControllerConfig';
-import { Type_ZWaveJSController } from '../types/Type_ZWaveJSController';
+import { InputMessage, Type_ZWaveJSController } from '../types/Type_ZWaveJSController';
+import { getProfile } from '../lib/RequestResponseProfiles';
 
 module.exports = (RED: NodeAPI) => {
 	const init = function (this: Type_ZWaveJSController, config: Type_ZWaveJSControllerConfig) {
@@ -33,100 +34,90 @@ module.exports = (RED: NodeAPI) => {
 			done();
 		});
 
+		//TODO: Remote legacy format
+		const Legacy = (msg: any, send: any, done: any) => {
+			self.warn(
+				"You're using a deprecated message format, in a future release, this format will not be supported. Please consider updating your commands."
+			);
+
+			const payload = msg.payload as Record<string, any>;
+			send({ payload: payload });
+			done();
+		};
+
 		self.on('input', (msg, send, done) => {
-			const MSG = msg as Record<string, any>;
-
 			//TODO: Remote legacy format
-			if (MSG.payload.mode) {
-				self.warn(
-					"You're using a deprecated message format, in a future release, this format will not be supported. Please consider updating your commands."
-				);
-
-				if (MSG.payload.mode === 'ControllerAPI' || MSG.payload.mode === 'DriverAPI') {
-					self.runtime
-						.controllerCommand(MSG.payload.method, MSG.payload.params)
-						.then((Result) => {
-							if (Result.Type !== undefined) {
-								switch (Result.Type) {
-									case MessageType.EVENT:
-										send({ payload: Result.Event });
-										done();
-										break;
-								}
-							} else {
-								done();
-							}
-						})
-						.catch((Error) => {
-							done(Error);
-						});
-				}
-
-				if (MSG.payload.mode === 'CCAPI') {
-					//
-				}
-				if (MSG.payload.mode === 'ValueAPI') {
-					//
-				}
+			if ((msg.payload as any).mode) {
+				Legacy(msg, send, done);
 			} else {
-				const Parts = MSG.payload.cmd.split('.');
-				const APICommand = {
-					API: Parts[0] as API,
-					Command: Parts[1]
-				};
+				const Req = msg.payload as InputMessage;
+				if (Req.cmd) {
+					const Parts = Req.cmd.split('.');
+					const APIKey = Parts[0] as keyof typeof API;
+					const APICommand = {
+						API: API[APIKey],
+						Command: Parts[1]
+					};
 
-				if (APICommand.API === API.CONTROLLER) {
-					self.runtime
-						.controllerCommand(APICommand.Command, MSG.payload.argumnets)
-						.then((Result) => {
-							if (Result.Type !== undefined) {
-								switch (Result.Type) {
-									case MessageType.EVENT:
-										send({ payload: Result.Event });
-										done();
-										break;
+					if (APICommand.API === API.CONTROLLER) {
+						self.runtime
+							.controllerCommand(APICommand.Command, Req.args)
+							.then((Result) => {
+								const Return = getProfile(APICommand.Command, Result) as ControllerCallbackObject;
+								if (Return.Type !== undefined && Return.Type === MessageType.EVENT) {
+									send({ payload: Return.Event });
+									done();
+								} else {
+									done();
 								}
-							} else {
-								done();
-							}
-						})
-						.catch((Error) => {
-							done(Error);
-						});
-				}
+							})
+							.catch((Error) => {
+								done(Error);
+							});
+					}
 
-				if (APICommand.API === API.CC) {
-					self.runtime
-						.ccCommand(
-							MSG.payload.commandClass,
-							MSG.payload.method,
-							MSG.payload.NodeId,
-							MSG.payload.endpoint,
-							MSG.payload.argumnets
-						)
-						.then((Result) => {
-							done();
-						})
-						.catch((Error) => {
-							done(Error);
-						});
-				}
+					if (APICommand.API === API.CC && Req.commandClass && Req.commandClassMethod && Req.nodeId) {
+						self.runtime
+							.ccCommand(
+								APICommand.Command,
+								Req.commandClass,
+								Req.commandClassMethod,
+								Req.nodeId,
+								Req.endpoint,
+								Req.args
+							)
+							.then((Result) => {
+								const Return = getProfile(APICommand.Command, Result) as ControllerCallbackObject;
+								if (Return.Type !== undefined && Return.Type === MessageType.EVENT) {
+									send({ payload: Return.Event });
+									done();
+								} else {
+									done();
+								}
+							})
+							.catch((Error) => {
+								done(Error);
+							});
+					}
 
-				if (APICommand.API === API.VALUE) {
-					self.runtime
-						.valueCommand(
-							APICommand.Command,
-							MSG.payload.nodeId,
-							MSG.payload.valueId,
-							MSG.payload.value,
-							MSG.payload.setValueOptions
-						)
-						.then((Result) => {
-							done();
-						})
-						.catch((Error) => {
-							done(Error);
-						});
+					if (APICommand.API === API.VALUE && Req.valueId && Req.nodeId) {
+						self.runtime
+							.valueCommand(APICommand.Command, Req.nodeId, Req.valueId, Req.value, Req.setValueOptions)
+							.then((Result) => {
+								const Return = getProfile(APICommand.Command, Result) as ControllerCallbackObject;
+								if (Return.Type !== undefined && Return.Type === MessageType.EVENT) {
+									send({ payload: Return.Event });
+									done();
+								} else {
+									done();
+								}
+							})
+							.catch((Error) => {
+								done(Error);
+							});
+					}
+				} else {
+					done(new Error('msg.payload is not a valid command.'));
 				}
 			}
 		});

@@ -11,7 +11,8 @@ export enum MessageType {
 export enum API {
 	CONTROLLER = 0,
 	VALUE,
-	CC
+	CC,
+	NODE
 }
 
 export interface StatusMessage {
@@ -27,7 +28,7 @@ export interface EventMessage {
 	nodeId?: number;
 	nodeName?: string;
 	nodeLocation?: string;
-	eventBody?: Record<string, any>;
+	eventBody?: unknown;
 }
 
 export type ControllerCallbackObject =
@@ -49,13 +50,13 @@ export type Type_ZWaveJSRuntime = Node & {
 	deregisterDeviceNode(deviceNodeId: string): void;
 	registerControllerNode(controllerNodeId: string, callback: ControllerCallback): void;
 	deregisterControllerNode(controllerNodeId: string): void;
-	controllerCommand(Method: string, Params?: any[]): Promise<any>;
+	controllerCommand(Method: string, Args?: unknown[]): Promise<unknown>;
 	valueCommand(
 		Method: string,
 		NodeID: number,
 		VID: ValueID,
-		Value?: any,
-		ValueOptions?: Record<string, any>
-	): Promise<any>;
-	ccCommand(CC: CommandClasses, CCMethod: string, NodeID: number, Endpoint?: number, Argumnets?: any[]): Promise<any>;
+		Value?: unknown,
+		ValueOptions?: Record<string, unknown>
+	): Promise<unknown>;
+	ccCommand(Method: string, CommandClass: CommandClasses, CommandClassMethod: string, NodeID: number, Endpoint?: number, Args?: unknown[]): Promise<unknown>;
 };

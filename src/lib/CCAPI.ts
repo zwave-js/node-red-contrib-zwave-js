@@ -3,22 +3,28 @@ import { CommandClasses } from '@zwave-js/core';
 
 export const process = async (
 	DriverInstance: Driver,
-	CC: CommandClasses,
+	Method: string,
+	CommandClass: CommandClasses,
 	CCMethod: string,
 	NodeID: number,
 	Endpoint?: number,
-	Argumnets?: any[]
-): Promise<any> => {
-	let Result: any;
-	return new Promise((resolve, reject) => {
-		try {
-			DriverInstance.controller.nodes
-				.get(NodeID)
-				?.getEndpoint(Endpoint || 0)
-				?.invokeCCAPI(CC, CCMethod, Argumnets?.values());
-			resolve(Result);
-		} catch (Err) {
-			reject(Err);
-		}
-	});
+	Args?: unknown[]
+): Promise<unknown> => {
+	let Result: unknown;
+
+	if (Method === 'invokeCCAPI') {
+		return new Promise((resolve, reject) => {
+			try {
+				Result = DriverInstance.controller.nodes
+					.get(NodeID)
+					?.getEndpoint(Endpoint || 0)
+					?.invokeCCAPI(CommandClass, CCMethod, Args?.values());
+				resolve({ nodeId: NodeID, result: Result });
+			} catch (Err) {
+				reject(Err);
+			}
+		});
+	}
+
+	return Promise.reject(new Error('Invalid Method'));
 };

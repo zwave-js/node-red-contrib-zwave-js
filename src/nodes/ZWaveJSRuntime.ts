@@ -19,8 +19,7 @@ import {
 	ZWaveNodeValueUpdatedArgs,
 	NodeInterviewFailedEventArgs,
 	ZWaveNodeValueAddedArgs,
-	InclusionResult,
-	ValueID
+	InclusionResult
 } from 'zwave-js';
 import { process as ControllerAPI_Process } from '../lib/ControllerAPI';
 import { process as ValueAPI_Process } from '../lib/ValueAPI';
@@ -107,23 +106,23 @@ module.exports = (RED: NodeAPI) => {
 			delete controllerNodes[ControllerNodeID];
 		};
 
-		self.controllerCommand = (Method, Params): Promise<any> => {
+		self.controllerCommand = (Method, Args): Promise<unknown> => {
 			if (self.driverInstance) {
-				return ControllerAPI_Process(self.driverInstance, Method, Params);
+				return ControllerAPI_Process(self.driverInstance, Method, Args);
 			}
 			return Promise.reject('Driver Instance');
 		};
 
-		self.valueCommand = (Method, NodeID, VID, Value?, Options?): Promise<any> => {
+		self.valueCommand = (Method, NodeID, VID, Value?, Options?): Promise<unknown> => {
 			if (self.driverInstance) {
 				return ValueAPI_Process(self.driverInstance, Method, NodeID, VID, Value, Options);
 			}
 			return Promise.reject('Driver Instance');
 		};
 
-		self.ccCommand = (CC, CCMethod, NodeID, Endpoint?, Arguments?): Promise<any> => {
+		self.ccCommand = (Method, CommandClass, CommandClassMethod, NodeID, Endpoint?, Args?): Promise<unknown> => {
 			if (self.driverInstance) {
-				return CC_Process(self.driverInstance, CC, CCMethod, NodeID, Endpoint, Arguments);
+				return CC_Process(self.driverInstance, Method, CommandClass, CommandClassMethod, NodeID, Endpoint, Args);
 			}
 			return Promise.reject('Driver Instance');
 		};
@@ -224,8 +223,8 @@ module.exports = (RED: NodeAPI) => {
 				`/zwave-js/ui/${self.id}/:api/:action`,
 				RED.auth.needsPermission('flows.write'),
 				(request, response) => {
-					const TypedAPIString: keyof typeof API = request.params.api as any;
-					const TargetAPI = API[TypedAPIString];
+					const APIKey = request.params.api as keyof typeof API;
+					const TargetAPI = API[APIKey];
 					const Method = request.params.action;
 
 					switch (TargetAPI) {
@@ -247,19 +246,14 @@ module.exports = (RED: NodeAPI) => {
 				`/zwave-js/ui/${self.id}/:api/:method`,
 				RED.auth.needsPermission('flows.write'),
 				(request, response) => {
-					const TypedAPIString: keyof typeof API = request.params.api as any;
-					const TargetAPI = API[TypedAPIString];
-					const Method = request.params.method;
+					const APIKey = request.params.api as keyof typeof API;
+					const TargetAPI = API[APIKey];
+					const Method = request.params.action;
 
 					switch (TargetAPI) {
 						case API.VALUE:
 							self
-								.valueCommand(
-									Method,
-									request.body.nodeId as number,
-									request.body.valueId as ValueID,
-									request.body.value
-								)
+								.valueCommand(Method, request.body.nodeId, request.body.valueId, request.body.value)
 								.then((R) => {
 									response.json({ callSuccess: true, response: R });
 								})
@@ -864,7 +858,7 @@ module.exports = (RED: NodeAPI) => {
 			});
 
 			// Notification
-			Node.on(event_Notification.driverName, (ThisNode: ZWaveNode, CC: number, Args: Record<string, any>) => {
+			Node.on(event_Notification.driverName, (ThisNode: ZWaveNode, CC: number, Args: Record<string, unknown>) => {
 				const Timestamp = new Date().getTime();
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined

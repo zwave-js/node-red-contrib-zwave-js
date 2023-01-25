@@ -1,8 +1,8 @@
 import { Driver, NodeStatus, InterviewStage, ProtocolVersion } from 'zwave-js';
 import { CommandClasses } from '@zwave-js/core';
 
-export const getNodes = (DriverInstance: Driver): Record<string, any> => {
-	const Collection: Record<string, any>[] = [];
+export const getNodes = (DriverInstance: Driver): Record<string, unknown>[] => {
+	const Collection: Record<string, unknown>[] = [];
 	DriverInstance.controller.nodes.forEach((N) => {
 		Collection.push({
 			nodeId: N.id,
@@ -52,8 +52,8 @@ export const getNodes = (DriverInstance: Driver): Record<string, any> => {
 	return Collection;
 };
 
-export const getValueDB = (DriverInstance: Driver, Nodes?: number[]): Record<string, any>[] => {
-	const DB: Record<string, any>[] = [];
+export const getValueDB = (DriverInstance: Driver, Nodes?: number[]): Record<string, unknown>[] => {
+	const DB: Record<string, unknown>[] = [];
 	const TargetNodes: number[] = Nodes || [];
 
 	if (!Nodes) {
@@ -67,9 +67,9 @@ export const getValueDB = (DriverInstance: Driver, Nodes?: number[]): Record<str
 	TargetNodes.forEach((N) => {
 		const ZWN = DriverInstance.controller.nodes.get(N);
 		if (ZWN) {
-			const NodeData: Record<string, any> = {
+			const NodeData = {
 				nodeId: ZWN.id,
-				values: []
+				values: new Array<unknown>()
 			};
 			const VIDs = ZWN.getDefinedValueIDs();
 			VIDs.forEach((VID) => {
