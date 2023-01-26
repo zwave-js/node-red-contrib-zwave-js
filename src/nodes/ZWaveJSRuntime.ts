@@ -6,21 +6,11 @@ import {
 	MessageType,
 	DeviceCallback,
 	ControllerCallback,
-	ControllerCallbackObject,
-	DeviceCallbackObject,
-	API
+	UserPayloadPackage,
+	API,
+	SanitizedEventName
 } from '../types/Type_ZWaveJSRuntime';
-import {
-	Driver,
-	InclusionGrant,
-	ZWaveNode,
-	HealNodeStatus,
-	ZWaveNodeValueNotificationArgs,
-	ZWaveNodeValueUpdatedArgs,
-	NodeInterviewFailedEventArgs,
-	ZWaveNodeValueAddedArgs,
-	InclusionResult
-} from 'zwave-js';
+import { Driver, InclusionGrant, ZWaveNode } from 'zwave-js';
 import { process as ControllerAPI_Process } from '../lib/ControllerAPI';
 import { process as ValueAPI_Process } from '../lib/ValueAPI';
 import { process as CC_Process } from '../lib/CCAPI';
@@ -29,23 +19,6 @@ import { Tail } from 'tail';
 const APP_NAME = 'node-red-contrib-zwave-js';
 const APP_VERSION = '9.0.0';
 const FWK = '127c49b6f2928a6579e82ecab64a83fc94a6436f03d5cb670b8ac44412687b75f0667843';
-
-// Event hook class
-class SanitizedEventName {
-	driverName: any;
-	redEventName: string;
-	nodeStatusName: string;
-	statusNameWithNode: (Node: ZWaveNode) => string;
-
-	constructor(event: string) {
-		this.driverName = event;
-		this.redEventName = event.replace(/ /g, '_').toUpperCase();
-		this.nodeStatusName = event.charAt(0).toUpperCase() + event.substr(1).toLowerCase() + '.';
-		this.statusNameWithNode = (Node) => {
-			return `Node: ${Node.id} ${this.nodeStatusName}`;
-		};
-	}
-}
 
 // Create event objects (creates easy to use event hooks)
 const event_DriverReady = new SanitizedEventName('driver ready');
@@ -405,7 +378,7 @@ module.exports = (RED: NodeAPI) => {
 				wireSubDriverEvents();
 
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Status: ControllerCallbackObject = {
+				const Status: UserPayloadPackage = {
 					Type: MessageType.STATUS,
 					Status: {
 						fill: 'yellow',
@@ -429,11 +402,11 @@ module.exports = (RED: NodeAPI) => {
 			self.driverInstance?.on(event_AllNodesReady.driverName, () => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: ControllerCallbackObject = {
+				const Event: UserPayloadPackage = {
 					Type: MessageType.EVENT,
 					Event: { event: event_AllNodesReady.redEventName, timestamp: Timestamp }
 				};
-				const Status: ControllerCallbackObject = {
+				const Status: UserPayloadPackage = {
 					Type: MessageType.STATUS,
 					Status: {
 						fill: 'green',
@@ -450,64 +423,66 @@ module.exports = (RED: NodeAPI) => {
 			});
 
 			// Node Added
-			self.driverInstance?.controller.on(event_NodeAdded.driverName, (Node: ZWaveNode, Result: InclusionResult) => {
+			self.driverInstance?.controller.on(event_NodeAdded.driverName, (ThisNode, Result) => {
 				const ControllerNodeIDs = Object.keys(controllerNodes);
 
 				RED.comms.publish(
 					`zwave-js/ui/${this.id}/nodes/added`,
-					{ nodeId: Node.id, highestSecurityClass: Node.getHighestSecurityClass(), lowSecurity: Result.lowSecurity },
+					{
+						nodeId: ThisNode.id,
+						highestSecurityClass: ThisNode.getHighestSecurityClass(),
+						lowSecurity: Result.lowSecurity
+					},
 					false
 				);
 
-				const Status: ControllerCallbackObject = {
+				const Status: UserPayloadPackage = {
 					Type: MessageType.STATUS,
 					Status: {
 						fill: 'green',
 						shape: 'dot',
-						text: event_NodeAdded.statusNameWithNode(Node),
+						text: event_NodeAdded.statusNameWithNode(ThisNode),
 						clearTime: 5000
 					}
 				};
-				updateLatestStatus(event_NodeAdded.statusNameWithNode(Node));
+				updateLatestStatus(event_NodeAdded.statusNameWithNode(ThisNode));
 				ControllerNodeIDs.forEach((ID) => {
 					controllerNodes[ID](Status);
 				});
-				wireNodeEvents(Node);
+				wireNodeEvents(ThisNode);
 			});
 
 			// Node Removed
-			self.driverInstance?.controller.on(event_NodeRemoved.driverName, (Node: ZWaveNode) => {
+			self.driverInstance?.controller.on(event_NodeRemoved.driverName, (ThisNode, Replaced) => {
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-
-				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/removed`, { nodeId: Node.id }, false);
-
-				const Status: ControllerCallbackObject = {
+				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/removed`, { nodeId: ThisNode.id }, false);
+				const Status: UserPayloadPackage = {
 					Type: MessageType.STATUS,
 					Status: {
 						fill: 'green',
 						shape: 'dot',
-						text: event_NodeRemoved.statusNameWithNode(Node),
+						text: event_NodeRemoved.statusNameWithNode(ThisNode),
 						clearTime: 5000
 					}
 				};
-				updateLatestStatus(event_NodeRemoved.statusNameWithNode(Node));
+				updateLatestStatus(event_NodeRemoved.statusNameWithNode(ThisNode));
 				ControllerNodeIDs.forEach((ID) => {
 					controllerNodes[ID](Status);
 				});
 			});
 
 			// inclusion started
-			self.driverInstance?.controller.on(event_InclusionStarted.driverName, (IsSecure: boolean) => {
+			self.driverInstance?.controller.on(event_InclusionStarted.driverName, (IsSecure, Strategy) => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Body = {
 					isSecureInclude: IsSecure
 				};
-				const Event: ControllerCallbackObject = {
+				const Event: UserPayloadPackage = {
 					Type: MessageType.EVENT,
 					Event: { event: event_InclusionStarted.redEventName, timestamp: Timestamp, eventBody: Body }
 				};
-				const Status: ControllerCallbackObject = {
+				const Status: UserPayloadPackage = {
 					Type: MessageType.STATUS,
 					Status: {
 						fill: 'yellow',
@@ -526,11 +501,11 @@ module.exports = (RED: NodeAPI) => {
 			self.driverInstance?.controller.on(event_InclusionFailed.driverName, () => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: ControllerCallbackObject = {
+				const Event: UserPayloadPackage = {
 					Type: MessageType.EVENT,
 					Event: { event: event_InclusionFailed.redEventName, timestamp: Timestamp }
 				};
-				const Status: ControllerCallbackObject = {
+				const Status: UserPayloadPackage = {
 					Type: MessageType.STATUS,
 					Status: {
 						fill: 'red',
@@ -550,11 +525,11 @@ module.exports = (RED: NodeAPI) => {
 			self.driverInstance?.controller.on(event_InclusionStopped.driverName, () => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: ControllerCallbackObject = {
+				const Event: UserPayloadPackage = {
 					Type: MessageType.EVENT,
 					Event: { event: event_InclusionStopped.redEventName, timestamp: Timestamp }
 				};
-				const Status: ControllerCallbackObject = {
+				const Status: UserPayloadPackage = {
 					Type: MessageType.STATUS,
 					Status: {
 						fill: 'yellow',
@@ -574,11 +549,11 @@ module.exports = (RED: NodeAPI) => {
 			self.driverInstance?.controller.on(event_ExclusionStarted.driverName, () => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: ControllerCallbackObject = {
+				const Event: UserPayloadPackage = {
 					Type: MessageType.EVENT,
 					Event: { event: event_ExclusionStarted.redEventName, timestamp: Timestamp }
 				};
-				const Status: ControllerCallbackObject = {
+				const Status: UserPayloadPackage = {
 					Type: MessageType.STATUS,
 					Status: {
 						fill: 'yellow',
@@ -597,11 +572,11 @@ module.exports = (RED: NodeAPI) => {
 			self.driverInstance?.controller.on(event_ExclusionFailed.driverName, () => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: ControllerCallbackObject = {
+				const Event: UserPayloadPackage = {
 					Type: MessageType.EVENT,
 					Event: { event: event_ExclusionFailed.redEventName, timestamp: Timestamp }
 				};
-				const Status: ControllerCallbackObject = {
+				const Status: UserPayloadPackage = {
 					Type: MessageType.STATUS,
 					Status: {
 						fill: 'red',
@@ -621,11 +596,11 @@ module.exports = (RED: NodeAPI) => {
 			self.driverInstance?.controller.on(event_ExclusionStopped.driverName, () => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: ControllerCallbackObject = {
+				const Event: UserPayloadPackage = {
 					Type: MessageType.EVENT,
 					Event: { event: event_ExclusionStopped.redEventName, timestamp: Timestamp }
 				};
-				const Status: ControllerCallbackObject = {
+				const Status: UserPayloadPackage = {
 					Type: MessageType.STATUS,
 					Status: {
 						fill: 'yellow',
@@ -642,61 +617,55 @@ module.exports = (RED: NodeAPI) => {
 			});
 
 			// Heal finnished
-			self.driverInstance?.controller.on(
-				event_NetworkHealDone.driverName,
-				(Result: ReadonlyMap<number, HealNodeStatus>) => {
-					const Timestamp = new Date().getTime();
-					const ControllerNodeIDs = Object.keys(controllerNodes);
-					const Event: ControllerCallbackObject = {
-						Type: MessageType.EVENT,
-						Event: { event: event_NetworkHealDone.redEventName, timestamp: Timestamp, eventBody: Result }
-					};
-					const Status: ControllerCallbackObject = {
-						Type: MessageType.STATUS,
-						Status: {
-							fill: 'green',
-							shape: 'dot',
-							text: event_NetworkHealDone.nodeStatusName,
-							clearTime: 5000
-						}
-					};
-					updateLatestStatus(event_NetworkHealDone.nodeStatusName);
-					ControllerNodeIDs.forEach((ID) => {
-						controllerNodes[ID](Event);
-						controllerNodes[ID](Status);
-					});
-				}
-			);
+			self.driverInstance?.controller.on(event_NetworkHealDone.driverName, (Result) => {
+				const Timestamp = new Date().getTime();
+				const ControllerNodeIDs = Object.keys(controllerNodes);
+				const Event: UserPayloadPackage = {
+					Type: MessageType.EVENT,
+					Event: { event: event_NetworkHealDone.redEventName, timestamp: Timestamp, eventBody: Result }
+				};
+				const Status: UserPayloadPackage = {
+					Type: MessageType.STATUS,
+					Status: {
+						fill: 'green',
+						shape: 'dot',
+						text: event_NetworkHealDone.nodeStatusName,
+						clearTime: 5000
+					}
+				};
+				updateLatestStatus(event_NetworkHealDone.nodeStatusName);
+				ControllerNodeIDs.forEach((ID) => {
+					controllerNodes[ID](Event);
+					controllerNodes[ID](Status);
+				});
+			});
 
 			// Heal Progress
-			self.driverInstance?.controller.on(
-				event_HealNetworkProgress.driverName,
-				(Progress: ReadonlyMap<number, HealNodeStatus>) => {
-					const Timestamp = new Date().getTime();
-					const ControllerNodeIDs = Object.keys(controllerNodes);
-					const Event: ControllerCallbackObject = {
-						Type: MessageType.EVENT,
-						Event: { event: event_HealNetworkProgress.redEventName, timestamp: Timestamp, eventBody: Progress }
-					};
-					const Count = Progress.size;
-					const Remain = [...Progress.values()].filter((V) => V === 'pending').length;
-					const Completed = Count - Remain;
-					const CompletedPercentage = Math.round((100 * Completed) / (Completed + Remain));
-					const Status: ControllerCallbackObject = {
-						Type: MessageType.STATUS,
-						Status: {
-							fill: 'yellow',
-							shape: 'dot',
-							text: `Heal network progress : ${CompletedPercentage}%`
-						}
-					};
-					updateLatestStatus(`Heal network progress : ${CompletedPercentage}%`);
-					ControllerNodeIDs.forEach((ID) => {
-						controllerNodes[ID](Event);
-						controllerNodes[ID](Status);
-					});
-				}
-			);
+			self.driverInstance?.controller.on(event_HealNetworkProgress.driverName, (Progress) => {
+				const Timestamp = new Date().getTime();
+				const ControllerNodeIDs = Object.keys(controllerNodes);
+				const Event: UserPayloadPackage = {
+					Type: MessageType.EVENT,
+					Event: { event: event_HealNetworkProgress.redEventName, timestamp: Timestamp, eventBody: Progress }
+				};
+				const Count = Progress.size;
+				const Remain = [...Progress.values()].filter((V) => V === 'pending').length;
+				const Completed = Count - Remain;
+				const CompletedPercentage = Math.round((100 * Completed) / (Completed + Remain));
+				const Status: UserPayloadPackage = {
+					Type: MessageType.STATUS,
+					Status: {
+						fill: 'yellow',
+						shape: 'dot',
+						text: `Heal network progress : ${CompletedPercentage}%`
+					}
+				};
+				updateLatestStatus(`Heal network progress : ${CompletedPercentage}%`);
+				ControllerNodeIDs.forEach((ID) => {
+					controllerNodes[ID](Event);
+					controllerNodes[ID](Status);
+				});
+			});
 		};
 
 		// Node callback subscriptions
@@ -705,36 +674,114 @@ module.exports = (RED: NodeAPI) => {
 				return;
 			}
 
-			// Awake, Live, Dead, Sleep, Ready
-			[event_Ready, event_Alive, event_Dead, event_Wake, event_Sleep].forEach((ThisEvent) => {
-				Node.on(ThisEvent.driverName, (ThisNode: ZWaveNode) => {
-					const Timestamp = new Date().getTime();
-					const InterestedDeviceNodes = Object.values(deviceNodes).filter(
-						(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
-					);
-					const Event: DeviceCallbackObject = {
-						Type: MessageType.EVENT,
-						Event: {
-							event: ThisEvent.redEventName,
-							timestamp: Timestamp,
-							nodeId: ThisNode.id,
-							nodeName: ThisNode.name,
-							nodeLocation: ThisNode.location
-						}
-					};
-					InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
-				});
+			// Ready
+			Node.on(event_Ready.driverName, (ThisNode) => {
+				const Timestamp = new Date().getTime();
+				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
+					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
+				);
+				const Event: UserPayloadPackage = {
+					Type: MessageType.EVENT,
+					Event: {
+						event: event_Ready.redEventName,
+						timestamp: Timestamp,
+						nodeId: ThisNode.id,
+						nodeName: ThisNode.name,
+						nodeLocation: ThisNode.location
+					}
+				};
+				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
+			});
+
+			// Alive
+			Node.on(event_Alive.driverName, (ThisNode, OldStatus) => {
+				const Timestamp = new Date().getTime();
+				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
+					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
+				);
+				const Event: UserPayloadPackage = {
+					Type: MessageType.EVENT,
+					Event: {
+						event: event_Alive.redEventName,
+						timestamp: Timestamp,
+						nodeId: ThisNode.id,
+						nodeName: ThisNode.name,
+						nodeLocation: ThisNode.location,
+						eventBody: { oldStatus: OldStatus }
+					}
+				};
+				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
+			});
+
+			// Wake
+			Node.on(event_Wake.driverName, (ThisNode, OldStatus) => {
+				const Timestamp = new Date().getTime();
+				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
+					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
+				);
+				const Event: UserPayloadPackage = {
+					Type: MessageType.EVENT,
+					Event: {
+						event: event_Wake.redEventName,
+						timestamp: Timestamp,
+						nodeId: ThisNode.id,
+						nodeName: ThisNode.name,
+						nodeLocation: ThisNode.location,
+						eventBody: { oldStatus: OldStatus }
+					}
+				};
+				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
+			});
+
+			// Sleep
+			Node.on(event_Sleep.driverName, (ThisNode, OldStatus) => {
+				const Timestamp = new Date().getTime();
+				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
+					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
+				);
+				const Event: UserPayloadPackage = {
+					Type: MessageType.EVENT,
+					Event: {
+						event: event_Sleep.redEventName,
+						timestamp: Timestamp,
+						nodeId: ThisNode.id,
+						nodeName: ThisNode.name,
+						nodeLocation: ThisNode.location,
+						eventBody: { oldStatus: OldStatus }
+					}
+				};
+				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
+			});
+
+			// Dead
+			Node.on(event_Dead.driverName, (ThisNode, OldStatus) => {
+				const Timestamp = new Date().getTime();
+				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
+					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
+				);
+				const Event: UserPayloadPackage = {
+					Type: MessageType.EVENT,
+					Event: {
+						event: event_Dead.redEventName,
+						timestamp: Timestamp,
+						nodeId: ThisNode.id,
+						nodeName: ThisNode.name,
+						nodeLocation: ThisNode.location,
+						eventBody: { oldStatus: OldStatus }
+					}
+				};
+				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
 			});
 
 			// Interview Started
 			Node.on(event_InterviewStarted.driverName, (ThisNode: ZWaveNode) => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: ControllerCallbackObject = {
+				const Event: UserPayloadPackage = {
 					Type: MessageType.EVENT,
 					Event: { event: event_InterviewStarted.redEventName, timestamp: Timestamp }
 				};
-				const Status: ControllerCallbackObject = {
+				const Status: UserPayloadPackage = {
 					Type: MessageType.STATUS,
 					Status: {
 						fill: 'yellow',
@@ -750,14 +797,14 @@ module.exports = (RED: NodeAPI) => {
 			});
 
 			// Interview Completed
-			Node.on(event_InterviewCompleted.driverName, (ThisNode: ZWaveNode) => {
+			Node.on(event_InterviewCompleted.driverName, (ThisNode) => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: ControllerCallbackObject = {
+				const Event: UserPayloadPackage = {
 					Type: MessageType.EVENT,
 					Event: { event: event_InterviewCompleted.redEventName, timestamp: Timestamp }
 				};
-				const Status: ControllerCallbackObject = {
+				const Status: UserPayloadPackage = {
 					Type: MessageType.STATUS,
 					Status: {
 						fill: 'green',
@@ -774,14 +821,14 @@ module.exports = (RED: NodeAPI) => {
 			});
 
 			// Interview Failed
-			Node.on(event_InterviewFailed.driverName, (ThisNode: ZWaveNode, Args: NodeInterviewFailedEventArgs) => {
+			Node.on(event_InterviewFailed.driverName, (ThisNode, Args) => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: ControllerCallbackObject = {
+				const Event: UserPayloadPackage = {
 					Type: MessageType.EVENT,
 					Event: { event: event_InterviewFailed.redEventName, timestamp: Timestamp, eventBody: Args }
 				};
-				const Status: ControllerCallbackObject = {
+				const Status: UserPayloadPackage = {
 					Type: MessageType.STATUS,
 					Status: {
 						fill: 'red',
@@ -798,12 +845,12 @@ module.exports = (RED: NodeAPI) => {
 			});
 
 			// Value Notification
-			Node.on(event_ValueNotification.driverName, (ThisNode: ZWaveNode, Args: ZWaveNodeValueNotificationArgs) => {
+			Node.on(event_ValueNotification.driverName, (ThisNode, Args) => {
 				const Timestamp = new Date().getTime();
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
 				);
-				const Event: DeviceCallbackObject = {
+				const Event: UserPayloadPackage = {
 					Type: MessageType.EVENT,
 					Event: {
 						event: event_ValueNotification.redEventName,
@@ -818,12 +865,12 @@ module.exports = (RED: NodeAPI) => {
 			});
 
 			// Value updated
-			Node.on(event_ValueUpdated.driverName, (ThisNode: ZWaveNode, Args: ZWaveNodeValueUpdatedArgs) => {
+			Node.on(event_ValueUpdated.driverName, (ThisNode, Args) => {
 				const Timestamp = new Date().getTime();
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
 				);
-				const Event: DeviceCallbackObject = {
+				const Event: UserPayloadPackage = {
 					Type: MessageType.EVENT,
 					Event: {
 						event: event_ValueUpdated.redEventName,
@@ -838,12 +885,12 @@ module.exports = (RED: NodeAPI) => {
 			});
 
 			// Value Added
-			Node.on(event_ValueAdded.driverName, (ThisNode: ZWaveNode, Args: ZWaveNodeValueAddedArgs) => {
+			Node.on(event_ValueAdded.driverName, (ThisNode, Args) => {
 				const Timestamp = new Date().getTime();
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
 				);
-				const Event: DeviceCallbackObject = {
+				const Event: UserPayloadPackage = {
 					Type: MessageType.EVENT,
 					Event: {
 						event: event_ValueAdded.redEventName,
@@ -858,12 +905,12 @@ module.exports = (RED: NodeAPI) => {
 			});
 
 			// Notification
-			Node.on(event_Notification.driverName, (ThisNode: ZWaveNode, CC: number, Args: Record<string, unknown>) => {
+			Node.on(event_Notification.driverName, (ThisNode, CC, Args) => {
 				const Timestamp = new Date().getTime();
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
 				);
-				const Event: DeviceCallbackObject = {
+				const Event: UserPayloadPackage = {
 					Type: MessageType.EVENT,
 					Event: {
 						event: event_Notification.redEventName,

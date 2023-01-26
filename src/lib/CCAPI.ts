@@ -19,7 +19,7 @@ export const process = async (
 					.get(NodeID)
 					?.getEndpoint(Endpoint || 0)
 					?.invokeCCAPI(CommandClass, CCMethod, Args?.values());
-				resolve({ nodeId: NodeID, result: Result });
+				resolve(Result);
 			} catch (Err) {
 				reject(Err);
 			}

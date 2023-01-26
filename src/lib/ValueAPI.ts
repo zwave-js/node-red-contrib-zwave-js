@@ -14,7 +14,7 @@ export const process = async (
 		return new Promise((resolve, reject) => {
 			try {
 				Result = DriverInstance.controller.nodes.get(NodeID)?.getValue(VID);
-				resolve({ nodeId: NodeID, value: Result });
+				resolve(Result);
 			} catch (Err) {
 				reject(Err);
 			}
@@ -27,7 +27,7 @@ export const process = async (
 				.get(NodeID)
 				?.setValue(VID, Value, ValueOptions)
 				.then((Result) => {
-					resolve({ nodeId: NodeID, Result: Result });
+					resolve(Result);
 				})
 				.catch((Error) => {
 					reject(Error);
@@ -41,7 +41,7 @@ export const process = async (
 				.get(NodeID)
 				?.pollValue(VID)
 				.then((Result) => {
-					resolve({ nodeId: NodeID, value: Result });
+					resolve(Result);
 				})
 				.catch((Error) => {
 					reject(Error);

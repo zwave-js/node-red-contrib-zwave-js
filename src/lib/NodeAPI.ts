@@ -13,7 +13,7 @@ export const process = async (
 				.get(NodeID)
 				?.ping()
 				.then((Result) => {
-					resolve({nodeId:NodeID,result:Result});
+					resolve(Result);
 				})
 				.catch((Error) => {
 					reject(Error);
@@ -31,7 +31,7 @@ export const process = async (
 					if (Node.supportsCC(CommandClasses['Node Naming and Location'])) {
 						Node.commandClasses['Node Naming and Location'].setName(AsString);
 					}
-					resolve({nodeId:NodeID,value:AsString});
+					resolve(AsString);
 				} catch (Error) {
 					reject(Error);
 				}
@@ -49,7 +49,7 @@ export const process = async (
 					if (Node.supportsCC(CommandClasses['Node Naming and Location'])) {
 						Node.commandClasses['Node Naming and Location'].setLocation(AsString);
 					}
-					resolve({nodeId:NodeID,value:AsString});
+					resolve(AsString);
 				} catch (Error) {
 					reject(Error);
 				}

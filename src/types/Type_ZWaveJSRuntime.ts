@@ -1,7 +1,24 @@
 import { Node } from 'node-red';
 import { Type_ZWaveJSRuntimeConfig, Type_ZWaveJSRuntimeCredentialConfig } from './Type_ZWaveJSRuntimeConfig';
-import { Driver, ValueID } from 'zwave-js';
+import { Driver, ValueID, ZWaveNode } from 'zwave-js';
 import { CommandClasses } from '@zwave-js/core';
+
+// Event hook class
+export class SanitizedEventName<T extends string> {
+	driverName: T;
+	redEventName: string;
+	nodeStatusName: string;
+	statusNameWithNode: (Node: ZWaveNode) => string;
+
+	constructor(event: T) {
+		this.driverName = event;
+		this.redEventName = event.replace(/ /g, '_').toUpperCase();
+		this.nodeStatusName = event.charAt(0).toUpperCase() + event.substr(1).toLowerCase() + '.';
+		this.statusNameWithNode = (Node) => {
+			return `Node: ${Node.id} ${this.nodeStatusName}`;
+		};
+	}
+}
 
 export enum MessageType {
 	STATUS = 0,
@@ -31,16 +48,12 @@ export interface EventMessage {
 	eventBody?: unknown;
 }
 
-export type ControllerCallbackObject =
+export type UserPayloadPackage =
 	| { Type: MessageType.STATUS; Status: StatusMessage }
 	| { Type: MessageType.EVENT; Event: EventMessage };
 
-export type DeviceCallbackObject =
-	| { Type: MessageType.STATUS; Status: StatusMessage }
-	| { Type: MessageType.EVENT; Event: EventMessage };
-
-export type ControllerCallback = (Data: ControllerCallbackObject) => void;
-export type DeviceCallback = (Data: DeviceCallbackObject) => void;
+export type ControllerCallback = (Data: UserPayloadPackage) => void;
+export type DeviceCallback = (Data: UserPayloadPackage) => void;
 
 export type Type_ZWaveJSRuntime = Node & {
 	config: Type_ZWaveJSRuntimeConfig;
@@ -58,5 +71,12 @@ export type Type_ZWaveJSRuntime = Node & {
 		Value?: unknown,
 		ValueOptions?: Record<string, unknown>
 	): Promise<unknown>;
-	ccCommand(Method: string, CommandClass: CommandClasses, CommandClassMethod: string, NodeID: number, Endpoint?: number, Args?: unknown[]): Promise<unknown>;
+	ccCommand(
+		Method: string,
+		CommandClass: CommandClasses,
+		CommandClassMethod: string,
+		NodeID: number,
+		Endpoint?: number,
+		Args?: unknown[]
+	): Promise<unknown>;
 };

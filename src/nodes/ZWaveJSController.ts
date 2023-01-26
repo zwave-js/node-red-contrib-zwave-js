@@ -1,5 +1,5 @@
 import { NodeAPI } from 'node-red';
-import { ControllerCallbackObject, Type_ZWaveJSRuntime, MessageType, API } from '../types/Type_ZWaveJSRuntime';
+import { UserPayloadPackage, Type_ZWaveJSRuntime, MessageType, API } from '../types/Type_ZWaveJSRuntime';
 import { Type_ZWaveJSControllerConfig } from '../types/Type_ZWaveJSControllerConfig';
 import { InputMessage, Type_ZWaveJSController } from '../types/Type_ZWaveJSController';
 import { getProfile } from '../lib/RequestResponseProfiles';
@@ -11,7 +11,7 @@ module.exports = (RED: NodeAPI) => {
 		self.config = config;
 		self.runtime = RED.nodes.getNode(self.config.runtimeId) as Type_ZWaveJSRuntime;
 
-		const callback = (Data: ControllerCallbackObject) => {
+		const callback = (Data: UserPayloadPackage) => {
 			switch (Data.Type) {
 				case MessageType.STATUS:
 					self.status(Data.Status);
@@ -61,7 +61,7 @@ module.exports = (RED: NodeAPI) => {
 						self.runtime
 							.controllerCommand(APIMethod, Req.cmdProperties.args)
 							.then((Result) => {
-								const Return = getProfile(APIMethod, Result) as ControllerCallbackObject;
+								const Return = getProfile(APIMethod, Result, Req.cmdProperties.nodeId) as UserPayloadPackage;
 								if (Return.Type !== undefined && Return.Type === MessageType.EVENT) {
 									send({ payload: Return.Event });
 									done();
@@ -90,7 +90,7 @@ module.exports = (RED: NodeAPI) => {
 								Req.cmdProperties.args
 							)
 							.then((Result) => {
-								const Return = getProfile(APIMethod, Result) as ControllerCallbackObject;
+								const Return = getProfile(APIMethod, Result, Req.cmdProperties.nodeId) as UserPayloadPackage;
 								if (Return.Type !== undefined && Return.Type === MessageType.EVENT) {
 									send({ payload: Return.Event });
 									done();
@@ -113,7 +113,7 @@ module.exports = (RED: NodeAPI) => {
 								Req.cmdProperties.setValueOptions
 							)
 							.then((Result) => {
-								const Return = getProfile(APIMethod, Result) as ControllerCallbackObject;
+								const Return = getProfile(APIMethod, Result, Req.cmdProperties.nodeId) as UserPayloadPackage;
 								if (Return.Type !== undefined && Return.Type === MessageType.EVENT) {
 									send({ payload: Return.Event });
 									done();
