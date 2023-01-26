@@ -6,15 +6,20 @@ import { Type_ZWaveJSControllerConfig } from './Type_ZWaveJSControllerConfig';
 import { Type_ZWaveJSRuntime } from './Type_ZWaveJSRuntime';
 
 export type InputMessage = {
-	cmd: string;
-	nodeId?: number;
-	commandClass?: CommandClasses
-	commandClassMethod?: string;
-	endpoint?: number;
-	value?: unknown;
-	valueId?: ValueID;
-	setValueOptions?: SetValueAPIOptions;
-	args?: unknown[];
+	cmd: {
+		api: string;
+		method: string;
+	};
+	cmdProperties: {
+		nodeId?: number;
+		commandClass?: CommandClasses;
+		method?: string;
+		endpoint?: number;
+		value?: unknown;
+		valueId?: ValueID;
+		setValueOptions?: SetValueAPIOptions;
+		args?: unknown[];
+	};
 };
 
 export type Type_ZWaveJSController = Node & {

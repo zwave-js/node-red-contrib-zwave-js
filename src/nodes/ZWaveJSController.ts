@@ -51,19 +51,17 @@ module.exports = (RED: NodeAPI) => {
 				Legacy(msg, send, done);
 			} else {
 				const Req = msg.payload as InputMessage;
-				if (Req.cmd) {
-					const Parts = Req.cmd.split('.');
-					const APIKey = Parts[0] as keyof typeof API;
-					const APICommand = {
-						API: API[APIKey],
-						Command: Parts[1]
-					};
 
-					if (APICommand.API === API.CONTROLLER) {
+				if (Req.cmd) {
+					const APIKey = Req.cmd.api as keyof typeof API;
+					const TargetAPI = API[APIKey];
+					const APIMethod = Req.cmd.method;
+
+					if (TargetAPI === API.CONTROLLER) {
 						self.runtime
-							.controllerCommand(APICommand.Command, Req.args)
+							.controllerCommand(APIMethod, Req.cmdProperties.args)
 							.then((Result) => {
-								const Return = getProfile(APICommand.Command, Result) as ControllerCallbackObject;
+								const Return = getProfile(APIMethod, Result) as ControllerCallbackObject;
 								if (Return.Type !== undefined && Return.Type === MessageType.EVENT) {
 									send({ payload: Return.Event });
 									done();
@@ -76,18 +74,23 @@ module.exports = (RED: NodeAPI) => {
 							});
 					}
 
-					if (APICommand.API === API.CC && Req.commandClass && Req.commandClassMethod && Req.nodeId) {
+					if (
+						TargetAPI === API.CC &&
+						Req.cmdProperties.commandClass &&
+						Req.cmdProperties.method &&
+						Req.cmdProperties.nodeId
+					) {
 						self.runtime
 							.ccCommand(
-								APICommand.Command,
-								Req.commandClass,
-								Req.commandClassMethod,
-								Req.nodeId,
-								Req.endpoint,
-								Req.args
+								APIMethod,
+								Req.cmdProperties.commandClass,
+								Req.cmdProperties.method,
+								Req.cmdProperties.nodeId,
+								Req.cmdProperties.endpoint,
+								Req.cmdProperties.args
 							)
 							.then((Result) => {
-								const Return = getProfile(APICommand.Command, Result) as ControllerCallbackObject;
+								const Return = getProfile(APIMethod, Result) as ControllerCallbackObject;
 								if (Return.Type !== undefined && Return.Type === MessageType.EVENT) {
 									send({ payload: Return.Event });
 									done();
@@ -100,11 +103,17 @@ module.exports = (RED: NodeAPI) => {
 							});
 					}
 
-					if (APICommand.API === API.VALUE && Req.valueId && Req.nodeId) {
+					if (TargetAPI === API.VALUE && Req.cmdProperties.valueId && Req.cmdProperties.nodeId) {
 						self.runtime
-							.valueCommand(APICommand.Command, Req.nodeId, Req.valueId, Req.value, Req.setValueOptions)
+							.valueCommand(
+								APIMethod,
+								Req.cmdProperties.nodeId,
+								Req.cmdProperties.valueId,
+								Req.cmdProperties.value,
+								Req.cmdProperties.setValueOptions
+							)
 							.then((Result) => {
-								const Return = getProfile(APICommand.Command, Result) as ControllerCallbackObject;
+								const Return = getProfile(APIMethod, Result) as ControllerCallbackObject;
 								if (Return.Type !== undefined && Return.Type === MessageType.EVENT) {
 									send({ payload: Return.Event });
 									done();
