@@ -453,7 +453,7 @@ module.exports = (RED: NodeAPI) => {
 			});
 
 			// Node Removed
-			self.driverInstance?.controller.on(event_NodeRemoved.driverName, (ThisNode, Replaced) => {
+			self.driverInstance?.controller.on(event_NodeRemoved.driverName, (ThisNode, _Replaced) => {
 				const ControllerNodeIDs = Object.keys(controllerNodes);
 				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/removed`, { nodeId: ThisNode.id }, false);
 				const Status: UserPayloadPackage = {
@@ -472,7 +472,7 @@ module.exports = (RED: NodeAPI) => {
 			});
 
 			// inclusion started
-			self.driverInstance?.controller.on(event_InclusionStarted.driverName, (IsSecure, Strategy) => {
+			self.driverInstance?.controller.on(event_InclusionStarted.driverName, (IsSecure, _Strategy) => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Body = {
