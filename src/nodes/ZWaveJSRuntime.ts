@@ -14,6 +14,7 @@ import { Driver, InclusionGrant, ZWaveNode } from 'zwave-js';
 import { process as ControllerAPI_Process } from '../lib/ControllerAPI';
 import { process as ValueAPI_Process } from '../lib/ValueAPI';
 import { process as CC_Process } from '../lib/CCAPI';
+import { process as Node_Process } from '../lib/NodeAPI';
 import { Tail } from 'tail';
 
 const APP_NAME = 'node-red-contrib-zwave-js';
@@ -96,6 +97,13 @@ module.exports = (RED: NodeAPI) => {
 		self.ccCommand = (Method, CommandClass, CommandClassMethod, NodeID, Endpoint?, Args?): Promise<unknown> => {
 			if (self.driverInstance) {
 				return CC_Process(self.driverInstance, Method, CommandClass, CommandClassMethod, NodeID, Endpoint, Args);
+			}
+			return Promise.reject('Driver Instance');
+		};
+
+		self.nodeCommand = (Method, NodeID, Value): Promise<unknown> => {
+			if (self.driverInstance) {
+				return Node_Process(self.driverInstance, Method, NodeID, Value);
 			}
 			return Promise.reject('Driver Instance');
 		};
@@ -193,12 +201,12 @@ module.exports = (RED: NodeAPI) => {
 			);
 
 			RED.httpAdmin.get(
-				`/zwave-js/ui/${self.id}/:api/:action`,
+				`/zwave-js/ui/${self.id}/:api/:method`,
 				RED.auth.needsPermission('flows.write'),
 				(request, response) => {
 					const APIKey = request.params.api as keyof typeof API;
 					const TargetAPI = API[APIKey];
-					const Method = request.params.action;
+					const Method = request.params.method;
 
 					switch (TargetAPI) {
 						case API.CONTROLLER:
@@ -221,7 +229,7 @@ module.exports = (RED: NodeAPI) => {
 				(request, response) => {
 					const APIKey = request.params.api as keyof typeof API;
 					const TargetAPI = API[APIKey];
-					const Method = request.params.action;
+					const Method = request.params.method;
 
 					switch (TargetAPI) {
 						case API.VALUE:
@@ -944,14 +952,13 @@ module.exports = (RED: NodeAPI) => {
 		wireDriverEvents();
 
 		self.driverInstance?.on('error', (Err) => {
-			console.log(Err);
+			self.error(Err);
 		});
 
 		self.driverInstance
 			.start()
 			.catch((e) => {
 				self.error(e);
-				return;
 			})
 			.then(() => {
 				//

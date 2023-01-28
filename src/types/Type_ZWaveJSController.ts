@@ -9,8 +9,9 @@ export type InputMessage = {
 	cmd: {
 		api: string;
 		method: string;
+		trackingToken?: unknown;
 	};
-	cmdProperties: {
+	cmdProperties?: {
 		nodeId?: number;
 		commandClass?: CommandClasses;
 		method?: string;

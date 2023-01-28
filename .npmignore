@@ -3,8 +3,8 @@
 node_modules
 .github
 package-lock.json
-.eslintrc.json
-.prettierrc.json
-GFXSources
+.eslintrc.js
+.prettierrc.js
 GHImages
 src
+tsconfig.json

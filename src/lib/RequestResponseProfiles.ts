@@ -3,6 +3,7 @@ import { UserPayloadPackage, MessageType } from '../types/Type_ZWaveJSRuntime';
 export const getProfile = (Name: string, Result: unknown, NodeID?: number): UserPayloadPackage | undefined => {
 	const Timestamp = new Date().getTime();
 
+	/*
 	if (Name === 'setNodeName') {
 		const Event: UserPayloadPackage = {
 			Type: MessageType.EVENT,
@@ -24,11 +25,12 @@ export const getProfile = (Name: string, Result: unknown, NodeID?: number): User
 		}
 		return Event;
 	}
+	*/
 
 	if (Name === 'ping') {
 		const Event: UserPayloadPackage = {
 			Type: MessageType.EVENT,
-			Event: { event: 'NODE_PING_RESULT', timestamp: Timestamp, eventBody: Result }
+			Event: { event: 'NODE_PING_RESPONSE', timestamp: Timestamp, eventBody: Result }
 		};
 		if (NodeID) {
 			Event.Event.nodeId = NodeID;
@@ -39,7 +41,7 @@ export const getProfile = (Name: string, Result: unknown, NodeID?: number): User
 	if (Name === 'invokeCCAPI') {
 		const Event: UserPayloadPackage = {
 			Type: MessageType.EVENT,
-			Event: { event: 'CCAPI_OPERATION_COMPLETE', timestamp: Timestamp, eventBody: Result }
+			Event: { event: 'CCAPI_OPERATION_RESPONSE', timestamp: Timestamp, eventBody: Result }
 		};
 		if (NodeID) {
 			Event.Event.nodeId = NodeID;

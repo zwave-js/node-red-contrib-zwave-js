@@ -79,4 +79,6 @@ export type Type_ZWaveJSRuntime = Node & {
 		Endpoint?: number,
 		Args?: unknown[]
 	): Promise<unknown>;
+
+	nodeCommand(Method: string, NodeID: number, Value?: unknown): Promise<unknown>;
 };

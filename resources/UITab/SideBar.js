@@ -332,7 +332,7 @@ const ZWaveJSUI = (function () {
 		Runtime.Get('CONTROLLER', 'getNodes')
 			.then((data) => {
 				if (data.callSuccess) {
-					const Controller = data.response.Event.eventBody.find((N) => N.isControllerNode);
+					const Controller = data.response.find((N) => N.isControllerNode);
 
 					const CITable = $('#CITable');
 					CITable.append(`<tr><td>Device</td><td>${Controller.deviceConfig.description}</td>`);
@@ -428,7 +428,7 @@ const ZWaveJSUI = (function () {
 			Runtime.Get('CONTROLLER', 'getNodes')
 				.then((data) => {
 					if (data.callSuccess) {
-						const Node = data.response.Event.eventBody.find((N) => N.nodeId === selectedNode);
+						const Node = data.response.find((N) => N.nodeId === selectedNode);
 
 						const NITable = $('#NITable');
 						NITable.append(`<tr><td>Device</td><td>${Node.deviceConfig.description}</td>`);
@@ -458,6 +458,19 @@ const ZWaveJSUI = (function () {
 				.catch((Error) => {
 					alert(Error.message);
 				});
+
+			// Associations
+			Runtime.Post('CONTROLLER', 'getAllAssociationGroups', [selectedNode])
+				.then((Data) => {
+					if (data.callSuccess) {
+						//
+					} else {
+						alert(data.response);
+					}
+				})
+				.catch((Error) => {
+					alert(data.response);
+				});
 		}
 	};
 
@@ -479,7 +492,7 @@ const ZWaveJSUI = (function () {
 		Runtime.Get('CONTROLLER', 'getNodes')
 			.then((data) => {
 				if (data.callSuccess) {
-					data = data.response.Event.eventBody;
+					data = data.response;
 
 					const Controller = data.filter((N) => N.isControllerNode)[0];
 
@@ -533,14 +546,14 @@ const ZWaveJSUI = (function () {
 
 	// Value Editor
 	const edit = (VID, EL) => {
-
-
-		const Send = (Value) =>{
-			Runtime.Post('VALUE','setValue'[selectedNode,VID.valueId,Value].then((data) => {
-				//
-			}))
-		}
-
+		const Send = (Value) => {
+			Runtime.Post(
+				'VALUE',
+				'setValue'[(selectedNode, VID.valueId, Value)].then((data) => {
+					//
+				})
+			);
+		};
 
 		const HTML = $('#TPL_ValueEditor').html();
 		const Panel = $('<div>');
@@ -557,8 +570,8 @@ const ZWaveJSUI = (function () {
 				Panel.remove();
 			},
 			position: {
-				my: 'left bottom', 
-				at: 'right top-10', 
+				my: 'left bottom',
+				at: 'right top-10',
 				of: EL
 			}
 		};
@@ -580,8 +593,7 @@ const ZWaveJSUI = (function () {
 				Input.append(new Option(key, value));
 			}
 
-			Send
-			
+			Send;
 
 			$('#zwave-js-value-input').append(
 				`<tr><td>Predefined Value</td><td>${
@@ -638,7 +650,7 @@ const ZWaveJSUI = (function () {
 		Runtime.Post('CONTROLLER', 'getValueDB', [item.nodeData.nodeId])
 			.then((data) => {
 				if (data.callSuccess) {
-					data = data.response.Event.eventBody[0];
+					data = data.response[0];
 					const ListOfCCs = [];
 					data.values.forEach((PL) => {
 						if (ListOfCCs.filter((CC) => CC.commandClass === PL.valueId.commandClass).length < 1) {

@@ -3,8 +3,8 @@ import { CommandClasses } from '@zwave-js/core';
 
 export const process = async (
 	DriverInstance: Driver,
-	NodeID: number,
 	Method: string,
+	NodeID: number,
 	Value?: unknown
 ): Promise<unknown> => {
 	if (Method === 'ping') {

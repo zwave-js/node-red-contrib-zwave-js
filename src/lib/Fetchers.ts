@@ -6,7 +6,7 @@ export const getNodes = (DriverInstance: Driver): Record<string, unknown>[] => {
 	DriverInstance.controller.nodes.forEach((N) => {
 		Collection.push({
 			nodeId: N.id,
-			nameName: N.name,
+			nodeName: N.name,
 			nodeLocation: N.location,
 			status: NodeStatus[N.status],
 			ready: N.ready,
