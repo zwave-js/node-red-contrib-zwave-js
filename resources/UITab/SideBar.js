@@ -12,6 +12,9 @@ let NetworkSelected;
 let ShowNetworkManagement;
 let ShowNodeManagement;
 
+// UI Vars
+let associationGroups;
+
 // Globals
 const toTitleCase = (str) => {
 	return str.replace(/\w\S*/g, function (txt) {
@@ -459,17 +462,30 @@ const ZWaveJSUI = (function () {
 					alert(Error.message);
 				});
 
-			// Associations
+			// Association Groups
 			Runtime.Post('CONTROLLER', 'getAllAssociationGroups', [selectedNode])
 				.then((Data) => {
-					if (data.callSuccess) {
-						//
+					if (Data.callSuccess) {
+						associationGroups = Data.response;
+
+						// Associations (All)
+						Runtime.Post('CONTROLLER', 'getAllAssociations', [selectedNode])
+							.then((Data) => {
+								if (Data.callSuccess) {
+									associationGroups = Data.response;
+								} else {
+									alert(Data.response);
+								}
+							})
+							.catch((Error) => {
+								alert(Data.response);
+							});
 					} else {
-						alert(data.response);
+						alert(Data.response);
 					}
 				})
 				.catch((Error) => {
-					alert(data.response);
+					alert(Data.response);
 				});
 		}
 	};
