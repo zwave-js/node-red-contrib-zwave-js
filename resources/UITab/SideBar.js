@@ -472,20 +472,35 @@ const ZWaveJSUI = (function () {
 						Runtime.Post('CONTROLLER', 'getAllAssociations', [selectedNode])
 							.then((Data) => {
 								if (Data.callSuccess) {
-									associationGroups = Data.response;
+									Data.response.forEach((A) => {
+										const LocalEndpoint = A.associationAddress.endpoint;
+
+										const TargetGroups = Object.keys(A.associations);
+										TargetGroups.forEach((G) => {
+											const GroupName = associationGroups[LocalEndpoint][G].label;
+											A.associations[G].forEach((TargetNode) => {
+												const TargetNodeID = TargetNode.nodeId;
+												const TargetEndpoint = TargetNode.endpoint || '(Root Device)';
+
+												const Row = `<tr><td>${GroupName}</td><td>${LocalEndpoint}</td><td>${TargetNodeID}</td><td>${TargetEndpoint}</td></tr>`;
+
+												$('#zwave-js-associations').append(Row);
+											});
+										});
+									});
 								} else {
 									alert(Data.response);
 								}
 							})
 							.catch((Error) => {
-								alert(Data.response);
+								alert(Error.message);
 							});
 					} else {
 						alert(Data.response);
 					}
 				})
 				.catch((Error) => {
-					alert(Data.response);
+					alert(Error.message);
 				});
 		}
 	};
