@@ -1,9 +1,7 @@
 <!--Core-->
 <link rel="stylesheet" href="resources/node-red-contrib-zwave-js/UITab/styles.css" />
-
 <link rel="stylesheet" href="resources/node-red-contrib-zwave-js/UITab/jquery-steps.css" />
 <script type="text/javascript" src="resources/node-red-contrib-zwave-js/UITab/jquery-steps.min.js"></script>
-
 <script type="text/javascript" src="resources/node-red-contrib-zwave-js/UITab/SideBar.js"></script>
 
 <script>
@@ -11,13 +9,10 @@
 </script>
 
 <!-- Side Panel Template-->
+<!-- prettier-ignore -->
 <template id="TPL_SidePanel">
 	<!--Network Selector-->
-	<div
-		class="red-ui-sidebar-header"
-		id="zwave-js-network-header"
-		style="display: none; text-align: center; height: 20px"
-	>
+	<div class="red-ui-sidebar-header" id="zwave-js-network-header" style="display: none; text-align: center; height: 20px">
 		<i class="fa fa-cog" aria-hidden="true"></i>
 		Network/Runtime :
 		<select id="zwave-js-network" onchange="NetworkSelected()" style="height: 25px; vertical-align: baseline">
@@ -92,6 +87,7 @@
 </template>
 
 <!--Network Management-->
+<!-- prettier-ignore -->
 <template id="TPL_NetworkManagement">
 	<div id="TPL_NetworkManagementTabs">
 		<ul>
@@ -247,6 +243,7 @@
 </template>
 
 <!--Node Managment-->
+<!-- prettier-ignore -->
 <template id="TPL_NodeManagement">
 	<div id="TPL_NodeManagementTabs">
 		<ul>
@@ -317,6 +314,7 @@
 </template>
 
 <!--Value Editor-->
+<!-- prettier-ignore -->
 <template id="TPL_ValueEditor">
 	<div>
 		<span id="zwave-js-value-command-class" style="color: gray; font-weight: bold; font-size: 22px"></span>

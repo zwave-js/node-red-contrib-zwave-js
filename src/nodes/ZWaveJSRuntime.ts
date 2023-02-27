@@ -317,8 +317,8 @@ module.exports = (RED: NodeAPI) => {
 			},
 			preferences: {
 				scales: {
-					temperature: self.config.preferences_scales_temperature,
-					humidity: self.config.preferences_scales_humidity
+					temperature: parseInt(self.config.preferences_scales_temperature),
+					humidity: parseInt(self.config.preferences_scales_humidity)
 				}
 			},
 			interview: {
@@ -356,26 +356,23 @@ module.exports = (RED: NodeAPI) => {
 		}
 
 		// Cleanup Timeouts
-		if (self.config.timeouts_ack) ZWaveOptions.timeouts.ack = self.config.timeouts_ack;
-		if (self.config.timeouts_report) ZWaveOptions.timeouts.report = self.config.timeouts_report;
-		if (self.config.timeouts_response) ZWaveOptions.timeouts.response = self.config.timeouts_response;
+		if (self.config.timeouts_ack) ZWaveOptions.timeouts.ack = parseInt(self.config.timeouts_ack);
+		if (self.config.timeouts_report) ZWaveOptions.timeouts.report = parseInt(self.config.timeouts_report);
+		if (self.config.timeouts_response) ZWaveOptions.timeouts.response = parseInt(self.config.timeouts_response);
 		if (self.config.timeouts_serialAPIStarted)
-			ZWaveOptions.timeouts.serialAPIStarted = self.config.timeouts_serialAPIStarted;
+			ZWaveOptions.timeouts.serialAPIStarted = parseInt(self.config.timeouts_serialAPIStarted);
 		if (self.config.timeouts_sendDataCallback)
-			ZWaveOptions.timeouts.sendDataCallback = self.config.timeouts_sendDataCallback;
+			ZWaveOptions.timeouts.sendDataCallback = parseInt(self.config.timeouts_sendDataCallback);
 
 		// Cleanup Keys
-		if (self.credentials.securityKeys_S0_Legacy)
-			ZWaveOptions.securityKeys.S0_Legacy = Buffer.from(self.credentials.securityKeys_S0_Legacy, 'hex');
-		if (self.credentials.securityKeys_S2_AccessControl)
-			ZWaveOptions.securityKeys.S2_AccessControl = Buffer.from(self.credentials.securityKeys_S2_AccessControl, 'hex');
-		if (self.credentials.securityKeys_S2_Authenticated)
-			ZWaveOptions.securityKeys.S2_Authenticated = Buffer.from(self.credentials.securityKeys_S2_Authenticated, 'hex');
-		if (self.credentials.securityKeys_S2_Unauthenticated)
-			ZWaveOptions.securityKeys.S2_Unauthenticated = Buffer.from(
-				self.credentials.securityKeys_S2_Unauthenticated,
-				'hex'
-			);
+		if (self.config.securityKeys_S0_Legacy)
+			ZWaveOptions.securityKeys.S0_Legacy = Buffer.from(self.config.securityKeys_S0_Legacy, 'hex');
+		if (self.config.securityKeys_S2_AccessControl)
+			ZWaveOptions.securityKeys.S2_AccessControl = Buffer.from(self.config.securityKeys_S2_AccessControl, 'hex');
+		if (self.config.securityKeys_S2_Authenticated)
+			ZWaveOptions.securityKeys.S2_Authenticated = Buffer.from(self.config.securityKeys_S2_Authenticated, 'hex');
+		if (self.config.securityKeys_S2_Unauthenticated)
+			ZWaveOptions.securityKeys.S2_Unauthenticated = Buffer.from(self.config.securityKeys_S2_Unauthenticated, 'hex');
 
 		// Driver callback subscriptions
 		const wireDriverEvents = (): void => {
@@ -975,12 +972,5 @@ module.exports = (RED: NodeAPI) => {
 			});
 	});
 
-	RED.nodes.registerType('zwavejs-runtime', init, {
-		credentials: {
-			securityKeys_S0_Legacy: { type: 'text' },
-			securityKeys_S2_Unauthenticated: { type: 'text' },
-			securityKeys_S2_Authenticated: { type: 'text' },
-			securityKeys_S2_AccessControl: { type: 'text' }
-		}
-	});
+	RED.nodes.registerType('zwavejs-runtime', init);
 };

@@ -1,5 +1,5 @@
 import { Node } from 'node-red';
-import { Type_ZWaveJSRuntimeConfig, Type_ZWaveJSRuntimeCredentialConfig } from './Type_ZWaveJSRuntimeConfig';
+import { Type_ZWaveJSRuntimeConfig } from './Type_ZWaveJSRuntimeConfig';
 import { Driver, ValueID, ZWaveNode } from 'zwave-js';
 import { CommandClasses } from '@zwave-js/core';
 
@@ -57,7 +57,6 @@ export type DeviceCallback = (Data: UserPayloadPackage) => void;
 
 export type Type_ZWaveJSRuntime = Node & {
 	config: Type_ZWaveJSRuntimeConfig;
-	credentials: Type_ZWaveJSRuntimeCredentialConfig;
 	driverInstance?: Driver;
 	registerDeviceNode(deviceNodeId: string, nodeIds: number[], callback: DeviceCallback): void;
 	deregisterDeviceNode(deviceNodeId: string): void;

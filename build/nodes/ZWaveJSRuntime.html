@@ -1,28 +1,6 @@
 <script type="text/javascript">
 	const RuntimeNodeSettings = {
 		category: 'config',
-		credentials: {
-			securityKeys_S0_Legacy: {
-				value: '',
-				required: false,
-				type: 'text'
-			},
-			securityKeys_S2_Unauthenticated: {
-				value: '',
-				required: false,
-				type: 'text'
-			},
-			securityKeys_S2_Authenticated: {
-				value: '',
-				required: false,
-				type: 'text'
-			},
-			securityKeys_S2_AccessControl: {
-				value: '',
-				required: false,
-				type: 'text'
-			}
-		},
 		defaults: {
 			name: {
 				value: 'ZWave JS Runtime',
@@ -33,39 +11,37 @@
 				required: true
 			},
 			timeouts_ack: {
-				value: 0,
-				required: true,
-				validate: RED.validators.number()
+				value: '',
+				required: false,
+				validate: Validate
 			},
 			timeouts_response: {
-				value: 0,
-				required: true,
-				validate: RED.validators.number()
+				value: '',
+				required: false,
+				validate: Validate
 			},
 			timeouts_sendDataCallback: {
-				value: 0,
-				required: true,
-				validate: RED.validators.number()
+				value: '',
+				required: false,
+				validate: Validate
 			},
 			timeouts_report: {
-				value: 0,
-				required: true,
-				validate: RED.validators.number()
+				value: '',
+				required: false,
+				validate: Validate
 			},
 			timeouts_serialAPIStarted: {
-				value: 0,
-				required: true,
-				validate: RED.validators.number()
+				value: '',
+				required: false,
+				validate: Validate
 			},
 			preferences_scales_temperature: {
-				value: 0,
-				required: true,
-				validate: RED.validators.number()
+				value: '0',
+				required: true
 			},
 			preferences_scales_humidity: {
-				value: 0,
-				required: true,
-				validate: RED.validators.number()
+				value: '0',
+				required: true
 			},
 			logConfig_level: {
 				value: 'off',
@@ -104,10 +80,26 @@
 				required: true
 			},
 			enableGlobalAPI: {
-				value: false,
+				value: true,
 				required: true
 			},
 			globalAPIName: {
+				value: '',
+				required: false
+			},
+			securityKeys_S0_Legacy: {
+				value: '',
+				required: false
+			},
+			securityKeys_S2_Unauthenticated: {
+				value: '',
+				required: false
+			},
+			securityKeys_S2_Authenticated: {
+				value: '',
+				required: false
+			},
+			securityKeys_S2_AccessControl: {
 				value: '',
 				required: false
 			}
@@ -115,27 +107,19 @@
 		label: function () {
 			return this.name;
 		},
-		oneditprepare: prepEditor,
-		oneditsave: formatNumericValues
+		oneditprepare: prepEditor
 	};
 
 	RED.nodes.registerType('zwavejs-runtime', RuntimeNodeSettings);
 
-	function prepEditor() {
-		const Numericle = [
-			'preferences_scales_temperature',
-			'preferences_scales_humidity',
-			'timeouts_ack',
-			'timeouts_response',
-			'timeouts_sendDataCallback',
-			'timeouts_report',
-			'timeouts_serialAPIStarted'
-		];
-		Numericle.forEach((K) => {
-			const Value = this[K] || K.startsWith('timeouts') ? 0 : '';
-			$(`#el-node-config-input-${K}`).val(Value.toString());
-		});
+	function Validate(v) {
+		if (v.length) {
+			return !isNaN(v);
+		}
+		return true;
+	}
 
+	function prepEditor() {
 		$.getJSON('zwave-js/ui/global/getports', (data) => {
 			if (data.callSuccess) {
 				data.response.forEach((SP) => {
@@ -147,21 +131,6 @@
 		});
 	}
 
-	function formatNumericValues() {
-		const Numericle = [
-			'preferences_scales_temperature',
-			'preferences_scales_humidity',
-			'timeouts_ack',
-			'timeouts_response',
-			'timeouts_sendDataCallback',
-			'timeouts_report',
-			'timeouts_serialAPIStarted'
-		];
-		Numericle.forEach((K) => {
-			this[K] = parseInt($(`#el-node-config-input-${K}`).val());
-		});
-	}
-
 	function genKey() {
 		const bytes = new Uint8Array(16);
 		window.crypto.getRandomValues(bytes);
@@ -170,6 +139,7 @@
 	}
 </script>
 
+<!-- prettier-ignore -->
 <script type="text/x-red" data-template-name="zwavejs-runtime">
 	<h3>Basic</h3>
 	<hr />
@@ -193,33 +163,33 @@
 	<hr />
 	<div class="form-row">
 	    <label for="node-config-input-securityKeys_S0_Legacy"><i class="fa fa-lock"></i> S0</label>
-	    <input type="text" id="node-config-input-securityKeys_S0_Legacy"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()">Generate</button>
+	    <input type="text" id="node-config-input-securityKeys_S0_Legacy" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()" style="display:unset; width:90px">Generate</button>
 	</div>
 	<div class="form-row">
 	    <label for="node-config-input-securityKeys_S2_Unauthenticated"><i class="fa fa-lock"></i> S2 UAuth</label>
-	    <input type="text" id="node-config-input-securityKeys_S2_Unauthenticated"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()">Generate</button>
+	    <input type="text" id="node-config-input-securityKeys_S2_Unauthenticated" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()" style="display:unset; width:90px">Generate</button>
 	</div>
 	<div class="form-row">
 	    <label for="node-config-input-securityKeys_S2_Authenticated"><i class="fa fa-lock"></i> S2 Auth</label>
-	    <input type="text" id="node-config-input-securityKeys_S2_Authenticated"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()">Generate</button>
+	    <input type="text" id="node-config-input-securityKeys_S2_Authenticated" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()" style="display:unset; width:90px">Generate</button>
 	</div>
 	<div class="form-row">
 	    <label for="node-config-input-securityKeys_S2_AccessControl"><i class="fa fa-lock"></i> S2 Acc Ctrl</label>
-	    <input type="text" id="node-config-input-securityKeys_S2_AccessControl"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()">Generate</button>
+	    <input type="text" id="node-config-input-securityKeys_S2_AccessControl" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()" style="display:unset; width:90px">Generate</button>
 	</div>
 
 	<h3>Scales</h3>
 	<hr />
 	<div class="form-row">
-	    <label for="el-node-config-input-preferences_scales_temperature"><i class="fa fa-thermometer-empty"></i> Temperature</label>
-	    <select id="el-node-config-input-preferences_scales_temperature">
+	    <label for="node-config-input-preferences_scales_temperature"><i class="fa fa-thermometer-empty"></i> Temperature</label>
+	    <select id="node-config-input-preferences_scales_temperature">
 	        <option value="0">Celsius (°C)</option>
 	        <option value="1">Fahrenheit (°F)</option>
 	    </select>
 	</div>
 	<div class="form-row">
-	    <label for="el-node-config-input-preferences_scales_humidity"><i class="fa fa-tint"></i> Humidity</label>
-	    <select id="el-node-config-input-preferences_scales_humidity">
+	    <label for="node-config-input-preferences_scales_humidity"><i class="fa fa-tint"></i> Humidity</label>
+	    <select id="node-config-input-preferences_scales_humidity">
 	        <option value="0">Percentage (%)</option>
 	        <option value="1">Absolute Humidity (g/m³)</option>
 	    </select>
@@ -278,27 +248,27 @@
 	    <input type="checkbox" id="node-config-input-enableSoftReset">
 	</div>
 
-	<h3>Timeouts</h3>
+	<h3>Timeouts (ms)</h3>
 	<hr />
 	<div class="form-row">
-	    <label for="el-node-config-input-timeouts_ack"><i class="fa fa-clock-o"></i> ACK</label>
-	    <input type="number" id="el-node-config-input-timeouts_ack">
+	    <label for="node-config-input-timeouts_ack"><i class="fa fa-clock-o"></i> ACK</label>
+	    <input type="number" id="node-config-input-timeouts_ack" placeholder="Use Default">
 	</div>
 	<div class="form-row">
-	    <label for="el-node-config-input-timeouts_response"><i class="fa fa-clock-o"></i> Response</label>
-	    <input type="number" id="el-node-config-input-timeouts_response">
+	    <label for="node-config-input-timeouts_response"><i class="fa fa-clock-o"></i> Response</label>
+	    <input type="number" id="node-config-input-timeouts_response" placeholder="Use Default">
 	</div>
 	<div class="form-row">
-	    <label for="el-node-config-input-timeouts_sendDataCallback"><i class="fa fa-clock-o"></i> Callback</label>
-	    <input type="number" id="el-node-config-input-timeouts_sendDataCallback">
+	    <label for="node-config-input-timeouts_sendDataCallback"><i class="fa fa-clock-o"></i> Callback</label>
+	    <input type="number" id="node-config-input-timeouts_sendDataCallback" placeholder="Use Default">
 	</div>
 	<div class="form-row">
-	    <label for="el-node-config-input-timeouts_report"><i class="fa fa-clock-o"></i> Report</label>
-	    <input type="number" id="el-node-config-input-timeouts_report">
+	    <label for="node-config-input-timeouts_report"><i class="fa fa-clock-o"></i> Report</label>
+	    <input type="number" id="node-config-input-timeouts_report" placeholder="Use Default">
 	</div>
 	<div class="form-row">
-	    <label for="el-node-config-input-timeouts_serialAPIStarted"><i class="fa fa-clock-o"></i> Serial API</label>
-	    <input type="number" id="el-node-config-input-timeouts_serialAPIStarted">
+	    <label for="node-config-input-timeouts_serialAPIStarted"><i class="fa fa-clock-o"></i> Serial API</label>
+	    <input type="number" id="node-config-input-timeouts_serialAPIStarted" placeholder="Use Default">
 	</div>
 
 	<h3>Global API Access</h3>
@@ -317,6 +287,7 @@
 	</div>
 </script>
 
+<!-- prettier-ignore -->
 <script type="text/markdown" data-help-name="zwavejs-runtime">
 	<p>A ZWave JS Driver Runtime Instance</p>
 </script>
