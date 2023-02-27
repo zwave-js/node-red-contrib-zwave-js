@@ -76,11 +76,11 @@
 				required: false
 			},
 			enableStatistics: {
-				value: true,
+				value: false,
 				required: true
 			},
 			enableGlobalAPI: {
-				value: true,
+				value: false,
 				required: true
 			},
 			globalAPIName: {
@@ -125,6 +125,9 @@
 				data.response.forEach((SP) => {
 					$('#node-config-input-serialPort').append(new Option(SP, SP));
 				});
+				if(this.serialPort){
+					$('#node-config-input-serialPort').val(this.serialPort)
+				}
 			} else {
 				alert(data.response);
 			}
