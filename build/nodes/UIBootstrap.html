@@ -38,17 +38,17 @@
 	</div>
 
 	<!--Controller Menu-->
-	<div class="red-ui-sidebar-header zwavejs-controller-menu-header">
+	<div class="red-ui-sidebar-header zwave-js-controller-menu-header">
 		<a class="red-ui-tab-link-button" onclick="ShowNetworkManagement()"><i class="fa fa-cogs"></i></a>
 		<a class="red-ui-tab-link-button"><i class="fa fa-refresh"></i></a>
 		<a class="red-ui-tab-link-button"><i class="fa fa-medkit"></i></a>
 	</div>
 
 	<!--Stack-->
-	<div class="red-ui-sidebar-info-stack" id="zwavejs-panel-stack" style="width: 100%; height: 100%">
+	<div class="red-ui-sidebar-info-stack" id="zwave-js-panel-stack" style="width: 100%; height: 100%">
 		<!-- Node List-->
 		<div>
-			<div id="zwavejs-node-list" style="width: 100%; height: 100%"></div>
+			<div id="zwave-js-node-list" style="width: 100%; height: 100%"></div>
 		</div>
 		<!--Node Info-->
 		<div>
@@ -74,7 +74,7 @@
 					</tr>
 				</table>
 			</div>
-			<div class="red-ui-sidebar-header zwavejs-controller-menu-header">
+			<div class="red-ui-sidebar-header zwave-js-controller-menu-header">
 				<a class="red-ui-tab-link-button" onclick="ShowNodeManagement()"><i class="fa fa-cogs"></i></a>
 				<a class="red-ui-tab-link-button"><i class="fa fa-handshake-o"></i></a>
 				<a class="red-ui-tab-link-button"><i class="fa fa-medkit"></i></a>
@@ -132,13 +132,13 @@
 				</ul>
 				<div class="step-content" style="border: none">
 					<div class="step-tab-panel" data-step="IEMode">
-						<button class="zwavejs-full-width-button" onclick="IE('Default')">Add New Device : Default (S2, S0)</button>
-						<button class="zwavejs-full-width-button" onclick="IE('S2')">Add New Device : S2</button>
-						<button class="zwavejs-full-width-button" onclick="IE('S0')">Add New Device : S0</button>
-						<button class="zwavejs-full-width-button" onclick="IE('SS')">Add New Device : Smart Start</button>
-						<button class="zwavejs-full-width-button" onclick="IE('NS')">Add New Device : Unsecured</button>
-						<button class="zwavejs-full-width-button" onclick="IE('EX')">Exclude A Device</button>
-						<button class="zwavejs-full-width-button" onclick="IE('PL')">Smart Start Provisioning List</button>
+						<button class="zwave-js-full-width-button" onclick="IE('Default')">Add New Device : Default (S2, S0)</button>
+						<button class="zwave-js-full-width-button" onclick="IE('S2')">Add New Device : S2</button>
+						<button class="zwave-js-full-width-button" onclick="IE('S0')">Add New Device : S0</button>
+						<button class="zwave-js-full-width-button" onclick="IE('SS')">Add New Device : Smart Start</button>
+						<button class="zwave-js-full-width-button" onclick="IE('NS')">Add New Device : Unsecured</button>
+						<button class="zwave-js-full-width-button" onclick="IE('EX')">Exclude A Device</button>
+						<button class="zwave-js-full-width-button" onclick="IE('PL')">Smart Start Provisioning List</button>
 					</div>
 
 					<div class="step-tab-panel" data-step="NIF">
@@ -231,6 +231,15 @@
 
 		<div id="tabs-5">
 			<h2>NVM Backup/Restore</h2>
+			<button class="zwave-js-full-width-button" onclick="NVMBackup()">Backup NVM</button>
+			<button class="zwave-js-full-width-button" onclick="NVMRestore()">Restore NVM</button>
+
+			<div id="NVRProgress" class="zwave-js-progress" style="display: none;">
+				<div class="zwave-js-progress-bar">0%</div>
+			  </div>
+			
+			
+
 		</div>
 
 		<div id="tabs-6">

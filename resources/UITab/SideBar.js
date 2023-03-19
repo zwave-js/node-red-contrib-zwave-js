@@ -11,6 +11,8 @@ let ValidateDSK;
 let NetworkSelected;
 let ShowNetworkManagement;
 let ShowNodeManagement;
+let NVMBackup;
+let NVMRestore;
 
 // UI Vars
 let associationGroups;
@@ -94,7 +96,7 @@ const ZWaveJSUI = (function () {
 		}
 	};
 	const commsStatus = (event, data) => {
-		$('#zwavejs-radio-status').text(data.status);
+		$('#zwave-js-radio-status').text(data.status);
 	};
 	const commsNodeAdded = (event, data) => {
 		const NodeID = data.nodeId;
@@ -165,6 +167,36 @@ const ZWaveJSUI = (function () {
 	};
 
 	// Node Managemnt fucntions
+	NVMBackup = () => {
+		$('#NVRProgress').css({display:'block'})
+
+		let D = 0;
+
+		setInterval(()=>{
+			D++;
+			$('#NVRProgress > div').css({width:`${D}%`});
+			$('#NVRProgress > div').text(`Backup ${D}%`);
+		},80)
+
+		
+		
+
+	
+	};
+	NVMRestore = () =>  {
+
+		$('#NVRProgress').css({display:'block'})
+
+		let D = 0;
+
+		setInterval(()=>{
+			D++;
+			$('#NVRProgress > div').css({width:`${D}%`});
+			$('#NVRProgress > div').text(`Backup ${D}%`);
+		},80)
+		
+		
+	};
 	Grant = () => {
 		const GrantObject = {
 			securityClasses: [],
@@ -545,7 +577,7 @@ const ZWaveJSUI = (function () {
 							//icon: 'fa fa-circle'
 						});
 					});
-					$('#zwavejs-node-list').treeList('data', TreeData);
+					$('#zwave-js-node-list').treeList('data', TreeData);
 				} else {
 					alert(data.response);
 				}
@@ -766,10 +798,10 @@ const ZWaveJSUI = (function () {
 			onchange: () => setTimeout(resizeStack, 0)
 		});
 
-		$('#zwavejs-node-list').treeList({ data: [] });
+		$('#zwave-js-node-list').treeList({ data: [] });
 		$('#zwavejz-cc-list-list').treeList({ data: [] });
 
-		const panels = RED.panels.create({ container: $('#zwavejs-panel-stack') });
+		const panels = RED.panels.create({ container: $('#zwave-js-panel-stack') });
 		panels.ratio(0.4);
 
 		const resizeStack = () => panels.resize(Content.height());
@@ -820,7 +852,7 @@ const ZWaveJSUI = (function () {
 		}, 250);
 
 		// Node List Selected
-		$('#zwavejs-node-list').on('treelistselect', nodeSelected);
+		$('#zwave-js-node-list').on('treelistselect', nodeSelected);
 	};
 
 	return { init };

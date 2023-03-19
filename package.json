@@ -6,17 +6,17 @@
 	"dependencies": {
 		"limiter": "^2.1.0",
 		"lodash": "^4.17.21",
-		"zwave-js": "^10.4.0",
+		"zwave-js": "^10.12.0",
 		"tail": "2.2.6"
 	},
 	"devDependencies": {
-		"eslint": "^8.25.1",
-		"prettier": "^2.7.1",
+		"eslint": "^8.36.0",
+		"prettier": "^2.8.4",
 		"@types/tail": "2.2.1",
 		"@types/node": "^14.13.0",
 		"@types/node-red": "^1.2.1",
-		"@typescript-eslint/parser": "5.41.0",
-		"@typescript-eslint/eslint-plugin": "5.47.0"
+		"@typescript-eslint/parser": "5.55.0",
+		"@typescript-eslint/eslint-plugin": "5.55.0"
 	},
 	"scripts": {
 		"validate": "node-red-dev validate -o validation_result.json",

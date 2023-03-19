@@ -1,5 +1,5 @@
 /* Alert Flash */
-.zwavejs-controller-button-blink {
+.zwave-js-controller-button-blink {
 	animation: blinker 1s linear infinite;
 }
 @keyframes blinker {
@@ -18,14 +18,14 @@
 }
 
 /* Controller Info Header */
-.zwavejs-info-header {
+.zwave-js-info-header {
 	height: 40px;
 	padding: 10px;
 	text-align: left;
 }
 
 /* Info icon */
-.zwavejs-info-header > i {
+.zwave-js-info-header > i {
 	position: absolute;
 	font-size: 30px;
 	margin-top: 5px;
@@ -33,38 +33,38 @@
 }
 
 /* Info Container */
-.zwavejs-info-container {
+.zwave-js-info-container {
 	margin-left: 50px;
 }
 
 /* Controller Info Lables */
-.zwavejs-info-container span:first-of-type {
+.zwave-js-info-container span:first-of-type {
 	font-size: 18px;
 	font-weight: bold;
 	color: gray;
 }
-.zwavejs-info-container span {
+.zwave-js-info-container span {
 	font-size: 14px;
 	color: gray;
 }
 
 /* Controller Menu header */
-.zwavejs-controller-menu-header {
+.zwave-js-controller-menu-header {
 	height: 20px;
 	text-align: center;
 }
 
 /* Controller Menu buttons */
-.zwavejs-controller-menu-header a {
+.zwave-js-controller-menu-header a {
 	position: relative;
 	margin-right: 15px;
 }
-.zwavejs-controller-menu-header a i {
+.zwave-js-controller-menu-header a i {
 	font-size: 18px;
 	color: gray;
 }
 
-button.zwavejs-full-width-button {
+button.zwave-js-full-width-button {
 	width: 70%;
 	display: block;
 	margin: auto;
@@ -79,7 +79,7 @@ button.zwavejs-full-width-button {
 	cursor: pointer;
 }
 
-button.zwavejs-full-width-button:hover {
+button.zwave-js-full-width-button:hover {
 	background-color: rgb(46, 145, 205);
 	color: white;
 }
@@ -185,4 +185,27 @@ button.zwavejs-full-width-button:hover {
 	display: inline-block;
 	text-align: center;
 	line-height: 20px;
+}
+
+.zwave-js-progress {
+	display: block;
+	margin: auto;
+	margin-top: 50px;
+	text-align: center;
+	height: 30px;
+	line-height: 30px;
+	width: 70%;
+	border-radius: 4px;
+	border-style: solid;
+	border-width: 1px;
+	border-color: var(--red-ui-node-border);
+	overflow: hidden;
+}
+
+.zwave-js-progress .zwave-js-progress-bar {
+	text-align: center;
+	background-color: rgb(46, 145, 205);
+	color: white;
+	width: 0%;
+	overflow: hidden;
 }
