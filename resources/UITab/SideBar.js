@@ -178,10 +178,6 @@ const ZWaveJSUI = (function () {
 			$('#NVRProgress > div').text(`Backup ${D}%`);
 		},80)
 
-		
-		
-
-	
 	};
 	NVMRestore = () =>  {
 
@@ -661,7 +657,7 @@ const ZWaveJSUI = (function () {
 			$('#zwave-js-value-input').append(
 				`<tr><td>Predefined Value</td><td>${
 					Input.get(0).outerHTML
-				}</td><td><button class="zwavejs-full-width-button" style="height:20px;border-radius:2px;width:50px">Send</button></td></tr>`
+				}</td><td><button class="zwave-js-full-width-button" style="height:20px;border-radius:2px;width:50px">Send</button></td></tr>`
 			);
 		}
 
@@ -694,7 +690,7 @@ const ZWaveJSUI = (function () {
 			$('#zwave-js-value-input').append(
 				`<tr><td>Custom Value</td><td>${
 					ManualInput.get(0).outerHTML
-				}</td><td><button class="zwavejs-full-width-button" style="height:20px;border-radius:2px;width:50px">Send</button></td></tr>`
+				}</td><td><button class="zwave-js-full-width-button" style="height:20px;border-radius:2px;width:50px">Send</button></td></tr>`
 			);
 		}
 	};
