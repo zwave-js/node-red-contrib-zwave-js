@@ -14,7 +14,8 @@ export const process = async (
 		return new Promise((resolve, reject) => {
 			try {
 				Result = DriverInstance.controller.nodes.get(NodeID)?.getValue(VID);
-				resolve(Result);
+				const TS = DriverInstance.controller.nodes.get(NodeID)?.getValueTimestamp(VID);
+				resolve({ value: Result, timestamp: TS });
 			} catch (Err) {
 				reject(Err);
 			}

@@ -75,8 +75,11 @@ export const getValueDB = (DriverInstance: Driver, Nodes?: number[]): Record<str
 			VIDs.forEach((VID) => {
 				const Meta = ZWN.getValueMetadata(VID);
 				const Value = ZWN.getValue(VID);
+				const TS = ZWN.getValueTimestamp(VID);
+
 				const VI = {
 					currentValue: Value,
+					valueTimestamp: TS,
 					valueId: VID,
 					metadata: Meta
 				};
