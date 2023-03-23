@@ -1,8 +1,8 @@
 import path from 'path';
 import { NodeAPI } from 'node-red';
-import { Type_ZWaveJSRuntimeConfig } from '../types/Type_ZWaveJSRuntimeConfig';
 import {
 	Type_ZWaveJSRuntime,
+	Type_ZWaveJSRuntimeConfig,
 	MessageType,
 	DeviceCallback,
 	ControllerCallback,
@@ -855,6 +855,7 @@ module.exports = (RED: NodeAPI) => {
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
 				);
+				const { value, ...valueId } = Args;
 				const Event: UserPayloadPackage = {
 					Type: MessageType.EVENT,
 					Event: {
@@ -863,7 +864,7 @@ module.exports = (RED: NodeAPI) => {
 						nodeId: ThisNode.id,
 						nodeName: ThisNode.name,
 						nodeLocation: ThisNode.location,
-						eventBody: Args
+						eventBody: { valueId, value }
 					}
 				};
 				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
@@ -875,6 +876,7 @@ module.exports = (RED: NodeAPI) => {
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
 				);
+				const { newValue, prevValue, ...valueId } = Args;
 				const Event: UserPayloadPackage = {
 					Type: MessageType.EVENT,
 					Event: {
@@ -883,7 +885,7 @@ module.exports = (RED: NodeAPI) => {
 						nodeId: ThisNode.id,
 						nodeName: ThisNode.name,
 						nodeLocation: ThisNode.location,
-						eventBody: Args
+						eventBody: { valueId, newValue, prevValue }
 					}
 				};
 				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
@@ -895,6 +897,7 @@ module.exports = (RED: NodeAPI) => {
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
 				);
+				const { newValue, ...valueId } = Args;
 				const Event: UserPayloadPackage = {
 					Type: MessageType.EVENT,
 					Event: {
@@ -903,7 +906,7 @@ module.exports = (RED: NodeAPI) => {
 						nodeId: ThisNode.id,
 						nodeName: ThisNode.name,
 						nodeLocation: ThisNode.location,
-						eventBody: Args
+						eventBody: { valueId, newValue }
 					}
 				};
 				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
@@ -926,6 +929,7 @@ module.exports = (RED: NodeAPI) => {
 						eventBody: { ccId: CC, args: Args }
 					}
 				};
+
 				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
 			});
 		};

@@ -1,6 +1,6 @@
 import { NodeAPI } from 'node-red';
 import { UserPayloadPackage, Type_ZWaveJSRuntime, MessageType, API } from '../types/Type_ZWaveJSRuntime';
-import { Type_ZWaveJSControllerConfig } from '../types/Type_ZWaveJSControllerConfig';
+import { Type_ZWaveJSControllerConfig } from '../types/Type_ZWaveJSController';
 import { InputMessage, Type_ZWaveJSController } from '../types/Type_ZWaveJSController';
 import { getProfile } from '../lib/RequestResponseProfiles';
 

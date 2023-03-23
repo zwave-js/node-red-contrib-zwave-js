@@ -1,0 +1,68 @@
+<script type="text/javascript">
+	const ZWJSDeviceNodeSettings = {
+		category: 'ZWave JS',
+		color: 'rgb(46,145,205)',
+		defaults: {
+			name: {
+				value: 'ZWave Device',
+				required: true
+			},
+			runtimeId: {
+				value: '',
+				required: true,
+				type: 'zwavejs-runtime'
+			}
+		},
+		inputs: 1,
+		outputs: 1,
+		icon: 'Device.svg',
+		label: function () {
+			return this.name;
+		},
+		paletteLabel: 'Device'
+	};
+
+	RED.nodes.registerType('zwavejs-device', ZWJSDeviceNodeSettings);
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/x-red" data-template-name="zwavejs-device">
+	<h3>Basic</h3>
+	<hr />
+	<div class="form-row">
+	    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+	    <input type="text" id="node-input-name">
+	</div>
+	<div class="form-row">
+	    <label for="node-input-runtimeId"><i class="fa fa-cog"></i> Runtime</label>
+	    <input type="text" id="node-input-runtimeId">
+	</div>
+	<h3>Operating Mode</h3>
+	<hr />
+	<div class="form-row">
+	    <label for="node-input-nodemode"><i class="fa fa-th-large"></i> Node Mode</label>
+	    <select id="node-input-nodemode">
+			<option value="All">All Nodes</option>
+			<option value="Multiple">Selected Nodes</option>
+		</select>
+	</div>
+	<!--
+	<div class="form-row">
+	    <label for="node-input-mulitcast"><i class="fa fa-check"></i> Use Multicast</label>
+	    <input type="checkbox" id="node-input-mulitcast">
+	</div>
+	-->
+	<div class="form-row">
+	    <label for="node-input-datamode"><i class="fa fa-exchange"></i> Data Mode</label>
+		<select id="node-input-datamode">
+			<option value="SR">Send/Receive</option>
+			<option value="S">Send</option>
+			<option value="R">Receive</option>
+		</select>
+	</div>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/markdown" data-help-name="zwavejs-device">
+<p>A ZWave JS device allowing control of one or many devices</p>
+</script>

@@ -22,11 +22,11 @@ export type InputMessage = {
 	};
 };
 
-export type Type_ZWaveJSController = Node & {
-	config: Type_ZWaveJSControllerConfig;
+export type Type_ZWaveJSDevice = Node & {
+	config: Type_ZWaveJSDeviceConfig;
 	runtime: Type_ZWaveJSRuntime;
 };
 
-export type Type_ZWaveJSControllerConfig = NodeDef & {
+export type Type_ZWaveJSDeviceConfig = NodeDef & {
 	runtimeId: string;
 };

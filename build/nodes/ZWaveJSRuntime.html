@@ -1,5 +1,5 @@
 <script type="text/javascript">
-	const RuntimeNodeSettings = {
+	const ZWJSRuntimeNodeSettings = {
 		category: 'config',
 		defaults: {
 			name: {
@@ -110,7 +110,7 @@
 		oneditprepare: prepEditor
 	};
 
-	RED.nodes.registerType('zwavejs-runtime', RuntimeNodeSettings);
+	RED.nodes.registerType('zwavejs-runtime', ZWJSRuntimeNodeSettings);
 
 	function Validate(v) {
 		if (v.length) {

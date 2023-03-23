@@ -1,5 +1,4 @@
-import { Node } from 'node-red';
-import { Type_ZWaveJSRuntimeConfig } from './Type_ZWaveJSRuntimeConfig';
+import { Node, NodeDef } from 'node-red';
 import { Driver, ValueID, ZWaveNode } from 'zwave-js';
 import { CommandClasses } from '@zwave-js/core';
 
@@ -58,7 +57,7 @@ export type DeviceCallback = (Data: UserPayloadPackage) => void;
 export type Type_ZWaveJSRuntime = Node & {
 	config: Type_ZWaveJSRuntimeConfig;
 	driverInstance?: Driver;
-	registerDeviceNode(deviceNodeId: string, nodeIds: number[], callback: DeviceCallback): void;
+	registerDeviceNode(deviceNodeId: string, nodeIds: number[] | undefined, callback: DeviceCallback): void;
 	deregisterDeviceNode(deviceNodeId: string): void;
 	registerControllerNode(controllerNodeId: string, callback: ControllerCallback): void;
 	deregisterControllerNode(controllerNodeId: string): void;
@@ -80,4 +79,38 @@ export type Type_ZWaveJSRuntime = Node & {
 	): Promise<unknown>;
 
 	nodeCommand(Method: string, NodeID: number, Value?: unknown): Promise<unknown>;
+};
+
+export type Type_ZWaveJSRuntimeConfig = NodeDef & {
+	serialPort: string;
+	enableGlobalAPI: boolean;
+	globalAPIName?: string;
+
+	preferences_scales_temperature: string;
+	preferences_scales_humidity: string;
+
+	logConfig_level: string;
+	LogConfig_nodeFilter?: string;
+
+	storage_deviceConfigPriorityDir?: string;
+	storage_throttle: 'fast' | 'normal' | 'slow';
+
+	disableOptimisticValueUpdate: boolean;
+	enableSoftReset: boolean;
+	interview_queryAllUserCodes: boolean;
+
+	apiKeys_firmwareUpdateService?: string;
+
+	enableStatistics: boolean;
+
+	timeouts_ack?: string;
+	timeouts_response?: string;
+	timeouts_sendDataCallback?: string;
+	timeouts_report?: string;
+	timeouts_serialAPIStarted?: string;
+
+	securityKeys_S0_Legacy: string;
+	securityKeys_S2_Unauthenticated: string;
+	securityKeys_S2_Authenticated: string;
+	securityKeys_S2_AccessControl: string;
 };

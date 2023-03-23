@@ -41,7 +41,10 @@
 		"nodes": {
 			"ui-bootstrap": "build/nodes/UIBootstrap.js",
 			"zwavejs-runtime": "build/nodes/ZWaveJSRuntime.js",
-			"zwavejs-controller": "build/nodes/ZWaveJSController.js"
+			"zwavejs-controller": "build/nodes/ZWaveJSController.js",
+			"zwavejs-device": "build/nodes/ZWaveJSDevice.js",
+			"zwavejs-filter": "build/nodes/ZWaveJSFilter.js",
+			"zwavejs-factory": "build/nodes/ZWaveJSFactory.js"
 		}
 	},
 	"repository": {

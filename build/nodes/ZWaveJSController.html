@@ -1,10 +1,10 @@
 <script type="text/javascript">
-	const ControllerSettings = {
+	const ZWJSControllerNodeSettings = {
 		category: 'ZWave JS',
 		color: 'rgb(46,145,205)',
 		defaults: {
 			name: {
-				value: 'ZWave JS Controller',
+				value: 'ZWave Controller',
 				required: true
 			},
 			runtimeId: {
@@ -15,14 +15,14 @@
 		},
 		inputs: 1,
 		outputs: 1,
-		icon: 'ZWJS.svg',
+		icon: 'Controller.png',
 		label: function () {
 			return this.name;
 		},
-		paletteLabel: 'ZWave Controller'
+		paletteLabel: 'Controller'
 	};
 
-	RED.nodes.registerType('zwavejs-controller', ControllerSettings);
+	RED.nodes.registerType('zwavejs-controller', ZWJSControllerNodeSettings);
 </script>
 
 <!-- prettier-ignore -->
