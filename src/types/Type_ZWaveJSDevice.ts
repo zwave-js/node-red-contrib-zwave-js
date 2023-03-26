@@ -6,7 +6,7 @@ import { Type_ZWaveJSRuntime } from './Type_ZWaveJSRuntime';
 
 export type InputMessage = {
 	cmd: {
-		api: string;
+		api: 'VALUE' | 'CC' | 'NODE';
 		method: string;
 		trackingToken?: unknown;
 	};
@@ -29,4 +29,7 @@ export type Type_ZWaveJSDevice = Node & {
 
 export type Type_ZWaveJSDeviceConfig = NodeDef & {
 	runtimeId: string;
+	nodemode: string;
+	multimode: string;
+	datamode: string;
 };

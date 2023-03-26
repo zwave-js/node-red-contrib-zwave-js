@@ -1,6 +1,6 @@
 import { NodeAPI } from 'node-red';
 import { UserPayloadPackage, Type_ZWaveJSRuntime, MessageType } from '../types/Type_ZWaveJSRuntime';
-import { Type_ZWaveJSDevice, Type_ZWaveJSDeviceConfig } from '../types/Type_ZWaveJSDevice';
+import { Type_ZWaveJSDevice, Type_ZWaveJSDeviceConfig, InputMessage } from '../types/Type_ZWaveJSDevice';
 
 module.exports = (RED: NodeAPI) => {
 	const init = function (this: Type_ZWaveJSDevice, config: Type_ZWaveJSDeviceConfig) {
@@ -31,6 +31,21 @@ module.exports = (RED: NodeAPI) => {
 		self.on('close', (_: boolean, done: () => void) => {
 			self.runtime.deregisterDeviceNode(self.id);
 			done();
+		});
+
+		self.on('input', (msg, _, done) => {
+			const Req = msg.payload as InputMessage;
+
+			if (self.config.nodemode === 'All' && !Req.cmdProperties?.nodeId) {
+				done(new Error('Missing cmdProperties.nodeId property.'));
+			} else {
+				if (Req.cmdProperties?.nodeId) {
+					switch (Req.cmd.api) {
+						case 'NODE':
+							self.runtime.nodeCommand(Req.cmd.method, Req.cmdProperties?.nodeId, Req.cmdProperties?.value);
+					}
+				}
+			}
 		});
 	};
 

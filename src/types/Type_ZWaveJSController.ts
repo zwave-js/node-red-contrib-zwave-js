@@ -6,7 +6,7 @@ import { Type_ZWaveJSRuntime } from './Type_ZWaveJSRuntime';
 
 export type InputMessage = {
 	cmd: {
-		api: string;
+		api: 'CONTROLLER' | 'VALUE' | 'CC' | 'NODE';
 		method: string;
 		trackingToken?: unknown;
 	};

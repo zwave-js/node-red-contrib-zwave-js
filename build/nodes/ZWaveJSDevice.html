@@ -11,7 +11,21 @@
 				value: '',
 				required: true,
 				type: 'zwavejs-runtime'
-			}
+			},
+			nodemode: {
+				value: 'All',
+				required: true
+			},
+			multimode: {
+				value: 'Fan',
+				required: true
+			},
+			datamode: {
+				value: 'SR',
+				required: true
+			},
+			outputs: {value: 1},
+			inputs: {value: 1}
 		},
 		inputs: 1,
 		outputs: 1,
@@ -19,10 +33,46 @@
 		label: function () {
 			return this.name;
 		},
-		paletteLabel: 'Device'
+		paletteLabel: 'Device',
+		oneditprepare: Prep,
+		oneditsave: Save
 	};
 
 	RED.nodes.registerType('zwavejs-device', ZWJSDeviceNodeSettings);
+
+	function Save(){
+		switch($("#node-input-datamode").val()){
+
+			case 'SR':
+				this.inputs = 1;
+				this.outputs = 1;
+				break;
+
+			case 'R':
+				this.inputs = 0;
+				this.outputs = 1;
+				break;
+
+			case 'S':
+				this.inputs = 1;
+				this.outputs = 0;
+				break;
+
+		}
+		
+	}
+
+	function Prep() {
+
+		$('#node-input-nodemode').on('change', function() {
+			if ($(this).val() === 'All') {
+				$('#node-input-multimode-div').fadeOut(150);
+			}
+			else{
+				$('#node-input-multimode-div').fadeIn(150);
+			}
+		});
+	}
 </script>
 
 <!-- prettier-ignore -->
@@ -46,12 +96,13 @@
 			<option value="Multiple">Selected Nodes</option>
 		</select>
 	</div>
-	<!--
-	<div class="form-row">
-	    <label for="node-input-mulitcast"><i class="fa fa-check"></i> Use Multicast</label>
-	    <input type="checkbox" id="node-input-mulitcast">
+	<div class="form-row" id="node-input-multimode-div">
+	    <label for="node-input-multimode"><i class="fa fa-bullhorn"></i> Broadcast</label>
+	    <select id="node-input-multimode">
+			<option value="Fan">Fan-Out</option>
+			<option value="Multicast">Multicast</option>
+		</select>
 	</div>
-	-->
 	<div class="form-row">
 	    <label for="node-input-datamode"><i class="fa fa-exchange"></i> Data Mode</label>
 		<select id="node-input-datamode">
@@ -59,6 +110,9 @@
 			<option value="S">Send</option>
 			<option value="R">Receive</option>
 		</select>
+	</div>
+	<div class="form-tips" id="node-tip">
+		Note: Message broadcasting is only supported when <strong>Node Mode</strong> is set to <code>Selected Nodes</code>, you must provide a <code>nodeId</code> propery in your commands otherwise.
 	</div>
 </script>
 
