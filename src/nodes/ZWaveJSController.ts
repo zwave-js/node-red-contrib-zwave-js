@@ -1,5 +1,5 @@
 import { NodeAPI } from 'node-red';
-import { UserPayloadPackage, Type_ZWaveJSRuntime, MessageType, API } from '../types/Type_ZWaveJSRuntime';
+import { UserPayloadPackage, Type_ZWaveJSRuntime, MessageType } from '../types/Type_ZWaveJSRuntime';
 import { Type_ZWaveJSControllerConfig } from '../types/Type_ZWaveJSController';
 import { InputMessage, Type_ZWaveJSController } from '../types/Type_ZWaveJSController';
 import { getProfile } from '../lib/RequestResponseProfiles';
@@ -65,103 +65,110 @@ module.exports = (RED: NodeAPI) => {
 				const Req = msg.payload as InputMessage;
 
 				if (Req.cmd) {
-					const APIKey = Req.cmd.api as keyof typeof API;
-					const TargetAPI = API[APIKey];
-					const APIMethod = Req.cmd.method;
+					switch (Req.cmd.api) {
+						// Controller API
+						case 'CONTROLLER':
+							self.runtime
+								.controllerCommand(Req.cmd.method, Req.cmdProperties?.args)
+								.then((Result) => {
+									sendTrackingUpdate(Req, Result);
+									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId) as UserPayloadPackage;
+									if (Return && Return.Type === MessageType.EVENT) {
+										send({ payload: Return.Event });
+										done();
+									} else {
+										done();
+									}
+								})
+								.catch((Error) => {
+									sendTrackingUpdate(Req, Error);
+									done(Error);
+								});
+							break;
 
-					if (TargetAPI === API.CONTROLLER) {
-						self.runtime
-							.controllerCommand(APIMethod, Req.cmdProperties?.args)
-							.then((Result) => {
-								sendTrackingUpdate(Req, Result);
-								const Return = getProfile(APIMethod, Result, Req.cmdProperties?.nodeId) as UserPayloadPackage;
-								if (Return && Return.Type === MessageType.EVENT) {
-									send({ payload: Return.Event });
-									done();
-								} else {
-									done();
-								}
-							})
-							.catch((Error) => {
-								sendTrackingUpdate(Req, Error);
-								done(Error);
-							});
-					}
+						// Command Class API
+						case 'CC':
+							if (Req.cmdProperties?.commandClass && Req.cmdProperties?.method && Req.cmdProperties?.nodeId) {
+								self.runtime
+									.ccCommand(
+										Req.cmd.method,
+										Req.cmdProperties?.commandClass,
+										Req.cmdProperties?.method,
+										Req.cmdProperties?.nodeId,
+										Req.cmdProperties?.endpoint,
+										Req.cmdProperties?.args
+									)
+									.then((Result) => {
+										sendTrackingUpdate(Req, Result);
+										const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId) as UserPayloadPackage;
+										if (Return && Return.Type === MessageType.EVENT) {
+											send({ payload: Return.Event });
+											done();
+										} else {
+											done();
+										}
+									})
+									.catch((Error) => {
+										sendTrackingUpdate(Req, Error);
+										done(Error);
+									});
+							} else {
+								done(new Error('cmdProperties is either missing or has fewer requied properties.'));
+							}
+							break;
 
-					if (
-						TargetAPI === API.CC &&
-						Req.cmdProperties?.commandClass &&
-						Req.cmdProperties?.method &&
-						Req.cmdProperties?.nodeId
-					) {
-						self.runtime
-							.ccCommand(
-								APIMethod,
-								Req.cmdProperties.commandClass,
-								Req.cmdProperties.method,
-								Req.cmdProperties.nodeId,
-								Req.cmdProperties.endpoint,
-								Req.cmdProperties.args
-							)
-							.then((Result) => {
-								sendTrackingUpdate(Req, Result);
-								const Return = getProfile(APIMethod, Result, Req.cmdProperties?.nodeId) as UserPayloadPackage;
-								if (Return && Return.Type === MessageType.EVENT) {
-									send({ payload: Return.Event });
-									done();
-								} else {
-									done();
-								}
-							})
-							.catch((Error) => {
-								sendTrackingUpdate(Req, Error);
-								done(Error);
-							});
-					}
+						// Value API
+						case 'VALUE':
+							if (Req.cmdProperties?.nodeId && Req.cmdProperties?.valueId) {
+								self.runtime
+									.valueCommand(
+										Req.cmd.method,
+										Req.cmdProperties.nodeId,
+										Req.cmdProperties.valueId,
+										Req.cmdProperties.value,
+										Req.cmdProperties.setValueOptions
+									)
+									.then((Result) => {
+										sendTrackingUpdate(Req, Result);
+										const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId) as UserPayloadPackage;
+										if (Return && Return.Type === MessageType.EVENT) {
+											send({ payload: Return.Event });
+											done();
+										} else {
+											done();
+										}
+									})
+									.catch((Error) => {
+										sendTrackingUpdate(Req, Error);
+										done(Error);
+									});
+							} else {
+								done(new Error('cmdProperties is either missing or has fewer requied properties.'));
+							}
+							break;
 
-					if (TargetAPI === API.VALUE && Req.cmdProperties?.valueId && Req.cmdProperties.nodeId) {
-						self.runtime
-							.valueCommand(
-								APIMethod,
-								Req.cmdProperties.nodeId,
-								Req.cmdProperties.valueId,
-								Req.cmdProperties.value,
-								Req.cmdProperties.setValueOptions
-							)
-							.then((Result) => {
-								sendTrackingUpdate(Req, Result);
-								const Return = getProfile(APIMethod, Result, Req.cmdProperties?.nodeId) as UserPayloadPackage;
-								if (Return && Return.Type === MessageType.EVENT) {
-									send({ payload: Return.Event });
-									done();
-								} else {
-									done();
-								}
-							})
-
-							.catch((Error) => {
-								sendTrackingUpdate(Req, Error);
-								done(Error);
-							});
-					}
-
-					if (TargetAPI === API.NODE && Req.cmdProperties?.nodeId) {
-						self.runtime
-							.nodeCommand(Req.cmd.method, Req.cmdProperties.nodeId, Req.cmdProperties.value)
-							.then((Result) => {
-								sendTrackingUpdate(Req, Result);
-								const Return = getProfile(APIMethod, Result, Req.cmdProperties?.nodeId) as UserPayloadPackage;
-								if (Return && Return.Type === MessageType.EVENT) {
-									send({ payload: Return.Event });
-									done();
-								} else {
-									done();
-								}
-							})
-							.catch((Error) => {
-								sendTrackingUpdate(Req, Error);
-								done(Error);
-							});
+						case 'NODE':
+							if (Req.cmdProperties?.nodeId) {
+								self.runtime
+									.nodeCommand(Req.cmd.method, Req.cmdProperties.nodeId, Req.cmdProperties.value)
+									.then((Result) => {
+										sendTrackingUpdate(Req, Result);
+										const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId) as UserPayloadPackage;
+										if (Return && Return.Type === MessageType.EVENT) {
+											send({ payload: Return.Event });
+											done();
+										} else {
+											done();
+										}
+									})
+									.catch((Error) => {
+										sendTrackingUpdate(Req, Error);
+										done(Error);
+									});
+							} else {
+								done(new Error('Missing cmdProperties.nodeId property.'));
+							}
+							break;
 					}
 				} else {
 					done(new Error('msg.payload is not a valid command.'));

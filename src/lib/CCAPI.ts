@@ -10,20 +10,17 @@ export const process = async (
 	Endpoint?: number,
 	Args?: unknown[]
 ): Promise<unknown> => {
-	let Result: unknown;
-
 	if (Method === 'invokeCCAPI') {
-		return new Promise((resolve, reject) => {
-			try {
-				Result = DriverInstance.controller.nodes
-					.get(NodeID)
-					?.getEndpoint(Endpoint || 0)
-					?.invokeCCAPI(CommandClass, CCMethod, Args?.values());
-				resolve(Result);
-			} catch (Err) {
-				reject(Err);
+		try {
+			const Node = DriverInstance.controller.nodes.get(NodeID);
+			if (Node) {
+				return Node.getEndpoint(Endpoint || 0)?.invokeCCAPI(CommandClass, CCMethod, Args?.values());
+			} else {
+				return Promise.reject(new Error(`Node ${NodeID} does not exist`));
 			}
-		});
+		} catch (Err) {
+			return Promise.reject(Err);
+		}
 	}
 
 	return Promise.reject(new Error('Invalid Method'));

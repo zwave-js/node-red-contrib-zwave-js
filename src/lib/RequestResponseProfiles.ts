@@ -3,7 +3,6 @@ import { UserPayloadPackage, MessageType } from '../types/Type_ZWaveJSRuntime';
 export const getProfile = (Name: string, Result: unknown, NodeID?: number): UserPayloadPackage | undefined => {
 	const Timestamp = new Date().getTime();
 
-	/*
 	if (Name === 'setNodeName') {
 		const Event: UserPayloadPackage = {
 			Type: MessageType.EVENT,
@@ -25,7 +24,6 @@ export const getProfile = (Name: string, Result: unknown, NodeID?: number): User
 		}
 		return Event;
 	}
-	*/
 
 	if (Name === 'ping') {
 		const Event: UserPayloadPackage = {

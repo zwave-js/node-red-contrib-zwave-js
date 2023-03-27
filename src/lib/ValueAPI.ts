@@ -8,46 +8,31 @@ export const process = async (
 	Value?: unknown,
 	ValueOptions?: Record<string, unknown>
 ): Promise<unknown> => {
-	let Result: unknown;
-
 	if (Method === 'getValue') {
-		return new Promise((resolve, reject) => {
-			try {
-				Result = DriverInstance.controller.nodes.get(NodeID)?.getValue(VID);
-				const TS = DriverInstance.controller.nodes.get(NodeID)?.getValueTimestamp(VID);
-				resolve({ value: Result, timestamp: TS });
-			} catch (Err) {
-				reject(Err);
-			}
-		});
+		const Node = DriverInstance.controller.nodes.get(NodeID);
+		if (Node) {
+			return DriverInstance.controller.nodes.get(NodeID)?.getValue(VID);
+		} else {
+			return Promise.reject(new Error(`Node ${NodeID} does not exist`));
+		}
 	}
 
 	if (Method === 'setValue') {
-		return new Promise((resolve, reject) => {
-			DriverInstance.controller.nodes
-				.get(NodeID)
-				?.setValue(VID, Value, ValueOptions)
-				.then((Result) => {
-					resolve(Result);
-				})
-				.catch((Error) => {
-					reject(Error);
-				});
-		});
+		const Node = DriverInstance.controller.nodes.get(NodeID);
+		if (Node) {
+			return DriverInstance.controller.nodes.get(NodeID)?.setValue(VID, Value, ValueOptions);
+		} else {
+			return Promise.reject(new Error(`Node ${NodeID} does not exist`));
+		}
 	}
 
 	if (Method === 'pollValue') {
-		return new Promise((resolve, reject) => {
-			DriverInstance.controller.nodes
-				.get(NodeID)
-				?.pollValue(VID)
-				.then((Result) => {
-					resolve(Result);
-				})
-				.catch((Error) => {
-					reject(Error);
-				});
-		});
+		const Node = DriverInstance.controller.nodes.get(NodeID);
+		if (Node) {
+			return DriverInstance.controller.nodes.get(NodeID)?.pollValue(VID);
+		} else {
+			return Promise.reject(new Error(`Node ${NodeID} does not exist`));
+		}
 	}
 
 	return Promise.reject(new Error('Invalid Method'));
