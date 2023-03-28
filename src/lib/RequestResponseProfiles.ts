@@ -3,7 +3,7 @@ import { UserPayloadPackage, MessageType } from '../types/Type_ZWaveJSRuntime';
 export const getProfile = (Name: string, Result: unknown, NodeID?: number): UserPayloadPackage | undefined => {
 	const Timestamp = new Date().getTime();
 
-	if (Name === 'setNodeName') {
+	if (Name === 'setName') {
 		const Event: UserPayloadPackage = {
 			Type: MessageType.EVENT,
 			Event: { event: 'NODE_NAME_SET', timestamp: Timestamp, eventBody: Result }

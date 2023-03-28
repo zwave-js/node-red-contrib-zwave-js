@@ -16,7 +16,7 @@ export const process = async (
 		}
 	}
 
-	if (Method === 'setNodeName') {
+	if (Method === 'setName') {
 		const Node = DriverInstance.controller.nodes.get(NodeID);
 		if (Node) {
 			try {

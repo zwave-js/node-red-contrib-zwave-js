@@ -1,5 +1,14 @@
 import { getNodes, getValueDB } from '../lib/Fetchers';
-import { AssociationAddress, Driver, ExclusionOptions, InclusionOptions, RFRegion } from 'zwave-js';
+import {
+	AssociationAddress,
+	Driver,
+	ExclusionOptions,
+	InclusionOptions,
+	Message,
+	MessagePriority,
+	MessageType,
+	RFRegion
+} from 'zwave-js';
 
 export const process = async (DriverInstance: Driver, Method: string, Args?: unknown[]): Promise<unknown> => {
 	if (Method === 'getAllAssociationGroups') {
@@ -91,6 +100,21 @@ export const process = async (DriverInstance: Driver, Method: string, Args?: unk
 		} catch (Err) {
 			return Promise.reject(Err);
 		}
+	}
+
+	if (Method === 'proprietaryFunction') {
+		const ZWaveMessage = new Message(DriverInstance as any, {
+			type: MessageType.Request,
+			functionType: Args?.[0] as number,
+			payload: Args?.[1] as Buffer
+		});
+
+		const MessageSettings = {
+			priority: MessagePriority.Controller,
+			supportCheck: false
+		};
+
+		return DriverInstance.sendMessage(ZWaveMessage, MessageSettings);
 	}
 
 	return Promise.reject(new Error('Invalid Method'));
