@@ -29,7 +29,7 @@ export type Type_ZWaveJSDevice = Node & {
 
 export type Type_ZWaveJSDeviceConfig = NodeDef & {
 	runtimeId: string;
-	nodemode: string;
-	multimode: string;
-	datamode: string;
+	nodeMode: string;
+	multiMode: string;
+	dataMode: string;
 };

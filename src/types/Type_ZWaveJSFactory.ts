@@ -5,5 +5,14 @@ export type Type_ZWaveJSFactory = Node & {
 };
 
 export type Type_ZWaveJSFactoryConfig = NodeDef & {
-	//
+	api: string;
+	method: string;
+	commandClass?: string;
+	valueId?: string;
+	nodeId: string;
+	endpoint?: string;
+	value?: string;
+	valueSetOptions?: string;
+	args?: string;
+	trackingToken?: string;
 };

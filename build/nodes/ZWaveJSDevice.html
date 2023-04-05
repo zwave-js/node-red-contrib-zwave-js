@@ -12,15 +12,15 @@
 				required: true,
 				type: 'zwavejs-runtime'
 			},
-			nodemode: {
+			nodeMode: {
 				value: 'All',
 				required: true
 			},
-			multimode: {
+			multiMode: {
 				value: 'Fan',
 				required: true
 			},
-			datamode: {
+			dataMode: {
 				value: 'SR',
 				required: true
 			},
@@ -41,7 +41,7 @@
 	RED.nodes.registerType('zwavejs-device', ZWJSDeviceNodeSettings);
 
 	function Save(){
-		switch($("#node-input-datamode").val()){
+		switch($("#node-input-dataMode").val()){
 
 			case 'SR':
 				this.inputs = 1;
@@ -64,12 +64,12 @@
 
 	function Prep() {
 
-		$('#node-input-nodemode').on('change', function() {
+		$('#node-input-nodeMode').on('change', function() {
 			if ($(this).val() === 'All') {
-				$('#node-input-multimode-div').fadeOut(150);
+				$('#node-input-multiMode-div').fadeOut(150);
 			}
 			else{
-				$('#node-input-multimode-div').fadeIn(150);
+				$('#node-input-multiMode-div').fadeIn(150);
 			}
 		});
 	}
@@ -90,22 +90,22 @@
 	<h3>Operating Mode</h3>
 	<hr />
 	<div class="form-row">
-	    <label for="node-input-nodemode"><i class="fa fa-th-large"></i> Node Mode</label>
-	    <select id="node-input-nodemode">
+	    <label for="node-input-nodeMode"><i class="fa fa-th-large"></i> Node Mode</label>
+	    <select id="node-input-nodeMode">
 			<option value="All">All Nodes</option>
 			<option value="Multiple">Selected Nodes</option>
 		</select>
 	</div>
-	<div class="form-row" id="node-input-multimode-div">
-	    <label for="node-input-multimode"><i class="fa fa-bullhorn"></i> Broadcast</label>
-	    <select id="node-input-multimode">
+	<div class="form-row" id="node-input-multiMode-div">
+	    <label for="node-input-multiMode"><i class="fa fa-bullhorn"></i> Broadcast</label>
+	    <select id="node-input-multiMode">
 			<option value="Fan">Fan-Out</option>
 			<option value="Multicast">Multicast</option>
 		</select>
 	</div>
 	<div class="form-row">
-	    <label for="node-input-datamode"><i class="fa fa-exchange"></i> Data Mode</label>
-		<select id="node-input-datamode">
+	    <label for="node-input-dataMode"><i class="fa fa-exchange"></i> Data Mode</label>
+		<select id="node-input-dataMode">
 			<option value="SR">Send/Receive</option>
 			<option value="S">Send</option>
 			<option value="R">Receive</option>
