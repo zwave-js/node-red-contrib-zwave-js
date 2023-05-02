@@ -1,6 +1,6 @@
 {
 	"name": "node-red-contrib-zwave-js",
-	"version": "8.0.0",
+	"version": "8.0.1",
 	"license": "MIT",
 	"description": "The most powerful, high performing and highly polished Z-Wave node for Node-RED based on Z-Wave JS. If you want a fully featured Z-Wave framework in your Node-RED instance, you have found it.",
 	"dependencies": {
@@ -9,11 +9,11 @@
 		"serialport": "^10.4.0",
 		"winston": "^3.8.2",
 		"winston-transport": "^4.5.0",
-		"zwave-js": "^10.2.0"
+		"zwave-js": "^10.16.0"
 	},
 	"devDependencies": {
-		"eslint": "^8.23.1",
-		"prettier": "^2.7.1"
+		"eslint": "^8.39.0",
+		"prettier": "^2.8.8"
 	},
 	"scripts": {
 		"validate": "node-red-dev validate -o validation_result.json"
