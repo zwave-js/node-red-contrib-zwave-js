@@ -1,4 +1,3 @@
-const SP = require('serialport').SerialPort;
 const ModulePackage = require('../../package.json');
 const { CommandClasses } = require('@zwave-js/core');
 const ZWaveJS = require('zwave-js');
@@ -80,13 +79,12 @@ const SetupGlobals = function (RED) {
 		`/zwave-js/cfg-serialports`,
 		RED.auth.needsPermission('flows.read'),
 		(req, res) => {
-			SP.list()
+			ZWaveJS.Driver.enumerateSerialPorts()
 				.then((ports) => {
-					const a = ports.map((p) => p.path);
-					res.json(a);
+					res.json(ports);
 				})
 				.catch((err) => {
-					RED.log.error('Error listing serial ports', err);
+					RED.log.error(`Error listing serial ports: ${err}`);
 					res.json([]);
 				});
 		}
