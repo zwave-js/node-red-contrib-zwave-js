@@ -1,9 +1,10 @@
   # node-red-contrib-zwave-js Change Log
 
-  - 8.0.1
+  - 8.1.0
 
     **Changes**  
       - Update dependencies. 
+      - Switch serial port list to use Driver provided methods, removing the dependency on the serilaport package
 
 
   - 8.0.0
