@@ -217,9 +217,9 @@ const DCs = {
 		name: 'getAvailableFirmwareUpdates',
 		noWait: false
 	},
-	beginOTAFirmwareUpdate: {
+	firmwareUpdateOTA: {
 		API: 'ControllerAPI',
-		name: 'beginOTAFirmwareUpdate',
+		name: 'firmwareUpdateOTA',
 		noWait: false
 	}
 };
@@ -522,11 +522,11 @@ const ZwaveJsUI = (function () {
 		}
 
 		ControllerCMD(
-			DCs.beginOTAFirmwareUpdate.API,
-			DCs.beginOTAFirmwareUpdate.name,
+			DCs.firmwareUpdateOTA.API,
+			DCs.firmwareUpdateOTA.name,
 			undefined,
 			[Node, File],
-			DCs.beginOTAFirmwareUpdate.noWait
+			DCs.firmwareUpdateOTA.noWait
 		)
 			.then(() => {
 				FWRunning = true;
@@ -1126,7 +1126,7 @@ const ZwaveJsUI = (function () {
 		const RestrictedModes = ['IEAPI'];
 		const RestrictedMethods = [
 			'setPowerlevel',
-			'beginFirmwareUpdate',
+			'updateFirmware',
 			'abortFirmwareUpdate',
 			'setRFRegion',
 			'hardReset',
@@ -3570,8 +3570,7 @@ const ZwaveJsUI = (function () {
 
 				const Child = renderPropertyElement(Prop);
 				propertyList
-					.treeList('data')
-					[Index].treeList.addChild({ element: Child });
+					.treeList('data')[Index].treeList.addChild({ element: Child });
 
 				if (Writeable && Type !== 'any') {
 					const icon = Child.prev();
