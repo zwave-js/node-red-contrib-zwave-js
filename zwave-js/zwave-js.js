@@ -953,7 +953,9 @@ module.exports = function (RED) {
 						firmwareTarget: Params[1]
 					};
 
-					await Driver.controller.nodes.get(Params[0]).updateFirmware(Package);
+					await Driver.controller.nodes
+						.get(Params[0])
+						.updateFirmware([Package]);
 					Send(ReturnNode, 'FIRMWARE_UPDATE_STARTED', Params[1], send);
 					break;
 
