@@ -948,9 +948,12 @@ module.exports = function (RED) {
 					ReturnNode.id = Params[0];
 					const Format = ZWaveJS.guessFirmwareFileFormat(Params[2], Params[3]);
 					const Firmware = ZWaveJS.extractFirmware(Params[3], Format);
-					await Driver.controller.nodes
-						.get(Params[0])
-						.updateFirmware(Firmware.data, Params[1]);
+					const Package = {
+						data: Firmware.data,
+						firmwareTarget: Params[1]
+					};
+
+					await Driver.controller.nodes.get(Params[0]).updateFirmware(Package);
 					Send(ReturnNode, 'FIRMWARE_UPDATE_STARTED', Params[1], send);
 					break;
 
