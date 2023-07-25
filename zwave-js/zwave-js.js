@@ -915,10 +915,10 @@ module.exports = function (RED) {
 					Send(ReturnNode, 'FIRMWARE_UPDATE_CHECK_RESULT', FWU, send);
 					break;
 
-				case 'beginOTAFirmwareUpdate':
+				case 'firmwareUpdateOTA':
 					NodeCheck(Params[0]);
 					ReturnNode.id = Params[0];
-					await Driver.controller.beginOTAFirmwareUpdate(Params[0], Params[1]);
+					await Driver.controller.firmwareUpdateOTA(Params[0], Params[1]);
 					Send(ReturnNode, 'FIRMWARE_UPDATE_STARTED', Params[1], send);
 					break;
 
@@ -943,14 +943,19 @@ module.exports = function (RED) {
 					Send(ReturnNode, 'FIRMWARE_UPDATE_ABORTED', undefined, send);
 					break;
 
-				case 'beginFirmwareUpdate':
+				case 'updateFirmware':
 					NodeCheck(Params[0]);
 					ReturnNode.id = Params[0];
 					const Format = ZWaveJS.guessFirmwareFileFormat(Params[2], Params[3]);
 					const Firmware = ZWaveJS.extractFirmware(Params[3], Format);
+					const Package = {
+						data: Firmware.data,
+						firmwareTarget: Params[1]
+					};
+
 					await Driver.controller.nodes
 						.get(Params[0])
-						.beginFirmwareUpdate(Firmware.data, Params[1]);
+						.updateFirmware([Package]);
 					Send(ReturnNode, 'FIRMWARE_UPDATE_STARTED', Params[1], send);
 					break;
 
@@ -1406,7 +1411,7 @@ module.exports = function (RED) {
 				case 'getLastEvents':
 					const PL = [];
 					Driver.controller.nodes.forEach((N) => {
-						if(N.isControllerNode){
+						if (N.isControllerNode) {
 							return;
 						}
 						const I = {
@@ -2136,8 +2141,8 @@ module.exports = function (RED) {
 			}
 
 			Node.once(event_Ready.zwaveName, () => {
-				Node.on(event_FirmwareUpdateFinished.zwaveName, (N, S) => {
-					Send(N, event_FirmwareUpdateFinished.redName, S);
+				Node.on(event_FirmwareUpdateFinished.zwaveName, (N, R) => {
+					Send(N, event_FirmwareUpdateFinished.redName, R);
 				});
 
 				Node.on(event_ValueNotification.zwaveName, (N, VL) => {

@@ -280,7 +280,7 @@ class UIServer {
 
 				const PL = {
 					mode: 'ControllerAPI',
-					method: 'beginFirmwareUpdate',
+					method: 'updateFirmware',
 					params: [NodeID, Target, FileName, _Buffer]
 				};
 
@@ -525,11 +525,16 @@ class UIServer {
 		node.on('notification', (node, value) => {
 			this._SendNodeEvent('node-value', node, value);
 		});
-		node.on('firmware update progress', (node, S, R) => {
-			this._SendNodeEvent('node-fwu-progress', node, { sent: S, remain: R });
+		node.on('firmware update progress', (node, Progress) => {
+			this._SendNodeEvent('node-fwu-progress', node, {
+				sent: Progress.sentFragments,
+				remain: Progress.totalFragments - Progress.sentFragments
+			});
 		});
-		node.on('firmware update finished', (node, Status) => {
-			this._SendNodeEvent('node-fwu-completed', node, { status: Status });
+		node.on('firmware update finished', (node, Result) => {
+			this._SendNodeEvent('node-fwu-completed', node, {
+				status: Result.status
+			});
 		});
 
 		// Meta
