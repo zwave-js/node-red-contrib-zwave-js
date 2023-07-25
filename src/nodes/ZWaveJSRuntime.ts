@@ -15,7 +15,6 @@ import { process as ControllerAPI_Process } from '../lib/ControllerAPI';
 import { process as ValueAPI_Process } from '../lib/ValueAPI';
 import { process as CC_Process } from '../lib/CCAPI';
 import { process as Node_Process } from '../lib/NodeAPI';
-import { Tail } from 'tail';
 
 const APP_NAME = 'node-red-contrib-zwave-js';
 const APP_VERSION = '9.0.0';
@@ -53,9 +52,6 @@ module.exports = (RED: NodeAPI) => {
 		const self = this;
 		RED.nodes.createNode(self, config);
 		self.config = config;
-
-		// Tail Log
-		let tailLog: Tail | undefined;
 
 		// S2 Promise Resolvers
 		let grantPromise: (Value: InclusionGrant | false) => void;
@@ -159,30 +155,6 @@ module.exports = (RED: NodeAPI) => {
 			});
 
 			RED.httpAdmin.post(
-				`/zwave-js/ui/${self.id}/log`,
-				RED.auth.needsPermission('flows.write'),
-				(request, response) => {
-					if (request.body.stream) {
-						if (self.config.logConfig_level !== 'off') {
-							tailLog = new Tail(path.join(RED.settings.userDir || '', 'zwavejs_current.log'));
-							tailLog.on('line', (data) => {
-								RED.comms.publish(`zwave-js/ui/${self.id}/log`, { log: `${data.toString()}\r\n` }, false);
-							});
-							response.json({ callSuccess: true, response: true });
-						} else {
-							response.json({ callSuccess: true, response: false });
-						}
-					} else {
-						if (tailLog) {
-							tailLog.unwatch();
-							tailLog = undefined;
-						}
-						response.json({ callSuccess: true });
-					}
-				}
-			);
-
-			RED.httpAdmin.post(
 				`/zwave-js/ui/${self.id}/s2/grant`,
 				RED.auth.needsPermission('flows.write'),
 				(request, response) => {
@@ -275,10 +247,6 @@ module.exports = (RED: NodeAPI) => {
 			removeHTTPAPI();
 			controllerNodes = {};
 			deviceNodes = {};
-			if (tailLog) {
-				tailLog.unwatch();
-				tailLog = undefined;
-			}
 			if (self.driverInstance) {
 				self.driverInstance?.destroy().then(() => {
 					self.driverInstance = undefined;
