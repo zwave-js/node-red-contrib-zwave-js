@@ -1,5 +1,10 @@
   # node-red-contrib-zwave-js Change Log
 
+    - 8.2.0
+
+    **Changes**  
+      - Update dependencies. 
+
   - 8.1.0
 
     **Changes**  
