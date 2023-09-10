@@ -29,45 +29,79 @@ module.exports = function (RED) {
 			}
 		}
 
-		function ValueAPI(msg, send) {
+		let _AwaiterResolver;
+		const Awaiter = () => {
+			return new Promise((Resolve) => {
+				_AwaiterResolver = Resolve;
+			});
+		};
+
+		async function ValueAPI(msg, send) {
 			let NodeID = undefined;
 			let Endpoint = undefined;
 			let Value = undefined;
 			let ValueID = undefined;
 			let Options = undefined;
 
+			let Waiter;
+
 			if (config.node !== undefined && config.node.length > 0) {
+				Waiter = Awaiter();
 				const EXP = RED.util.prepareJSONataExpression(config.node, RedNode);
-				NodeID = RED.util.evaluateJSONataExpression(EXP, msg);
+				RED.util.evaluateJSONataExpression(EXP, msg, (Err, Res) => {
+					NodeID = Res;
+					_AwaiterResolver();
+				});
+				await Promise.all([Waiter]);
 			}
 
 			if (config.endpoint !== undefined && config.endpoint.length > 0) {
+				Waiter = Awaiter();
 				const EXP = RED.util.prepareJSONataExpression(config.endpoint, RedNode);
-				Endpoint = RED.util.evaluateJSONataExpression(EXP, msg);
+				RED.util.evaluateJSONataExpression(EXP, msg, (Err, Res) => {
+					Endpoint = Res;
+					_AwaiterResolver();
+				});
+				await Promise.all([Waiter]);
 			}
 
 			if (config.vapiValueId !== undefined && config.vapiValueId.length > 0) {
+				Waiter = Awaiter();
 				const EXP = RED.util.prepareJSONataExpression(
 					config.vapiValueId,
 					RedNode
 				);
-				ValueID = RED.util.evaluateJSONataExpression(EXP, msg);
+				RED.util.evaluateJSONataExpression(EXP, msg, (Err, Res) => {
+					ValueID = Res;
+					_AwaiterResolver();
+				});
+				await Promise.all([Waiter]);
 			}
 
 			if (config.vapiOptions !== undefined && config.vapiOptions.length > 0) {
+				Waiter = Awaiter();
 				const EXP = RED.util.prepareJSONataExpression(
 					config.vapiOptions,
 					RedNode
 				);
-				Options = RED.util.evaluateJSONataExpression(EXP, msg);
+				RED.util.evaluateJSONataExpression(EXP, msg, (Err, Res) => {
+					Options = Res;
+					_AwaiterResolver();
+				});
+				await Promise.all([Waiter]);
 			}
 
 			if (config.vapiValue !== undefined && config.vapiValue.length > 0) {
+				Waiter = Awaiter();
 				const EXP = RED.util.prepareJSONataExpression(
 					config.vapiValue,
 					RedNode
 				);
-				Value = RED.util.evaluateJSONataExpression(EXP, msg);
+				RED.util.evaluateJSONataExpression(EXP, msg, (Err, Res) => {
+					Value = Res;
+					_AwaiterResolver();
+				});
+				await Promise.all([Waiter]);
 			}
 
 			if (ValueID === undefined) {
@@ -120,34 +154,56 @@ module.exports = function (RED) {
 			}
 		}
 
-		function CCAPI(msg, send) {
+		async function CCAPI(msg, send) {
 			let NodeID = undefined;
 			let Endpoint = undefined;
 			let Params = undefined;
 			const NoEvent = config.noEvent || false;
 			let ForceUpdate = undefined;
 
+			let Waiter;
+
 			if (config.node !== undefined && config.node.length > 0) {
+				Waiter = Awaiter();
 				const EXP = RED.util.prepareJSONataExpression(config.node, RedNode);
-				NodeID = RED.util.evaluateJSONataExpression(EXP, msg);
+				RED.util.evaluateJSONataExpression(EXP, msg, (Err, Res) => {
+					NodeID = Res;
+					_AwaiterResolver();
+				});
+				await Promise.all([Waiter]);
 			}
 
 			if (config.endpoint !== undefined && config.endpoint.length > 0) {
+				Waiter = Awaiter();
 				const EXP = RED.util.prepareJSONataExpression(config.endpoint, RedNode);
-				Endpoint = RED.util.evaluateJSONataExpression(EXP, msg);
+				RED.util.evaluateJSONataExpression(EXP, msg, (Err, Res) => {
+					Endpoint = Res;
+					_AwaiterResolver();
+				});
+				await Promise.all([Waiter]);
 			}
 
 			if (config.params !== undefined && config.params.length > 0) {
+				Waiter = Awaiter();
 				const EXP = RED.util.prepareJSONataExpression(config.params, RedNode);
-				Params = RED.util.evaluateJSONataExpression(EXP, msg);
+				RED.util.evaluateJSONataExpression(EXP, msg, (Err, Res) => {
+					Params = Res;
+					_AwaiterResolver();
+				});
+				await Promise.all([Waiter]);
 			}
 
 			if (config.forceUpdate !== undefined && config.forceUpdate.length > 0) {
+				Waiter = Awaiter();
 				const EXP = RED.util.prepareJSONataExpression(
 					config.forceUpdate,
 					RedNode
 				);
-				ForceUpdate = RED.util.evaluateJSONataExpression(EXP, msg);
+				RED.util.evaluateJSONataExpression(EXP, msg, (Err, Res) => {
+					ForceUpdate = Res;
+					_AwaiterResolver();
+				});
+				await Promise.all([Waiter]);
 			}
 
 			if (Params !== undefined) {

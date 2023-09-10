@@ -1,5 +1,14 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 8.2.1
+
+    **Changes**  
+      - Bump ZWave JS
+
+    **Bug Fixes**
+      - Address Node RED 3.1 **evaluateJSONataExpression** Warning 
+
+
   - 8.2.0
 
     **Changes**  
