@@ -1,5 +1,17 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 9.0.0
+
+    **Breaking Changes**
+      - The min node version is now 18
+
+    **Changes**  
+      - Bump ZWave JS to v12
+
+    **Deprecations**
+      - The old message format has now been deprecated, and support will be removed in V10.
+        Please review the migration document
+
   - 8.2.1
 
     **Changes**  
