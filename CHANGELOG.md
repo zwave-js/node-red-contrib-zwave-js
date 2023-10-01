@@ -10,7 +10,9 @@
 
     **Deprecations**
       - The old message format has now been deprecated, and support will be removed in V10.
-        Please review the migration document
+        [PLEASE SEE MIGRATION GUIDE](/APIChange-v9.md)
+      - Support for `responseThroughEvent` will be removed in V10 (all methods will return in v10)
+      - Support for `forceUpdate` will be removed in V10 (you will be requied to manage this your self if using the CC API)
 
   - 8.2.1
 
@@ -430,7 +432,7 @@
     - Bump Z-Wave JS to 7.12.1
 
   - 4.0.0 **Possible Breaking Changes**, **Deprecation Warnings**
-    - MAJOR API Transition : [PLEASE SEE MIGRATION GUIDE](/APIChange.md)
+    - MAJOR API Transition : [PLEASE SEE MIGRATION GUIDE](/APIChange-v4.md)
     - Added Node Firmware Update UI
     - Added Network Map UI
     - Added Association Group Managment UI
