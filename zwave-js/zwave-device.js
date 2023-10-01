@@ -163,7 +163,7 @@ module.exports = function (RED) {
 				switch (CMD.api) {
 					case 'VALUE':
 						msg.payload = {
-							mode: 'ValueID',
+							mode: 'ValueAPI',
 							method: CMD.method,
 							node: CMDProp.nodeId
 						};

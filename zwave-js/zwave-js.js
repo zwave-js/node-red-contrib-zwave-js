@@ -656,7 +656,7 @@ module.exports = function (RED) {
 
 					case 'VALUE':
 						msg.payload = {
-							mode: 'ValueID',
+							mode: 'ValueAPI',
 							method: CMD.method,
 							node: CMDProp.nodeId
 						};
