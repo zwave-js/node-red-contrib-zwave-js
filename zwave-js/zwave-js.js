@@ -634,7 +634,7 @@ module.exports = function (RED) {
 						msg.payload = {
 							mode: 'DriverAPI',
 							method: CMD.method,
-							params: CMDProp?.args || undefined
+							params: CMDProp.args
 						};
 						break;
 
@@ -642,7 +642,7 @@ module.exports = function (RED) {
 						msg.payload = {
 							mode: 'AssociationsAPI',
 							method: CMD.method,
-							params: CMDProp?.args || undefined
+							params: CMDProp.args
 						};
 						break;
 
@@ -650,7 +650,7 @@ module.exports = function (RED) {
 						msg.payload = {
 							mode: 'ControllerAPI',
 							method: CMD.method,
-							params: CMDProp?.args || undefined
+							params: CMDProp.args
 						};
 						break;
 
