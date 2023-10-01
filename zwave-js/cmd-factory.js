@@ -220,10 +220,8 @@ module.exports = function (RED) {
 					method: config.method,
 					args: Params
 				},
-				supportWillEndInV10: {
-					responseThroughEvent: NoEvent !== true,
-					forceUpdate: ForceUpdate
-				}
+				responseThroughEvent: NoEvent !== true,
+				forceUpdate: ForceUpdate
 			};
 
 			msg.payload = RM;

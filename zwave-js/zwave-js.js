@@ -679,7 +679,9 @@ module.exports = function (RED) {
 							method: CMD.method,
 							node: CMDProp.nodeId,
 							endpoint: CMDProp.endpoint,
-							params: CMDProp.args
+							params: CMDProp.args,
+							responseThroughEvent: msg.payload.responseThroughEvent,
+							forceUpdate: msg.payload.forceUpdate
 						};
 
 						break;

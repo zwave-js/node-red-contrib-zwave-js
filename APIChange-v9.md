@@ -14,6 +14,9 @@ Every command is now designed to be a consistant format, and the following `payl
 During this transition, the following APIs will be available using the new format : `DRIVER`, `ASSOCIATIONS`
 However, these will form part of the combined `CONTROLLER` API when V10 lands.
 
+The properties `responseThroughEvent` and `forceUpdate` will be supported in the new message format (at the root of `payload`)
+but support for them will be removed in V10 (please see change log)
+
 
 ```javascript
 cmd:{
