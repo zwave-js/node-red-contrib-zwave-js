@@ -691,6 +691,8 @@ module.exports = function (RED) {
 					'You are using an old payload format, support for this format will be removed in v10'
 				);
 			}
+
+			return msg;
 		};
 
 		async function Input(msg, send, done, internal) {
@@ -1903,7 +1905,7 @@ module.exports = function (RED) {
 
 			let _Subject = '';
 			if (Node !== undefined) {
-				_Subject = '[Node: ' + Node.nodeId || Node.id + '] [' + Subject + ']';
+				_Subject = '[Node: ' + (Node.nodeId || Node.id) + '] [' + Subject + ']';
 			} else {
 				_Subject = '[' + Subject + ']';
 			}
