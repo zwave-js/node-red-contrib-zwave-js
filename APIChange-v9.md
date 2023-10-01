@@ -46,7 +46,7 @@ let Message = {
            method: 'invokeCCAPI'
         },
         cmdProperties: {
-            nodeId: 37
+            nodeId: 37,
             commandClass: 0x84,
             method: 'setInterval',
             args: [3600]
