@@ -4,6 +4,10 @@
 
     **Breaking Changes**
       - The min node version is now 18
+      - If you execute certain methods your self, the following have been renamed
+        - `beginHealingNetwork` -> `beginRebuildingRoutes`
+        - `stopHealingNetwork` -> `stopRebuildingRoutes`
+        - `healNode` -> `rebuildNodeRoutes`
 
     **Changes**  
       - Bump ZWave JS to v12
