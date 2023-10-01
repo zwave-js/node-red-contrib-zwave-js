@@ -15,7 +15,7 @@ cmd:{
     method: string                                 /* The method you are executing on this API  */
 },
 cmdProperties:{
-    commandClass: number,                          /* The Command class ID (CC API) */
+    commandClass: number,                       /* The Command class ID (CC API) */
     method: string,                            /* The CC's method you want to execute (CC API) */    
     endpoint: number,                          /* The endpoint you wish to target (CC API) */ 
     value: any,                                /* The Value you are providing (VALUE API) */
