@@ -625,7 +625,68 @@ module.exports = function (RED) {
 
 		RedNode.on('input', Input);
 
+		const Convert = (msg) => {
+			if (msg.payload.cmd) {
+				const CMD = msg.payload.cmd;
+				const CMDProp = msg.payload.cmdProperties;
+				switch (CMD.api) {
+					case 'DRIVER':
+						msg.payload = {
+							mode: 'DriverAPI',
+							method: CMD.method
+						};
+						break;
+
+					case 'ASSOCIATIONS':
+						msg.payload = {};
+						break;
+
+					case 'CONTROLLER':
+						msg.payload = {};
+						break;
+
+					case 'VALUE':
+						msg.payload = {
+							mode: 'ValueID',
+							method: CMD.method,
+							node: CMDProp.nodeId
+						};
+						msg.payload.params = [];
+
+						if (CMD.method === 'setValue') {
+							msg.payload.params.push(CMDProp.valueId);
+							msg.payload.params.push(CMDProp.value);
+							if (CMDProp.setValueOptions) {
+								msg.payload.params.push(CMDProp.setValueOptions);
+							}
+						} else {
+							msg.payload.params.push(CMDProp.valueId);
+						}
+						break;
+
+					case 'CC':
+						msg.payload = {
+							mode: 'CCAPI',
+							cc: CMDProp.commandClass,
+							method: CMD.method,
+							node: CMDProp.nodeId,
+							endpoint: CMDProp.endpoint,
+							params: CMDProp.args
+						};
+
+						break;
+				}
+			} else {
+				RedNode.warn(
+					'You are using an old payload format, support for this format will be removed in v10'
+				);
+			}
+		};
+
 		async function Input(msg, send, done, internal) {
+			// For my own sanity, i'll convert the new format back to old format if its being used, as this will be much easiyer during the transition phase
+			msg = Convert(msg);
+
 			let Type = 'CONTROLLER';
 			if (internal !== undefined && internal) {
 				Type = 'EVENT';

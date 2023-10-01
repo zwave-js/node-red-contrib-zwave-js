@@ -9,6 +9,12 @@ without further ado.
 
 Every command is now designed to be a consistant format, and the following `payload` will now be as follows
 
+## Notes
+
+During this transition, the following APIs will be available using the new format : `DRIVER`, `ASSOCIATIONS`
+However, these will form part of the combined `CONTROLLER` API when V10 lands.
+
+
 ```javascript
 cmd:{
     api: 'CONTROLLER' | 'VALUE' | 'CC' | 'NODE',  /* The API you want to use  */
@@ -22,7 +28,7 @@ cmdProperties:{
     value: any,                                   /* The Value you are providing (VALUE API) */
     valueId: object,                              /* The ValueID you are targeting (VALUE API) */
     setValueOptions: object,                      /* Set Value (VALUE API) */
-    args: any[]                                   /* The args for the command you are calling (CC API) */
+    args: any[]                                   /* The args for the command you are calling (CC API, CONTROLLER, NODE) */
 }
 ```
 
