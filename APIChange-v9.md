@@ -11,17 +11,17 @@ Every command is now designed to be a consistant format, and the following `payl
 
 ```javascript
 cmd:{
-    api: 'CONTROLLER' | 'VALUE' | 'CC' | 'NODE',   /* The API you want to use  */
-    method: string                                 /* The method you are executing on this API  */
+    api: 'CONTROLLER' | 'VALUE' | 'CC' | 'NODE',  /* The API you want to use  */
+    method: string                                /* The method you are executing on this API  */
 },
 cmdProperties:{
-    commandClass: number,                       /* The Command class ID (CC API) */
-    method: string,                            /* The CC's method you want to execute (CC API) */    
-    endpoint: number,                          /* The endpoint you wish to target (CC API) */ 
-    value: any,                                /* The Value you are providing (VALUE API) */
-    valueId: object,                           /* The ValueID you are targeting (VALUE API) */
-    setValueOptions: object,                   /* Set Value (VALUE API) */
-    args: any[]                                /* The args for the command you are calling (CC API) */
+    commandClass: number,                         /* The Command class ID (CC API) */
+    method: string,                               /* The CC's method you want to execute (CC API) */    
+    endpoint: number,                             /* The endpoint you wish to target (CC API) */ 
+    value: any,                                   /* The Value you are providing (VALUE API) */
+    valueId: object,                              /* The ValueID you are targeting (VALUE API) */
+    setValueOptions: object,                      /* Set Value (VALUE API) */
+    args: any[]                                   /* The args for the command you are calling (CC API) */
 }
 ```
 
