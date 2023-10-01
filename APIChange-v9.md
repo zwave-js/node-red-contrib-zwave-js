@@ -69,17 +69,19 @@ let Message = {
 return Message;
 
 /* Is now this */
- payload: {
-        cmd: {
-           api: 'VALUE',
-           method: 'setValue'
-        },
-        cmdProperties: {
-            nodeId: 5,
-            valueId : <ValueID>,
-            value: 3600
-        }
-    }
+let Message = {
+	payload: {
+		   cmd: {
+			  api: 'VALUE',
+			  method: 'setValue'
+		   },
+		   cmdProperties: {
+			   nodeId: 5,
+			   valueId : <ValueID>,
+			   value: 3600
+		   }
+	   }
+   }
 return Message;
 ```
 
