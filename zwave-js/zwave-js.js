@@ -633,16 +633,25 @@ module.exports = function (RED) {
 					case 'DRIVER':
 						msg.payload = {
 							mode: 'DriverAPI',
-							method: CMD.method
+							method: CMD.method,
+							params: CMDProp.args
 						};
 						break;
 
 					case 'ASSOCIATIONS':
-						msg.payload = {};
+						msg.payload = {
+							mode: 'AssociationsAPI',
+							method: CMD.method,
+							params: CMDProp.args
+						};
 						break;
 
 					case 'CONTROLLER':
-						msg.payload = {};
+						msg.payload = {
+							mode: 'ControllerAPI',
+							method: CMD.method,
+							params: CMDProp.args
+						};
 						break;
 
 					case 'VALUE':
@@ -653,14 +662,13 @@ module.exports = function (RED) {
 						};
 						msg.payload.params = [];
 
+						msg.payload.params.push(CMDProp.valueId);
+
 						if (CMD.method === 'setValue') {
-							msg.payload.params.push(CMDProp.valueId);
 							msg.payload.params.push(CMDProp.value);
 							if (CMDProp.setValueOptions) {
 								msg.payload.params.push(CMDProp.setValueOptions);
 							}
-						} else {
-							msg.payload.params.push(CMDProp.valueId);
 						}
 						break;
 
@@ -684,7 +692,7 @@ module.exports = function (RED) {
 		};
 
 		async function Input(msg, send, done, internal) {
-			// For my own sanity, i'll convert the new format back to old format if its being used, as this will be much easiyer during the transition phase
+			// For my own sanity, i'll convert the new format back to old format if its being used, as this will be much easier during the transition phase
 			msg = Convert(msg);
 
 			let Type = 'CONTROLLER';

@@ -2,7 +2,7 @@
 
 V9 begins the take down of the old API introduced in v4.
 
-The old APIs are now set for removal and will be removed very quicky.  
+The old APIs are now set for removal and will be removed in V10.  
 Below, I set out the changes that you will need to make - and I suggest you make these changes after updating to V9.
 
 without further ado.
