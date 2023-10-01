@@ -159,7 +159,7 @@ module.exports = function (RED) {
 		const Convert = (msg) => {
 			if (msg.payload.cmd) {
 				const CMD = msg.payload.cmd;
-				const CMDProp = msg.payload.cmdProperties;
+				const CMDProp = msg.payload.cmdProperties || {};
 				switch (CMD.api) {
 					case 'VALUE':
 						msg.payload = {
@@ -193,10 +193,6 @@ module.exports = function (RED) {
 
 						break;
 				}
-			} else {
-				RedNode.warn(
-					'You are using an old payload format, support for this format will be removed in v10'
-				);
 			}
 
 			return msg;
