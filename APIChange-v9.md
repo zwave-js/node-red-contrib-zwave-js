@@ -76,7 +76,7 @@ return Message;
         },
         cmdProperties: {
             nodeId: 5,
-            valueId : <ValueID>
+            valueId : <ValueID>,
             value: 3600
         }
     }
