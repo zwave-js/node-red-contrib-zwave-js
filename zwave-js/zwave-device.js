@@ -183,7 +183,7 @@ module.exports = function (RED) {
 						msg.payload = {
 							mode: 'CCAPI',
 							cc: CMDProp.commandClass,
-							method: CMD.method,
+							method: CMDProp.method,
 							node: CMDProp.nodeId,
 							endpoint: CMDProp.endpoint,
 							params: CMDProp.args,

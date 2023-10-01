@@ -211,7 +211,7 @@ module.exports = function (RED) {
 			const RM = {
 				cmd: {
 					api: 'CC',
-					method: config.method
+					method: 'invokeCCAPI'
 				},
 				cmdProperties: {
 					nodeId: NodeID,
