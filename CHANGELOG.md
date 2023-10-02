@@ -10,7 +10,7 @@
         - `healNode` -> `rebuildNodeRoutes`
 
     **New Features**
-      - Added `getValueTimestamp` to the `Value API` - args will be the single Value ID
+      - Added `getValueTimestamp` to the `Value API` - args will be the single Value ID  
         The event will be `VALUE_TIMESTAMP`
 
     **Changes**  
