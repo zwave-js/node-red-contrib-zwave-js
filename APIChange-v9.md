@@ -50,6 +50,7 @@ cmdProperties:{
 let Message = {
     payload: {
         node: 37,
+        mode: "CCAPI",
         class: "Wake Up",
         method: "setInterval",
         params: [3600]
