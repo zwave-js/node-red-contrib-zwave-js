@@ -1102,7 +1102,7 @@ module.exports = function (RED) {
 							isControllerNode: N.isControllerNode,
 							supportsBeaming: N.supportsBeaming,
 							keepAwake: N.keepAwake,
-							lastSeen: N.lastSeen,
+							lastSeen: new Date(N.lastSeen).getTime(),
 							powerSource: {
 								type: N.supportsCC(CommandClasses.Battery)
 									? 'battery'
@@ -1929,7 +1929,8 @@ module.exports = function (RED) {
 				'ALIVE',
 				'VALUE_ID_LIST',
 				'GET_VALUE_RESPONSE',
-				'GET_VALUE_METADATA_RESPONSE'
+				'GET_VALUE_METADATA_RESPONSE',
+				"VALUE_TIMESTAMP"
 			];
 
 			const TimestampSubjects = [
