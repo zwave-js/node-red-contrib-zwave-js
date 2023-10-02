@@ -7,7 +7,12 @@ Below, I set out the changes that you will need to make - and I suggest you make
 
 without further ado.
 
-Every command is now designed to be a consistant format, and the following `payload` will now be as follows
+Every command is now designed to be a consistant format, and the  `payload` below will be the new format.  
+The reason for this change, is to make it easier for you (and me), to identify parts of the payload.
+
+Previously, setting a value using the Value API for instance, will involve sending an array of objects without any clue as to what they really are, this new format will address that.
+
+
 
 ## Notes
 
