@@ -1102,7 +1102,7 @@ module.exports = function (RED) {
 							isControllerNode: N.isControllerNode,
 							supportsBeaming: N.supportsBeaming,
 							keepAwake: N.keepAwake,
-							lastSeen: N.ZWNR_lastSeen || 0,
+							lastSeen: N.lastSeen,
 							powerSource: {
 								type: N.supportsCC(CommandClasses.Battery)
 									? 'battery'
@@ -1325,6 +1325,12 @@ module.exports = function (RED) {
 			const ReturnNode = { id: ZWaveNode.id };
 
 			switch (Method) {
+				case 'getValueTimestamp':
+					if (Multicast) ThrowVirtualNodeLimit();
+					const TS = ZWaveNode.getValueTimestamp(Params[0]);
+					Send(ReturnNode, 'VALUE_TIMESTAMP', TS, send);
+					break;
+
 				case 'getDefinedValueIDs':
 					if (Multicast) ThrowVirtualNodeLimit();
 					const VIDs = ZWaveNode.getDefinedValueIDs();

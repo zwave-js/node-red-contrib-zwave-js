@@ -9,14 +9,20 @@
         - `stopHealingNetwork` -> `stopRebuildingRoutes`
         - `healNode` -> `rebuildNodeRoutes`
 
+    **New Features**
+      - Added `getValueTimestamp` to the `Value API` - args will be the single Value ID
+        The event will be `VALUE_TIMESTAMP`
+
     **Changes**  
       - Bump ZWave JS to v12
+      - the `lastSeen` property will now use the Drivers internal value, which is persistant between reboots 
 
     **Deprecations**
       - The old message format has now been deprecated, and support will be removed in V10.
         [PLEASE SEE MIGRATION GUIDE](/APIChange-v9.md)
       - Support for `responseThroughEvent` will be removed in V10 (all methods will return in v10)
       - Support for `forceUpdate` will be removed in V10 (you will be requied to manage this your self if using the CC API)
+      - Support for `getLastEvents` will be removed in V10 (you will be requied to manage this your self if using the CC API)
 
   - 8.2.1
 
