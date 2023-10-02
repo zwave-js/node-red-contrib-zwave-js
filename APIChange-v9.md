@@ -22,6 +22,9 @@ However, these will form part of the combined `CONTROLLER` API when V10 lands.
 The properties `responseThroughEvent` and `forceUpdate` will be supported in the new message format (at the root of `payload`)
 but support for them will be removed in V10 (please see change log)
 
+The `Node` API will be available in V10 and will house the `setName`, `setLocation` methods as well as a few new one 😃
+
+
 
 ```javascript
 cmd:{
