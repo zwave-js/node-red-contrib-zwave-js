@@ -36,17 +36,19 @@ cmdProperties:{
     nodeId: number,                               /* The target Node ID */
 
     /* CC API */
-    commandClass: number,                         /* The Command class ID (CC API) */
-    method: string,                               /* The CC's method you want to execute (CC API) */    
-    endpoint: number,                             /* The endpoint you wish to target (CC API) */
+    commandClass: number,                         /* The Command class ID (CC) */
+    method: string,                               /* The CC's method you want to execute (CC) */    
+    endpoint: number,                             /* The endpoint you wish to target (CC) */
 
-    /* CC, CONTROLLER and NODE API */
-    args: any[],                                  /* The args for the command you are calling (CC API, CONTROLLER, NODE) */
+    /* CC, CONTROLLER API */
+    args: any[],                                  /* The args for the command you are calling (CC, CONTROLLER) */
 
     /* VALUE API */
-    valueId: object,                              /* The ValueID you are targeting (VALUE API) */
-    value: any,                                   /* The Value you are providing (VALUE API) */
-    setValueOptions: object,                      /* Set Value Options (VALUE API) */
+    valueId: object,                              /* The ValueID you are targeting (VALUE) */
+    setValueOptions: object,                      /* Set Value Options (VALUE) */
+
+    /* VALUE, NODE API */
+    value: any,                                   /* The Value you are providing (VALUE, NODE) */
 
 }
 ```
