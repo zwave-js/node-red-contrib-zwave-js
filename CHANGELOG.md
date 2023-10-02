@@ -15,7 +15,7 @@
 
     **Changes**  
       - Bump ZWave JS to v12
-      - the `lastSeen` property will now use the Drivers internal value, which is persistant between reboots 
+      - The `lastSeen` property will now use the Drivers internal value, which is persistant between reboots 
 
     **Deprecations**
       - The old message format has now been deprecated, and support will be removed in V10.
