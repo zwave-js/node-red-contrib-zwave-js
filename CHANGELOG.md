@@ -22,7 +22,7 @@
         [PLEASE SEE MIGRATION GUIDE](/APIChange-v9.md)
       - Support for `responseThroughEvent` will be removed in V10 (all methods will return in v10)
       - Support for `forceUpdate` will be removed in V10 (you will be requied to manage this your self if using the CC API)
-      - Support for `getLastEvents` will be removed in V10 (you will be requied to manage this your self if using the CC API)
+      - Support for `getLastEvents` will be removed in V10 (the introdcution of the persistant `lastSeen` value and `getValueTimestamp` has made this somewhat bloatware)
 
   - 8.2.1
 
