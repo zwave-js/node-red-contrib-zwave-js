@@ -2,7 +2,6 @@ import { NodeAPI } from 'node-red';
 import { UserPayloadPackage, Type_ZWaveJSRuntime, MessageType } from '../types/Type_ZWaveJSRuntime';
 import { Type_ZWaveJSDevice, Type_ZWaveJSDeviceConfig, InputMessage } from '../types/Type_ZWaveJSDevice';
 import { getProfile } from '../lib/RequestResponseProfiles';
-import { LegacyNode } from '../lib/Utils';
 
 module.exports = (RED: NodeAPI) => {
 	const init = function (this: Type_ZWaveJSDevice, config: Type_ZWaveJSDeviceConfig) {
@@ -48,13 +47,6 @@ module.exports = (RED: NodeAPI) => {
 		};
 
 		self.on('input', (msg, send, done) => {
-			// TODO: Remove me
-			if (LegacyNode(msg)) {
-				self.warn(
-					'You are using a deprecated Message API  - Please update your commands. A future version will remove support for the old format.'
-				);
-			}
-
 			const Req = msg.payload as InputMessage;
 
 			if (self.config.nodeMode === 'All' && !Req.cmdProperties?.nodeId) {

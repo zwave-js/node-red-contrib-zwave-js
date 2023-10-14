@@ -103,7 +103,6 @@ export const process = async (DriverInstance: Driver, Method: string, Args?: unk
 	}
 
 	if (Method === 'proprietaryFunction') {
-		// @ts-expect-error - Driver is not assignable to ZWaveHost
 		const ZWaveMessage = new Message(DriverInstance, {
 			type: MessageType.Request,
 			functionType: Args?.[0] as number,

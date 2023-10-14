@@ -17,7 +17,7 @@ import { process as CC_Process } from '../lib/CCAPI';
 import { process as Node_Process } from '../lib/NodeAPI';
 
 const APP_NAME = 'node-red-contrib-zwave-js';
-const APP_VERSION = '9.0.0';
+const APP_VERSION = '10.0.0';
 const FWK = '127c49b6f2928a6579e82ecab64a83fc94a6436f03d5cb670b8ac44412687b75f0667843';
 
 // Create event objects (creates easy to use event hooks)
@@ -31,7 +31,7 @@ const event_InclusionStopped = new SanitizedEventName('inclusion stopped');
 const event_ExclusionStarted = new SanitizedEventName('exclusion started');
 const event_ExclusionFailed = new SanitizedEventName('exclusion failed');
 const event_ExclusionStopped = new SanitizedEventName('exclusion stopped');
-const event_NetworkHealDone = new SanitizedEventName('heal network done');
+const event_RebuildRoutesDone = new SanitizedEventName('rebuild routes done');
 //const event_FirmwareUpdateFinished = new SanitizedEventName('firmware update finished');
 const event_ValueNotification = new SanitizedEventName('value notification');
 const event_Notification = new SanitizedEventName('notification');
@@ -45,7 +45,7 @@ const event_InterviewStarted = new SanitizedEventName('interview started');
 const event_InterviewFailed = new SanitizedEventName('interview failed');
 const event_InterviewCompleted = new SanitizedEventName('interview completed');
 const event_Ready = new SanitizedEventName('ready');
-const event_HealNetworkProgress = new SanitizedEventName('heal network progress');
+const event_RebuildRoutesProgress = new SanitizedEventName('rebuild routes progress');
 
 module.exports = (RED: NodeAPI) => {
 	const init = function (this: Type_ZWaveJSRuntime, config: Type_ZWaveJSRuntimeConfig) {
@@ -590,23 +590,23 @@ module.exports = (RED: NodeAPI) => {
 			});
 
 			// Heal finnished
-			self.driverInstance?.controller.on(event_NetworkHealDone.driverName, (Result) => {
+			self.driverInstance?.controller.on(event_RebuildRoutesDone.driverName, (Result) => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Event: UserPayloadPackage = {
 					Type: MessageType.EVENT,
-					Event: { event: event_NetworkHealDone.redEventName, timestamp: Timestamp, eventBody: Result }
+					Event: { event: event_RebuildRoutesDone.redEventName, timestamp: Timestamp, eventBody: Result }
 				};
 				const Status: UserPayloadPackage = {
 					Type: MessageType.STATUS,
 					Status: {
 						fill: 'green',
 						shape: 'dot',
-						text: event_NetworkHealDone.nodeStatusName,
+						text: event_RebuildRoutesDone.nodeStatusName,
 						clearTime: 5000
 					}
 				};
-				updateLatestStatus(event_NetworkHealDone.nodeStatusName);
+				updateLatestStatus(event_RebuildRoutesDone.nodeStatusName);
 				ControllerNodeIDs.forEach((ID) => {
 					controllerNodes[ID](Event);
 					controllerNodes[ID](Status);
@@ -614,12 +614,12 @@ module.exports = (RED: NodeAPI) => {
 			});
 
 			// Heal Progress
-			self.driverInstance?.controller.on(event_HealNetworkProgress.driverName, (Progress) => {
+			self.driverInstance?.controller.on(event_RebuildRoutesProgress.driverName, (Progress) => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Event: UserPayloadPackage = {
 					Type: MessageType.EVENT,
-					Event: { event: event_HealNetworkProgress.redEventName, timestamp: Timestamp, eventBody: Progress }
+					Event: { event: event_RebuildRoutesProgress.redEventName, timestamp: Timestamp, eventBody: Progress }
 				};
 				const Count = Progress.size;
 				const Remain = [...Progress.values()].filter((V) => V === 'pending').length;
@@ -881,7 +881,7 @@ module.exports = (RED: NodeAPI) => {
 			});
 
 			// Notification
-			Node.on(event_Notification.driverName, (ThisNode, CC, Args) => {
+			Node.on(event_Notification.driverName, (Endpoint, CC, Args) => {
 				const Timestamp = new Date().getTime();
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
@@ -891,9 +891,9 @@ module.exports = (RED: NodeAPI) => {
 					Event: {
 						event: event_Notification.redEventName,
 						timestamp: Timestamp,
-						nodeId: ThisNode.id,
-						nodeName: ThisNode.name,
-						nodeLocation: ThisNode.location,
+						nodeId: Endpoint.nodeId,
+						nodeName: Node.name,
+						nodeLocation: Node.location,
 						eventBody: { ccId: CC, args: Args }
 					}
 				};
