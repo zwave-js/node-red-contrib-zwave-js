@@ -9,7 +9,7 @@
         (please note: ~~healing~~ route rebuilding was still occurring, just the events were not being triggered)  
         Therefore Node RED was not aware of it's progress
 
-      - Check for `NodeId` in notification events for device nodes (I missed 1)
+      - Check for `NodeId` in notification events for device nodes (I missed 1)  
         This would have only affected notifications for `endpoints` > 0
 
   - 9.0.0
