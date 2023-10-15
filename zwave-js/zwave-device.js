@@ -155,8 +155,54 @@ module.exports = function (RED) {
 				);
 			}
 		}
+
+		const Convert = (msg) => {
+			if (msg.payload.cmd) {
+				const CMD = msg.payload.cmd;
+				const CMDProp = msg.payload.cmdProperties || {};
+				switch (CMD.api) {
+					case 'VALUE':
+						msg.payload = {
+							mode: 'ValueAPI',
+							method: CMD.method,
+							node: CMDProp.nodeId
+						};
+						msg.payload.params = [];
+
+						msg.payload.params.push(CMDProp.valueId);
+
+						if (CMD.method === 'setValue') {
+							msg.payload.params.push(CMDProp.value);
+							if (CMDProp.setValueOptions) {
+								msg.payload.params.push(CMDProp.setValueOptions);
+							}
+						}
+						break;
+
+					case 'CC':
+						msg.payload = {
+							mode: 'CCAPI',
+							cc: CMDProp.commandClass,
+							method: CMDProp.method,
+							node: CMDProp.nodeId,
+							endpoint: CMDProp.endpoint,
+							params: CMDProp.args,
+							responseThroughEvent: msg.payload.responseThroughEvent,
+							forceUpdate: msg.payload.forceUpdate
+						};
+
+						break;
+				}
+			}
+
+			return msg;
+		};
+
 		async function Input(msg, send, done) {
 			try {
+				// For my own sanity, i'll convert the new format back to old format if its being used, as this will be much easier during the transition phase
+				msg = Convert(msg);
+
 				AddIsolatedNodeID(msg);
 				switch (DeviceMode) {
 					case 'AS':

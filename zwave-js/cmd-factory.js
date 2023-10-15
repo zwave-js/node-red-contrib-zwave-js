@@ -122,28 +122,18 @@ module.exports = function (RED) {
 				}
 			}
 
-			const RM = {};
-			RM.mode = 'ValueAPI';
-			RM.method = config.vapiMode;
-			RM.node = NodeID;
-			RM.params = [];
-			RM.params.push(ValueID);
-			if (config.vapiMode === 'setValue') {
-				RM.params.push(Value);
-				if (Options !== undefined) {
-					RM.params.push(Options);
+			const RM = {
+				cmd: {
+					api: 'VALUE',
+					method: config.vapiMode
+				},
+				cmdProperties: {
+					nodeId: NodeID,
+					value: Value,
+					valueId: ValueID,
+					setValueOptions: Options
 				}
-			}
-
-			if (RM.params.length < 1) {
-				delete RM['params'];
-			}
-
-			Object.keys(RM).forEach((K) => {
-				if (typeof RM[K] === 'undefined') {
-					delete RM[K];
-				}
-			});
+			};
 
 			msg.payload = RM;
 
@@ -218,23 +208,21 @@ module.exports = function (RED) {
 				}
 			}
 
-			const RM = {};
-			RM.mode = 'CCAPI';
-			RM.cc = config.cc;
-			RM.method = config.method;
-			RM.responseThroughEvent = NoEvent !== true;
-			RM.node = NodeID;
-			RM.endpoint = Endpoint;
-			RM.params = Params;
-			if (ForceUpdate !== undefined) {
-				RM.forceUpdate = ForceUpdate;
-			}
-
-			Object.keys(RM).forEach((K) => {
-				if (typeof RM[K] === 'undefined') {
-					delete RM[K];
-				}
-			});
+			const RM = {
+				cmd: {
+					api: 'CC',
+					method: 'invokeCCAPI'
+				},
+				cmdProperties: {
+					nodeId: NodeID,
+					endpoint: Endpoint,
+					commandClass: config.cc,
+					method: config.method,
+					args: Params
+				},
+				responseThroughEvent: NoEvent !== true,
+				forceUpdate: ForceUpdate
+			};
 
 			msg.payload = RM;
 

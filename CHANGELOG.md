@@ -1,5 +1,29 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 9.0.0
+
+    **Breaking Changes**
+      - The min node version is now 18
+      - If you execute certain methods your self, the following have been renamed
+        - `beginHealingNetwork` -> `beginRebuildingRoutes`
+        - `stopHealingNetwork` -> `stopRebuildingRoutes`
+        - `healNode` -> `rebuildNodeRoutes`
+
+    **New Features**
+      - Added `getValueTimestamp` to the `Value API` - args will be the single Value ID  
+        The event will be `VALUE_TIMESTAMP`
+
+    **Changes**  
+      - Bump ZWave JS to v12
+      - The `lastSeen` property will now use the Drivers internal value, which is persistant between reboots 
+
+    **Deprecations**
+      - The old message format has now been deprecated, and support will be removed in V10.
+        [PLEASE SEE MIGRATION GUIDE](/APIChange-v9.md)
+      - Support for `responseThroughEvent` will be removed in V10 (all methods will return in v10)
+      - Support for `forceUpdate` will be removed in V10 (you will be requied to manage this your self if using the CC API)
+      - Support for `getLastEvents` will be removed in V10 (the introdcution of the persistant `lastSeen` value and `getValueTimestamp` has made this somewhat bloatware)
+
   - 8.2.1
 
     **Changes**  
@@ -418,7 +442,7 @@
     - Bump Z-Wave JS to 7.12.1
 
   - 4.0.0 **Possible Breaking Changes**, **Deprecation Warnings**
-    - MAJOR API Transition : [PLEASE SEE MIGRATION GUIDE](/APIChange.md)
+    - MAJOR API Transition : [PLEASE SEE MIGRATION GUIDE](/APIChange-v4.md)
     - Added Node Firmware Update UI
     - Added Network Map UI
     - Added Association Group Managment UI

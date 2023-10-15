@@ -147,19 +147,19 @@ const DCs = {
 		name: 'unprovisionAllSmartStart',
 		noWait: false
 	},
-	healNode: {
+	rebuildNodeRoutes: {
 		API: 'ControllerAPI',
-		name: 'healNode',
+		name: 'rebuildNodeRoutes',
 		noWait: true
 	},
-	beginHealingNetwork: {
+	beginRebuildingRoutes: {
 		API: 'ControllerAPI',
-		name: 'beginHealingNetwork',
+		name: 'beginRebuildingRoutes',
 		noWait: false
 	},
-	stopHealingNetwork: {
+	stopRebuildingRoutes: {
 		API: 'ControllerAPI',
-		name: 'stopHealingNetwork',
+		name: 'stopRebuildingRoutes',
 		noWait: false
 	},
 	hardReset: {
@@ -1889,11 +1889,11 @@ const ZwaveJsUI = (function () {
 
 	function StartNodeHeal() {
 		ControllerCMD(
-			DCs.healNode.API,
-			DCs.healNode.name,
+			DCs.rebuildNodeRoutes.API,
+			DCs.rebuildNodeRoutes.name,
 			undefined,
 			[HoveredNode.nodeId],
-			DCs.healNode.noWait
+			DCs.rebuildNodeRoutes.noWait
 		).catch((err) => {
 			modalAlert(err.responseText || err.message, 'Could not start Node heal.');
 			throw new Error(err.responseText || err.message);
@@ -1902,11 +1902,11 @@ const ZwaveJsUI = (function () {
 
 	function StartHeal() {
 		ControllerCMD(
-			DCs.beginHealingNetwork.API,
-			DCs.beginHealingNetwork.name,
+			DCs.beginRebuildingRoutes.API,
+			DCs.beginRebuildingRoutes.name,
 			undefined,
 			undefined,
-			DCs.beginHealingNetwork.noWait
+			DCs.beginRebuildingRoutes.noWait
 		).catch((err) => {
 			modalAlert(
 				err.responseText || err.message,
@@ -1918,11 +1918,11 @@ const ZwaveJsUI = (function () {
 
 	function StopHeal() {
 		ControllerCMD(
-			DCs.stopHealingNetwork.API,
-			DCs.stopHealingNetwork.name,
+			DCs.stopRebuildingRoutes.API,
+			DCs.stopRebuildingRoutes.name,
 			undefined,
 			undefined,
-			DCs.stopHealingNetwork.noWait
+			DCs.stopRebuildingRoutes.noWait
 		).catch((err) => {
 			console.error(err);
 		});
@@ -2230,7 +2230,7 @@ const ZwaveJsUI = (function () {
 				},
 				{
 					id: 'controller-option-menu-start-heal',
-					label: 'Begin Network Heal',
+					label: 'Begin Rebuilding Routes',
 					onselect: function () {
 						IsDriverReady();
 						StartHeal();
@@ -2238,7 +2238,7 @@ const ZwaveJsUI = (function () {
 				},
 				{
 					id: 'controller-option-menu-stop-heal',
-					label: 'Stop Network Heal',
+					label: 'Stop Rebuilding Routes',
 					onselect: function () {
 						IsDriverReady();
 						StopHeal();
@@ -3179,7 +3179,7 @@ const ZwaveJsUI = (function () {
 				marginRight: '1px'
 			});
 			Heal.append('<i class="fa fa-medkit fa-lg"></i>');
-			RED.popover.tooltip(Heal, 'Heal Node');
+			RED.popover.tooltip(Heal, 'Rebuild Node Routes');
 			BA.append(Heal);
 
 			const Associations = $('<button>');
@@ -3570,7 +3570,8 @@ const ZwaveJsUI = (function () {
 
 				const Child = renderPropertyElement(Prop);
 				propertyList
-					.treeList('data')[Index].treeList.addChild({ element: Child });
+					.treeList('data')
+					[Index].treeList.addChild({ element: Child });
 
 				if (Writeable && Type !== 'any') {
 					const icon = Child.prev();

@@ -625,7 +625,76 @@ module.exports = function (RED) {
 
 		RedNode.on('input', Input);
 
+		const Convert = (msg) => {
+			if (msg.payload.cmd) {
+				const CMD = msg.payload.cmd;
+				const CMDProp = msg.payload.cmdProperties || {};
+				switch (CMD.api) {
+					case 'DRIVER':
+						msg.payload = {
+							mode: 'DriverAPI',
+							method: CMD.method,
+							params: CMDProp.args
+						};
+						break;
+
+					case 'ASSOCIATIONS':
+						msg.payload = {
+							mode: 'AssociationsAPI',
+							method: CMD.method,
+							params: CMDProp.args
+						};
+						break;
+
+					case 'CONTROLLER':
+						msg.payload = {
+							mode: 'ControllerAPI',
+							method: CMD.method,
+							params: CMDProp.args
+						};
+						break;
+
+					case 'VALUE':
+						msg.payload = {
+							mode: 'ValueAPI',
+							method: CMD.method,
+							node: CMDProp.nodeId
+						};
+						msg.payload.params = [];
+
+						msg.payload.params.push(CMDProp.valueId);
+
+						if (CMD.method === 'setValue') {
+							msg.payload.params.push(CMDProp.value);
+							if (CMDProp.setValueOptions) {
+								msg.payload.params.push(CMDProp.setValueOptions);
+							}
+						}
+						break;
+
+					case 'CC':
+						msg.payload = {
+							mode: 'CCAPI',
+							cc: CMDProp.commandClass,
+							method: CMDProp.method,
+							node: CMDProp.nodeId,
+							endpoint: CMDProp.endpoint,
+							params: CMDProp.args,
+							responseThroughEvent: msg.payload.responseThroughEvent,
+							forceUpdate: msg.payload.forceUpdate
+						};
+
+						break;
+				}
+			}
+
+			return msg;
+		};
+
 		async function Input(msg, send, done, internal) {
+			// For my own sanity, i'll convert the new format back to old format if its being used, as this will be much easier during the transition phase
+			msg = Convert(msg);
+
 			let Type = 'CONTROLLER';
 			if (internal !== undefined && internal) {
 				Type = 'EVENT';
@@ -1033,7 +1102,7 @@ module.exports = function (RED) {
 							isControllerNode: N.isControllerNode,
 							supportsBeaming: N.supportsBeaming,
 							keepAwake: N.keepAwake,
-							lastSeen: N.ZWNR_lastSeen || 0,
+							lastSeen: new Date(N.lastSeen).getTime(),
 							powerSource: {
 								type: N.supportsCC(CommandClasses.Battery)
 									? 'battery'
@@ -1136,7 +1205,7 @@ module.exports = function (RED) {
 					Send(undefined, 'CONTROLLER_RESET_COMPLETE', undefined, send);
 					break;
 
-				case 'healNode':
+				case 'rebuildNodeRoutes':
 					NodeCheck(Params[0]);
 					ReturnNode.id = Params[0];
 					Send(ReturnNode, 'NODE_HEAL_STARTED', undefined, send);
@@ -1146,7 +1215,9 @@ module.exports = function (RED) {
 						text: 'Node Heal Started: ' + Params[0]
 					});
 					UI.Status('Node Heal Started: ' + Params[0]);
-					const HealResponse = await Driver.controller.healNode(Params[0]);
+					const HealResponse = await Driver.controller.rebuildNodeRoutes(
+						Params[0]
+					);
 					if (HealResponse) {
 						SetFlowNodeStatus({
 							fill: 'green',
@@ -1171,8 +1242,8 @@ module.exports = function (RED) {
 					RestoreReadyStatus();
 					break;
 
-				case 'beginHealingNetwork':
-					await Driver.controller.beginHealingNetwork();
+				case 'beginRebuildingRoutes':
+					await Driver.controller.beginRebuildingRoutes();
 					Send(undefined, 'NETWORK_HEAL_STARTED', undefined, send);
 					SetFlowNodeStatus({
 						fill: 'yellow',
@@ -1182,8 +1253,8 @@ module.exports = function (RED) {
 					UI.Status('Network Heal Started.');
 					break;
 
-				case 'stopHealingNetwork':
-					await Driver.controller.stopHealingNetwork();
+				case 'stopRebuildingRoutes':
+					await Driver.controller.stopRebuildingRoutes();
 					Send(undefined, 'NETWORK_HEAL_STOPPED', undefined, send);
 					SetFlowNodeStatus({
 						fill: 'blue',
@@ -1254,6 +1325,12 @@ module.exports = function (RED) {
 			const ReturnNode = { id: ZWaveNode.id };
 
 			switch (Method) {
+				case 'getValueTimestamp':
+					if (Multicast) ThrowVirtualNodeLimit();
+					const TS = ZWaveNode.getValueTimestamp(Params[0]);
+					Send(ReturnNode, 'VALUE_TIMESTAMP', TS, send);
+					break;
+
 				case 'getDefinedValueIDs':
 					if (Multicast) ThrowVirtualNodeLimit();
 					const VIDs = ZWaveNode.getDefinedValueIDs();
@@ -1808,16 +1885,16 @@ module.exports = function (RED) {
 			let IsolatedNodeId;
 
 			if (Node !== undefined) {
-				PL.node = Node.id;
+				PL.node = Node.nodeId || Node.id;
 				IsolatedNodeId = Node.targetFlowNode || undefined;
 			}
 
 			if (Node !== undefined) {
-				const N = getNodeInfoForPayload(Node.id, 'name');
+				const N = getNodeInfoForPayload(Node.nodeId || Node.id, 'name');
 				if (N !== undefined) {
 					PL.nodeName = N;
 				}
-				const L = getNodeInfoForPayload(Node.id, 'location');
+				const L = getNodeInfoForPayload(Node.nodeId || Node.id, 'location');
 				if (L !== undefined) {
 					PL.nodeLocation = L;
 				}
@@ -1830,7 +1907,7 @@ module.exports = function (RED) {
 
 			let _Subject = '';
 			if (Node !== undefined) {
-				_Subject = '[Node: ' + Node.id + '] [' + Subject + ']';
+				_Subject = '[Node: ' + (Node.nodeId || Node.id) + '] [' + Subject + ']';
 			} else {
 				_Subject = '[' + Subject + ']';
 			}
@@ -1852,7 +1929,8 @@ module.exports = function (RED) {
 				'ALIVE',
 				'VALUE_ID_LIST',
 				'GET_VALUE_RESPONSE',
-				'GET_VALUE_METADATA_RESPONSE'
+				'GET_VALUE_METADATA_RESPONSE',
+				"VALUE_TIMESTAMP"
 			];
 
 			const TimestampSubjects = [
@@ -1864,9 +1942,12 @@ module.exports = function (RED) {
 			];
 
 			if (TimestampSubjects.includes(Subject)) {
-				Driver.controller.nodes.get(Node.id).ZWNR_lastSeen = PL.timestamp;
-				Driver.controller.nodes.get(Node.id).ZWNR_lastEvent = PL.event;
-				Driver.controller.nodes.get(Node.id).ZWNR_lastObject = PL.object;
+				Driver.controller.nodes.get(Node.nodeId || Node.id).ZWNR_lastSeen =
+					PL.timestamp;
+				Driver.controller.nodes.get(Node.nodeId || Node.id).ZWNR_lastEvent =
+					PL.event;
+				Driver.controller.nodes.get(Node.nodeId || Node.id).ZWNR_lastObject =
+					PL.object;
 			}
 
 			if (AllowedSubjectsForDNs.includes(Subject) && SendDNs) {
