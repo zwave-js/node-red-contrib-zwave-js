@@ -412,23 +412,6 @@ const ZWaveJSUI = (function () {
 
 		const Steps = $('#IEWizard').steps({ showFooterButtons: false });
 		stepsAPI = Steps.data('plugin_Steps');
-
-		/* Logs */
-		Runtime.Post(undefined, undefined, { stream: true }, `zwave-js/ui/${networkId}/log`)
-			.then((data) => {
-				if (data.callSuccess) {
-					if (data.response) {
-						RED.comms.subscribe(`zwave-js/ui/${networkId}/log`, commsLog);
-					} else {
-						$('#TPL_NetworkManagementTabs').tabs({ disabled: [5] });
-					}
-				} else {
-					alert(data.response);
-				}
-			})
-			.catch((Error) => {
-				alert(Error.message);
-			});
 	};
 
 	// Show Node  Options
