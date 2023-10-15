@@ -35,7 +35,7 @@ module.exports = function (RED) {
 	const event_ExclusionStarted = new SanitizedEventName('exclusion started');
 	const event_ExclusionFailed = new SanitizedEventName('exclusion failed');
 	const event_ExclusionStopped = new SanitizedEventName('exclusion stopped');
-	const event_NetworkHealDone = new SanitizedEventName('heal network done');
+	const event_NetworkHealDone = new SanitizedEventName('rebuild routes done');
 	const event_FirmwareUpdateFinished = new SanitizedEventName(
 		'firmware update finished'
 	);
@@ -54,7 +54,7 @@ module.exports = function (RED) {
 	);
 	const event_Ready = new SanitizedEventName('ready');
 	const event_HealNetworkProgress = new SanitizedEventName(
-		'heal network progress'
+		'rebuild routes progress'
 	);
 	const FWK =
 		'127c49b6f2928a6579e82ecab64a83fc94a6436f03d5cb670b8ac44412687b75f0667843';
@@ -1977,7 +1977,7 @@ module.exports = function (RED) {
 						payload: PL
 					});
 					NodeEventEmitter.emit(
-						`zwjs:${NetworkIdentifier}:node:event:${Node.id}`,
+						`zwjs:${NetworkIdentifier}:node:event:${Node.nodeId || Node.id}`,
 						{ payload: PL }
 					);
 				}

@@ -1,5 +1,16 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 9.0.1
+
+    **Bug Fixes**
+      - Correctly attach to the network healing events.  
+        V12 of the Driver renamed these events (to accurately describe what they actually do)  
+        Seems I didn't update the event handlers  
+        (please note: ~~healing~~ route rebuilding was still occurring, just the events were not being triggered)  
+        Therefore Node RED was not aware of it's progress
+
+      - Check for `NodeId` in notification events for device nodes (I missed 1)
+
   - 9.0.0
 
     **Breaking Changes**
