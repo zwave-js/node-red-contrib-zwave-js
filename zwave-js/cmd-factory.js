@@ -9,10 +9,10 @@ module.exports = function (RED) {
 				const API = config.api || 'ValueAPI';
 				switch (API) {
 					case 'CCAPI':
-						CCAPI(msg, send);
+						await CCAPI(msg, send);
 						break;
 					case 'ValueAPI':
-						ValueAPI(msg, send);
+						await ValueAPI(msg, send);
 						break;
 				}
 				if (done) {

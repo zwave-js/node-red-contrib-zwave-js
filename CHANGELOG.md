@@ -1,5 +1,10 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 9.0.2
+
+    **Bug Fixes**
+      - Fix `CMD Factory` crashing Node RED, when required values are missing.
+
   - 9.0.1
 
     **Bug Fixes**
