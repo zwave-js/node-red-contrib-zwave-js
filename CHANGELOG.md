@@ -1,5 +1,12 @@
   # node-red-contrib-zwave-js Change Log
 
+
+  - 9.0.3
+
+    **Maintenance Release**
+      - Update dependencies
+      - Update Node/UI status with regards to Route Rebuilding
+
   - 9.0.2
 
     **Bug Fixes**

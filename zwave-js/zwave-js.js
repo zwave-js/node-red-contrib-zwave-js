@@ -1212,9 +1212,9 @@ module.exports = function (RED) {
 					SetFlowNodeStatus({
 						fill: 'yellow',
 						shape: 'dot',
-						text: 'Node Heal Started: ' + Params[0]
+						text: 'Rebuild Node Routes Started: ' + Params[0]
 					});
-					UI.Status('Node Heal Started: ' + Params[0]);
+					UI.Status('Rebuild Node Routes Started: ' + Params[0]);
 					const HealResponse = await Driver.controller.rebuildNodeRoutes(
 						Params[0]
 					);
@@ -1222,16 +1222,16 @@ module.exports = function (RED) {
 						SetFlowNodeStatus({
 							fill: 'green',
 							shape: 'dot',
-							text: 'Node Heal Successful: ' + Params[0]
+							text: 'Rebuild Node Routes Successful: ' + Params[0]
 						});
-						UI.Status('Node Heal Successful: ' + Params[0]);
+						UI.Status('Rebuild Node Routes Successful ' + Params[0]);
 					} else {
 						SetFlowNodeStatus({
 							fill: 'red',
 							shape: 'dot',
-							text: 'Node Heal Unsuccessful: ' + Params[0]
+							text: 'Rebuild Node Routes Unsuccessful: ' + Params[0]
 						});
-						UI.Status('Node Heal Unsuccessful: ' + Params[0]);
+						UI.Status('Rebuild Node Routes Unsuccessful: ' + Params[0]);
 					}
 					Send(
 						ReturnNode,
@@ -1248,9 +1248,9 @@ module.exports = function (RED) {
 					SetFlowNodeStatus({
 						fill: 'yellow',
 						shape: 'dot',
-						text: 'Network Heal Started.'
+						text: 'Route Rebuilding Started.'
 					});
-					UI.Status('Network Heal Started.');
+					UI.Status('Route Rebuilding Started.');
 					break;
 
 				case 'stopRebuildingRoutes':
@@ -1259,9 +1259,9 @@ module.exports = function (RED) {
 					SetFlowNodeStatus({
 						fill: 'blue',
 						shape: 'dot',
-						text: 'Network Heal Stopped.'
+						text: 'Route Rebuilding Stopped.'
 					});
-					UI.Status('Network Heal Stopped.');
+					UI.Status('Route Rebuilding Stopped.');
 					RestoreReadyStatus();
 					break;
 
@@ -1930,7 +1930,7 @@ module.exports = function (RED) {
 				'VALUE_ID_LIST',
 				'GET_VALUE_RESPONSE',
 				'GET_VALUE_METADATA_RESPONSE',
-				"VALUE_TIMESTAMP"
+				'VALUE_TIMESTAMP'
 			];
 
 			const TimestampSubjects = [
