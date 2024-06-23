@@ -6,12 +6,14 @@
 	"dependencies": {
 		"limiter": "^2.1.0",
 		"lodash": "^4.17.21",
-		"node-red": "^3.1.0",
-		"zwave-js": "^12.1.1"
+		"zwave-js":"12.11.0",
+		"handlebars":"4.7.8",
+		"qr-scanner":"1.4.2"
 	},
 	"devDependencies": {
+		"node-red": "^4.0.0",
 		"@types/node": "^18.0.0",
-		"@types/node-red": "^1.3.2",
+		"@types/node-red": "^1.3.5",
 		"@typescript-eslint/eslint-plugin": "6.7.5",
 		"@typescript-eslint/parser": "6.7.5",
 		"eslint": "^8.51.0",
@@ -19,13 +21,15 @@
 	},
 	"scripts": {
 		"validate": "node-red-dev validate -o validation_result.json",
-		"setup-dev": "npm install && npm run setup-debug",
+		"setup-dev": "npm install --save-dev && npm run setup-debug",
 		"setup-debug": "npm run debug-make-folders && npm run debug-install-nr",
 		"clean-debug": "rm -r ../DebugENV",
 		"debug-make-folders": "mkdir -p ../DebugENV && mkdir -p ../DebugENV/DebugHome/node_modules",
 		"debug-install-nr": "npm --prefix ../DebugENV install node-red && ln -s $(PWD) ../DebugENV/DebugHome/node_modules/${PWD##*/}",
 		"debug": "npm run build && node ../DebugENV/node_modules/node-red/red.js --userDir ../DebugENV/DebugHome",
-		"build": "npm run clean && tsc",
+		"build": "npm run clean && tsc && npm run move-handlebars && npm run move-qrcode",
+		"move-handlebars" : "cp ./node_modules/handlebars/dist/handlebars.min.js ./resources/UITab/handlebars.min.js",
+		"move-qrcode" : "cp ./node_modules/qr-scanner/*.js ./resources/UITab/",
 		"clean": "rimraf build/**/*.js"
 	},
 	"engines": {

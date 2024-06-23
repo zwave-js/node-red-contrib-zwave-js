@@ -1,4 +1,4 @@
-import { Driver, NodeStatus, InterviewStage, ProtocolVersion } from 'zwave-js';
+import { Driver, NodeStatus, InterviewStage, InclusionState, ProtocolVersion, num2hex} from 'zwave-js';
 import { CommandClasses } from '@zwave-js/core';
 
 export const getNodes = (DriverInstance: Driver): Record<string, unknown>[] => {
@@ -32,6 +32,9 @@ export const getNodes = (DriverInstance: Driver): Record<string, unknown>[] => {
 			isControllerNode: N.isControllerNode,
 			supportsBeaming: N.supportsBeaming,
 			keepAwake: N.keepAwake,
+			homeId: N.isControllerNode ? num2hex(DriverInstance.controller.homeId,true) : undefined,
+			inclusionState: N.isControllerNode ? InclusionState[DriverInstance.controller.inclusionState] : undefined,
+			supportsLongRange: N.isControllerNode ? DriverInstance.controller.supportsLongRange : undefined,
 			powerSource: {
 				type: N.supportsCC(CommandClasses.Battery) ? 'battery' : 'mains',
 				level: N.getValue({

@@ -1,6 +1,6 @@
 import { NodeAPI } from 'node-red';
 import { Driver, getAPI } from 'zwave-js';
-import { CommandClasses } from '@zwave-js/core';
+import { CommandClasses, isApplicationCC } from '@zwave-js/core';
 module.exports = (RED: NodeAPI) => {
 	const CCList: { [CCName: string]: string[] } = {};
 
@@ -20,12 +20,14 @@ module.exports = (RED: NodeAPI) => {
 		try {
 			if (!Object.keys(CCList).length) {
 				Object.keys(CommandClasses).forEach((CC) => {
-					const API = getAPI(CommandClasses[CC as keyof typeof CommandClasses]);
-					if (API !== undefined) {
-						const Methods = Object.getOwnPropertyNames(API.prototype).filter(
-							(m) => m !== 'constructor' && m !== 'supportsCommand'
-						);
-						CCList[CC] = Methods;
+					if (isApplicationCC(CommandClasses[CC as keyof typeof CommandClasses])) {
+						const API = getAPI(CommandClasses[CC as keyof typeof CommandClasses]);
+						if (API !== undefined) {
+							const Methods = Object.getOwnPropertyNames(API.prototype).filter(
+								(m) => m !== 'constructor' && m !== 'supportsCommand'
+							);
+							CCList[CC] = Methods;
+						}
 					}
 				});
 			}

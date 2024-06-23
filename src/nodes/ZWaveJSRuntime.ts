@@ -11,10 +11,13 @@ import {
 	SanitizedEventName
 } from '../types/Type_ZWaveJSRuntime';
 import { Driver, InclusionGrant, ZWaveNode } from 'zwave-js';
+import { tryParseDSKFromQRCodeString, parseQRCodeString, QRProvisioningInformation } from '@zwave-js/core';
+import { ConfigManager } from '@zwave-js/config';
 import { process as ControllerAPI_Process } from '../lib/ControllerAPI';
 import { process as ValueAPI_Process } from '../lib/ValueAPI';
 import { process as CC_Process } from '../lib/CCAPI';
 import { process as Node_Process } from '../lib/NodeAPI';
+import { getNodes } from '../lib/Fetchers';
 
 const APP_NAME = 'node-red-contrib-zwave-js';
 const APP_VERSION = '10.0.0';
@@ -52,6 +55,9 @@ module.exports = (RED: NodeAPI) => {
 		const self = this;
 		RED.nodes.createNode(self, config);
 		self.config = config;
+
+		const _ConfigManager = new ConfigManager();
+		_ConfigManager.loadDeviceIndex();
 
 		// S2 Promise Resolvers
 		let grantPromise: (Value: InclusionGrant | false) => void;
@@ -173,6 +179,54 @@ module.exports = (RED: NodeAPI) => {
 			);
 
 			RED.httpAdmin.get(
+				`/zwave-js/ui/${self.id}/s2/provisioningentries`,
+				RED.auth.needsPermission('flows.write'),
+				(_, response) => {
+					const Entries = self.driverInstance?.controller.getProvisioningEntries();
+					response.json({ callSuccess: true, response: Entries });
+				}
+			);
+
+			RED.httpAdmin.post(
+				`/zwave-js/ui/${self.id}/s2/parseqr`,
+				RED.auth.needsPermission('flows.write'),
+				(request, response) => {
+					const DSK = tryParseDSKFromQRCodeString(request.body[0]);
+
+					if (DSK !== undefined) {
+						response.json({
+							callSuccess: true,
+							response: {
+								isDSK: true
+							}
+						});
+
+						return;
+					} else {
+						let SSQR: QRProvisioningInformation;
+						try {
+							SSQR = parseQRCodeString(request.body[0]);
+							_ConfigManager.lookupDevice(SSQR.manufacturerId, SSQR.productType, SSQR.productId).then((dc) => {
+								response.json({
+									callSuccess: true,
+									response: {
+										isDSK: false,
+										qrProvisioningInformation: SSQR,
+										deviceConfig: dc
+									}
+								});
+							});
+						} catch (Err: unknown) {
+							response.json({
+								callSuccess: false,
+								response: (Err as Error).message
+							});
+						}
+					}
+				}
+			);
+
+			RED.httpAdmin.get(
 				`/zwave-js/ui/${self.id}/:api/:method`,
 				RED.auth.needsPermission('flows.write'),
 				(request, response) => {
@@ -204,6 +258,16 @@ module.exports = (RED: NodeAPI) => {
 					const Method = request.params.method;
 
 					switch (TargetAPI) {
+						case API.NODE:
+							self
+								.nodeCommand(Method, request.body.nodeId, request.body.value)
+								.then((R) => {
+									response.json({ callSuccess: true, response: R });
+								})
+								.catch((error) => {
+									response.json({ callSuccess: false, response: error.message });
+								});
+							break;
 						case API.VALUE:
 							self
 								.valueCommand(Method, request.body.nodeId, request.body.valueId, request.body.value)
@@ -426,9 +490,9 @@ module.exports = (RED: NodeAPI) => {
 			});
 
 			// Node Removed
-			self.driverInstance?.controller.on(event_NodeRemoved.driverName, (ThisNode, _Replaced) => {
+			self.driverInstance?.controller.on(event_NodeRemoved.driverName, (ThisNode, Reason) => {
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/removed`, { nodeId: ThisNode.id }, false);
+				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/removed`, { nodeId: ThisNode.id, reason: Reason }, false);
 				const Status: UserPayloadPackage = {
 					Type: MessageType.STATUS,
 					Status: {
@@ -664,6 +728,9 @@ module.exports = (RED: NodeAPI) => {
 					}
 				};
 				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
+
+				const NodeInfo = getNodes(self.driverInstance!).find((N) => N.nodeId === ThisNode.id);
+				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/ready`, { nodeInfo: NodeInfo }, false);
 			});
 
 			// Alive
@@ -684,6 +751,9 @@ module.exports = (RED: NodeAPI) => {
 					}
 				};
 				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
+
+				const NodeInfo = getNodes(self.driverInstance!).find((N) => N.nodeId === ThisNode.id);
+				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/alive`, { nodeInfo: NodeInfo }, false);
 			});
 
 			// Wake
@@ -704,6 +774,9 @@ module.exports = (RED: NodeAPI) => {
 					}
 				};
 				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
+
+				const NodeInfo = getNodes(self.driverInstance!).find((N) => N.nodeId === ThisNode.id);
+				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/wakeup`, { nodeInfo: NodeInfo }, false);
 			});
 
 			// Sleep
@@ -724,6 +797,9 @@ module.exports = (RED: NodeAPI) => {
 					}
 				};
 				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
+
+				const NodeInfo = getNodes(self.driverInstance!).find((N) => N.nodeId === ThisNode.id);
+				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/sleep`, { nodeInfo: NodeInfo }, false);
 			});
 
 			// Dead
@@ -744,6 +820,9 @@ module.exports = (RED: NodeAPI) => {
 					}
 				};
 				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
+
+				const NodeInfo = getNodes(self.driverInstance!).find((N) => N.nodeId === ThisNode.id);
+				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/dead`, { nodeInfo: NodeInfo }, false);
 			});
 
 			// Interview Started
@@ -767,6 +846,9 @@ module.exports = (RED: NodeAPI) => {
 					controllerNodes[ID](Event);
 					controllerNodes[ID](Status);
 				});
+
+				const NodeInfo = getNodes(self.driverInstance!).find((N) => N.nodeId === ThisNode.id);
+				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/interviewstarted`, { nodeInfo: NodeInfo }, false);
 			});
 
 			// Interview Completed
@@ -791,6 +873,9 @@ module.exports = (RED: NodeAPI) => {
 					controllerNodes[ID](Event);
 					controllerNodes[ID](Status);
 				});
+
+				const NodeInfo = getNodes(self.driverInstance!).find((N) => N.nodeId === ThisNode.id);
+				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/interviewed`, { nodeInfo: NodeInfo }, false);
 			});
 
 			// Interview Failed
@@ -815,6 +900,9 @@ module.exports = (RED: NodeAPI) => {
 					controllerNodes[ID](Event);
 					controllerNodes[ID](Status);
 				});
+
+				const NodeInfo = getNodes(self.driverInstance!).find((N) => N.nodeId === ThisNode.id);
+				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/interviewfailed`, { nodeInfo: NodeInfo }, false);
 			});
 
 			// Value Notification

@@ -20,7 +20,7 @@ module.exports = {
 		'constructor-super': 2,
 		'for-direction': 2,
 		'getter-return': 2,
-		'no-async-promise-executor': 2,
+		'no-async-promise-executor': 0,
 		'no-class-assign': 2,
 		'no-compare-neg-zero': 2,
 		'no-cond-assign': 2,

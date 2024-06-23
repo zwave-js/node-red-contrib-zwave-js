@@ -16,6 +16,20 @@ export const process = async (
 		}
 	}
 
+	if (Method === 'refreshInfo') {
+		const Node = DriverInstance.controller.nodes.get(NodeID);
+		if (Node) {
+			try {
+				await Node.refreshInfo()
+				return true;
+			} catch (Err) {
+				return Promise.reject(Err);
+			}
+		} else {
+			return Promise.reject(new Error(`Node ${NodeID} does not exist`));
+		}
+	}
+
 	if (Method === 'setName') {
 		const Node = DriverInstance.controller.nodes.get(NodeID);
 		if (Node) {

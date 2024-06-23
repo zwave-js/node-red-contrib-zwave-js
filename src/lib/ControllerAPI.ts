@@ -7,6 +7,7 @@ import {
 	Message,
 	MessagePriority,
 	MessageType,
+	PlannedProvisioningEntry,
 	RFRegion
 } from 'zwave-js';
 
@@ -97,6 +98,22 @@ export const process = async (DriverInstance: Driver, Method: string, Args?: unk
 	if (Method === 'getNodes') {
 		try {
 			return getNodes(DriverInstance);
+		} catch (Err) {
+			return Promise.reject(Err);
+		}
+	}
+
+	if (Method === 'provisionSmartStartNode') {
+		try {
+			return DriverInstance.controller.provisionSmartStartNode(Args?.[0] as PlannedProvisioningEntry)
+		} catch (Err) {
+			return Promise.reject(Err);
+		}
+	}
+
+	if (Method === 'unprovisionSmartStartNode') {
+		try {
+			return DriverInstance.controller.unprovisionSmartStartNode(Args?.[0] as string)
 		} catch (Err) {
 			return Promise.reject(Err);
 		}

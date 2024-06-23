@@ -1,211 +1,236 @@
-/* Alert Flash */
-.zwave-js-controller-button-blink {
-	animation: blinker 1s linear infinite;
-}
-@keyframes blinker {
-	0% {
-		color: gray;
-	}
-	49% {
-		color: gray;
-	}
-	50% {
-		color: red;
-	}
-	100% {
-		color: red;
-	}
+.zwjs-node-icon {
+	color: rgb(46, 145, 205);
+	font-size: 40px;
 }
 
-/* Controller Info Header */
-.zwave-js-info-header {
-	height: 40px;
-	padding: 10px;
-	text-align: left;
+.zwjs-node-id {
+	background-color: rgb(46, 145, 205);
+	padding: 2px;
+	display: inline-block;
+	min-width: 30px;
+	color: white;
+	text-align: center;
+	border-radius: 4px;
+	margin-right: 5px;
 }
 
-/* Info icon */
-.zwave-js-info-header > i {
-	position: absolute;
-	font-size: 30px;
-	margin-top: 5px;
-	color: gray;
+.zwjs-node-id[nodeinfo] {
+	height: 30px;
+	line-height: 30px;
 }
 
-/* Info Container */
-.zwave-js-info-container {
-	margin-left: 50px;
+#zwjs-endpoint-list div {
+	background-color: rgb(46, 145, 205);
+	padding: 2px;
+	display: inline-block;
+	color: white;
+	text-align: center;
+	border-radius: 4px;
+	font-size: 12px;
+	margin-right: 3px;
+	cursor: pointer;
 }
 
-/* Controller Info Lables */
-.zwave-js-info-container span:first-of-type {
-	font-size: 18px;
+.zwjs-cc-id {
+	background-color: var(--red-ui-palette-header-background);
+	padding: 5px;
+	color: black;
+	text-align: center;
+	border-radius: 4px;
+	font-size: 12px;
+}
+
+#zwjs-endpoint-list div[selected] {
+	background-color: rgb(135, 169, 128);
+	color: white;
+}
+
+#zwjs-controller-info,
+#zwjs-controller-info-tray {
+	font-size: 14px;
 	font-weight: bold;
 	color: gray;
 }
-.zwave-js-info-container span {
-	font-size: 14px;
-	color: gray;
-}
 
-/* Controller Menu header */
-.zwave-js-controller-menu-header {
-	height: 20px;
+.zwjs-sb-menu-header {
 	text-align: center;
+	font-size: 22px;
+	padding: 3px;
 }
 
-/* Controller Menu buttons */
-.zwave-js-controller-menu-header a {
+.zwjs-sb-menu-header a {
+	margin-right: 10px;
+	color: gray;
+	font-size: 16px;
+}
+.zwjs-sb-menu-header a > i {
+	cursor: pointer;
+}
+.zwjs-tray-header {
+	width: 100%;
+	background-color: var(--red-ui-palette-header-background);
+	height: 40px;
+	padding: 10px;
+	-webkit-box-shadow: 0px 14px 13px -11px rgba(0, 0, 0, 0.5);
+	-moz-box-shadow: 0px 14px 13px -11px rgba(0, 0, 0, 0.5);
+	box-shadow: 0px 14px 13px -11px rgba(0, 0, 0, 0.5);
 	position: relative;
-	margin-right: 15px;
 }
-.zwave-js-controller-menu-header a i {
-	font-size: 18px;
-	color: gray;
-}
-
-button.zwave-js-full-width-button {
-	width: 70%;
-	display: block;
-	margin: auto;
-	margin-bottom: 5px;
-	color: var(--red-ui-primary-text-color);
-	height: 30px;
-	background-color: var(--red-ui-form-button-background);
-	border-style: solid;
-	border-width: 1px;
-	border-radius: 4px;
-	border-color: var(--red-ui-node-border);
-	cursor: pointer;
-}
-
-button.zwave-js-full-width-button:hover {
-	background-color: rgb(46, 145, 205);
-	color: white;
-}
-
-.zwave-js-vertical-tabs {
-	width: 100%;
-	height: 98%;
-}
-.zwave-js-vertical-tabs .ui-tabs-nav {
-	padding-right: 3px;
-	width: 190px;
-	height: 100%;
+.zwjs-tray-menu {
+	width: 200px;
+	background-color: var(--red-ui-palette-header-background);
+	height: calc(100% - 60px);
+	padding: 10px;
+	-webkit-box-shadow: 14px 0px 13px -11px rgba(0, 0, 0, 0.5);
+	-moz-box-shadow: 14px 0px 13px -11px rgba(0, 0, 0, 0.5);
+	box-shadow: 14px 0px 13px -11px rgba(0, 0, 0, 0.5);
 	display: inline-block;
-}
-.zwave-js-vertical-tabs .ui-tabs-nav li {
-	clear: left;
-	margin: 1px;
-	width: 98%;
-	border-style: solid;
-	border-width: 1px;
-	border-color: var(--red-ui-node-border);
-	border-radius: 4px;
-}
-
-.zwave-js-vertical-tabs .ui-tabs-nav li a {
-	display: block;
-}
-.zwave-js-vertical-tabs .ui-tabs-nav li.ui-tabs-active {
-	background-color: rgb(46, 145, 205);
-}
-.zwave-js-vertical-tabs .ui-tabs-nav li.ui-tabs-active a {
-	color: white;
-}
-.zwave-js-vertical-tabs .ui-tabs-panel {
-	padding: 1em;
-	width: calc(100% - 240px);
 	vertical-align: top;
-	display: inline-block;
-	height: 90%;
 }
 
-.zwave-js-vertical-tabs .ui-tabs-panel h2:first-of-type {
-	margin-top: 0px;
+.zwjs-tray-menu > div {
+	padding: 6px;
+	border-radius: 6px;
+	height: 20px;
+	margin-bottom: 5px;
 }
 
-.zwave-js-info-table tr td:first-of-type {
-	width: 150px;
-	color: rgb(46, 145, 205);
-}
-
-.zwave-js-save {
-	position: absolute;
-	right: 30px;
-	bottom: 30px;
-	width: 120px;
-	height: 30px;
+.zwjs-tray-menu > div[parent] {
 	background-color: rgb(46, 145, 205);
 	color: white;
-	border-style: solid;
-	border-width: 1px;
-	border-color: var(--red-ui-node-border);
-	border-radius: 4px;
+}
+
+.zwjs-tray-menu > div[child] {
 	cursor: pointer;
 }
 
-.zwave-js-ie-state-icon {
-	font-size: 85px;
-	display: block;
-	text-align: center;
-	color: rgb(46, 145, 205);
-	margin-top: 150px;
-}
-.zwave-js-ie-state-text {
-	text-align: center;
-	display: block;
-	font-size: 18px;
-	margin-top: 10px;
+.zwjs-tray-menu > div[child]:hover {
+	background-color: lightgray;
 }
 
-.zwave-js-dsk {
-	width: 40px;
+.zwjs-tray-menu > div[child][active] {
+	background-color: rgb(135, 169, 128);
+	color: white;
 }
 
-.zwave-js-log {
-	background-color: rgb(0, 0, 50);
-	color: darkgray;
-	width: 100%;
-	height: 95%;
-	border-radius: 8px;
+#zwjs-advanced-content {
+	display: inline-block;
+	width: calc(100% - 250px);
+
+	vertical-align: top;
+	padding: 20px;
+	box-sizing: border-box;
+}
+
+table.zwjs-table {
 	overflow: hidden;
-	overflow-y: scroll;
-	font-size: 12px;
+	width: 100%;
+	border-radius: 4px;
+}
+table.zwjs-table td {
 	padding: 5px;
 }
 
-.zwave-js-node-id-list {
-	background-color: gray;
-	color: white;
-	padding: 3px;
-	border-radius: 4px;
-	width: 30px;
-	height: 20px;
-	display: inline-block;
-	text-align: center;
-	line-height: 20px;
+table.zwjs-table[horizontal] tr {
+	background-color: var(--red-ui-palette-header-background);
 }
 
-.zwave-js-progress {
-	display: block;
-	margin: auto;
-	margin-top: 50px;
-	text-align: center;
-	height: 30px;
-	line-height: 30px;
-	width: 70%;
-	border-radius: 4px;
+table.zwjs-table[horizontal] tr:first-of-type {
+	background-color: lightgray;
+	width: 150px;
+}
+
+table.zwjs-table[vertical] td:first-of-type {
+	background-color: lightgray;
+	width: 150px;
+}
+table.zwjs-table[vertical] td:nth-of-type(2) {
+	background-color: var(--red-ui-palette-header-background);
+}
+
+.zwjs-fieldset > div.zwjs-hint {
+	margin-bottom: 20px;
+	background-color: lightgoldenrodyellow;
+	padding: 5px;
+	border-radius: 6px;
 	border-style: solid;
 	border-width: 1px;
-	border-color: var(--red-ui-node-border);
-	overflow: hidden;
+	border-color: gray;
 }
 
-.zwave-js-progress .zwave-js-progress-bar {
-	text-align: center;
+.zwjs-fieldset * label {
+	display: inline-block;
+}
+.zwjs-fieldset > div > button {
+	min-width: 120px;
 	background-color: rgb(46, 145, 205);
+	border-color: lightgray;
+	border-style: solid;
+	border-width: 1px;
+	border-radius: 4px;
+	float: right;
 	color: white;
-	width: 0%;
-	overflow: hidden;
+	margin-top: 10px;
+}
+
+.zwjs-fieldset > div > button[disabled] {
+	background-color: gray
+}
+
+.zwjs-empises {
+	margin-right: 5px;
+	padding: 5px;
+	border-radius: 4px;
+}
+
+.zwjs-empises[positive] {
+	background-color: rgb(135, 169, 128);
+	color: white;
+}
+
+.zwjs-empises[negative] {
+	background-color: red;
+	color: white;
+}
+
+.zwjs-node-state-group {
+	font-size: 16px;
+	float: right;
+	margin-right: 15px;
+	color: gray;
+}
+
+.zwjs-node-state-group i {
+	margin-right: 10px;
+}
+
+i.zwjs-state-amber {
+	color: orange;
+}
+i.zwjs-state-red {
+	color: red;
+}
+i.zwjs-state-green {
+	color: green;
+}
+
+#zwjs-camera-view {
+	width: 300px;
+	border-radius: 6px;
+	margin: auto;
+	display: block;
+	margin-top: 30px;
+	border-width: 2px;
+	border-style: solid;
+	border-color: rgb(46, 145, 205);
+}
+
+.scan-region-highlight > svg.scan-region-highlight-svg {
+	stroke-width: 10 !important;
+	stroke: rgb(46, 145, 205) !important;
+}
+
+.scan-region-highlight > svg.code-outline-highlight {
+	stroke: red !important;
+	stroke-width: 20 !important;
 }

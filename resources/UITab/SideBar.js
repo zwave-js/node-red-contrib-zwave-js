@@ -4,136 +4,106 @@
 /* eslint no-undef: "warn"*/
 /* eslint no-unused-vars: "warn"*/
 
-// UI Function placholders
-let IE;
-let Grant;
-let ValidateDSK;
-let NetworkSelected;
-let ShowNetworkManagement;
-let ShowNodeManagement;
-let NVMBackup;
-let NVMRestore;
+const ZWaveJS = (function () {
+	let networkId = undefined;
+	let selectedNode = undefined;
+	let lastInterviewedNode = undefined;
+	const AdvancedPanels = [];
+	let QRS;
 
-// UI Vars
-let associationGroups;
-
-// Globals
-const toTitleCase = (str) => {
-	return str.replace(/\w\S*/g, function (txt) {
-		return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-	});
-};
-
-const prompt = async (Message, Buttons, NoCancel = false) => {
-	return new Promise((resolve) => {
-		let Prompt = $('<div>');
-		Prompt.append(Message);
-
-		const Options = {
-			title: 'Question',
-			buttons: [],
-			draggable: false,
-			resizable: false,
-			modal: true
-		};
-
-		if (!NoCancel) {
-			Options.buttons.push({
-				text: 'Cancel',
-				click: function () {
-					resolve(-1);
-					$(this).dialog('close');
-				}
-			});
-		}
-		Buttons.forEach(function (V, I) {
-			Options.buttons.push({
-				text: V,
-				click: function () {
-					resolve(I);
-					$(this).dialog('close');
-				}
-			});
-		});
-
-		Prompt.dialog(Options);
-	});
-};
-
-const StepList = {
-	IEMode: 0,
-	NIF: 1,
-	Grant: 2,
-	DSK: 3,
-	Added: 4,
-	Removed: 5
-};
-
-const S2Classes = {
-	'-1': 'None',
-	0: 'S2 Unauthenticated',
-	1: 'S2 Authenticated',
-	2: 'S2 AccessControl',
-	7: 'S0 Legacy'
-};
-
-const modalWidth = 800;
-const modalHeight = 620;
-const maxModalWidth = 1120;
-
-const ZWaveJSUI = (function () {
-	// Vars
-	let networkId;
-	let selectedNode;
-	let stepsAPI;
-	let clientSideAuth = false;
+	let TPL_SidePanel = undefined;
+	let TPL_ControllerManagement = undefined;
+	let TPL_NodeManagement = undefined;
 
 	// Runtime event Callbacks
-	const commsLog = (event, data) => {
-		$('#zwave-js-log').append(data.log);
-		if ($('.zwave-js-log').scrollTop() > parseInt($('.zwave-js-log').prop('scrollHeight')) - 1000) {
-			$('.zwave-js-log').scrollTop(parseInt($('.zwave-js-log').prop('scrollHeight')));
-		}
+	const commsStatus = (topic, data) => {
+		$('#zwjs-controller-status').text(data.status);
+		$('#zwjs-controller-status-tray').text(data.status);
 	};
-	const commsStatus = (event, data) => {
-		$('#zwave-js-radio-status').text(data.status);
-	};
-	const commsNodeAdded = (event, data) => {
-		const NodeID = data.nodeId;
-		const HSC = data.highestSecurityClass;
-		const LS = data.lowSecurity;
+	const commsNodeState = (topic, data) => {
+		$('#zwjs-node-list')
+			.treeList('data')
+			.find((N) => N.nodeData.nodeId).nodeData = data.nodeInfo;
 
-		let Message = `The Node was successfully added to the network.<br />It will now be interviewed!<br /><br /><strong>Node ID:</strong> ${NodeID}, <strong>Security Mode:</strong> ${S2Classes[HSC]}`;
-
-		if (LS) {
-			Message += ' (lower than requested)';
-			$('#NodeAddedIcon').css({ color: 'orange' });
-			$('#NodeAddedIcon').addClass('fa-exclamation-triangle');
-		} else {
-			$('#NodeAddedIcon').addClass('fa-check-circle');
+		if (selectedNode && selectedNode.nodeId === data.nodeInfo.nodeId) {
+			nodeSelected(undefined, { nodeData: data.nodeInfo });
 		}
 
-		$('#NodeAddedMessage').html(Message);
-		stepsAPI.setStepIndex(StepList.Added);
+		RenderNodeIconState(data.nodeInfo);
 	};
-	const commsNodeRemoved = (event, data) => {
-		stepsAPI.setStepIndex(StepList.Removed);
+	const commsNodeAdded = (topic, data) => {
+		RefreshNodes();
+		RenderAdvanced('ZWJS_TPL_NAdded', undefined, data);
 	};
-	const commsGrant = (event, data) => {
+	const commsNodeRemoved = (topic, data) => {
+		RefreshNodes();
+		RenderAdvanced('ZWJS_TPL_NRemoved', undefined, data);
+	};
+
+	let clientSideAuth = false;
+	const SClassMap = {
+		0: 'S2 Unauthenticated',
+		1: 'S2 Authenticated',
+		2: 'S2 AccessControl',
+		7: 'S0 Legacy'
+	};
+
+	const commsGrant = (topic, data) => {
 		clientSideAuth = data.clientSideAuth;
+
+		const Classes = [];
 		data.securityClasses.forEach((SC) => {
-			$('#S2ClassesTable').append(
-				`<tr><td>${S2Classes[SC]}</td><td><input type="checkbox" value="${SC}" class="S2Class" /></td></tr>`
-			);
+			Classes.push({
+				classId: SC,
+				className: SClassMap[SC]
+			});
 		});
-		stepsAPI.setStepIndex(StepList.Grant);
+		RenderAdvanced('ZWJS_TPL_SecurityGrant', undefined, { classes: Classes });
 	};
-	const commsDSK = (event, data) => {
-		const Parts = data.dsk.split('-');
-		for (let i = 1; i < Parts.length; i++) {
-			$(`#DSK_Hint${i}`).val(Parts[i]);
-		}
-		stepsAPI.setStepIndex(StepList.DSK);
+	const commsDSK = (topic, data) => {
+		RenderAdvanced('ZWJS_TPL_DSK', undefined, data);
+	};
+
+	const toTitleCase = (str) => {
+		return str.replace(/\w\S*/g, function (txt) {
+			return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+		});
+	};
+
+	const prompt = async (Message, Buttons, NoCancel = false) => {
+		return new Promise((resolve) => {
+			let Prompt = $('<div>');
+			Prompt.append(Message);
+
+			const Options = {
+				title: 'Question',
+				buttons: [],
+				draggable: false,
+				resizable: false,
+				modal: true
+			};
+
+			if (!NoCancel) {
+				Options.buttons.push({
+					text: 'Cancel',
+					click: function () {
+						resolve(-1);
+						$(this).dialog('close');
+					}
+				});
+			}
+			Buttons.forEach(function (V, I) {
+				Options.buttons.push({
+					text: V,
+					click: function () {
+						resolve(I);
+						$(this).dialog('close');
+					}
+				});
+			});
+
+			Prompt.dialog(Options);
+		});
 	};
 
 	// Runtime Communication Methods
@@ -166,371 +136,428 @@ const ZWaveJSUI = (function () {
 		}
 	};
 
-	// Node Managemnt fucntions
-	NVMBackup = () => {
-		$('#NVRProgress').css({display:'block'})
-
-		let D = 0;
-
-		setInterval(()=>{
-			D++;
-			$('#NVRProgress > div').css({width:`${D}%`});
-			$('#NVRProgress > div').text(`Backup ${D}%`);
-		},80)
-
+	const StartExclusion = () => {
+		Runtime.Post('CONTROLLER', 'beginExclusion').then((R) => {
+			if (R.callSuccess) {
+				RenderAdvanced('ZWJS_TPL_NIFWait', undefined, { mode: 'Exclusion' });
+			} else {
+				alert(R.response);
+			}
+		});
 	};
-	NVMRestore = () =>  {
 
-		$('#NVRProgress').css({display:'block'})
+	const StartInclusion = () => {
+		const IS = $('input[type="radio"][name="ZWJS_IS"]:checked').val();
 
-		let D = 0;
-
-		setInterval(()=>{
-			D++;
-			$('#NVRProgress > div').css({width:`${D}%`});
-			$('#NVRProgress > div').text(`Backup ${D}%`);
-		},80)
-		
-		
+		if (IS !== 'SS') {
+			const ISO = {
+				strategy: parseInt(IS),
+				forceSecurity: false
+			};
+			Runtime.Post('CONTROLLER', 'beginInclusion', [ISO]).then((R) => {
+				if (R.callSuccess) {
+					RenderAdvanced('ZWJS_TPL_NIFWait', undefined, { mode: 'Inclusion' });
+				} else {
+					alert(R.response);
+				}
+			});
+		} else {
+			RenderAdvanced('ZWJS_TPL_QRRead', undefined, 'StartCamera');
+		}
 	};
-	Grant = () => {
-		const GrantObject = {
-			securityClasses: [],
-			clientSideAuth: clientSideAuth
-		};
 
-		$(':checkbox:checked').each(function () {
-			GrantObject.securityClasses.push(parseInt($(this).val()));
+	const SubmitDSK = (Button) => {
+		Runtime.Post(undefined, undefined, [$('#zwjs-dsk').val()], `zwave-js/ui/${networkId}/s2/dsk`).then((R) => {
+			if (R.callSuccess) {
+				$(Button).text('Please wait...');
+				$(Button).prop('disabled', true);
+			} else {
+				alert(R.response);
+			}
+		});
+	};
+
+	const SubmitProvisioningEntry = (Button) => {
+		$(Button).text('Please wait...');
+		$(Button).prop('disabled', true);
+
+		const Entry = JSON.parse(atob($('#zwjs-qrdata').attr('data-entry')));
+		Entry.securityClasses = [];
+		Entry.status = 0;
+
+		$('input[type="checkbox"][name="ZWJS_SCLASS"]:checked').each((i, e) => {
+			Entry.securityClasses.push(parseInt($(e).val()));
 		});
 
-		Runtime.Post(undefined, undefined, [GrantObject], `zwave-js/ui/${networkId}/s2/grant`)
-			.then((data) => {
-				if (!data.callSuccess) {
-					alert(data.response);
-				}
-			})
-			.catch((Error) => {
-				alert(Error.message);
-			});
+		Runtime.Post('CONTROLLER', 'provisionSmartStartNode', [Entry]).then((R) => {
+			if (R.callSuccess) {
+				RenderAdvanced('ZWJS_TPL_SSDone');
+			} else {
+				alert(R.response);
+			}
+		});
 	};
 
-	ValidateDSK = () => {
-		Runtime.Post(undefined, undefined, [$('#DSK').val()], `zwave-js/ui/${networkId}/s2/dsk`)
-			.then((data) => {
-				if (!data.callSuccess) {
-					alert(data.response);
-				}
-			})
-			.catch((Error) => {
-				alert(Error.message);
-			});
+	const SetPEActive = (El, Entry) => {
+		Entry = JSON.parse(atob(Entry));
+		delete Entry.checked;
+		delete Entry.shortDSK;
+		delete Entry.B64;
+		Entry.status = $(El).prop('checked') ? 0 : 1;
+
+		Runtime.Post('CONTROLLER', 'provisionSmartStartNode', [Entry]).then((R) => {
+			if (!R.callSuccess) {
+				alert(R.response);
+			}
+		});
 	};
 
-	IE = (Mode) => {
-		let Request;
-
-		if (Mode === 'EX') {
-			prompt(
-				'If the device you wish to exclude is found on the Smart Start Provisioning List, would you like it to be removed?',
-				['Yes', 'No']
-			).then((answer) => {
-				Request = {
-					strategy: answer === 0 ? 2 : 0
-				};
-				Runtime.Post('CONTROLLER', 'beginExclusion', [Request])
-					.then((data) => {
-						if (data.callSuccess) {
-							stepsAPI.setStepIndex(StepList.NIF);
-						} else {
-							alert(data.response);
-						}
-					})
-					.catch((Error) => {
-						alert(Error.message);
-					});
+	const DeletePE = (El, Entry) => {
+		if (confirm('Are you sure you wish to delete this Provisioning Entry? Note: it will not exclude the device.')) {
+			Entry = JSON.parse(atob(Entry));
+			delete Entry.checked;
+			delete Entry.shortDSK;
+			delete Entry.B64;
+			Runtime.Post('CONTROLLER', 'unprovisionSmartStartNode', [Entry.dsk]).then((R) => {
+				if (R.callSuccess) {
+					$(El).parent().parent().remove();
+				} else {
+					alert(R.response);
+				}
 			});
 		}
+	};
 
-		if (Mode === 'Default') {
-			prompt(
-				"If the device you're including does not support S2, S0 will be used ONLY if its necessary. Would you like to fallback to S0 regarldess?",
-				['Yes', 'No']
-			).then((answer) => {
-				if (answer > -1) {
-					Request = {
-						strategy: 0,
-						forceSecurity: answer === 0
-					};
-					Runtime.Post('CONTROLLER', 'beginInclusion', [Request])
-						.then((data) => {
-							if (data.callSuccess) {
-								stepsAPI.setStepIndex(StepList.NIF);
-							} else {
-								alert(data.response);
-							}
-						})
-						.catch((Error) => {
-							alert(Error.message);
+	const GrantClasses = (Button) => {
+		const Granted = {
+			clientSideAuth: clientSideAuth,
+			securityClasses: []
+		};
+
+		$('input[type="checkbox"][name="ZWJS_SCLASS"]:checked').each((i, e) => {
+			Granted.securityClasses.push(parseInt($(e).val()));
+		});
+
+		Runtime.Post(undefined, undefined, [Granted], `zwave-js/ui/${networkId}/s2/grant`).then((R) => {
+			if (R.callSuccess) {
+				$(Button).text('Please wait...');
+				$(Button).prop('disabled', true);
+			} else {
+				alert(R.response);
+			}
+		});
+	};
+
+	const InterviewCurrentNode = () => {
+		if (!selectedNode) {
+			return;
+		}
+		if (confirm('Are you sure you wish to re-interview this Node?')) {
+			Runtime.Post('NODE', 'refreshInfo', { nodeId: selectedNode.nodeId })
+				.then((data) => {
+					if (!data.callSuccess) {
+						alert(data.response);
+					}
+				})
+				.catch((Error) => {
+					alert(Error.message);
+				});
+		}
+	};
+
+	const RenderFunctions = {
+		ControllerInfo: () => {
+			return new Promise(async (resolve, reject) => {
+				let Response = await Runtime.Get('CONTROLLER', 'getNodes');
+				if (Response.callSuccess) {
+					Response = Response.response.find((N) => N.isControllerNode);
+					Response.configuration = $('#zwjs-network option:selected').text();
+					Response.serialPort = RED.nodes.node(networkId).serialPort;
+					resolve(Response);
+				} else {
+					reject(Response.response);
+				}
+			});
+		},
+		ControllerStats: () => {
+			return new Promise(async (resolve, reject) => {
+				let Response = await Runtime.Get('CONTROLLER', 'getNodes');
+				if (Response.callSuccess) {
+					Response = Response.response.find((N) => N.isControllerNode).statistics;
+					resolve(Response);
+				} else {
+					reject(Response.response);
+				}
+			});
+		},
+		SetInclusionOptions: () => {
+			return new Promise(async (resolve) => {
+				setTimeout(() => {
+					const S0K = RED.nodes.node(networkId).securityKeys_S0_Legacy;
+					const S2ACK = RED.nodes.node(networkId).securityKeys_S2_AccessControl;
+					const S2AK = RED.nodes.node(networkId).securityKeys_S2_Authenticated;
+					const S2UK = RED.nodes.node(networkId).securityKeys_S2_Unauthenticated;
+
+					if (S2ACK.length < 32 || S2AK.length < 32 || S2UK.length < 32) {
+						[
+							'input[type="radio"][name="ZWJS_IS"][value="0"]',
+							'input[type="radio"][name="ZWJS_IS"][value="4"]',
+							'input[type="radio"][name="ZWJS_IS"][value="SS"]'
+						].forEach((EL) => {
+							$(EL).attr('disabled', 'disabled');
+							$(EL).parent().css({ opacity: 0.4 });
 						});
-				}
+						$('input[type="radio"][name="ZWJS_IS"][value="2"]').prop('checked', true);
+					}
+
+					if (S0K.length < 32) {
+						['input[type="radio"][name="ZWJS_IS"][value="3"]'].forEach((EL) => {
+							$(EL).attr('disabled', 'disabled');
+							$(EL).parent().css({ opacity: 0.4 });
+						});
+
+						if (S2ACK.length < 32 || S2AK.length < 32 || S2UK.length < 32) {
+							$('input[type="radio"][name="IS"][value="2"]').prop('checked', true);
+						}
+					}
+				}, 10);
+
+				resolve({});
+			});
+		},
+		StartCamera: () => {
+			setTimeout(() => {
+				const Options = {
+					highlightCodeOutline: true,
+					highlightScanRegion: true,
+					calculateScanRegion: () => {
+						const ve = $('#zwjs-camera-view')[0];
+						const sd = Math.min(ve.videoWidth, ve.videoHeight);
+						const srz = Math.round(0.5 * sd);
+
+						const region = {
+							x: Math.round((ve.videoWidth - srz) / 2),
+							y: Math.round((ve.videoHeight - srz) / 2),
+							width: srz,
+							height: srz
+						};
+						return region;
+					}
+				};
+
+				const EL = $('#zwjs-camera-view')[0];
+				const Handler = (result) => {
+					QRS.stop();
+					Runtime.Post(undefined, undefined, [result.data], `zwave-js/ui/${networkId}/s2/parseqr`).then((R) => {
+						if (R.callSuccess) {
+							if (R.response.isDSK) {
+								alert('The QR Code you have scanned, is a DSK (Device Specific Key), it is not a Smart Start QR Code');
+								QRS.start();
+							} else {
+								const Classes = [];
+								R.response.qrProvisioningInformation.requestedSecurityClasses.forEach((SC) => {
+									Classes.push({
+										classId: SC,
+										className: SClassMap[SC]
+									});
+								});
+
+								R.response.qrProvisioningInformation.manufacturer = R.response.deviceConfig.manufacturer;
+								R.response.qrProvisioningInformation.label = R.response.deviceConfig.label;
+
+								RenderAdvanced('ZWJS_TPL_PrePro', undefined, {
+									QRProvisioningInformation: btoa(JSON.stringify(R.response.qrProvisioningInformation)),
+									DSK: R.response.qrProvisioningInformation.dsk,
+									DeviceConfig: R.response.deviceConfig,
+									classes: Classes
+								});
+							}
+						} else {
+							alert(R.response);
+							QRS.start();
+						}
+					});
+				};
+
+				QRS = new QrScanner(EL, Handler, Options);
+				QRS.start();
+			}, 50);
+		},
+
+		PrepSSList: () => {
+			return new Promise((resolve, reject) => {
+				Runtime.Get(undefined, undefined, `zwave-js/ui/${networkId}/s2/provisioningentries`).then((R) => {
+					if (R.callSuccess) {
+						R.response.forEach((E) => {
+							E.shortDSK = E.dsk.split('-')[0];
+							if (E.status === 0) {
+								E.checked = 'checked';
+							}
+							E.B64 = btoa(JSON.stringify(E));
+						});
+						resolve({ entries: R.response });
+					} else {
+						reject(R.response);
+					}
+				});
 			});
 		}
+	};
 
-		if (Mode === 'S2') {
-			Request = {
-				strategy: 4
-			};
-			Runtime.Post('CONTROLLER', 'beginInclusion', [Request])
-				.then((data) => {
-					if (data.callSuccess) {
-						stepsAPI.setStepIndex(StepList.NIF);
-					} else {
-						alert(data.response);
-					}
-				})
-				.catch((Error) => {
-					alert(Error.message);
-				});
+	// Render Advanced
+	const RenderAdvanced = async (TemplateID, Target, FunctionIDORObject) => {
+		if (!AdvancedPanels.find((P) => P.id === TemplateID)) {
+			const TPL = Handlebars.compile($(`#${TemplateID}`).html());
+			AdvancedPanels.push({ id: TemplateID, compiled: TPL });
 		}
 
-		if (Mode === 'S0') {
-			Request = {
-				strategy: 3
-			};
-			Runtime.Post('CONTROLLER', 'beginInclusion', [Request])
-				.then((data) => {
-					if (data.callSuccess) {
-						stepsAPI.setStepIndex(StepList.NIF);
-					} else {
-						alert(data.response);
-					}
-				})
-				.catch((Error) => {
-					alert(Error.message);
-				});
+		let Data = {};
+		if (FunctionIDORObject && typeof FunctionIDORObject !== 'object') {
+			try {
+				Data = await RenderFunctions[FunctionIDORObject]();
+			} catch (Response) {
+				alert(Response);
+				return;
+			}
+		} else if (FunctionIDORObject && typeof FunctionIDORObject === 'object') {
+			Data = FunctionIDORObject;
 		}
 
-		if (Mode === 'NS') {
-			Request = {
-				strategy: 2
-			};
-			Runtime.Post('CONTROLLER', 'beginInclusion', [Request])
-				.then((data) => {
-					if (data.callSuccess) {
-						stepsAPI.setStepIndex(StepList.NIF);
-					} else {
-						alert(data.response);
-					}
-				})
-				.catch((Error) => {
-					alert(Error.message);
-				});
+		const Output = AdvancedPanels.find((P) => P.id === TemplateID).compiled(Data);
+		$('#zwjs-advanced-content').empty();
+		$('#zwjs-advanced-content').append(Output);
+
+		if (Target) {
+			$('.zwjs-tray-menu div').removeAttr('active');
+			$(Target).attr('active', '');
 		}
+	};
+
+	const CloseTray = () => {
+		// Kill Scanner
+		if (QRS) {
+			QRS.destroy();
+			QRS = undefined;
+		}
+
+		// Kill any outstanding network task (we dont really need to await these)
+		Runtime.Post('CONTROLLER', 'stopInclusion');
+		Runtime.Post('CONTROLLER', 'stopExclusion');
+
+		// Finally Close Tray
+		RED.tray.close();
 	};
 
 	// Show Network Options
-	ShowNetworkManagement = () => {
-		const HTML = $('#TPL_NetworkManagement').html();
-		const Panel = $('<div>');
-		Panel.append(HTML);
-
-		const Settings = {
-			title: 'Network Management',
-			modal: true,
-			width: modalWidth,
-			height: modalHeight,
-			maxWidth: maxModalWidth,
-			resizable: true,
-			draggable: true,
-			close: function () {
-				Runtime.Post(undefined, undefined, { stream: false }, `zwave-js/ui/${networkId}/log`)
-					.then((data) => {
-						RED.comms.unsubscribe(`zwave-js/ui/${networkId}/log`, commsLog);
-						$('#zwave-js-log').empty();
-					})
-					.catch((Error) => {
-						//
-					});
-				Panel.remove();
+	const ShowNetworkManagement = () => {
+		if (!networkId) {
+			return;
+		}
+		const Options = {
+			width: 900,
+			title: 'ZWave JS Controller Management',
+			buttons: [
+				{
+					id: 'zwjs-tray-about',
+					text: 'About Zwave JS',
+					click: function () {
+						CloseTray();
+					}
+				},
+				{
+					id: 'zwjs-tray-close',
+					text: 'Close',
+					click: function () {
+						CloseTray();
+					}
+				}
+			],
+			open: function (tray) {
+				var trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
+				const State = {
+					Network: $('#zwjs-controller-info').text(),
+					Status: $('#zwjs-controller-status').text()
+				};
+				trayBody.append(TPL_ControllerManagement(State));
 			}
 		};
+		CloseTray();
+		RED.tray.show(Options);
 
-		Panel.dialog(Settings);
-		$('#TPL_NetworkManagementTabs').tabs().addClass('zwave-js-vertical-tabs ui-helper-clearfix');
-		$('#TPL_NetworkManagementTabs li').removeClass('ui-corner-top').addClass('ui-corner-left');
-
-		// Basic Controller Info
-		Runtime.Get('CONTROLLER', 'getNodes')
-			.then((data) => {
-				if (data.callSuccess) {
-					const Controller = data.response.find((N) => N.isControllerNode);
-
-					const CITable = $('#CITable');
-					CITable.append(`<tr><td>Device</td><td>${Controller.deviceConfig.description}</td>`);
-					CITable.append(`<tr><td>Manufacturer</td><td>${Controller.deviceConfig.manufacturer}</td>`);
-					CITable.append(`<tr><td>Firmware Version</td><td>${Controller.firmwareVersion}</td>`);
-					CITable.append(`<tr><td>Supported Data Rates</td><td>${Controller.supportedDataRates.toString()}</td>`);
-
-					const CIStatsTable = $('#CIStatsTable');
-					for (const [key, value] of Object.entries(Controller.statistics)) {
-						CIStatsTable.append(`<tr><td>${key}</td><td>${value}</td>`);
-					}
-				} else {
-					alert(data.response);
-				}
-			})
-			.catch((Error) => {
-				alert(Error.message);
-			});
-
-		// Power Level
-		Runtime.Get('CONTROLLER', 'getPowerlevel')
-			.then((data) => {
-				if (data.callSuccess) {
-					$('#CSettings_PL').val(data.response.powerlevel);
-					$('#CSettings_0DBM').val(data.response.measured0dBm);
-				} else {
-					alert(data.response);
-				}
-			})
-			.catch((Error) => {
-				alert(Error.message);
-			});
-
-		// Region
-		Runtime.Get('CONTROLLER', 'getRFRegion')
-			.then((data) => {
-				if (data.callSuccess) {
-					//
-				} else {
-					$('#CSettings_Regions').prop('disabled', 'disabled');
-				}
-			})
-			.catch((Error) => {
-				alert(Error.message);
-			});
-
-		const Steps = $('#IEWizard').steps({ showFooterButtons: false });
-		stepsAPI = Steps.data('plugin_Steps');
+		$('.zwjs-tray-menu > div[default]').trigger('click');
 	};
 
-	// Show Node  Options
-	ShowNodeManagement = () => {
-		if (selectedNode) {
-			const HTML = $('#TPL_NodeManagement').html();
-			const Panel = $('<div>');
-			Panel.append(HTML);
-
-			const Settings = {
-				title: 'Node Management',
-				modal: true,
-				width: modalWidth,
-				height: modalHeight,
-				maxWidth: maxModalWidth,
-				resizable: true,
-				draggable: true,
-				close: function () {
-					Panel.remove();
+	const ShowNodeManagement = () => {
+		if (!selectedNode) {
+			return;
+		}
+		const Options = {
+			width: 900,
+			title: 'ZWave JS Node Management',
+			buttons: [
+				{
+					id: 'zwjs-tray-about',
+					text: 'About Zwave JS',
+					click: function () {
+						CloseTray();
+					}
+				},
+				{
+					id: 'zwjs-tray-close',
+					text: 'Close',
+					click: function () {
+						CloseTray();
+					}
 				}
-			};
+			],
+			open: function (tray) {
+				var trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
+				const State = {
+					NodeID: $('#zwjs-node-info-id').text(),
+					Status: $('#zwjs-node-status').text(),
+					NodeInfo: $('#zwjs-node-info').text()
+				};
+				trayBody.append(TPL_NodeManagement(State));
+			}
+		};
+		CloseTray();
+		RED.tray.show(Options);
 
-			Panel.dialog(Settings);
-			$('#TPL_NodeManagementTabs').tabs().addClass('zwave-js-vertical-tabs ui-helper-clearfix');
-			$('#TPL_NodeManagementTabs li').removeClass('ui-corner-top').addClass('ui-corner-left');
+		$('.zwjs-tray-menu > div[default]').trigger('click');
+	};
 
-			// Basic Node Info
-			Runtime.Get('CONTROLLER', 'getNodes')
-				.then((data) => {
-					if (data.callSuccess) {
-						const Node = data.response.find((N) => N.nodeId === selectedNode);
+	const RenderNodeIconState = (Node) => {
+		$(`#zwjs-node-state-interview-${Node.nodeId}`).removeClass();
+		$(`#zwjs-node-state-status-${Node.nodeId}`).removeClass();
+		$(`#zwjs-node-state-power-${Node.nodeId}`).removeClass();
 
-						const NITable = $('#NITable');
-						NITable.append(`<tr><td>Device</td><td>${Node.deviceConfig.description}</td>`);
-						NITable.append(`<tr><td>Manufacturer</td><td>${Node.deviceConfig.manufacturer}</td>`);
-						NITable.append(`<tr><td>Firmware Version</td><td>${Node.firmwareVersion}</td>`);
+		if (Node.interviewStage !== 'Complete') {
+			$(`#zwjs-node-state-interview-${Node.nodeId}`).addClass(['fa', 'fa-handshake-o', 'zwjs-state-amber']);
+		} else {
+			$(`#zwjs-node-state-interview-${Node.nodeId}`).addClass(['fa', 'fa-check', 'zwjs-state-green']);
+		}
 
-						const NSTable = $('#NSTable');
-						NSTable.append(`<tr><td>Interview Stage</td><td>${Node.interviewStage}</td>`);
-						NSTable.append(`<tr><td>Power Source</td><td>${toTitleCase(Node.powerSource.type)}</td>`);
-						if (Node.powerSource.type === 'battery') {
-							NSTable.append(`<tr><td>Battery Level</td><td>${Node.powerSource.level}</td>`);
-							NSTable.append(`<tr><td>Is Low</td><td>${Node.powerSource.isLow}</td>`);
-						}
-						NSTable.append(`<tr><td>Status</td><td>${Node.status}</td>`);
-						NSTable.append(`<tr><td>Ready</td><td>${Node.ready}</td>`);
-						NSTable.append(`<tr><td>Security Mode</td><td>${S2Classes[Node.highestSecurityClass]}</td>`);
+		switch (Node.status) {
+			case 'Alive':
+				$(`#zwjs-node-state-status-${Node.nodeId}`).addClass(['fa', 'fa-sun-o', 'zwjs-state-green']);
+				break;
+			case 'Asleep':
+				$(`#zwjs-node-state-status-${Node.nodeId}`).addClass(['fa', 'fa-moon-o', 'zwjs-state-amber']);
+				break;
+			case 'Dead':
+				$(`#zwjs-node-state-status-${Node.nodeId}`).addClass(['fa', 'fa-exclamation-triangle', 'zwjs-state-red']);
+				break;
+		}
 
-						const NSTTable = $('#NSTTable');
-						delete Node.statistics.lwr;
-						for (const [key, value] of Object.entries(Node.statistics)) {
-							NSTTable.append(`<tr><td>${key}</td><td>${value}</td>`);
-						}
-					} else {
-						alert(data.response);
-					}
-				})
-				.catch((Error) => {
-					alert(Error.message);
-				});
-
-			// Association Groups
-			Runtime.Post('CONTROLLER', 'getAllAssociationGroups', [selectedNode])
-				.then((Data) => {
-					if (Data.callSuccess) {
-						associationGroups = Data.response;
-
-						// Associations (All)
-						Runtime.Post('CONTROLLER', 'getAllAssociations', [selectedNode])
-							.then((Data) => {
-								if (Data.callSuccess) {
-									Data.response.forEach((A) => {
-										const LocalEndpoint = A.associationAddress.endpoint;
-
-										const TargetGroups = Object.keys(A.associations);
-										TargetGroups.forEach((G) => {
-											const GroupName = associationGroups[LocalEndpoint][G].label;
-											A.associations[G].forEach((TargetNode) => {
-												const TargetNodeID = TargetNode.nodeId;
-												const TargetEndpoint = TargetNode.endpoint || '(Root Device)';
-
-												const Row = `<tr><td>${GroupName}</td><td>${LocalEndpoint}</td><td>${TargetNodeID}</td><td>${TargetEndpoint}</td></tr>`;
-
-												$('#zwave-js-associations').append(Row);
-											});
-										});
-									});
-								} else {
-									alert(Data.response);
-								}
-							})
-							.catch((Error) => {
-								alert(Error.message);
-							});
-					} else {
-						alert(Data.response);
-					}
-				})
-				.catch((Error) => {
-					alert(Error.message);
-				});
+		if (Node.powerSource.type === 'mains') {
+			$(`#zwjs-node-state-power-${Node.nodeId}`).addClass(['fa', 'fa-plug']);
 		}
 	};
 
-	// Network Selecetd
-	NetworkSelected = function () {
-		// Remove Subscriptions
-		if (networkId) {
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/status`, commsStatus);
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/s2/grant`, commsGrant);
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/s2/dsk`, commsDSK);
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/added`, commsNodeAdded);
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/removed`, commsNodeRemoved);
-			networkId = undefined;
+	const RefreshNodes = () => {
+		if (!networkId) {
+			return;
 		}
-
-		networkId = $('#zwave-js-network').val();
-
-		// get Nodes ansd Info
 		Runtime.Get('CONTROLLER', 'getNodes')
 			.then((data) => {
 				if (data.callSuccess) {
@@ -539,7 +566,7 @@ const ZWaveJSUI = (function () {
 					const Controller = data.filter((N) => N.isControllerNode)[0];
 
 					const Info = `${Controller.deviceConfig.manufacturer} | ${Controller.deviceConfig.label} | v${Controller.firmwareVersion}`;
-					$('#zwave-js-controller-info').text(Info);
+					$('#zwjs-controller-info').text(Info);
 
 					const Nodes = data.filter((N) => !N.isControllerNode);
 
@@ -547,16 +574,30 @@ const ZWaveJSUI = (function () {
 					const TreeData = [];
 					Nodes.forEach((N) => {
 						const Label = $('<div>');
-						Label.append(`<span class="zwave-js-node-id-list">${N.nodeId}</span> `);
+						Label.append(`<span class="zwjs-node-id">${N.nodeId}</span>`);
 						Label.append(N.nodeName || 'No Name');
+						const IconSpan = $('<span>').addClass('zwjs-node-state-group');
+						Label.append(IconSpan);
+
+						IconSpan.append(`<i id="zwjs-node-state-interview-${N.nodeId}" aria-hidden="true"></i>`);
+						IconSpan.append(`<i id="zwjs-node-state-status-${N.nodeId}" aria-hidden="true"></i>`);
+						IconSpan.append(`<i id="zwjs-node-state-power-${N.nodeId}" aria-hidden="true"></i>`);
+
+						RenderNodeIconState(N);
 
 						TreeData.push({
+							id: `zwjs-node-list-entry-${N.nodeId}`,
 							element: Label,
 							nodeData: N
 							//icon: 'fa fa-circle'
 						});
 					});
-					$('#zwave-js-node-list').treeList('data', TreeData);
+
+					$('#zwjs-node-list').treeList('data', TreeData);
+
+					TreeData.forEach((N) => {
+						RenderNodeIconState(N.nodeData);
+					});
 				} else {
 					alert(data.response);
 				}
@@ -564,11 +605,40 @@ const ZWaveJSUI = (function () {
 			.catch((Error) => {
 				alert(Error.message);
 			});
+	};
+
+	// Network Selecetd
+	const NetworkSelected = function () {
+		// Remove Subscriptions
+		if (networkId) {
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/status`, commsStatus);
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/s2/grant`, commsGrant);
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/s2/dsk`, commsDSK);
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/added`, commsNodeAdded);
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/removed`, commsNodeRemoved);
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/interviewstarted`, commsNodeState);
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/interviewfailed`, commsNodeState);
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/interviewed`, commsNodeState);
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/ready`, commsNodeState);
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/sleep`, commsNodeState);
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/awake`, commsNodeState);
+			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/dead`, commsNodeState);
+			networkId = undefined;
+		}
+
+		if (!$('#zwjs-network').val()) {
+			return;
+		}
+
+		networkId = $('#zwjs-network').val();
+
+		// get Nodes ansd Info
+		RefreshNodes();
 
 		Runtime.Get(undefined, undefined, `zwave-js/ui/${networkId}/status`)
 			.then((data) => {
 				if (data.callSuccess) {
-					$('#zwave-js-controller-status').text(data.response);
+					$('#zwjs-controller-status').text(data.response);
 				} else {
 					alert(data.response);
 				}
@@ -580,170 +650,105 @@ const ZWaveJSUI = (function () {
 		// subscribe
 
 		RED.comms.subscribe(`zwave-js/ui/${networkId}/status`, commsStatus);
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/added`, commsNodeAdded);
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/removed`, commsNodeRemoved);
 		RED.comms.subscribe(`zwave-js/ui/${networkId}/s2/grant`, commsGrant);
 		RED.comms.subscribe(`zwave-js/ui/${networkId}/s2/dsk`, commsDSK);
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/added`, commsNodeAdded);
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/removed`, commsNodeRemoved);
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/interviewstarted`, commsNodeState);
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/interviewfailed`, commsNodeState);
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/interviewed`, commsNodeState);
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/ready`, commsNodeState);
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/sleep`, commsNodeState);
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/awake`, commsNodeState);
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/dead`, commsNodeState);
 	};
 
-	// Value Editor
-	const edit = (VID, EL) => {
-		const Send = (Value) => {
-			Runtime.Post(
-				'VALUE',
-				'setValue'[(selectedNode, VID.valueId, Value)].then((data) => {
-					//
-				})
-			);
+	const listCCs = (Collection) => {
+		const groupByCC = function (xs) {
+			return xs.reduce(function (rv, x) {
+				(rv[x.valueId.commandClass] = rv[x.valueId.commandClass] || []).push(x);
+				return rv;
+			}, {});
 		};
 
-		const HTML = $('#TPL_ValueEditor').html();
-		const Panel = $('<div>');
-		Panel.append(HTML);
+		const CCGroups = groupByCC(Collection);
+		const CCGroupIDs = Object.keys(CCGroups);
 
-		const Settings = {
-			title: 'Edit Value',
-			modal: false,
-			width: 400,
-			height: 260,
-			resizable: false,
-			draggable: true,
-			close: function () {
-				Panel.remove();
-			},
-			position: {
-				my: 'left bottom',
-				at: 'right top-10',
-				of: EL
-			}
-		};
+		const Items = [];
 
-		Panel.dialog(Settings);
+		CCGroupIDs.forEach((CCID) => {
+			const Name = CCGroups[CCID][0].valueId.commandClassName;
+			const Item = {
+				element: `<div><span class="zwjs-cc-id">0x${parseInt(CCID).toString(16).padStart(2, '0').toUpperCase()}</span> - ${Name}</div>`,
+				children: []
+			};
 
-		const Label = VID.metadata.label || VID.valueId.property;
+			CCGroups[CCID].forEach((V) => {
+				const sItem = {
+					label: V.metadata.label,
+					icon: V.metadata.writeable ? 'fa fa-pencil' : ''
+				};
 
-		$('#zwave-js-value-command-class').text(VID.valueId.commandClassName);
-		$('#zwave-js-value-name').text(Label);
-		if (VID.metadata) {
-			$('#zwave-js-value-description').text(VID.metadata.description);
-		}
+				Item.children.push(sItem);
+			});
 
-		if (VID.metadata.states) {
-			const Input = $('<select>');
-			Input.append(new Option('Select...', ''));
-			for (const [value, key] of Object.entries(VID.metadata.states)) {
-				Input.append(new Option(key, value));
-			}
+			Items.push(Item);
+		});
 
-			Send;
-
-			$('#zwave-js-value-input').append(
-				`<tr><td>Predefined Value</td><td>${
-					Input.get(0).outerHTML
-				}</td><td><button class="zwave-js-full-width-button" style="height:20px;border-radius:2px;width:50px">Send</button></td></tr>`
-			);
-		}
-
-		if (VID.valueId.commandClass !== 0x70 || VID.metadata.allowManualEntry) {
-			let ManualInput;
-
-			switch (VID.metadata.type) {
-				case 'number':
-					ManualInput = $('<input>');
-					ManualInput.attr('type', 'number');
-					if (VID.metadata.min !== undefined) ManualInput.attr('min', VID.metadata.min);
-					if (VID.metadata.max !== undefined) ManualInput.attr('max', VID.metadata.max);
-					break;
-
-				case 'boolean':
-					ManualInput = $('<input>');
-					ManualInput.attr('type', 'checkbox');
-					ManualInput.attr('name', 'value');
-					break;
-
-				case 'string':
-					ManualInput = $('<input>');
-					ManualInput.attr('type', 'text');
-					break;
-
-				case 'color':
-					break;
-			}
-
-			$('#zwave-js-value-input').append(
-				`<tr><td>Custom Value</td><td>${
-					ManualInput.get(0).outerHTML
-				}</td><td><button class="zwave-js-full-width-button" style="height:20px;border-radius:2px;width:50px">Send</button></td></tr>`
-			);
-		}
+		$('#zwjs-cc-list').treeList('data', Items);
 	};
 
 	// Node Selected
 	const nodeSelected = (event, item) => {
-		if (!item.nodeData) return;
+		if (!item.nodeData) {
+			return;
+		}
 
-		selectedNode = item.nodeData.nodeId;
+		selectedNode = item.nodeData;
 
-		const Info = `${item.nodeData.deviceConfig.manufacturer} | ${item.nodeData.deviceConfig.label} | v${item.nodeData.firmwareVersion}`;
-		$('#zwave-js-node-info').text(Info);
-		$('#zwave-js-node-status').text(item.nodeData.status);
-		$('#zwave-js-node-info-id').text(selectedNode);
+		$('#zwjs-endpoint-list').empty();
+		$('#zwjs-cc-list').treeList('empty');
+		$('#zwjs-node-status').text(selectedNode.status);
+		$('#zwjs-node-info-id').text(selectedNode.nodeId);
 
-		Runtime.Post('CONTROLLER', 'getValueDB', [item.nodeData.nodeId])
+		if (selectedNode.interviewStage !== 'Complete') {
+			$('#zwjs-node-info').text(`Node Interview Stage : ${selectedNode.interviewStage}`);
+			return;
+		}
+
+		const Info = `${selectedNode.deviceConfig.manufacturer} | ${selectedNode.deviceConfig.label} | v${selectedNode.firmwareVersion}`;
+		$('#zwjs-node-info').text(Info);
+
+		Runtime.Post('CONTROLLER', 'getValueDB', [selectedNode.nodeId])
 			.then((data) => {
 				if (data.callSuccess) {
 					data = data.response[0];
-					const ListOfCCs = [];
-					data.values.forEach((PL) => {
-						if (ListOfCCs.filter((CC) => CC.commandClass === PL.valueId.commandClass).length < 1) {
-							ListOfCCs.push({ commandClassName: PL.valueId.commandClassName, commandClass: PL.valueId.commandClass });
-						}
-					});
-					ListOfCCs.sort((a, b) => a.commandClassName > b.commandClassName);
 
-					const Items = [];
+					const groupByEP = function (xs) {
+						return xs.reduce(function (rv, x) {
+							(rv[x.valueId.endpoint] = rv[x.valueId.endpoint] || []).push(x);
+							return rv;
+						}, {});
+					};
 
-					ListOfCCs.forEach((CC) => {
-						const Item = {
-							label: `0x${CC.commandClass.toString(16).toUpperCase()} - ${CC.commandClassName}`,
-							children: []
-						};
+					const EPGroups = groupByEP(data.values);
+					const EPIDs = Object.keys(EPGroups);
 
-						const Properties = data.values.filter((V) => V.valueId.commandClass === CC.commandClass);
-
-						Properties.forEach((P) => {
-							let Label = P.metadata ? P.metadata.label || P.valueId.property : P.valueId.property;
-							let CurrentValue = P.currentValue;
-							const Unit = P.metadata ? P.metadata.unit || '' : '';
-							const Writeable = P.metadata ? P.metadata.writeable || false : false;
-
-							if (P.metadata && P.metadata.states && P.currentValue !== undefined) {
-								CurrentValue = P.metadata.states[P.currentValue];
-							}
-
-							const LabelDiv = $('<div>')
-								.text(Label)
-								.append(`<span style="float:right;padding-right:20px">${CurrentValue} ${Unit}</span>`);
-
-							if (Writeable) {
-								const Edit = $('<i>')
-									.addClass('fa')
-									.addClass('fa-pencil')
-									.attr('aria-hidden', 'true')
-									.css({ marginRight: '5px' })
-									.click(() => edit(P, Edit));
-
-								LabelDiv.prepend(Edit);
-							}
-
-							Item.children.push({
-								element: LabelDiv
-							});
+					$('#zwjs-endpoint-list').empty();
+					EPIDs.forEach((E) => {
+						const EP = E === '0' ? 'Root' : `EP${E}`;
+						const Button = $(`<div data-endpoint="${E}">${EP}</div>`);
+						Button.click(() => {
+							listCCs(EPGroups[E]);
+							$('#zwjs-endpoint-list > div').removeAttr('selected');
+							$(`#zwjs-endpoint-list > div[data-endpoint="${E}"]`).attr('selected', 'selected');
 						});
-						Items.push(Item);
+						Button.data(EPGroups[E]);
+						$('#zwjs-endpoint-list').append(Button);
 					});
 
-					$('#zwavejz-cc-list-list').treeList('data', Items);
+					$('#zwjs-endpoint-list > div[data-endpoint="0"]').attr('selected', '');
+					listCCs(EPGroups['0']);
 				} else {
 					alert(data.response);
 				}
@@ -755,6 +760,11 @@ const ZWaveJSUI = (function () {
 
 	// Init
 	const init = () => {
+		// Templates
+		TPL_SidePanel = Handlebars.compile($('#ZWJS_TPL_SidePanel').html());
+		TPL_ControllerManagement = Handlebars.compile($('#ZWJS_TPL_Tray-Controller').html());
+		TPL_NodeManagement = Handlebars.compile($('#ZWJS_TPL_Tray-Node').html());
+
 		// Container
 		const Content = $('<div>').addClass('red-ui-sidebar-info').css({
 			position: 'relative',
@@ -764,7 +774,7 @@ const ZWaveJSUI = (function () {
 			flexDirection: 'column'
 		});
 
-		Content.append($('#TPL_SidePanel').html());
+		Content.append(TPL_SidePanel({}));
 
 		// Add tab
 		RED.sidebar.addTab({
@@ -777,62 +787,50 @@ const ZWaveJSUI = (function () {
 			onchange: () => setTimeout(resizeStack, 0)
 		});
 
-		$('#zwave-js-node-list').treeList({ data: [] });
-		$('#zwavejz-cc-list-list').treeList({ data: [] });
+		$('#zwjs-node-list').treeList({ data: [] });
+		$('#zwjs-node-list').on('treelistselect', nodeSelected);
+		$('#zwjs-cc-list').treeList({ data: [] });
 
-		const panels = RED.panels.create({ container: $('#zwave-js-panel-stack') });
-		panels.ratio(0.4);
+		const panels = RED.panels.create({ container: $('#zwjs-panel-stack') });
+		panels.ratio(0.3);
 
 		const resizeStack = () => panels.resize(Content.height());
 		RED.events.on('sidebar:resize', resizeStack);
 		$(window).on('resize', resizeStack);
 		$(window).on('focus', resizeStack);
 
-		// Show/Hide/pre-Select
-		const processSelectAccess = () => {
-			const Select = $('#zwave-js-network');
-			const SelectHeader = $('#zwave-js-network-header');
-
-			// why 2 - the first is a prompt
-			if (Select.children().length === 2) {
-				SelectHeader.css({ display: 'none' });
-				$('#zwave-js-network option:eq(1)').attr('selected', 'selected');
-				Select.trigger('change');
-			}
-
-			if (Select.children().length > 2) {
-				SelectHeader.css({ display: 'block' });
-			}
-		};
-
-		// Live Adding/removing
-		const addNetwork = (Event, data) => {
-			const Select = $('#zwave-js-network');
-			Select.append(`<option id="${data.id}" value="${data.id}">${data.name}</option>`);
-			processSelectAccess();
-		};
-		const removeNetwork = (Event, data) => {
-			const Select = $('#zwave-js-network');
-			Select.children(`option[id="${data.id}"]`).remove();
-			processSelectAccess();
-		};
-		RED.comms.subscribe('zwave-js/ui/global/addnetwork', addNetwork);
-		RED.comms.subscribe('zwave-js/ui/global/removenetwork', removeNetwork);
-
-		// Load current networks
 		setTimeout(() => {
-			const Select = $('#zwave-js-network');
-			RED.nodes.eachConfig((R) => {
-				if (R.type === 'zwavejs-runtime' && !R.d) {
-					Select.append(`<option id="${R.id}" value="${R.id}">${R.name}</option>`);
+			RED.nodes.eachConfig((c) => {
+				if (c.type === 'zwavejs-runtime') {
+					$('#zwjs-network').append(new Option(c.name, c.id));
 				}
 			});
-			processSelectAccess();
-		}, 250);
 
-		// Node List Selected
-		$('#zwave-js-node-list').on('treelistselect', nodeSelected);
+			if ($('#zwjs-network option').length === 2) {
+				const Value = $('#zwjs-network option:eq(1)').attr('value');
+				$('#zwjs-network').val(Value);
+				NetworkSelected();
+			}
+			RED.actions.add('zwjs:show-recent-interviewed-node', function () {
+				RED.sidebar.show('zwave-js');
+				nodeSelected(undefined, lastInterviewedNode);
+			});
+		}, 100);
 	};
 
-	return { init };
+	return {
+		init,
+		NetworkSelected,
+		ShowNetworkManagement,
+		ShowNodeManagement,
+		InterviewCurrentNode,
+		RenderAdvanced,
+		StartInclusion,
+		StartExclusion,
+		GrantClasses,
+		SubmitDSK,
+		SubmitProvisioningEntry,
+		SetPEActive,
+		DeletePE
+	};
 })();

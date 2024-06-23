@@ -1,326 +1,421 @@
 <!--Core-->
 <link rel="stylesheet" href="resources/node-red-contrib-zwave-js/UITab/styles.css" />
-<link rel="stylesheet" href="resources/node-red-contrib-zwave-js/UITab/jquery-steps.css" />
-<script type="text/javascript" src="resources/node-red-contrib-zwave-js/UITab/jquery-steps.min.js"></script>
+<script type="text/javascript" src="resources/node-red-contrib-zwave-js/UITab/qr-scanner.umd.min.js"></script>
 <script type="text/javascript" src="resources/node-red-contrib-zwave-js/UITab/SideBar.js"></script>
+<script type="text/javascript" src="resources/node-red-contrib-zwave-js/UITab/handlebars.min.js"></script>
+
 
 <script>
-	ZWaveJSUI.init();
+	ZWaveJS.init();
 </script>
 
 <!-- Side Panel Template-->
+
 <!-- prettier-ignore -->
-<template id="TPL_SidePanel">
+<script type="text/template" id="ZWJS_TPL_SidePanel">
 	<!--Network Selector-->
-	<div class="red-ui-sidebar-header" id="zwave-js-network-header" style="display: none; text-align: center; height: 20px">
+	<div class="red-ui-sidebar-header" style="text-align: center; height: 20px">
 		<i class="fa fa-cog" aria-hidden="true"></i>
-		Network/Runtime :
-		<select id="zwave-js-network" onchange="NetworkSelected()" style="height: 25px; vertical-align: baseline">
-			<option>Select Network</option>
+		Runtime :
+		<select id="zwjs-network" onchange="ZWaveJS.NetworkSelected()" style="height: 25px; vertical-align: baseline">
+			<option option="">Select Network</option>			      
 		</select>
 	</div>
 
 	<!--Controller Info-->
-	<div class="red-ui-sidebar-header" style="text-align: left">
+	<div class="red-ui-sidebar-header" style="text-align: left; padding: 3px; padding-left: 20px;">
 		<table>
 			<tr>
-				<td rowspan="3"><i class="fa fa-rss" style="color: grey; font-size: 40px"></i></td>
+				<td rowspan="3"><i class="fa fa-rss zwjs-node-icon"></i></td>
 			</tr>
 			<tr>
 				<td style="padding-left: 10px">
-					<span style="font-size: 14px; font-weight: bold; color: gray" id="zwave-js-controller-info"
-						>No Network Selected</span
-					><br />
-					<span id="zwave-js-controller-status"></span>
+					<span id="zwjs-controller-info">No Network Selected</span>
+					<br />
+					<span id="zwjs-controller-status"></span>
 				</td>
 			</tr>
 		</table>
 	</div>
 
 	<!--Controller Menu-->
-	<div class="red-ui-sidebar-header zwave-js-controller-menu-header">
-		<a class="red-ui-tab-link-button" onclick="ShowNetworkManagement()"><i class="fa fa-cogs"></i></a>
+	<div class="red-ui-sidebar-header zwjs-sb-menu-header">
+		<a class="red-ui-tab-link-button" onclick="ZWaveJS.ShowNetworkManagement()"><i class="fa fa-cogs"></i></a>
 		<a class="red-ui-tab-link-button"><i class="fa fa-refresh"></i></a>
 		<a class="red-ui-tab-link-button"><i class="fa fa-medkit"></i></a>
 	</div>
 
 	<!--Stack-->
-	<div class="red-ui-sidebar-info-stack" id="zwave-js-panel-stack" style="width: 100%; height: 100%">
+	<div class="red-ui-sidebar-info-stack" id="zwjs-panel-stack" style="width: 100%; height: 100%">
 		<!-- Node List-->
 		<div>
-			<div id="zwave-js-node-list" style="width: 100%; height: 100%"></div>
+			<div id="zwjs-node-list" style="width: 100%; height: 100%"></div>
 		</div>
 		<!--Node Info-->
 		<div>
-			<div class="red-ui-sidebar-header" style="text-align: left">
-				<table>
+			<div class="red-ui-sidebar-header" style="text-align: left; padding: 3px; padding-left: 10px;">
+				<table style="margin-left: 10px;">
 					<tr>
 						<td rowspan="3">
-							<span
-								class="zwave-js-node-id-list"
-								id="zwave-js-node-info-id"
-								style="width: 40px; height: 30px; line-height: 30px; font-size: 20px"
-								>--</span
-							>
+							<span class="zwjs-node-id" id="zwjs-node-info-id" nodeinfo>--</span>
 						</td>
 					</tr>
 					<tr>
 						<td style="padding-left: 10px">
-							<span style="font-size: 14px; font-weight: bold; color: gray" id="zwave-js-node-info"
-								>No Node Selected</span
-							><br />
-							<span id="zwave-js-node-status"></span>
+							<span style="font-size: 14px; font-weight: bold; color: gray" id="zwjs-node-info">No Node Selected</span>
+							<br />
+							<span id="zwjs-node-status"></span>
 						</td>
 					</tr>
 				</table>
 			</div>
-			<div class="red-ui-sidebar-header zwave-js-controller-menu-header">
-				<a class="red-ui-tab-link-button" onclick="ShowNodeManagement()"><i class="fa fa-cogs"></i></a>
-				<a class="red-ui-tab-link-button"><i class="fa fa-handshake-o"></i></a>
+			<div class="red-ui-sidebar-header zwjs-sb-menu-header">
+				<a class="red-ui-tab-link-button" onclick="ZWaveJS.ShowNodeManagement()"><i class="fa fa-cogs"></i></a>
+				<a class="red-ui-tab-link-button" onclick="ZWaveJS.InterviewCurrentNode()"><i class="fa fa-handshake-o"></i></a>
 				<a class="red-ui-tab-link-button"><i class="fa fa-medkit"></i></a>
 				<a class="red-ui-tab-link-button"><i class="fa fa-trash-o"></i></a>
 			</div>
+			<div class="red-ui-sidebar-header zwjs-sb-menu-header" id="zwjs-endpoint-list">
+				
+			</div>
+			<div id="zwjs-cc-list" style="width: 100%; height: 100%">
 
-			<div id="zwavejz-cc-list-list" style="width: 100%; height: 100%"></div>
-		</div>
-	</div>
-</template>
-
-<!--Network Management-->
-<!-- prettier-ignore -->
-<template id="TPL_NetworkManagement">
-	<div id="TPL_NetworkManagementTabs">
-		<ul>
-			<li>
-				<a href="#tabs-1"><i class="fa fa-info-circle"></i> Controller Information</a>
-			</li>
-			<li>
-				<a href="#tabs-2"><i class="fa fa-list"></i> Node Management</a>
-			</li>
-			<li>
-				<a href="#tabs-3"><i class="fa fa-cog"></i> Controller Settings</a>
-			</li>
-			<li>
-				<a href="#tabs-4"><i class="fa fa-microchip"></i> Firmware Updates</a>
-			</li>
-			<li>
-				<a href="#tabs-5"><i class="fa fa-floppy-o"></i> NVM Backup/Restore</a>
-			</li>
-		</ul>
-
-		<div id="tabs-1">
-			<h2>Controller Information</h2>
-			<table id="CITable" class="zwave-js-info-table"></table>
-
-			<h2>Statistics</h2>
-			<table id="CIStatsTable" class="zwave-js-info-table"></table>
-		</div>
-
-		<div id="tabs-2">
-			<h2>Node Management</h2>
-			<div class="step-app" id="IEWizard">
-				<ul class="step-steps" style="display: none">
-					<li data-step-target="IEMode"></li>
-					<li data-step-target="NIF"></li>
-					<li data-step-target="Grant"></li>
-					<li data-step-target="DSK"></li>
-					<li data-step-target="Added"></li>
-					<li data-step-target="Removed"></li>
-				</ul>
-				<div class="step-content" style="border: none">
-					<div class="step-tab-panel" data-step="IEMode">
-						<button class="zwave-js-full-width-button" onclick="IE('Default')">Add New Device : Default (S2, S0)</button>
-						<button class="zwave-js-full-width-button" onclick="IE('S2')">Add New Device : S2</button>
-						<button class="zwave-js-full-width-button" onclick="IE('S0')">Add New Device : S0</button>
-						<button class="zwave-js-full-width-button" onclick="IE('SS')">Add New Device : Smart Start</button>
-						<button class="zwave-js-full-width-button" onclick="IE('NS')">Add New Device : Unsecured</button>
-						<button class="zwave-js-full-width-button" onclick="IE('EX')">Exclude A Device</button>
-						<button class="zwave-js-full-width-button" onclick="IE('PL')">Smart Start Provisioning List</button>
-					</div>
-
-					<div class="step-tab-panel" data-step="NIF">
-						<i class="fa fa-rss zwave-js-ie-state-icon"></i>
-						<span class="zwave-js-ie-state-text">Waiting for Node Information Frame (NIF)...</span>
-					</div>
-
-					<div class="step-tab-panel" data-step="Grant">
-						Below are the S2 Secuity classes, that the new node is asking for. Please verify the classes you wish to
-						allow.
-						<table id="S2ClassesTable" class="zwave-js-info-table" style="margin-top: 10px"></table>
-
-						<button class="zwave-js-save" onclick="Grant()">Grant</button>
-					</div>
-
-					<div class="step-tab-panel" data-step="DSK">
-						S2 Authenticated Security requires validating the 'DSK', please provide the first set of digits below, these
-						may be printed on the device, and / or documentation.
-						<br />
-						<br />
-						<input type="text" id="DSK" class="zwave-js-dsk" /> -
-						<input type="text" id="DSK_Hint1" class="zwave-js-dsk" disabled /> -
-						<input type="text" id="DSK_Hint2" class="zwave-js-dsk" disabled /> -
-						<input type="text" id="DSK_Hint3" class="zwave-js-dsk" disabled /> -
-						<input type="text" id="DSK_Hint4" class="zwave-js-dsk" disabled /> -
-						<input type="text" id="DSK_Hint5" class="zwave-js-dsk" disabled /> -
-						<input type="text" id="DSK_Hint6" class="zwave-js-dsk" disabled /> -
-						<input type="text" id="DSK_Hint7" class="zwave-js-dsk" disabled />
-						<button class="zwave-js-save" onclick="ValidateDSK()">Validate</button>
-					</div>
-
-					<div class="step-tab-panel" data-step="Added">
-						<i class="fa zwave-js-ie-state-icon" id="NodeAddedIcon"></i>
-						<span class="zwave-js-ie-state-text" id="NodeAddedMessage">&nbsp;</span>
-					</div>
-					<div class="step-tab-panel" data-step="Removed">
-						<i class="fa fa-minus-circle zwave-js-ie-state-icon"></i>
-						<span class="zwave-js-ie-state-text">The Node was successfully removed from it's network.</span>
-					</div>
-				</div>
 			</div>
 		</div>
-
-		<div id="tabs-3">
-			<h2>Controller Settings</h2>
-			<table class="zwave-js-info-table">
-				<tr>
-					<td>RF Region</td>
-					<td>
-						<select id="CSettings_Regions">
-							<option value="0x02">Australia/New Zealand</option>
-							<option value="0x08">China</option>
-							<option value="0xff">Default (EU)</option>
-							<option value="0x00">Europe</option>
-							<option value="0x03">Hong Kong</option>
-							<option value="0x05">India</option>
-							<option value="0x06">Israel</option>
-							<option value="0x20">Japan</option>
-							<option value="0x21">Korea</option>
-							<option value="0x07">Russia</option>
-							<option value="0x01">USA</option>
-							<option value="0x09">USA (Long Range)</option>
-							<option value="0xfe" selected>Unknown</option>
-						</select>
-					</td>
-				</tr>
-				<tr>
-					<td colspan="2">&nbsp;</td>
-				</tr>
-				<tr>
-					<td>Power Level</td>
-					<td>
-						<input type="number" step="0.1" value="0.0" id="CSettings_PL" min="-12.8" max="12.7" />
-					</td>
-				</tr>
-				<tr>
-					<td>Measured @ 0dBm</td>
-					<td>
-						<input type="number" step="0.1" value="0.0" id="CSettings_0DBM" min="-12.8" max="12.7" />
-					</td>
-				</tr>
-			</table>
-
-			<button class="zwave-js-save">Save Changes</button>
-		</div>
-
-		<div id="tabs-4">
-			<h2>Firmware Updates</h2>
-		</div>
-
-		<div id="tabs-5">
-			<h2>NVM Backup/Restore</h2>
-			<button class="zwave-js-full-width-button" onclick="NVMBackup()">Backup NVM</button>
-			<button class="zwave-js-full-width-button" onclick="NVMRestore()">Restore NVM</button>
-
-			<div id="NVRProgress" class="zwave-js-progress" style="display: none;">
-				<div class="zwave-js-progress-bar">0%</div>
-			  </div>
-			
-			
-
-		</div>
 	</div>
-</template>
+</script>
 
-<!--Node Managment-->
+<!-- Tray Panel Template-->
+
 <!-- prettier-ignore -->
-<template id="TPL_NodeManagement">
-	<div id="TPL_NodeManagementTabs">
-		<ul>
-			<li>
-				<a href="#tabs-1"><i class="fa fa-info-circle"></i> Node Information</a>
-			</li>
-			<li>
-				<a href="#tabs-2"><i class="fa fa-pencil"></i> Name / Location</a>
-			</li>
-			<li>
-				<a href="#tabs-3"><i class="fa fa-code-fork"></i> Associations</a>
-			</li>
-			<li>
-				<a href="#tabs-4"><i class="fa fa-heartbeat"></i> Health Check</a>
-			</li>
-			<li>
-				<a href="#tabs-5"><i class="fa fa-clone"></i> Replace</a>
-			</li>
-			<li>
-				<a href="#tabs-6"><i class="fa fa-microchip"></i> Firmware Updates</a>
-			</li>
-		</ul>
-		<div id="tabs-1">
-			<h2>Node Information</h2>
-			<table id="NITable" class="zwave-js-info-table"></table>
-
-			<h2>Status</h2>
-			<table id="NSTable" class="zwave-js-info-table"></table>
-
-			<h2>Statistics</h2>
-			<table id="NSTTable" class="zwave-js-info-table"></table>
-		</div>
-		<div id="tabs-2">
-			<h2>Name / Location</h2>
-			<table class="zwave-js-info-table">
-				<tr>
-					<td>Node Name</td>
-					<td><input type="text" /></td>
-				</tr>
-				<tr>
-					<td>Node Location</td>
-					<td><input type="text" /></td>
-				</tr>
-			</table>
-			<button class="zwave-js-save">Save Changes</button>
-		</div>
-		<div id="tabs-3">
-			<h2>Associations</h2>
-			<table class="zwave-js-info-table" id="zwave-js-associations">
-				<tr>
-					<th>Group</th>
-					<th>Local Endpoint</th>
-					<th>Remote Node</th>
-					<th>Remote Endpoint</th>
-				</tr>
-			</table>
-		</div>
-		<div id="tabs-4">
-			<h2>Health Check</h2>
-		</div>
-		<div id="tabs-5">
-			<h2>Replace</h2>
-		</div>
-		<div id="tabs-6">
-			<h2>Firmware Updates</h2>
-		</div>
+<script type="text/template" id="ZWJS_TPL_Tray-Node">
+	<div class="zwjs-tray-header">
+		<table>
+			<tr>
+				<td rowspan="3">
+					<span class="zwjs-node-id" nodeinfo>{{NodeID}}</span>
+				</td>
+			</tr>
+			<tr>
+				<td style="padding-left: 10px">
+					<span style="font-size: 14px; font-weight: bold; color: gray">{{NodeInfo}}</span>
+					<br />
+					<span id="zwave-js-node-status">{{Status}}</span>
+				</td>
+			</tr>
+		</table>
 	</div>
-</template>
+	<div class="zwjs-tray-menu">
+		<div parent>Node</div>
+		<div child default onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Info',this)">Information</div>
+		<div child>Name &amp; Location</div>
+		<div child>Statistics</div>
+		<div child>Associations</div>
+		<div child>Health Check</div>
+		<div child>Firmware Update</div>
 
-<!--Value Editor-->
+	</div>
+	<div id="zwjs-advanced-content"></div>
+</script>
+
 <!-- prettier-ignore -->
-<template id="TPL_ValueEditor">
-	<div>
-		<span id="zwave-js-value-command-class" style="color: gray; font-weight: bold; font-size: 22px"></span>
-		<hr />
-		<span id="zwave-js-value-name" style="color: gray; font-size: 16px; font-weight: bold"></span><br />
-		<span id="zwave-js-value-description" style="color: gray"></span>
-		<br />
-		<table id="zwave-js-value-input" class="zwave-js-info-table" style="margin-top: 15px; width: 100%"></table>
+<script type="text/template" id="ZWJS_TPL_Tray-Controller">
+	<div class="zwjs-tray-header">
+		<table>
+			<tr>
+				<td rowspan="3"><i class="fa fa-rss zwjs-node-icon"></i></td>
+			</tr>
+			<tr>
+				<td style="padding-left: 10px">
+					<span id="zwjs-controller-info-tray">{{Network}}</span>
+					<br />
+					<span id="zwjs-controller-status-tray">{{Status}}</span>
+				</td>
+			</tr>
+		</table>
 	</div>
-</template>
+	<div class="zwjs-tray-menu">
+		<div parent>Controller</div>
+		<div child default onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Info',this, 'ControllerInfo')">Information</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Stats',this, 'ControllerStats')">Statistics</div>
+		<div child>Topology Map</div>
+		<div child>Settings</div>
+		<div child>Rebuild Routes</div>
+		<div child>Firmware Update</div>
+
+		<div parent>Nodes</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_NodeAddMode',this,'SetInclusionOptions')">Add</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_NodeRemoveMode',this, 'PrepSSList')">Remove</div>
+		<div child>Failed Nodes</div>
+
+	</div>
+	<div id="zwjs-advanced-content"></div>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Controller-Info">
+	<table class="zwjs-table" vertical>
+		<tr>
+			<td>Configuration</td><td>{{configuration}}</td>
+		</tr>
+		<tr>
+			<td>Home ID</td><td>{{homeId}}</td>
+		</tr>
+		<tr>
+			<td>Serial Port</td><td>{{serialPort}}</td>
+		</tr>
+		<tr>
+			<td>Manufacture</td><td>{{deviceConfig.manufacturer}}</td>
+		</tr>
+		<tr>
+			<td>Model</td><td>{{deviceConfig.label}}</td>
+		</tr>
+		<tr>
+			<td>Description</td><td>{{deviceConfig.description}}</td>
+		</tr>
+		<tr>
+			<td>Firmware</td><td>{{firmwareVersion}}</td>
+		</tr>
+		<tr>
+			<td>Protocol Version</td><td>{{protocolVersion}}</td>
+		</tr>
+		<tr>
+			<td>Supported Data Rates</td><td>{{supportedDataRates}}</td>
+		</tr>
+		<tr>
+			<td>Supports Long Range</td><td>{{supportsLongRange}}</td>
+		</tr>
+		<tr>
+			<td>Inclusion Status</td><td>{{inclusionState}}</td>
+		</tr>
+	</table>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Controller-Stats">
+	<table class="zwjs-table" vertical>
+		{{#each .}}
+			<tr>
+				<td>{{@key}}</td><td>{{this}}</td>
+			</tr>
+		{{/each}}
+	</table>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Node-Info">
+	<table class="zwjs-table" vertical>
+		<tr>
+			<td>Manufacture</td><td>{{deviceConfig.manufacturer}}</td>
+		</tr>
+		<tr>
+			<td>Model</td><td>{{Model}}</td>
+		</tr>
+		<tr>
+			<td>Status</td><td>{{Status}}</td>
+		</tr>
+	</table>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_NodeAddMode">
+	<fieldset class="zwjs-fieldset">
+		<legend>Please select the Node Inclusion strategy:</legend>
+
+	    <div class="zwjs-hint">If greyed out, check encryption settings (i.e missing keys)</div>
+	  
+		<div>
+		  <input type="radio" id="0" name="ZWJS_IS" value="0" checked />
+		  <label for="0"><span class="zwjs-empises" positive>Recommended</span>S2 When Supported, S0 if absolutely necessary, esle no encryption.</label>
+		</div>
+	  
+		<div>
+		  <input type="radio" id="4" name="ZWJS_IS" value="4" />
+		  <label for="4">Require S2</label>
+		</div>
+		<div>
+			<input type="radio" id="SS" name="ZWJS_IS" value="SS" />
+			<label for="SS">Smart Start QR Code</label>
+		</div>
+		<div>
+		  <input type="radio" id="3" name="ZWJS_IS" value="3" />
+		  <label for="3"><span class="zwjs-empises" negative>Not Recommended</span>Require S0</label>
+		</div>
+		<div>
+			<input type="radio" id="2" name="ZWJS_IS" value="2" />
+			<label for="2">Insecure</label>
+		</div>
+		<div>
+			<button onclick="ZWaveJS.StartInclusion()">Start</button>
+		</div>
+	  </fieldset>
+	
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_NodeRemoveMode">
+	<fieldset class="zwjs-fieldset">
+		<legend>Manage Node Removal:</legend>
+
+		<div class="zwjs-hint">
+			Click <strong>Start</strong> to remove a Node via a Node Information Frame (NIF),<br />
+			or disable a Smart Start Entry listed below.
+			<br /><br />
+			<strong>Note:</strong> Disabling/Removing a Smart Start entry does not remove the associated node.
+		</div>
+	  
+		
+		
+		<div>
+			<button onclick="ZWaveJS.StartExclusion()">Start</button>
+		</div>
+	</fieldset>
+	<table class="zwjs-table" style="margin-top:10px" horizontal>
+	  <tr>
+		  <td>Manufacture</td>
+		  <td>Label</td>
+		  <td style="text-align:center">DSK</td>
+		  <td style="text-align:center">Associated Node ID</td>
+		  <td style="text-align:center">Enabled</td>
+		  <td style="text-align:center">Delete</td>
+	  </tr>
+	  {{#each entries}}
+		<tr style="font-size:12px">
+			<td>{{manufacturer}}</td>
+			<td>{{label}}</td>
+			<td style="text-align:center">{{shortDSK}}</td>
+			<td style="text-align:center">{{nodeId}}</td>
+			<td style="text-align:center"><input type="checkbox" onchange="ZWaveJS.SetPEActive(this,'{{B64}}')" {{checked}}/></td>
+			<td style="text-align:center"><i class="fa fa-trash" aria-hidden="true" style="font-size: 18px;color: red;" onclick="ZWaveJS.DeletePE(this,'{{B64}}')""></i></td>
+		</tr>
+	  {{/each}}
+   </table>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_NIFWait">
+	<fieldset class="zwjs-fieldset">
+		<legend>Waiting for the Node Information Frame (NIF):</legend>
+	    <div class="zwjs-hint">Place your Node into <strong>{{mode}}</strong> mode</div>
+	  </fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_SecurityGrant">
+	<fieldset class="zwjs-fieldset">
+		<legend>Choose the security classes below you wish to Grant:</legend>
+	    <div class="zwjs-hint">The below security classes are reqeusted by the Node</div>
+		{{#each classes}}
+			<div>
+				<input type="checkbox" name="ZWJS_SCLASS" value="{{classId}}" checked />
+				<label for="0">{{className}}</label>
+			</div>
+	  	{{/each}}
+		<div>
+			<button onclick="ZWaveJS.GrantClasses(this)">Confirm</button>
+		</div>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_DSK">
+	<fieldset class="zwjs-fieldset">
+		<legend>Authenticate the Node:</legend>
+	    <div class="zwjs-hint">Validate the Node by providng the DSK (Device Specific Key)</div>
+		<div>
+			<input type="text" id="zwjs-dsk" style="width: 60px;text-align: center;height: 30px;vertical-align: baseline;"> {{dsk}}
+		</div>
+		<div>
+			<button onclick="ZWaveJS.SubmitDSK(this)">Confirm</button>
+		</div>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_NAdded">
+	<fieldset class="zwjs-fieldset">
+		<legend>Node Added:</legend>
+	    <div>
+			<i class="fa fa-check" aria-hidden="true" style="font-size: 20px;color: green;vertical-align: middle;"></i> Node {{nodeId}} was added to the network
+		</div>
+		{{#if lowSecurity}}
+		    <div>
+				<i class="fa fa-exclamation-triangle" aria-hidden="true" style="font-size: 20px;color: orange;vertical-align: middle;"></i> Warning, it was added with a lesser security class than what was requested.
+			</div>
+		{{else}}
+		   <div>
+			    <i class="fa fa-check" aria-hidden="true" style="font-size: 20px;color: green;vertical-align: middle;"></i> Was added with the requested security class
+		   </div>
+		{{/if}}
+        <br />
+		<p>The Node will now be interviewed</p>
+		
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_NRemoved">
+	<fieldset class="zwjs-fieldset">
+		<legend>Node Removed:</legend>
+		<i class="fa fa-trash" aria-hidden="true" style="font-size: 20px;color: green;vertical-align: middle;"></i> Node {{nodeId}} was removed from the network
+	</fieldset>
+</script>
+
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_QRRead">
+	<fieldset class="zwjs-fieldset">
+		<legend>Scan A Smart Start QR Code:</legend>
+	    <div class="zwjs-hint">Note: Your browser may only support webcam access, if Node RED is served under <strong>HTTPS</strong></div>
+        <video id="zwjs-camera-view"></video>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_PrePro">
+	<fieldset class="zwjs-fieldset">
+		<legend>Smart Start Device:</legend>
+	    <div class="zwjs-hint">Review the device provisioning entry below and Confirm.</div>
+		<table class="zwjs-table" id="zwjs-qrdata" data-entry="{{QRProvisioningInformation}}" vertical>
+			<tr>
+				<td>Manufacturer</td><td>{{DeviceConfig.manufacturer}}</td>
+			</tr>
+			<tr>
+				<td>Model</td><td>{{DeviceConfig.label}}</td>
+			</tr>
+			<tr>
+				<td>Description</td><td>{{DeviceConfig.description}}</td>
+			</tr>
+			<tr>
+				<td>DSK</td><td>{{DSK}}</td>
+			</tr>
+			<tr>
+				<td>Security Classes</td>
+				<td>
+					{{#each classes}}
+					<div>
+						<input type="checkbox" name="ZWJS_SCLASS" value="{{classId}}" checked />
+						<label for="0">{{className}}</label>
+					</div>
+					{{/each}}
+
+				</td>
+			</tr>
+		</table>
+		<div>
+			<button onclick="ZWaveJS.SubmitProvisioningEntry(this)">Confirm</button>
+		</div>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_SSDone">
+	<fieldset class="zwjs-fieldset">
+		<legend>Entry sucessfully Added:</legend>
+	    <i class="fa fa-check" aria-hidden="true" style="font-size: 20px;color: green;vertical-align: middle;"></i> The Smart Start device has been successfully added. When it is next powered on, and requests inclusion, it will be automatically added.
+	</fieldset>
+</script>
+
+
+
+
