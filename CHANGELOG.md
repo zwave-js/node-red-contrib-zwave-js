@@ -6,9 +6,9 @@
       - Bump ZWave JS from v12 to V14
 
     **New Features**
-      - Added ability to set the base config directory.
-        Note: Installing configuration updates, now requies this to be utilised.
-        This not consdiered a breaking change, asd it does not affect use.
+      - Added ability to set the base config directory.  
+        Note: Installing configuration updates, now requires this to be utilised.  
+        This not considered a breaking change, as it does not affect use.
 
   - 9.0.4
 
