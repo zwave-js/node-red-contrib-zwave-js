@@ -1,5 +1,15 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 9.1.0
+
+    **Changes**  
+      - Bump ZWave JS from v12 to V14 + other dependencies
+
+    **New Features**
+      - Added ability to set the base config directory.  
+        Note: Installing configuration updates, now requires this to be utilised.  
+        This not considered a breaking change, as it does not affect use.
+
   - 9.0.4
 
     **Maintenance Release**
