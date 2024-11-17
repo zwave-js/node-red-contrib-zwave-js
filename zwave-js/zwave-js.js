@@ -1524,8 +1524,9 @@ module.exports = function (RED) {
 					break;
 
 				case 'installConfigUpdate':
+					/* Not happy to do this, but currently Don't  have time to test/implement exertnal Directory support - which is now required */
 					let Success = false;
-					const Version = await Driver.checkForConfigUpdates();
+					const Version = undefined; //await Driver.checkForConfigUpdates();
 					if (Version !== undefined) {
 						Success = await Driver.installConfigUpdate();
 					}
