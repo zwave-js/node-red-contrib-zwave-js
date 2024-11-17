@@ -3,7 +3,7 @@
   - 9.1.0
 
     **Changes**  
-      - Bump ZWave JS from v12 to V14
+      - Bump ZWave JS from v12 to V14 + other dependencies
 
     **New Features**
       - Added ability to set the base config directory.  
