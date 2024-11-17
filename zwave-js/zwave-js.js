@@ -310,16 +310,19 @@ module.exports = function (RED) {
 			DriverOptions.disableOptimisticValueUpdate = false;
 		}
 
+		DriverOptions.features = {};
+
 		// Soft Reset
 		if (config.softResetUSB !== undefined && config.softResetUSB) {
 			Log(
 				'debug',
 				'NDERED',
 				undefined,
-				'[options] [enableSoftReset]',
+				'[options] [features.softReset]',
 				'Enabled'
 			);
-			DriverOptions.enableSoftReset = true;
+
+			DriverOptions.features.softReset = true;
 
 			if (
 				config.serialAPIStarted !== undefined &&
@@ -342,10 +345,10 @@ module.exports = function (RED) {
 				'debug',
 				'NDERED',
 				undefined,
-				'[options] [enableSoftReset]',
+				'[options] [features.softReset]',
 				'Disabled'
 			);
-			DriverOptions.enableSoftReset = false;
+			DriverOptions.features.softReset = true;
 		}
 
 		DriverOptions.storage = {};
@@ -1166,9 +1169,9 @@ module.exports = function (RED) {
 					if (SupportsNN) {
 						await Driver.controller.nodes
 							.get(Params[0])
-							.commandClasses['Node Naming and Location'].setLocation(
-								Params[1]
-							);
+							.commandClasses[
+								'Node Naming and Location'
+							].setLocation(Params[1]);
 					}
 					ReturnNode.id = Params[0];
 					Send(ReturnNode, 'NODE_LOCATION_SET', Params[1], send);
@@ -1705,7 +1708,8 @@ module.exports = function (RED) {
 					NodeCheck(Params[0].nodeId);
 					Params[2].forEach((A) => {
 						if (
-							!Driver.controller.isAssociationAllowed(Params[0], Params[1], A)
+							Driver.controller.checkAssociation(Params[0], Params[1], A) !==
+							ZWaveJS.AssociationCheckResult.OK
 						) {
 							const ErrorMSG = `Association: Source ->  ${JSON.stringify(
 								Params[0]
@@ -2072,9 +2076,9 @@ module.exports = function (RED) {
 				});
 
 				// Include
-				Driver.controller.on(event_InclusionStarted.zwaveName, (Secure) => {
+				Driver.controller.on(event_InclusionStarted.zwaveName, (strategy) => {
 					Send(undefined, event_InclusionStarted.redName, {
-						isSecureInclude: Secure
+						isSecureInclude: strategy !== ZWaveJS.InclusionStrategy.Insecure
 					});
 					SetFlowNodeStatus({
 						fill: 'yellow',
