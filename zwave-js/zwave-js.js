@@ -381,6 +381,20 @@ module.exports = function (RED) {
 			DriverOptions.storage.deviceConfigPriorityDir = config.customConfigPath;
 		}
 
+		if (
+			config.baseConfigPath !== undefined &&
+			config.baseConfigPath.length > 0
+		) {
+			Log(
+				'debug',
+				'NDERED',
+				undefined,
+				'[options] [storage.deviceConfigExternalDir]',
+				config.baseConfigPath
+			);
+			DriverOptions.storage.deviceConfigExternalDir = config.baseConfigPath;
+		}
+
 		// Disk throttle
 		if (
 			config.valueCacheDiskThrottle !== undefined &&
@@ -1524,9 +1538,8 @@ module.exports = function (RED) {
 					break;
 
 				case 'installConfigUpdate':
-					/* Not happy to do this, but currently Don't  have time to test/implement exertnal Directory support - which is now required */
 					let Success = false;
-					const Version = undefined; //await Driver.checkForConfigUpdates();
+					const Version = await Driver.checkForConfigUpdates();
 					if (Version !== undefined) {
 						Success = await Driver.installConfigUpdate();
 					}

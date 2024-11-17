@@ -1030,6 +1030,7 @@
 			sendUsageStatistics: { value: true },
 			valueCacheDiskThrottle: { value: 'normal' },
 			customConfigPath: { value: undefined },
+			baseConfigPath: { value: undefined },
 			intvwUserCodes: { value: false },
 			softResetUSB: { value: false },
 			outputs: { value: 1 },
@@ -1316,8 +1317,12 @@
 	    <strong>Advanced Driver Settings</strong>
 	</p>
 	<div class="form-row">
-	    <label  for="node-input-customConfigPath" style="width:130px"><i class="fa fa-pencil"></i> Custom CFG Dir</label>
+	    <label  for="node-input-customConfigPath" style="width:130px"><i class="fa fa-pencil"></i> Priority CFG Dir</label>
 	    <input type="text" id="node-input-customConfigPath" placeholder="/some/directory" style="width: calc(100% - 135px)">
+	</div>
+	<div class="form-row">
+	    <label  for="node-input-baseConfigPath" style="width:130px"><i class="fa fa-pencil"></i> Base CFG Dir</label>
+	    <input type="text" id="node-input-baseConfigPath" placeholder="Use Default" style="width: calc(100% - 135px)">
 	</div>
 	<div class="form-row">
 	    <label  for="node-input-valueCacheDiskThrottle" style="width:130px"><i class="fa fa-pencil"></i> Disk IO Throttle</label>
