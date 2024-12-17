@@ -1,5 +1,10 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 9.1.1
+
+    **Bug Fixes**
+      - Fix NVM Backup
+
   - 9.1.0
 
     **Changes**  

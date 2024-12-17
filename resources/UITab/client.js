@@ -2732,7 +2732,7 @@ const ZwaveJsUI = (function () {
 		EnableCritical(true);
 		$('#NVMProgressLabel').html('Backing up NVM Completed');
 
-		const Bytes = new Uint8Array(data.payload.data);
+		const Bytes = new Uint8Array(Object.values(data.payload));
 		const blob = new Blob([Bytes], {
 			type: 'application/octet-stream'
 		});
@@ -2981,12 +2981,12 @@ const ZwaveJsUI = (function () {
 					node.powerSource.level > 90
 						? (Class = 'fa fa-battery-full')
 						: node.powerSource.level > 65
-						? (Class = 'fa fa-battery-three-quarters')
-						: node.powerSource.level > 35
-						? (Class = 'fa fa-battery-half')
-						: node.powerSource.level > 10
-						? (Class = 'fa fa-battery-quarter')
-						: (Class = 'fa fa-battery-empty');
+							? (Class = 'fa fa-battery-three-quarters')
+							: node.powerSource.level > 35
+								? (Class = 'fa fa-battery-half')
+								: node.powerSource.level > 10
+									? (Class = 'fa fa-battery-quarter')
+									: (Class = 'fa fa-battery-empty');
 
 					if (node.powerSource.isLow) {
 						i.css({ color: 'red' });
@@ -3737,12 +3737,12 @@ const ZwaveJsUI = (function () {
 				data.payload.newValue > 90
 					? (Class = 'fa fa-battery-full')
 					: data.payload.newValue > 65
-					? (Class = 'fa fa-battery-three-quarters')
-					: data.payload.newValue > 35
-					? (Class = 'fa fa-battery-half')
-					: data.payload.newValue > 10
-					? (Class = 'fa fa-battery-quarter')
-					: (Class = 'fa fa-battery-empty');
+						? (Class = 'fa fa-battery-three-quarters')
+						: data.payload.newValue > 35
+							? (Class = 'fa fa-battery-half')
+							: data.payload.newValue > 10
+								? (Class = 'fa fa-battery-quarter')
+								: (Class = 'fa fa-battery-empty');
 				BatterySymbol.removeClass();
 				BatterySymbol.addClass(Class);
 				BatteryUIElements[data.node].setContent(
