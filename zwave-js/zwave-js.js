@@ -348,7 +348,7 @@ module.exports = function (RED) {
 				'[options] [features.softReset]',
 				'Disabled'
 			);
-			DriverOptions.features.softReset = true;
+			DriverOptions.features.softReset = false;
 		}
 
 		DriverOptions.storage = {};
