@@ -92,7 +92,7 @@ const SetupGlobals = function (RED) {
 
 	RED.httpAdmin.get(`/zwave-js/mesh`, (req, res) => {
 		const Secure = req.connection.encrypted !== undefined;
-		const Prot = Secure ? 'https://' : 'http://';
+		const Prot = process.env.ZWAVE_JS_PROTOCOL ? `${process.env.ZWAVE_JS_PROTOCOL}://` : (Secure ? 'https://' : 'http://');
 
 		const PageFIle = path.join(
 			__dirname,
