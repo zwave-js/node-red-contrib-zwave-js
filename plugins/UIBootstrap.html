@@ -110,8 +110,8 @@
 		<div child default onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Info',this, 'NodeInfo')">Information</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Stats',this,'NodeStats')">Statistics</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Associations',this,'NodeAssociationGroups')">Associations</div>
-		<div child>Health Check</div>
-		<div child>Firmware Update</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-HealthCheck',this)">Health Check</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Firmware',this)">Firmware Update</div>
 
 	</div>
 	<div id="zwjs-advanced-content"></div>
@@ -268,6 +268,25 @@
 		</table>
 		<div>
 			<button onclick="ZWaveJS.PreppNewAssociation()">Add Association</button> <button onclick="ZWaveJS.CommitAssociations()">Commit Changes</button><button style="background-color:red" onclick="ZWaveJS.ResetAllAssociations()">Wipe All Associations</button>
+		</div>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Node-HealthCheck">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">This should <strong>NOT</strong> be done while there is a lot of traffic on the network because it will negatively impact the test results</div>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Node-Firmware">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">
+			This software is provided as-is.<br /><br />
+			The developer(s) of <strong>node-red-contrib-zwave-js</strong> or any libraries it uses,
+			are not responsible for any damage that may result from your attempt to upgrade the firmware.<br /><br />
+			You are performing this upgrade, soley at your own risk.
 		</div>
 	</fieldset>
 </script>
