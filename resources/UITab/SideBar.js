@@ -338,12 +338,44 @@ const ZWaveJS = (function () {
 	};
 
 	const MarkAssoDelete = (El) => {
-		$(El).closest('tr').attr('data-role','zwjs-remove-association');
-		$(El).closest('tr').css({textDecoration:'line-through',color:'silver'})
-
+		$(El).closest('tr').attr('data-role', 'zwjs-remove-association');
+		$(El).closest('tr').css({ textDecoration: 'line-through', color: 'silver' });
 	};
 
 	const CommitAssociations = () => {
+		const Addresses = [];
+		$("[data-role='zwjs-remove-association']").each(function (index) {
+			const Node = parseInt($(this).find('td').first().text());
+			let Endpoint = parseInt($(this).find('td').first().next().text());
+			if (isNaN(Endpoint)) {
+				Endpoint = undefined;
+			}
+			Addresses.push({ nodeId: Node, endpoint: Endpoint });
+		});
+
+		if (Addresses.length > 0) {
+			const Params = [
+				{ nodeId: selectedNode.nodeId, endpoint: parseInt($('#zwjs-asso-endpoints').val()) },
+				parseInt($('#zwjs-asso-groups').val()),
+				Addresses
+			];
+			Runtime.Post('CONTROLLER', 'removeAssociations', Params)
+				.then((response) => {
+					if (response.callSuccess) {
+						CommitAssociationsAdd();
+					} else {
+						alert(response.response);
+					}
+				})
+				.catch((Error) => {
+					alert(Error.message);
+				});
+		} else {
+			CommitAssociationsAdd();
+		}
+	};
+
+	const CommitAssociationsAdd = () => {
 		const Addresses = [];
 		$("[data-role='zwjs-new-association']").each(function (index) {
 			const Node = parseInt($(this).find("[data-role='zwjs-node']").first().val());
@@ -354,24 +386,28 @@ const ZWaveJS = (function () {
 			Addresses.push({ nodeId: Node, endpoint: Endpoint });
 		});
 
-		const Params = [
-			{ nodeId: selectedNode.nodeId, endpoint: parseInt($('#zwjs-asso-endpoints').val()) },
-			parseInt($('#zwjs-asso-groups').val()),
-			Addresses
-		];
-
-		Runtime.Post('CONTROLLER', 'addAssociations', Params)
-			.then((response) => {
-				if (response.callSuccess) {
-					alert('Associations successfully updated!');
-					processAssociationGPSelect();
-				} else {
-					alert(response.response);
-				}
-			})
-			.catch((Error) => {
-				alert(Error.message);
-			});
+		if (Addresses.length > 0) {
+			const Params = [
+				{ nodeId: selectedNode.nodeId, endpoint: parseInt($('#zwjs-asso-endpoints').val()) },
+				parseInt($('#zwjs-asso-groups').val()),
+				Addresses
+			];
+			Runtime.Post('CONTROLLER', 'addAssociations', Params)
+				.then((response) => {
+					if (response.callSuccess) {
+						alert('Associations have been successfully updated!');
+						processAssociationGPSelect();
+					} else {
+						alert(response.response);
+					}
+				})
+				.catch((Error) => {
+					alert(Error.message);
+				});
+		} else {
+			alert('Associations have been successfully updated!');
+			processAssociationGPSelect();
+		}
 	};
 	const PreppNewAssociation = () => {
 		$('#zwjs-asso-mappings').append(
@@ -386,7 +422,7 @@ const ZWaveJS = (function () {
 		$('#zwjs-asso-groups').append(new Option('Select Association Group'));
 
 		for (const [ID, GP] of Object.entries(GPs)) {
-			$('#zwjs-asso-groups').append(new Option(GP.label, ID));
+			$('#zwjs-asso-groups').append(new Option(`${GP.label} (Max: ${GP.maxNodes})`, ID));
 		}
 	};
 	const processAssociationGPSelect = () => {
