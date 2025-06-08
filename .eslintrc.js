@@ -1,7 +1,5 @@
 module.exports = {
-	extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
-	plugins: ['@typescript-eslint'],
-	parser: '@typescript-eslint/parser',
+	extends: ['eslint:recommended'],
 	parserOptions: {
 		ecmaVersion: 2020,
 		sourceType: 'module',
@@ -13,8 +11,6 @@ module.exports = {
 		es2021: true
 	},
 	rules: {
-		'@typescript-eslint/no-this-alias': 0,
-		'@typescript-eslint/no-non-null-assertion': 0,
 		quotes: ['error', 'single', { avoidEscape: true }],
 		'prefer-const': 2,
 		'constructor-super': 2,

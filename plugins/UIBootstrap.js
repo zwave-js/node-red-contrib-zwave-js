@@ -1,8 +1,8 @@
-import { NodeAPI } from 'node-red';
-import { Driver, getAPI } from 'zwave-js';
-import { CommandClasses, isApplicationCC } from '@zwave-js/core';
-module.exports = (RED: NodeAPI) => {
-	const CCList: { [CCName: string]: string[] } = {};
+const { CommandClasses, isApplicationCC } = require('@zwave-js/core');
+const { Driver, getAPI } = require('zwave-js');
+
+module.exports = function (RED) {
+	const CCList = {};
 
 	RED.httpAdmin.get(
 		'/zwave-js/ui/global/getccmethods/:cc',
@@ -20,8 +20,8 @@ module.exports = (RED: NodeAPI) => {
 		try {
 			if (!Object.keys(CCList).length) {
 				Object.keys(CommandClasses).forEach((CC) => {
-					if (isApplicationCC(CommandClasses[CC as keyof typeof CommandClasses])) {
-						const API = getAPI(CommandClasses[CC as keyof typeof CommandClasses]);
+					if (isApplicationCC(CommandClasses[CC])) {
+						const API = getAPI(CommandClasses[CC]);
 						if (API !== undefined) {
 							const Methods = Object.getOwnPropertyNames(API.prototype).filter(
 								(m) => m !== 'constructor' && m !== 'supportsCommand'

@@ -1,8 +1,8 @@
-import { Driver, NodeStatus, InterviewStage, InclusionState, ProtocolVersion, num2hex} from 'zwave-js';
-import { CommandClasses } from '@zwave-js/core';
+const { NodeStatus, InterviewStage, InclusionState, ProtocolVersion, num2hex } = require('zwave-js');
+const { CommandClasses } = require('@zwave-js/core');
 
-export const getNodes = (DriverInstance: Driver): Record<string, unknown>[] => {
-	const Collection: Record<string, unknown>[] = [];
+const getNodes = (DriverInstance) => {
+	const Collection = [];
 	DriverInstance.controller.nodes.forEach((N) => {
 		Collection.push({
 			nodeId: N.id,
@@ -32,7 +32,7 @@ export const getNodes = (DriverInstance: Driver): Record<string, unknown>[] => {
 			isControllerNode: N.isControllerNode,
 			supportsBeaming: N.supportsBeaming,
 			keepAwake: N.keepAwake,
-			homeId: N.isControllerNode ? num2hex(DriverInstance.controller.homeId,true) : undefined,
+			homeId: N.isControllerNode ? num2hex(DriverInstance.controller.homeId, true) : undefined,
 			inclusionState: N.isControllerNode ? InclusionState[DriverInstance.controller.inclusionState] : undefined,
 			supportsLongRange: N.isControllerNode ? DriverInstance.controller.supportsLongRange : undefined,
 			powerSource: {
@@ -55,9 +55,9 @@ export const getNodes = (DriverInstance: Driver): Record<string, unknown>[] => {
 	return Collection;
 };
 
-export const getValueDB = (DriverInstance: Driver, Nodes?: number[]): Record<string, unknown>[] => {
-	const DB: Record<string, unknown>[] = [];
-	const TargetNodes: number[] = Nodes || [];
+const getValueDB = (DriverInstance, Nodes) => {
+	const DB = [];
+	const TargetNodes = Nodes || [];
 
 	if (!Nodes) {
 		DriverInstance.controller.nodes.forEach((N) => {
@@ -72,7 +72,7 @@ export const getValueDB = (DriverInstance: Driver, Nodes?: number[]): Record<str
 		if (ZWN) {
 			const NodeData = {
 				nodeId: ZWN.id,
-				values: new Array<unknown>()
+				values: []
 			};
 			const VIDs = ZWN.getDefinedValueIDs();
 			VIDs.forEach((VID) => {
@@ -95,4 +95,9 @@ export const getValueDB = (DriverInstance: Driver, Nodes?: number[]): Record<str
 	});
 
 	return DB;
+};
+
+module.exports = {
+	getNodes,
+	getValueDB
 };

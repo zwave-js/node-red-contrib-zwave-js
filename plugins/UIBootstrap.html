@@ -107,10 +107,9 @@
 	</div>
 	<div class="zwjs-tray-menu">
 		<div parent>Node</div>
-		<div child default onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Info',this)">Information</div>
-		<div child>Name &amp; Location</div>
-		<div child>Statistics</div>
-		<div child>Associations</div>
+		<div child default onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Info',this, 'NodeInfo')">Information</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Stats',this,'NodeStats')">Statistics</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Associations',this,'NodeAssociationGroups')">Associations</div>
 		<div child>Health Check</div>
 		<div child>Firmware Update</div>
 
@@ -204,18 +203,86 @@
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Node-Info">
+	<fieldset class=zwjs-fieldset>
+		<legend>Hardware Information:</legend>
+		<table class="zwjs-table" vertical>
+			<tr>
+				<td>Node ID</td><td>{{nodeId}}</td>
+			</tr>
+			<tr>
+				<td>Manufacture</td><td>{{deviceConfig.manufacturer}}</td>
+			</tr>
+			<tr>
+				<td>Model</td><td>{{deviceConfig.label}}</td>
+			</tr>
+			<tr>
+				<td>Description</td><td>{{deviceConfig.description}}</td>
+			</tr>
+			<tr>
+				<td>Firmware</td><td>{{firmwareVersion}}</td>
+			</tr>
+			<tr>
+				<td>Status</td><td>{{status}}</td>
+			</tr>
+			
+		</table>
+	</fieldset>
+
+	<fieldset class=zwjs-fieldset>
+		<legend>Update the Name & Location:</legend>
+		<div class="zwjs-hint">If the device supports the 'Node Name & Location' CC - it will also get updated, meaning the values here will persist across networks.</div>
+		<table class="zwjs-table" vertical>
+				<tr>
+					<td>Name</td><td><input type="text" id="zwjs-node-edit-name" value="{{nodeName}}"></td>
+				</tr>
+				<tr>
+					<td>Location</td><td><input type="text" id="zwjs-node-edit-location" value="{{nodeLocation}}"></td>
+				</tr>
+		</table>
+		<div>
+			<button onclick="ZWaveJS.SetNameLocation()">Save Changes</button>
+		</div>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Node-Associations">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">Choose the Endpoint, and the supported association group to see and edit the mappings. You can also completely wipe all associations on the device, to start over. </div>
+
+		<select id="zwjs-asso-endpoints" style="width:140px" onchange="ZWaveJS.processAssociationEPSelect()">
+			<option>Select Endpoint</option>
+			{{#each .}}
+			<option value="{{@key}}">Endpoint {{@key}}</option>
+			{{/each}}
+		</select>
+
+		<select id="zwjs-asso-groups" style="width:200px" onchange="ZWaveJS.processAssociationGPSelect()">
+			<option>Select Association Group</option>
+		</select>
+
+		<table class="zwjs-table" id="zwjs-asso-mappings" horizontal>
+				<tr>
+					<td style="text-align:center">Target Node</td><td style="text-align:center">Target Endpoint</td><td style="text-align:center">Delete</td>
+				</tr>
+		</table>
+		<div>
+			<button onclick="ZWaveJS.PreppNewAssociation()">Add Association</button> <button onclick="ZWaveJS.CommitAssociations()">Commit Changes</button><button style="background-color:red" onclick="ZWaveJS.ResetAllAssociations()">Wipe All Associations</button>
+		</div>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Node-Stats">
 	<table class="zwjs-table" vertical>
-		<tr>
-			<td>Manufacture</td><td>{{deviceConfig.manufacturer}}</td>
-		</tr>
-		<tr>
-			<td>Model</td><td>{{Model}}</td>
-		</tr>
-		<tr>
-			<td>Status</td><td>{{Status}}</td>
-		</tr>
+		{{#each .}}
+			<tr>
+				<td>{{@key}}</td><td>{{this}}</td>
+			</tr>
+		{{/each}}
 	</table>
 </script>
+
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_NodeAddMode">
@@ -267,7 +334,7 @@
 		
 		
 		<div>
-			<button onclick="ZWaveJS.StartExclusion()">Start</button>
+			<button onclick="ZWaveJS.StartExclusion()">Start Removal</button>
 		</div>
 	</fieldset>
 	<table class="zwjs-table" style="margin-top:10px" horizontal>

@@ -1,27 +1,28 @@
-import path from 'path';
-import { NodeAPI } from 'node-red';
-import {
-	Type_ZWaveJSRuntime,
-	Type_ZWaveJSRuntimeConfig,
-	MessageType,
-	DeviceCallback,
-	ControllerCallback,
-	UserPayloadPackage,
-	API,
-	SanitizedEventName
-} from '../types/Type_ZWaveJSRuntime';
-import { Driver, InclusionGrant, ZWaveNode } from 'zwave-js';
-import { tryParseDSKFromQRCodeString, parseQRCodeString, QRProvisioningInformation } from '@zwave-js/core';
-import { ConfigManager } from '@zwave-js/config';
-import { process as ControllerAPI_Process } from '../lib/ControllerAPI';
-import { process as ValueAPI_Process } from '../lib/ValueAPI';
-import { process as CC_Process } from '../lib/CCAPI';
-import { process as Node_Process } from '../lib/NodeAPI';
-import { getNodes } from '../lib/Fetchers';
+const path = require('path');
+const { Driver } = require('zwave-js');
+const { tryParseDSKFromQRCodeString, parseQRCodeString } = require('@zwave-js/core');
+const { ConfigManager } = require('@zwave-js/config');
+
+const ControllerAPI_Process = require('./lib/ControllerAPI').process;
+const ValueAPI_Process = require('./lib/ValueAPI').process;
+const CCAPI_Process = require('./lib/CCAPI').process;
+const NodeAPI_Process = require('./lib/NodeAPI').process;
+const { getNodes } = require('./lib/Fetchers');
 
 const APP_NAME = 'node-red-contrib-zwave-js';
 const APP_VERSION = '10.0.0';
 const FWK = '127c49b6f2928a6579e82ecab64a83fc94a6436f03d5cb670b8ac44412687b75f0667843';
+
+class SanitizedEventName {
+	constructor(event) {
+		this.driverName = event;
+		this.redEventName = event.replace(/ /g, '_').toUpperCase();
+		this.nodeStatusName = event.charAt(0).toUpperCase() + event.substr(1).toLowerCase() + '.';
+		this.statusNameWithNode = (Node) => {
+			return `Node: ${Node.id} ${this.nodeStatusName}`;
+		};
+	}
+}
 
 // Create event objects (creates easy to use event hooks)
 const event_DriverReady = new SanitizedEventName('driver ready');
@@ -50,8 +51,8 @@ const event_InterviewCompleted = new SanitizedEventName('interview completed');
 const event_Ready = new SanitizedEventName('ready');
 const event_RebuildRoutesProgress = new SanitizedEventName('rebuild routes progress');
 
-module.exports = (RED: NodeAPI) => {
-	const init = function (this: Type_ZWaveJSRuntime, config: Type_ZWaveJSRuntimeConfig) {
+module.exports = function (RED) {
+	const init = function (config) {
 		const self = this;
 		RED.nodes.createNode(self, config);
 		self.config = config;
@@ -60,12 +61,12 @@ module.exports = (RED: NodeAPI) => {
 		_ConfigManager.loadDeviceIndex();
 
 		// S2 Promise Resolvers
-		let grantPromise: (Value: InclusionGrant | false) => void;
-		let dskPromise: (Value: string | false) => void;
+		let grantPromise;
+		let dskPromise;
 
 		// Controller and Device Nodes
-		let controllerNodes: { [ControllerNodeID: string]: ControllerCallback } = {};
-		let deviceNodes: { [DeviceNodeID: string]: { NodeIDs?: number[]; Callback: DeviceCallback } } = {};
+		let controllerNodes = {};
+		let deviceNodes = {};
 
 		// Public methods (used by config clients)
 		self.registerDeviceNode = (DeviceNodeID, NodeIDs, Callback) => {
@@ -82,39 +83,39 @@ module.exports = (RED: NodeAPI) => {
 			delete controllerNodes[ControllerNodeID];
 		};
 
-		self.controllerCommand = (Method, Args): Promise<unknown> => {
+		self.controllerCommand = function (Method, Args) {
 			if (self.driverInstance) {
 				return ControllerAPI_Process(self.driverInstance, Method, Args);
 			}
 			return Promise.reject('Driver Instance');
 		};
 
-		self.valueCommand = (Method, NodeID, VID, Value?, Options?): Promise<unknown> => {
+		self.valueCommand = function (Method, NodeID, VID, Value, Options) {
 			if (self.driverInstance) {
 				return ValueAPI_Process(self.driverInstance, Method, NodeID, VID, Value, Options);
 			}
 			return Promise.reject('Driver Instance');
 		};
 
-		self.ccCommand = (Method, CommandClass, CommandClassMethod, NodeID, Endpoint?, Args?): Promise<unknown> => {
+		self.ccCommand = function (Method, CommandClass, CommandClassMethod, NodeID, Endpoint, Args) {
 			if (self.driverInstance) {
-				return CC_Process(self.driverInstance, Method, CommandClass, CommandClassMethod, NodeID, Endpoint, Args);
+				return CCAPI_Process(self.driverInstance, Method, CommandClass, CommandClassMethod, NodeID, Endpoint, Args);
 			}
 			return Promise.reject('Driver Instance');
 		};
 
-		self.nodeCommand = (Method, NodeID, Value): Promise<unknown> => {
+		self.nodeCommand = function (Method, NodeID, Value) {
 			if (self.driverInstance) {
-				return Node_Process(self.driverInstance, Method, NodeID, Value);
+				return NodeAPI_Process(self.driverInstance, Method, NodeID, Value);
 			}
 			return Promise.reject('Driver Instance');
 		};
 
 		// Last status of network
-		let lastStatus: string;
+		let lastStatus;
 
 		// Send latest Status to UI and update current
-		const updateLatestStatus = (Status: string) => {
+		const updateLatestStatus = function (Status) {
 			lastStatus = Status;
 			RED.comms.publish(`zwave-js/ui/${self.id}/status`, { status: lastStatus }, false);
 		};
@@ -190,7 +191,7 @@ module.exports = (RED: NodeAPI) => {
 			RED.httpAdmin.post(
 				`/zwave-js/ui/${self.id}/s2/parseqr`,
 				RED.auth.needsPermission('flows.write'),
-				(request, response) => {
+				async (request, response) => {
 					const DSK = tryParseDSKFromQRCodeString(request.body[0]);
 
 					if (DSK !== undefined) {
@@ -203,9 +204,9 @@ module.exports = (RED: NodeAPI) => {
 
 						return;
 					} else {
-						let SSQR: QRProvisioningInformation;
+						let SSQR;
 						try {
-							SSQR = parseQRCodeString(request.body[0]);
+							SSQR = await parseQRCodeString(request.body[0]);
 							_ConfigManager.lookupDevice(SSQR.manufacturerId, SSQR.productType, SSQR.productId).then((dc) => {
 								response.json({
 									callSuccess: true,
@@ -216,10 +217,10 @@ module.exports = (RED: NodeAPI) => {
 									}
 								});
 							});
-						} catch (Err: unknown) {
+						} catch (Err) {
 							response.json({
 								callSuccess: false,
-								response: (Err as Error).message
+								response: Err.message
 							});
 						}
 					}
@@ -230,12 +231,11 @@ module.exports = (RED: NodeAPI) => {
 				`/zwave-js/ui/${self.id}/:api/:method`,
 				RED.auth.needsPermission('flows.write'),
 				(request, response) => {
-					const APIKey = request.params.api as keyof typeof API;
-					const TargetAPI = API[APIKey];
+					const TargetAPI = request.params.api;
 					const Method = request.params.method;
 
 					switch (TargetAPI) {
-						case API.CONTROLLER:
+						case 'CONTROLLER':
 							self
 								.controllerCommand(Method)
 								.then((R) => {
@@ -253,12 +253,11 @@ module.exports = (RED: NodeAPI) => {
 				`/zwave-js/ui/${self.id}/:api/:method`,
 				RED.auth.needsPermission('flows.write'),
 				(request, response) => {
-					const APIKey = request.params.api as keyof typeof API;
-					const TargetAPI = API[APIKey];
+					const TargetAPI = request.params.api;
 					const Method = request.params.method;
 
 					switch (TargetAPI) {
-						case API.NODE:
+						case 'NODE':
 							self
 								.nodeCommand(Method, request.body.nodeId, request.body.value)
 								.then((R) => {
@@ -268,7 +267,7 @@ module.exports = (RED: NodeAPI) => {
 									response.json({ callSuccess: false, response: error.message });
 								});
 							break;
-						case API.VALUE:
+						case 'VALUE':
 							self
 								.valueCommand(Method, request.body.nodeId, request.body.valueId, request.body.value)
 								.then((R) => {
@@ -279,7 +278,7 @@ module.exports = (RED: NodeAPI) => {
 								});
 							break;
 
-						case API.CONTROLLER:
+						case 'CONTROLLER':
 							self
 								.controllerCommand(Method, request.body)
 								.then((R) => {
@@ -296,7 +295,7 @@ module.exports = (RED: NodeAPI) => {
 
 		// Remove HTTP API
 		const removeHTTPAPI = () => {
-			const Check = (Route: any) => {
+			const Check = (Route) => {
 				if (Route.route === undefined) return true;
 				if (!Route.route.path.startsWith(`/zwave-js/ui/${self.id}`)) return true;
 				return false;
@@ -306,13 +305,13 @@ module.exports = (RED: NodeAPI) => {
 		};
 
 		// On close
-		self.on('close', (_: boolean, done: () => void) => {
+		self.on('close', function (_, done) {
 			removeGlobalAPI();
 			removeHTTPAPI();
 			controllerNodes = {};
 			deviceNodes = {};
 			if (self.driverInstance) {
-				self.driverInstance?.destroy().then(() => {
+				self.driverInstance.destroy().then(() => {
 					self.driverInstance = undefined;
 					done();
 				});
@@ -322,16 +321,16 @@ module.exports = (RED: NodeAPI) => {
 		});
 
 		// S2 Callbacks
-		const s2Void = (): void => {
+		const s2Void = () => {
 			RED.comms.publish(`zwave-js/ui/${self.id}/s2/void`, {}, false);
 		};
-		const grantSecurityClasses = (Request: InclusionGrant): Promise<InclusionGrant | false> => {
+		const grantSecurityClasses = (Request) => {
 			return new Promise((resolve) => {
 				RED.comms.publish(`zwave-js/ui/${self.id}/s2/grant`, Request, false);
 				grantPromise = resolve;
 			});
 		};
-		const validateDSKAndEnterPIN = (DSK: string): Promise<string | false> => {
+		const validateDSKAndEnterPIN = (DSK) => {
 			return new Promise((resolve) => {
 				RED.comms.publish(`zwave-js/ui/${self.id}/s2/dsk`, { dsk: DSK }, false);
 				dskPromise = resolve;
@@ -339,10 +338,14 @@ module.exports = (RED: NodeAPI) => {
 		};
 
 		// Driver settings
-		const ZWaveOptions: Record<string, any> = {
+		const ZWaveOptions = {
 			logConfig: {},
 			timeouts: {},
 			securityKeys: {},
+			features: {
+				softReset: self.config.enableSoftReset
+			},
+
 			storage: {
 				throttle: self.config.storage_throttle,
 				cacheDir: path.join(RED.settings.userDir || '', 'zwave-js-cache')
@@ -366,7 +369,6 @@ module.exports = (RED: NodeAPI) => {
 				abort: s2Void
 			},
 			disableOptimisticValueUpdate: !self.config.disableOptimisticValueUpdate,
-			enableSoftReset: self.config.enableSoftReset
 		};
 
 		if (self.config.storage_deviceConfigPriorityDir) {
@@ -381,7 +383,7 @@ module.exports = (RED: NodeAPI) => {
 		if (LogEnabled) {
 			ZWaveOptions.logConfig.level = self.config.logConfig_level;
 		}
-		let nodeLogFilter: number[] | undefined;
+		let nodeLogFilter;
 		if (self.config.LogConfig_nodeFilter) {
 			nodeLogFilter = self.config.LogConfig_nodeFilter.split(',').map((N) => parseInt(N.trim()));
 			ZWaveOptions.logConfig.nodeFilter = nodeLogFilter;
@@ -407,7 +409,7 @@ module.exports = (RED: NodeAPI) => {
 			ZWaveOptions.securityKeys.S2_Unauthenticated = Buffer.from(self.config.securityKeys_S2_Unauthenticated, 'hex');
 
 		// Driver callback subscriptions
-		const wireDriverEvents = (): void => {
+		const wireDriverEvents = () => {
 			// Driver ready
 			self.driverInstance?.once(event_DriverReady.driverName, () => {
 				exposeGlobalAPI();
@@ -415,8 +417,8 @@ module.exports = (RED: NodeAPI) => {
 				wireSubDriverEvents();
 
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Status: UserPayloadPackage = {
-					Type: MessageType.STATUS,
+				const Status = {
+					Type: 'STATUS',
 					Status: {
 						fill: 'yellow',
 						shape: 'dot',
@@ -439,12 +441,12 @@ module.exports = (RED: NodeAPI) => {
 			self.driverInstance?.on(event_AllNodesReady.driverName, () => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: UserPayloadPackage = {
-					Type: MessageType.EVENT,
+				const Event = {
+					Type: 'EVENT',
 					Event: { event: event_AllNodesReady.redEventName, timestamp: Timestamp }
 				};
-				const Status: UserPayloadPackage = {
-					Type: MessageType.STATUS,
+				const Status = {
+					Type: 'STATUS',
 					Status: {
 						fill: 'green',
 						shape: 'dot',
@@ -473,8 +475,8 @@ module.exports = (RED: NodeAPI) => {
 					false
 				);
 
-				const Status: UserPayloadPackage = {
-					Type: MessageType.STATUS,
+				const Status = {
+					Type: 'STATUS',
 					Status: {
 						fill: 'green',
 						shape: 'dot',
@@ -493,8 +495,8 @@ module.exports = (RED: NodeAPI) => {
 			self.driverInstance?.controller.on(event_NodeRemoved.driverName, (ThisNode, Reason) => {
 				const ControllerNodeIDs = Object.keys(controllerNodes);
 				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/removed`, { nodeId: ThisNode.id, reason: Reason }, false);
-				const Status: UserPayloadPackage = {
-					Type: MessageType.STATUS,
+				const Status = {
+					Type: 'STATUS',
 					Status: {
 						fill: 'green',
 						shape: 'dot',
@@ -515,12 +517,12 @@ module.exports = (RED: NodeAPI) => {
 				const Body = {
 					isSecureInclude: IsSecure
 				};
-				const Event: UserPayloadPackage = {
-					Type: MessageType.EVENT,
+				const Event = {
+					Type: 'EVENT',
 					Event: { event: event_InclusionStarted.redEventName, timestamp: Timestamp, eventBody: Body }
 				};
-				const Status: UserPayloadPackage = {
-					Type: MessageType.STATUS,
+				const Status = {
+					Type: 'STATUS',
 					Status: {
 						fill: 'yellow',
 						shape: 'dot',
@@ -538,12 +540,12 @@ module.exports = (RED: NodeAPI) => {
 			self.driverInstance?.controller.on(event_InclusionFailed.driverName, () => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: UserPayloadPackage = {
-					Type: MessageType.EVENT,
+				const Event = {
+					Type: 'EVENT',
 					Event: { event: event_InclusionFailed.redEventName, timestamp: Timestamp }
 				};
-				const Status: UserPayloadPackage = {
-					Type: MessageType.STATUS,
+				const Status = {
+					Type: 'STATUS',
 					Status: {
 						fill: 'red',
 						shape: 'dot',
@@ -562,12 +564,12 @@ module.exports = (RED: NodeAPI) => {
 			self.driverInstance?.controller.on(event_InclusionStopped.driverName, () => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: UserPayloadPackage = {
-					Type: MessageType.EVENT,
+				const Event = {
+					Type: 'EVENT',
 					Event: { event: event_InclusionStopped.redEventName, timestamp: Timestamp }
 				};
-				const Status: UserPayloadPackage = {
-					Type: MessageType.STATUS,
+				const Status = {
+					Type: 'STATUS',
 					Status: {
 						fill: 'yellow',
 						shape: 'ring',
@@ -586,12 +588,12 @@ module.exports = (RED: NodeAPI) => {
 			self.driverInstance?.controller.on(event_ExclusionStarted.driverName, () => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: UserPayloadPackage = {
-					Type: MessageType.EVENT,
+				const Event = {
+					Type: 'EVENT',
 					Event: { event: event_ExclusionStarted.redEventName, timestamp: Timestamp }
 				};
-				const Status: UserPayloadPackage = {
-					Type: MessageType.STATUS,
+				const Status = {
+					Type: 'STATUS',
 					Status: {
 						fill: 'yellow',
 						shape: 'dot',
@@ -609,12 +611,12 @@ module.exports = (RED: NodeAPI) => {
 			self.driverInstance?.controller.on(event_ExclusionFailed.driverName, () => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: UserPayloadPackage = {
-					Type: MessageType.EVENT,
+				const Event = {
+					Type: 'EVENT',
 					Event: { event: event_ExclusionFailed.redEventName, timestamp: Timestamp }
 				};
-				const Status: UserPayloadPackage = {
-					Type: MessageType.STATUS,
+				const Status = {
+					Type: 'STATUS',
 					Status: {
 						fill: 'red',
 						shape: 'dot',
@@ -633,12 +635,12 @@ module.exports = (RED: NodeAPI) => {
 			self.driverInstance?.controller.on(event_ExclusionStopped.driverName, () => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: UserPayloadPackage = {
-					Type: MessageType.EVENT,
+				const Event = {
+					Type: 'EVENT',
 					Event: { event: event_ExclusionStopped.redEventName, timestamp: Timestamp }
 				};
-				const Status: UserPayloadPackage = {
-					Type: MessageType.STATUS,
+				const Status = {
+					Type: 'STATUS',
 					Status: {
 						fill: 'yellow',
 						shape: 'ring',
@@ -657,12 +659,12 @@ module.exports = (RED: NodeAPI) => {
 			self.driverInstance?.controller.on(event_RebuildRoutesDone.driverName, (Result) => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: UserPayloadPackage = {
-					Type: MessageType.EVENT,
+				const Event = {
+					Type: 'EVENT',
 					Event: { event: event_RebuildRoutesDone.redEventName, timestamp: Timestamp, eventBody: Result }
 				};
-				const Status: UserPayloadPackage = {
-					Type: MessageType.STATUS,
+				const Status = {
+					Type: 'STATUS',
 					Status: {
 						fill: 'green',
 						shape: 'dot',
@@ -681,16 +683,16 @@ module.exports = (RED: NodeAPI) => {
 			self.driverInstance?.controller.on(event_RebuildRoutesProgress.driverName, (Progress) => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: UserPayloadPackage = {
-					Type: MessageType.EVENT,
+				const Event = {
+					Type: 'EVENT',
 					Event: { event: event_RebuildRoutesProgress.redEventName, timestamp: Timestamp, eventBody: Progress }
 				};
 				const Count = Progress.size;
 				const Remain = [...Progress.values()].filter((V) => V === 'pending').length;
 				const Completed = Count - Remain;
 				const CompletedPercentage = Math.round((100 * Completed) / (Completed + Remain));
-				const Status: UserPayloadPackage = {
-					Type: MessageType.STATUS,
+				const Status = {
+					Type: 'STATUS',
 					Status: {
 						fill: 'yellow',
 						shape: 'dot',
@@ -706,7 +708,7 @@ module.exports = (RED: NodeAPI) => {
 		};
 
 		// Node callback subscriptions
-		const wireNodeEvents = (Node: ZWaveNode) => {
+		const wireNodeEvents = (Node) => {
 			if (Node.isControllerNode) {
 				return;
 			}
@@ -717,8 +719,8 @@ module.exports = (RED: NodeAPI) => {
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
 				);
-				const Event: UserPayloadPackage = {
-					Type: MessageType.EVENT,
+				const Event = {
+					Type: 'EVENT',
 					Event: {
 						event: event_Ready.redEventName,
 						timestamp: Timestamp,
@@ -729,7 +731,7 @@ module.exports = (RED: NodeAPI) => {
 				};
 				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
 
-				const NodeInfo = getNodes(self.driverInstance!).find((N) => N.nodeId === ThisNode.id);
+				const NodeInfo = getNodes(self.driverInstance).find((N) => N.nodeId === ThisNode.id);
 				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/ready`, { nodeInfo: NodeInfo }, false);
 			});
 
@@ -739,8 +741,8 @@ module.exports = (RED: NodeAPI) => {
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
 				);
-				const Event: UserPayloadPackage = {
-					Type: MessageType.EVENT,
+				const Event = {
+					Type: 'EVENT',
 					Event: {
 						event: event_Alive.redEventName,
 						timestamp: Timestamp,
@@ -752,7 +754,7 @@ module.exports = (RED: NodeAPI) => {
 				};
 				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
 
-				const NodeInfo = getNodes(self.driverInstance!).find((N) => N.nodeId === ThisNode.id);
+				const NodeInfo = getNodes(self.driverInstance).find((N) => N.nodeId === ThisNode.id);
 				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/alive`, { nodeInfo: NodeInfo }, false);
 			});
 
@@ -762,8 +764,8 @@ module.exports = (RED: NodeAPI) => {
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
 				);
-				const Event: UserPayloadPackage = {
-					Type: MessageType.EVENT,
+				const Event = {
+					Type: 'EVENT',
 					Event: {
 						event: event_Wake.redEventName,
 						timestamp: Timestamp,
@@ -775,7 +777,7 @@ module.exports = (RED: NodeAPI) => {
 				};
 				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
 
-				const NodeInfo = getNodes(self.driverInstance!).find((N) => N.nodeId === ThisNode.id);
+				const NodeInfo = getNodes(self.driverInstance).find((N) => N.nodeId === ThisNode.id);
 				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/wakeup`, { nodeInfo: NodeInfo }, false);
 			});
 
@@ -785,8 +787,8 @@ module.exports = (RED: NodeAPI) => {
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
 				);
-				const Event: UserPayloadPackage = {
-					Type: MessageType.EVENT,
+				const Event = {
+					Type: 'EVENT',
 					Event: {
 						event: event_Sleep.redEventName,
 						timestamp: Timestamp,
@@ -798,7 +800,7 @@ module.exports = (RED: NodeAPI) => {
 				};
 				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
 
-				const NodeInfo = getNodes(self.driverInstance!).find((N) => N.nodeId === ThisNode.id);
+				const NodeInfo = getNodes(self.driverInstance).find((N) => N.nodeId === ThisNode.id);
 				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/sleep`, { nodeInfo: NodeInfo }, false);
 			});
 
@@ -808,8 +810,8 @@ module.exports = (RED: NodeAPI) => {
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
 				);
-				const Event: UserPayloadPackage = {
-					Type: MessageType.EVENT,
+				const Event = {
+					Type: 'EVENT',
 					Event: {
 						event: event_Dead.redEventName,
 						timestamp: Timestamp,
@@ -821,20 +823,20 @@ module.exports = (RED: NodeAPI) => {
 				};
 				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
 
-				const NodeInfo = getNodes(self.driverInstance!).find((N) => N.nodeId === ThisNode.id);
+				const NodeInfo = getNodes(self.driverInstance).find((N) => N.nodeId === ThisNode.id);
 				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/dead`, { nodeInfo: NodeInfo }, false);
 			});
 
 			// Interview Started
-			Node.on(event_InterviewStarted.driverName, (ThisNode: ZWaveNode) => {
+			Node.on(event_InterviewStarted.driverName, (ThisNode) => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: UserPayloadPackage = {
-					Type: MessageType.EVENT,
+				const Event = {
+					Type: 'EVENT',
 					Event: { event: event_InterviewStarted.redEventName, timestamp: Timestamp }
 				};
-				const Status: UserPayloadPackage = {
-					Type: MessageType.STATUS,
+				const Status = {
+					Type: 'STATUS',
 					Status: {
 						fill: 'yellow',
 						shape: 'dot',
@@ -847,7 +849,7 @@ module.exports = (RED: NodeAPI) => {
 					controllerNodes[ID](Status);
 				});
 
-				const NodeInfo = getNodes(self.driverInstance!).find((N) => N.nodeId === ThisNode.id);
+				const NodeInfo = getNodes(self.driverInstance).find((N) => N.nodeId === ThisNode.id);
 				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/interviewstarted`, { nodeInfo: NodeInfo }, false);
 			});
 
@@ -855,12 +857,12 @@ module.exports = (RED: NodeAPI) => {
 			Node.on(event_InterviewCompleted.driverName, (ThisNode) => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: UserPayloadPackage = {
-					Type: MessageType.EVENT,
+				const Event = {
+					Type: 'EVENT',
 					Event: { event: event_InterviewCompleted.redEventName, timestamp: Timestamp }
 				};
-				const Status: UserPayloadPackage = {
-					Type: MessageType.STATUS,
+				const Status = {
+					Type: 'STATUS',
 					Status: {
 						fill: 'green',
 						shape: 'dot',
@@ -874,7 +876,7 @@ module.exports = (RED: NodeAPI) => {
 					controllerNodes[ID](Status);
 				});
 
-				const NodeInfo = getNodes(self.driverInstance!).find((N) => N.nodeId === ThisNode.id);
+				const NodeInfo = getNodes(self.driverInstance).find((N) => N.nodeId === ThisNode.id);
 				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/interviewed`, { nodeInfo: NodeInfo }, false);
 			});
 
@@ -882,12 +884,12 @@ module.exports = (RED: NodeAPI) => {
 			Node.on(event_InterviewFailed.driverName, (ThisNode, Args) => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-				const Event: UserPayloadPackage = {
-					Type: MessageType.EVENT,
+				const Event = {
+					Type: 'EVENT',
 					Event: { event: event_InterviewFailed.redEventName, timestamp: Timestamp, eventBody: Args }
 				};
-				const Status: UserPayloadPackage = {
-					Type: MessageType.STATUS,
+				const Status = {
+					Type: 'STATUS',
 					Status: {
 						fill: 'red',
 						shape: 'dot',
@@ -901,7 +903,7 @@ module.exports = (RED: NodeAPI) => {
 					controllerNodes[ID](Status);
 				});
 
-				const NodeInfo = getNodes(self.driverInstance!).find((N) => N.nodeId === ThisNode.id);
+				const NodeInfo = getNodes(self.driverInstance).find((N) => N.nodeId === ThisNode.id);
 				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/interviewfailed`, { nodeInfo: NodeInfo }, false);
 			});
 
@@ -912,8 +914,8 @@ module.exports = (RED: NodeAPI) => {
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
 				);
 				const { value, ...valueId } = Args;
-				const Event: UserPayloadPackage = {
-					Type: MessageType.EVENT,
+				const Event = {
+					Type: 'EVENT',
 					Event: {
 						event: event_ValueNotification.redEventName,
 						timestamp: Timestamp,
@@ -933,8 +935,8 @@ module.exports = (RED: NodeAPI) => {
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
 				);
 				const { newValue, prevValue, ...valueId } = Args;
-				const Event: UserPayloadPackage = {
-					Type: MessageType.EVENT,
+				const Event = {
+					Type: 'EVENT',
 					Event: {
 						event: event_ValueUpdated.redEventName,
 						timestamp: Timestamp,
@@ -954,8 +956,8 @@ module.exports = (RED: NodeAPI) => {
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
 				);
 				const { newValue, ...valueId } = Args;
-				const Event: UserPayloadPackage = {
-					Type: MessageType.EVENT,
+				const Event = {
+					Type: 'EVENT',
 					Event: {
 						event: event_ValueAdded.redEventName,
 						timestamp: Timestamp,
@@ -974,8 +976,8 @@ module.exports = (RED: NodeAPI) => {
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
 					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
 				);
-				const Event: UserPayloadPackage = {
-					Type: MessageType.EVENT,
+				const Event = {
+					Type: 'EVENT',
 					Event: {
 						event: event_Notification.redEventName,
 						timestamp: Timestamp,

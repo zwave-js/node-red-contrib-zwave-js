@@ -3,7 +3,6 @@
 /* eslint-env browser */
 /* eslint no-undef: "warn"*/
 /* eslint no-unused-vars: "warn"*/
-
 const ZWaveJS = (function () {
 	let networkId = undefined;
 	let selectedNode = undefined;
@@ -23,7 +22,7 @@ const ZWaveJS = (function () {
 	const commsNodeState = (topic, data) => {
 		$('#zwjs-node-list')
 			.treeList('data')
-			.find((N) => N.nodeData.nodeId).nodeData = data.nodeInfo;
+			.find((N) => N.nodeData.nodeId === data.nodeInfo.nodeId).nodeData = data.nodeInfo;
 
 		if (selectedNode && selectedNode.nodeId === data.nodeInfo.nodeId) {
 			nodeSelected(undefined, { nodeData: data.nodeInfo });
@@ -265,26 +264,192 @@ const ZWaveJS = (function () {
 		}
 	};
 
+	const SetNameLocation = () => {
+		Runtime.Post('NODE', 'setName', { nodeId: selectedNode.nodeId, value: $('#zwjs-node-edit-name').val() })
+			.then((data) => {
+				if (!data.callSuccess) {
+					alert(data.response);
+				} else {
+					Runtime.Post('NODE', 'setLocation', {
+						nodeId: selectedNode.nodeId,
+						value: $('#zwjs-node-edit-location').val()
+					})
+						.then((data) => {
+							if (!data.callSuccess) {
+								alert(data.response);
+							} else {
+								const ND = $('#zwjs-node-list')
+									.treeList('data')
+									.find((N) => N.nodeData.nodeId).nodeData;
+								ND.nodeName = $('#zwjs-node-edit-name').val();
+								ND.nodeLocation = $('#zwjs-node-edit-location').val();
+								$(`#zwjs-node-name-${selectedNode.nodeId}`).text(ND.nodeName);
+
+								nodeSelected(undefined, { nodeData: ND });
+
+								alert('Name & Location Set Successfully!');
+							}
+						})
+						.catch((Error) => {
+							alert(Error.message);
+						});
+				}
+			})
+			.catch((Error) => {
+				alert(Error.message);
+			});
+	};
+
+	let AssociationGroups;
+	const ResetAllAssociations = () => {
+		if (
+			confirm(
+				'Are you sure you wish to wipe all Associations? this includes the LifeLine associations, you will need to re-create them after.'
+			)
+		) {
+			Runtime.Post('CONTROLLER', 'getAllAssociations', [selectedNode.nodeId])
+				.then((response) => {
+					if (response.callSuccess) {
+						response.response.forEach(function (E, i) {
+							Object.keys(E.associations).forEach(async function (G, i) {
+								if (E.associations[G].length > 0) {
+									const Params = [];
+									Params.push(E.associationAddress);
+									Params.push(parseInt(G));
+									Params.push(E.associations[G]);
+									try {
+										await Runtime.Post('CONTROLLER', 'removeAssociations', Params);
+									} catch (Error) {
+										alert(Error.message);
+									}
+								}
+							});
+						});
+						alert('All associations successfully removed!');
+						processAssociationGPSelect();
+					} else {
+						alert(response.response);
+					}
+				})
+				.catch((Error) => {
+					alert(Error.message);
+				});
+		}
+	};
+
+	const MarkAssoDelete = (El) => {
+		$(El).closest('tr').attr('data-role','zwjs-remove-association');
+		$(El).closest('tr').css({textDecoration:'line-through',color:'silver'})
+
+	};
+
+	const CommitAssociations = () => {
+		const Addresses = [];
+		$("[data-role='zwjs-new-association']").each(function (index) {
+			const Node = parseInt($(this).find("[data-role='zwjs-node']").first().val());
+			let Endpoint = parseInt($(this).find("[data-role='zwjs-endpoint']").first().val());
+			if (isNaN(Endpoint)) {
+				Endpoint = undefined;
+			}
+			Addresses.push({ nodeId: Node, endpoint: Endpoint });
+		});
+
+		const Params = [
+			{ nodeId: selectedNode.nodeId, endpoint: parseInt($('#zwjs-asso-endpoints').val()) },
+			parseInt($('#zwjs-asso-groups').val()),
+			Addresses
+		];
+
+		Runtime.Post('CONTROLLER', 'addAssociations', Params)
+			.then((response) => {
+				if (response.callSuccess) {
+					alert('Associations successfully updated!');
+					processAssociationGPSelect();
+				} else {
+					alert(response.response);
+				}
+			})
+			.catch((Error) => {
+				alert(Error.message);
+			});
+	};
+	const PreppNewAssociation = () => {
+		$('#zwjs-asso-mappings').append(
+			'<tr data-role="zwjs-new-association"><td style="text-align:center"><input type="number" data-role="zwjs-node" value="1" min="1"></td><td style="text-align:center"><input type="number" data-role="zwjs-endpoint" min="0" placeholder="<Empty: Node-Association>"></td><td>&nbsp;</td></tr>'
+		);
+	};
+	const processAssociationEPSelect = () => {
+		const EP = $('#zwjs-asso-endpoints').val();
+		const GPs = AssociationGroups[EP];
+
+		$('#zwjs-asso-groups').empty();
+		$('#zwjs-asso-groups').append(new Option('Select Association Group'));
+
+		for (const [ID, GP] of Object.entries(GPs)) {
+			$('#zwjs-asso-groups').append(new Option(GP.label, ID));
+		}
+	};
+	const processAssociationGPSelect = () => {
+		const Group = parseInt($('#zwjs-asso-groups').val());
+		const Address = {
+			nodeId: selectedNode.nodeId,
+			endpoint: parseInt($('#zwjs-asso-endpoints').val())
+		};
+		Runtime.Post('CONTROLLER', 'getAssociations', [Address]).then((data) => {
+			const Mapped = data.response[Group];
+
+			$('#zwjs-asso-mappings').empty();
+			$('#zwjs-asso-mappings').append(
+				'<tr><td style="text-align:center">Target Node</td><td style="text-align:center">Target Endpoint</td><td style="text-align:center">Delete</td></tr>'
+			);
+			Mapped.forEach((v, i) => {
+				$('#zwjs-asso-mappings').append(
+					`<tr><td style="text-align:center">${v.nodeId}</td><td style="text-align:center">${v.endpoint === undefined ? '&lt;Node-Associtation&gt;' : v.endpoint}</td><td style="text-align:center"><i class="fa fa-trash" aria-hidden="true" style="font-size: 18px;color: red; cursor:pointer" onclick="ZWaveJS.MarkAssoDelete(this)"></i></td></tr>`
+				);
+			});
+		});
+	};
+
 	const RenderFunctions = {
 		ControllerInfo: () => {
-			return new Promise(async (resolve, reject) => {
-				let Response = await Runtime.Get('CONTROLLER', 'getNodes');
-				if (Response.callSuccess) {
-					Response = Response.response.find((N) => N.isControllerNode);
-					Response.configuration = $('#zwjs-network option:selected').text();
-					Response.serialPort = RED.nodes.node(networkId).serialPort;
-					resolve(Response);
-				} else {
-					reject(Response.response);
-				}
+			return new Promise(async (resolve, _) => {
+				const CD = $('#zwjs-controller-info').data('info');
+				const Response = {
+					configuration: $('#zwjs-network option:selected').text(),
+					serialPort: RED.nodes.node(networkId).serialPort,
+					...CD
+				};
+				resolve(Response);
 			});
 		},
 		ControllerStats: () => {
+			return new Promise(async (resolve, _) => {
+				const CD = $('#zwjs-controller-info').data('info');
+				resolve(CD.statistics);
+			});
+		},
+		NodeInfo: () => {
+			return new Promise(async (resolve, _) => {
+				const ND = $('#zwjs-node-list')
+					.treeList('data')
+					.find((N) => N.nodeData.nodeId === selectedNode.nodeId).nodeData;
+				resolve(ND);
+			});
+		},
+		NodeStats: () => {
+			return new Promise(async (resolve, _) => {
+				const ND = $('#zwjs-node-list')
+					.treeList('data')
+					.find((N) => N.nodeData.nodeId === selectedNode.nodeId).nodeData;
+				resolve(ND.statistics);
+			});
+		},
+		NodeAssociationGroups: () => {
 			return new Promise(async (resolve, reject) => {
-				let Response = await Runtime.Get('CONTROLLER', 'getNodes');
+				const Response = await Runtime.Post('CONTROLLER', 'getAllAssociationGroups', [selectedNode.nodeId]);
 				if (Response.callSuccess) {
-					Response = Response.response.find((N) => N.isControllerNode).statistics;
-					resolve(Response);
+					AssociationGroups = Response.response;
+					resolve(AssociationGroups);
 				} else {
 					reject(Response.response);
 				}
@@ -453,77 +618,114 @@ const ZWaveJS = (function () {
 		if (!networkId) {
 			return;
 		}
-		const Options = {
-			width: 900,
-			title: 'ZWave JS Controller Management',
-			buttons: [
-				{
-					id: 'zwjs-tray-about',
-					text: 'About Zwave JS',
-					click: function () {
-						CloseTray();
-					}
-				},
-				{
-					id: 'zwjs-tray-close',
-					text: 'Close',
-					click: function () {
-						CloseTray();
-					}
-				}
-			],
-			open: function (tray) {
-				var trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
-				const State = {
-					Network: $('#zwjs-controller-info').text(),
-					Status: $('#zwjs-controller-status').text()
-				};
-				trayBody.append(TPL_ControllerManagement(State));
-			}
-		};
-		CloseTray();
-		RED.tray.show(Options);
 
-		$('.zwjs-tray-menu > div[default]').trigger('click');
+		CloseTray();
+
+		Runtime.Get('CONTROLLER', 'getNodes')
+			.then((data) => {
+				if (data.callSuccess) {
+					const RCD = data.response.find((N) => N.isControllerNode);
+					delete RCD.statistics.backgroundRSSI;
+					$('#zwjs-controller-info').data('info', RCD);
+
+					const Options = {
+						width: 900,
+						title: 'ZWave JS Controller Management',
+						buttons: [
+							{
+								id: 'zwjs-tray-about',
+								text: 'About Zwave JS',
+								click: function () {
+									CloseTray();
+								}
+							},
+							{
+								id: 'zwjs-tray-close',
+								text: 'Close',
+								click: function () {
+									CloseTray();
+								}
+							}
+						],
+						open: function (tray) {
+							var trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
+							const State = {
+								Network: $('#zwjs-controller-info').text(),
+								Status: $('#zwjs-controller-status').text()
+							};
+							trayBody.append(TPL_ControllerManagement(State));
+						}
+					};
+					RED.tray.show(Options);
+					setTimeout(() => {
+						$('.zwjs-tray-menu > div[default]').trigger('click');
+					}, 250);
+				} else {
+					alert(Error.message);
+				}
+			})
+			.catch((Error) => {
+				alert(Error.message);
+			});
 	};
 
 	const ShowNodeManagement = () => {
 		if (!selectedNode) {
 			return;
 		}
-		const Options = {
-			width: 900,
-			title: 'ZWave JS Node Management',
-			buttons: [
-				{
-					id: 'zwjs-tray-about',
-					text: 'About Zwave JS',
-					click: function () {
-						CloseTray();
-					}
-				},
-				{
-					id: 'zwjs-tray-close',
-					text: 'Close',
-					click: function () {
-						CloseTray();
-					}
-				}
-			],
-			open: function (tray) {
-				var trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
-				const State = {
-					NodeID: $('#zwjs-node-info-id').text(),
-					Status: $('#zwjs-node-status').text(),
-					NodeInfo: $('#zwjs-node-info').text()
-				};
-				trayBody.append(TPL_NodeManagement(State));
-			}
-		};
-		CloseTray();
-		RED.tray.show(Options);
 
-		$('.zwjs-tray-menu > div[default]').trigger('click');
+		CloseTray();
+
+		Runtime.Get('CONTROLLER', 'getNodes')
+			.then((data) => {
+				if (data.callSuccess) {
+					const RND = data.response.find((N) => N.nodeId === selectedNode.nodeId);
+					delete RND.statistics.lwr;
+					$('#zwjs-node-list')
+						.treeList('data')
+						.find((N) => N.nodeData.nodeId === RND.nodeId).nodeData = RND;
+
+					const Options = {
+						width: 900,
+						title: 'ZWave JS Node Management',
+						buttons: [
+							{
+								id: 'zwjs-tray-about',
+								text: 'About Zwave JS',
+								click: function () {
+									CloseTray();
+								}
+							},
+							{
+								id: 'zwjs-tray-close',
+								text: 'Close',
+								click: function () {
+									CloseTray();
+								}
+							}
+						],
+						open: function (tray) {
+							var trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
+							const State = {
+								NodeID: $('#zwjs-node-info-id').text(),
+								Status: $('#zwjs-node-status').text(),
+								NodeInfo: $('#zwjs-node-info').text()
+							};
+							trayBody.append(TPL_NodeManagement(State));
+						}
+					};
+					RED.tray.show(Options);
+
+					setTimeout(() => {
+						$('.zwjs-tray-menu > div[default]').trigger('click');
+					}, 250);
+				} else {
+					alert(Error.message);
+				}
+			})
+			.catch((Error) => {
+				alert(Error.message);
+			});
 	};
 
 	const RenderNodeIconState = (Node) => {
@@ -563,19 +765,19 @@ const ZWaveJS = (function () {
 				if (data.callSuccess) {
 					data = data.response;
 
-					const Controller = data.filter((N) => N.isControllerNode)[0];
+					const Controller = data.find((N) => N.isControllerNode);
+					const Nodes = data.filter((N) => !N.isControllerNode);
 
 					const Info = `${Controller.deviceConfig.manufacturer} | ${Controller.deviceConfig.label} | v${Controller.firmwareVersion}`;
 					$('#zwjs-controller-info').text(Info);
-
-					const Nodes = data.filter((N) => !N.isControllerNode);
+					$('#zwjs-controller-info').data('info', Controller);
 
 					// Render List
 					const TreeData = [];
 					Nodes.forEach((N) => {
 						const Label = $('<div>');
 						Label.append(`<span class="zwjs-node-id">${N.nodeId}</span>`);
-						Label.append(N.nodeName || 'No Name');
+						Label.append(`<span id="zwjs-node-name-${N.nodeId}">${N.nodeName || 'No Name'}</span>`);
 						const IconSpan = $('<span>').addClass('zwjs-node-state-group');
 						Label.append(IconSpan);
 
@@ -686,7 +888,9 @@ const ZWaveJS = (function () {
 			CCGroups[CCID].forEach((V) => {
 				const sItem = {
 					label: V.metadata.label,
-					icon: V.metadata.writeable ? 'fa fa-pencil' : ''
+					icon: V.metadata.writeable ? 'fa fa-pencil' : '',
+					metadata: V.metadata,
+					valueId: V.valueId
 				};
 
 				Item.children.push(sItem);
@@ -703,6 +907,8 @@ const ZWaveJS = (function () {
 		if (!item.nodeData) {
 			return;
 		}
+
+		CloseTray();
 
 		selectedNode = item.nodeData;
 
@@ -815,7 +1021,7 @@ const ZWaveJS = (function () {
 				RED.sidebar.show('zwave-js');
 				nodeSelected(undefined, lastInterviewedNode);
 			});
-		}, 100);
+		}, 1000);
 	};
 
 	return {
@@ -831,6 +1037,13 @@ const ZWaveJS = (function () {
 		SubmitDSK,
 		SubmitProvisioningEntry,
 		SetPEActive,
-		DeletePE
+		DeletePE,
+		SetNameLocation,
+		processAssociationEPSelect,
+		processAssociationGPSelect,
+		PreppNewAssociation,
+		CommitAssociations,
+		ResetAllAssociations,
+		MarkAssoDelete
 	};
 })();

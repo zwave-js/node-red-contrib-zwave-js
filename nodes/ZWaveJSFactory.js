@@ -1,19 +1,12 @@
-import { NodeAPI, NodeMessage, NodeMessageInFlow } from 'node-red';
-import { Type_ZWaveJSFactory, Type_ZWaveJSFactoryConfig } from '../types/Type_ZWaveJSFactory';
-import { InputMessage } from '../types/Type_ZWaveJSController';
-import { CommandClasses } from '@zwave-js/core';
+const { CommandClasses } = require('@zwave-js/core');
 
-module.exports = (RED: NodeAPI) => {
-	const init = function (this: Type_ZWaveJSFactory, config: Type_ZWaveJSFactoryConfig) {
+module.exports = (RED) => {
+	const init = function (config) {
 		const self = this;
 		RED.nodes.createNode(self, config);
 		self.config = config;
 
-		const ValueAPI = (
-			msg: NodeMessageInFlow,
-			send: (msg: NodeMessage | Array<NodeMessage | NodeMessage[] | null>) => void,
-			done: (err?: Error) => void
-		) => {
+		const ValueAPI = (msg, send, done) => {
 			let ValueID;
 			let Value;
 			let NodeID;
@@ -59,9 +52,10 @@ module.exports = (RED: NodeAPI) => {
 
 			if (config.method === 'setValue' && !Value) {
 				done(new Error('Missing Value expression, or expression yields undefined.'));
+				return;
 			}
 
-			const CMD: InputMessage = {
+			const CMD = {
 				cmd: {
 					api: 'VALUE',
 					method: config.method
@@ -76,23 +70,19 @@ module.exports = (RED: NodeAPI) => {
 				CMD.cmd.trackingToken = TrackingToken;
 			}
 
-			if (Value) {
-				CMD.cmdProperties!.value = Value;
+			if (Value !== undefined) {
+				CMD.cmdProperties.value = Value;
 			}
 
 			if (Options) {
-				CMD.cmdProperties!.setValueOptions = Options;
+				CMD.cmdProperties.setValueOptions = Options;
 			}
 
 			send({ payload: CMD });
 			done();
 		};
 
-		const CCAPI = (
-			msg: NodeMessageInFlow,
-			send: (msg: NodeMessage | Array<NodeMessage | NodeMessage[] | null>) => void,
-			done: (err?: Error) => void
-		) => {
+		const CCAPI = (msg, send, done) => {
 			let NodeID;
 			let Endpoint;
 			let Args;
@@ -133,14 +123,15 @@ module.exports = (RED: NodeAPI) => {
 				return;
 			}
 
-			const CMD: InputMessage = {
+			const CMD = {
 				cmd: {
 					api: 'CC',
 					method: 'invokeCCAPI'
 				},
 				cmdProperties: {
 					nodeId: NodeID,
-					method: config.method
+					method: config.method,
+					commandClass: CommandClasses[config.commandClass]
 				}
 			};
 
@@ -148,14 +139,12 @@ module.exports = (RED: NodeAPI) => {
 				CMD.cmd.trackingToken = TrackingToken;
 			}
 
-			CMD.cmdProperties!.commandClass = CommandClasses[config.commandClass as keyof typeof CommandClasses];
-
-			if (Endpoint) {
-				CMD.cmdProperties!.endpoint = Endpoint;
+			if (Endpoint !== undefined) {
+				CMD.cmdProperties.endpoint = Endpoint;
 			}
 
 			if (Args) {
-				CMD.cmdProperties!.args = Args;
+				CMD.cmdProperties.args = Args;
 			}
 
 			send({ payload: CMD });
@@ -167,14 +156,13 @@ module.exports = (RED: NodeAPI) => {
 				case 'VALUE':
 					ValueAPI(msg, send, done);
 					break;
-
 				case 'CC':
 					CCAPI(msg, send, done);
 					break;
 			}
 		});
 
-		self.on('close', (_: boolean, done: () => void) => {
+		self.on('close', (_, done) => {
 			done();
 		});
 	};

@@ -1,19 +1,15 @@
-import { NodeAPI } from 'node-red';
-import { UserPayloadPackage, Type_ZWaveJSRuntime, MessageType } from '../types/Type_ZWaveJSRuntime';
-import { Type_ZWaveJSControllerConfig } from '../types/Type_ZWaveJSController';
-import { InputMessage, Type_ZWaveJSController } from '../types/Type_ZWaveJSController';
-import { getProfile } from '../lib/RequestResponseProfiles';
+const { getProfile } = require('./lib/RequestResponseProfiles');
 
-module.exports = (RED: NodeAPI) => {
-	const init = function (this: Type_ZWaveJSController, config: Type_ZWaveJSControllerConfig) {
+module.exports = (RED) => {
+	const init = function (config) {
 		const self = this;
 		RED.nodes.createNode(self, config);
 		self.config = config;
-		self.runtime = RED.nodes.getNode(self.config.runtimeId) as Type_ZWaveJSRuntime;
+		self.runtime = RED.nodes.getNode(self.config.runtimeId);
 
-		const callback = (Data: UserPayloadPackage) => {
+		const callback = (Data) => {
 			switch (Data.Type) {
-				case MessageType.STATUS:
+				case 'STATUS':
 					self.status(Data.Status);
 					if (Data.Status.clearTime) {
 						setTimeout(() => {
@@ -22,43 +18,46 @@ module.exports = (RED: NodeAPI) => {
 					}
 					break;
 
-				case MessageType.EVENT:
+				case 'EVENT':
 					self.send({ payload: Data.Event });
 					break;
 			}
 		};
+
 		self.runtime.registerControllerNode(self.id, callback);
 
-		self.on('close', (_: boolean, done: () => void) => {
+		self.on('close', (_, done) => {
 			self.runtime.deregisterControllerNode(self.id);
 			done();
 		});
 
-		const sendTrackingUpdate = (Req: InputMessage, Response: unknown) => {
+		const sendTrackingUpdate = (Req, Response) => {
 			if (Req.cmd.trackingToken !== undefined) {
 				const Timestamp = new Date().getTime();
 				const TrackingResponse = {
 					event: 'TRACKING_TOKEN_RETURN',
 					timestamp: Timestamp,
-					eventBody: { token: Req.cmd.trackingToken, response: Response }
+					eventBody: {
+						token: Req.cmd.trackingToken,
+						response: Response
+					}
 				};
 				self.send({ payload: TrackingResponse });
 			}
 		};
 
 		self.on('input', (msg, send, done) => {
-			const Req = msg.payload as InputMessage;
+			const Req = msg.payload;
 
 			if (Req.cmd) {
 				switch (Req.cmd.api) {
-					// Controller API
 					case 'CONTROLLER':
 						self.runtime
 							.controllerCommand(Req.cmd.method, Req.cmdProperties?.args)
 							.then((Result) => {
 								sendTrackingUpdate(Req, Result);
-								const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId) as UserPayloadPackage;
-								if (Return && Return.Type === MessageType.EVENT) {
+								const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId);
+								if (Return && Return.Type === 'EVENT') {
 									send({ payload: Return.Event });
 									done();
 								} else {
@@ -71,22 +70,21 @@ module.exports = (RED: NodeAPI) => {
 							});
 						break;
 
-					// Command Class API
 					case 'CC':
 						if (Req.cmdProperties?.commandClass && Req.cmdProperties?.method && Req.cmdProperties?.nodeId) {
 							self.runtime
 								.ccCommand(
 									Req.cmd.method,
-									Req.cmdProperties?.commandClass,
-									Req.cmdProperties?.method,
-									Req.cmdProperties?.nodeId,
-									Req.cmdProperties?.endpoint,
-									Req.cmdProperties?.args
+									Req.cmdProperties.commandClass,
+									Req.cmdProperties.method,
+									Req.cmdProperties.nodeId,
+									Req.cmdProperties.endpoint,
+									Req.cmdProperties.args
 								)
 								.then((Result) => {
 									sendTrackingUpdate(Req, Result);
-									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId) as UserPayloadPackage;
-									if (Return && Return.Type === MessageType.EVENT) {
+									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId);
+									if (Return && Return.Type === 'EVENT') {
 										send({ payload: Return.Event });
 										done();
 									} else {
@@ -98,11 +96,10 @@ module.exports = (RED: NodeAPI) => {
 									done(Error);
 								});
 						} else {
-							done(new Error('cmdProperties is either missing or has fewer requied properties.'));
+							done(new Error('cmdProperties is either missing or has fewer required properties.'));
 						}
 						break;
 
-					// Value API
 					case 'VALUE':
 						if (Req.cmdProperties?.nodeId && Req.cmdProperties?.valueId) {
 							self.runtime
@@ -115,8 +112,8 @@ module.exports = (RED: NodeAPI) => {
 								)
 								.then((Result) => {
 									sendTrackingUpdate(Req, Result);
-									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId) as UserPayloadPackage;
-									if (Return && Return.Type === MessageType.EVENT) {
+									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId);
+									if (Return && Return.Type === 'EVENT') {
 										send({ payload: Return.Event });
 										done();
 									} else {
@@ -128,7 +125,7 @@ module.exports = (RED: NodeAPI) => {
 									done(Error);
 								});
 						} else {
-							done(new Error('cmdProperties is either missing or has fewer requied properties.'));
+							done(new Error('cmdProperties is either missing or has fewer required properties.'));
 						}
 						break;
 
@@ -138,8 +135,8 @@ module.exports = (RED: NodeAPI) => {
 								.nodeCommand(Req.cmd.method, Req.cmdProperties.nodeId, Req.cmdProperties.value)
 								.then((Result) => {
 									sendTrackingUpdate(Req, Result);
-									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId) as UserPayloadPackage;
-									if (Return && Return.Type === MessageType.EVENT) {
+									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId);
+									if (Return && Return.Type === 'EVENT') {
 										send({ payload: Return.Event });
 										done();
 									} else {
@@ -160,5 +157,6 @@ module.exports = (RED: NodeAPI) => {
 			}
 		});
 	};
+
 	RED.nodes.registerType('zwavejs-controller', init);
 };

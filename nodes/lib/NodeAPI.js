@@ -1,16 +1,10 @@
-import { Driver } from 'zwave-js';
-import { CommandClasses } from '@zwave-js/core';
+const { CommandClasses } = require('@zwave-js/core');
 
-export const process = async (
-	DriverInstance: Driver,
-	Method: string,
-	NodeID: number,
-	Value?: unknown
-): Promise<unknown> => {
+const process = async function (DriverInstance, Method, NodeID, Value) {
 	if (Method === 'ping') {
 		const Node = DriverInstance.controller.nodes.get(NodeID);
 		if (Node) {
-			return DriverInstance.controller.nodes.get(NodeID)?.ping();
+			return Node.ping();
 		} else {
 			return Promise.reject(new Error(`Node ${NodeID} does not exist`));
 		}
@@ -20,7 +14,7 @@ export const process = async (
 		const Node = DriverInstance.controller.nodes.get(NodeID);
 		if (Node) {
 			try {
-				await Node.refreshInfo()
+				await Node.refreshInfo();
 				return true;
 			} catch (Err) {
 				return Promise.reject(Err);
@@ -34,12 +28,11 @@ export const process = async (
 		const Node = DriverInstance.controller.nodes.get(NodeID);
 		if (Node) {
 			try {
-				const AsString = Value as string;
-				Node.name = AsString;
+				Node.name = Value;
 				if (Node.supportsCC(CommandClasses['Node Naming and Location'])) {
-					Node.commandClasses['Node Naming and Location'].setName(AsString);
+					Node.commandClasses['Node Naming and Location'].setName(Value);
 				}
-				return AsString;
+				return Value;
 			} catch (Err) {
 				return Promise.reject(Err);
 			}
@@ -52,12 +45,11 @@ export const process = async (
 		const Node = DriverInstance.controller.nodes.get(NodeID);
 		if (Node) {
 			try {
-				const AsString = Value as string;
-				Node.location = AsString;
+				Node.location = Value;
 				if (Node.supportsCC(CommandClasses['Node Naming and Location'])) {
-					Node.commandClasses['Node Naming and Location'].setLocation(AsString);
+					Node.commandClasses['Node Naming and Location'].setLocation(Value);
 				}
-				return AsString;
+				return Value;
 			} catch (Err) {
 				return Promise.reject(Err);
 			}
@@ -68,3 +60,5 @@ export const process = async (
 
 	return Promise.reject(new Error('Invalid Method'));
 };
+
+module.exports = { process };

@@ -1,21 +1,11 @@
-import { getNodes, getValueDB } from '../lib/Fetchers';
-import {
-	AssociationAddress,
-	Driver,
-	ExclusionOptions,
-	InclusionOptions,
-	Message,
-	MessagePriority,
-	MessageType,
-	PlannedProvisioningEntry,
-	RFRegion
-} from 'zwave-js';
+const { getNodes, getValueDB } = require('./Fetchers');
+const { Message, MessagePriority, MessageType } = require('zwave-js');
 
-export const process = async (DriverInstance: Driver, Method: string, Args?: unknown[]): Promise<unknown> => {
+const process = async function (DriverInstance, Method, Args) {
 	if (Method === 'getAllAssociationGroups') {
 		try {
-			const Formated: { [Endpoint: number]: unknown } = {};
-			DriverInstance.controller.getAllAssociationGroups(Args?.[0] as number).forEach((M, I) => {
+			const Formated = {};
+			DriverInstance.controller.getAllAssociationGroups(...Args).forEach((M, I) => {
 				Formated[I] = Object.fromEntries(M);
 			});
 			return Formated;
@@ -26,16 +16,17 @@ export const process = async (DriverInstance: Driver, Method: string, Args?: unk
 
 	if (Method === 'getAssociationGroups') {
 		try {
-			return Object.fromEntries(DriverInstance.controller.getAssociationGroups(Args?.[0] as AssociationAddress));
+			return Object.fromEntries(DriverInstance.controller.getAssociationGroups(...Args));
 		} catch (Err) {
 			return Promise.reject(Err);
 		}
 	}
+	
 
 	if (Method === 'getAllAssociations') {
 		try {
-			const Formated: unknown[] = [];
-			DriverInstance.controller.getAllAssociations(Args?.[0] as number).forEach((M, AD) => {
+			const Formated = [];
+			DriverInstance.controller.getAllAssociations(...Args).forEach((M, AD) => {
 				Formated.push({
 					associationAddress: AD,
 					associations: Object.fromEntries(M)
@@ -47,9 +38,24 @@ export const process = async (DriverInstance: Driver, Method: string, Args?: unk
 		}
 	}
 
+	if (Method === 'addAssociations') {
+		try {
+			return DriverInstance.controller.addAssociations(...Args);
+		} catch (Err) {
+			return Promise.reject(Err);
+		}
+	}
+	if (Method === 'removeAssociations') {
+		try {
+			return DriverInstance.controller.removeAssociations(...Args);
+		} catch (Err) {
+			return Promise.reject(Err);
+		}
+	}
+
 	if (Method === 'getAssociations') {
 		try {
-			return Object.fromEntries(DriverInstance.controller.getAssociations(Args?.[0] as AssociationAddress));
+			return Object.fromEntries(DriverInstance.controller.getAssociations(...Args));
 		} catch (Err) {
 			return Promise.reject(Err);
 		}
@@ -60,7 +66,7 @@ export const process = async (DriverInstance: Driver, Method: string, Args?: unk
 	}
 
 	if (Method === 'setPowerlevel') {
-		return DriverInstance.controller.setPowerlevel(Args?.[0] as number, Args?.[1] as number);
+		return DriverInstance.controller.setPowerlevel(...Args);
 	}
 
 	if (Method === 'getRFRegion') {
@@ -68,11 +74,11 @@ export const process = async (DriverInstance: Driver, Method: string, Args?: unk
 	}
 
 	if (Method === 'setRFRegion') {
-		return DriverInstance.controller.setRFRegion(Args?.[0] as RFRegion);
+		return DriverInstance.controller.setRFRegion(...Args);
 	}
 
 	if (Method === 'beginInclusion') {
-		return DriverInstance.controller.beginInclusion(Args?.[0] as InclusionOptions);
+		return DriverInstance.controller.beginInclusion(...Args);
 	}
 
 	if (Method === 'stopInclusion') {
@@ -80,7 +86,7 @@ export const process = async (DriverInstance: Driver, Method: string, Args?: unk
 	}
 
 	if (Method === 'beginExclusion') {
-		return DriverInstance.controller.beginExclusion(Args?.[0] as ExclusionOptions);
+		return DriverInstance.controller.beginExclusion();
 	}
 
 	if (Method === 'stopExclusion') {
@@ -89,7 +95,7 @@ export const process = async (DriverInstance: Driver, Method: string, Args?: unk
 
 	if (Method === 'getValueDB') {
 		try {
-			return getValueDB(DriverInstance, Args as number[]);
+			return getValueDB(DriverInstance, Args);
 		} catch (Err) {
 			return Promise.reject(Err);
 		}
@@ -105,7 +111,7 @@ export const process = async (DriverInstance: Driver, Method: string, Args?: unk
 
 	if (Method === 'provisionSmartStartNode') {
 		try {
-			return DriverInstance.controller.provisionSmartStartNode(Args?.[0] as PlannedProvisioningEntry)
+			return DriverInstance.controller.provisionSmartStartNode(...Args);
 		} catch (Err) {
 			return Promise.reject(Err);
 		}
@@ -113,7 +119,7 @@ export const process = async (DriverInstance: Driver, Method: string, Args?: unk
 
 	if (Method === 'unprovisionSmartStartNode') {
 		try {
-			return DriverInstance.controller.unprovisionSmartStartNode(Args?.[0] as string)
+			return DriverInstance.controller.unprovisionSmartStartNode(...Args);
 		} catch (Err) {
 			return Promise.reject(Err);
 		}
@@ -122,8 +128,8 @@ export const process = async (DriverInstance: Driver, Method: string, Args?: unk
 	if (Method === 'proprietaryFunction') {
 		const ZWaveMessage = new Message(DriverInstance, {
 			type: MessageType.Request,
-			functionType: Args?.[0] as number,
-			payload: Args?.[1] as Buffer
+			functionType: Args[0],
+			payload: Args[1]
 		});
 
 		const MessageSettings = {
@@ -136,3 +142,5 @@ export const process = async (DriverInstance: Driver, Method: string, Args?: unk
 
 	return Promise.reject(new Error('Invalid Method'));
 };
+
+module.exports = { process };
