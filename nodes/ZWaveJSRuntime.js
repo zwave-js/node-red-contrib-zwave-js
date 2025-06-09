@@ -104,9 +104,9 @@ module.exports = function (RED) {
 			return Promise.reject('Driver Instance');
 		};
 
-		self.nodeCommand = function (Method, NodeID, Value) {
+		self.nodeCommand = function (Method, NodeID, Value, Args) {
 			if (self.driverInstance) {
-				return NodeAPI_Process(self.driverInstance, Method, NodeID, Value);
+				return NodeAPI_Process(self.driverInstance, Method, NodeID, Value, Args);
 			}
 			return Promise.reject('Driver Instance');
 		};
@@ -258,8 +258,20 @@ module.exports = function (RED) {
 
 					switch (TargetAPI) {
 						case 'NODE':
+							if (Method === 'checkLifelineHealth') {
+								const CB = (round, totalRounds, lastRating, lastResult) => {
+									RED.comms.publish(
+										`zwave-js/ui/${self.id}/nodes/healthcheck`,
+										{ nodeId: request.body.nodeId, check: { round, totalRounds, lastRating, lastResult } },
+										false
+									);
+								};
+								request.body.args = [5, CB];
+							} else {
+								request.body.args = undefined;
+							}
 							self
-								.nodeCommand(Method, request.body.nodeId, request.body.value)
+								.nodeCommand(Method, request.body.nodeId, request.body.value, request.body.args)
 								.then((R) => {
 									response.json({ callSuccess: true, response: R });
 								})
@@ -368,7 +380,7 @@ module.exports = function (RED) {
 				validateDSKAndEnterPIN: validateDSKAndEnterPIN,
 				abort: s2Void
 			},
-			disableOptimisticValueUpdate: !self.config.disableOptimisticValueUpdate,
+			disableOptimisticValueUpdate: !self.config.disableOptimisticValueUpdate
 		};
 
 		if (self.config.storage_deviceConfigPriorityDir) {

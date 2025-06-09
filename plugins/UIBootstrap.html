@@ -224,7 +224,6 @@
 			<tr>
 				<td>Status</td><td>{{status}}</td>
 			</tr>
-			
 		</table>
 	</fieldset>
 
@@ -240,7 +239,7 @@
 				</tr>
 		</table>
 		<div>
-			<button onclick="ZWaveJS.SetNameLocation()">Save Changes</button>
+			<button onclick="ZWaveJS.SetNameLocation(this)">Save Changes</button>
 		</div>
 	</fieldset>
 </script>
@@ -263,11 +262,13 @@
 
 		<table class="zwjs-table" id="zwjs-asso-mappings" horizontal>
 				<tr>
-					<td style="text-align:center">Target Node</td><td style="text-align:center">Target Endpoint</td><td style="text-align:center">Delete</td>
+					<td style="text-align:center">Target Node</td>
+					<td style="text-align:center">Target Endpoint</td>
+					<td style="text-align:center">Delete</td>
 				</tr>
 		</table>
 		<div>
-			<button onclick="ZWaveJS.PreppNewAssociation()">Add Association</button> <button onclick="ZWaveJS.CommitAssociations()">Commit Changes</button><button style="background-color:red" onclick="ZWaveJS.ResetAllAssociations()">Wipe All Associations</button>
+			<button onclick="ZWaveJS.PreppNewAssociation()">Add Association</button> <button onclick="ZWaveJS.CommitAssociations(this)">Commit Changes</button><button style="background-color:red" onclick="ZWaveJS.ResetAllAssociations(this)">Wipe All Associations</button>
 		</div>
 	</fieldset>
 </script>
@@ -276,6 +277,19 @@
 <script type="text/template" id="ZWJS_TPL_Tray-Node-HealthCheck">
 	<fieldset class=zwjs-fieldset>
 		<div class="zwjs-hint">This should <strong>NOT</strong> be done while there is a lot of traffic on the network because it will negatively impact the test results</div>
+			<table class="zwjs-table" id="zwjs-node-health-check" horizontal>
+				<tr>
+					<td style="text-align:center">Rating</td>
+					<td style="text-align:center">Failed Pings</td>
+					<td style="text-align:center">Latency</td>
+					<td style="text-align:center">Neighbors</td>
+					<td style="text-align:center">Min Power Level</td>
+					<td style="text-align:center">SNR Margin</td>
+				</tr>
+		</table>
+		<div>
+			<button onclick="ZWaveJS.CheckNodeHealth(this)">Begin (5 Rounds)</button>
+		</div>
 	</fieldset>
 </script>
 

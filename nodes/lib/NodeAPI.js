@@ -1,10 +1,19 @@
 const { CommandClasses } = require('@zwave-js/core');
 
-const process = async function (DriverInstance, Method, NodeID, Value) {
+const process = async function (DriverInstance, Method, NodeID, Value, Args) {
 	if (Method === 'ping') {
 		const Node = DriverInstance.controller.nodes.get(NodeID);
 		if (Node) {
 			return Node.ping();
+		} else {
+			return Promise.reject(new Error(`Node ${NodeID} does not exist`));
+		}
+	}
+
+	if (Method === 'checkLifelineHealth') {
+		const Node = DriverInstance.controller.nodes.get(NodeID);
+		if (Node) {
+			return Node.checkLifelineHealth(...Args);
 		} else {
 			return Promise.reject(new Error(`Node ${NodeID} does not exist`));
 		}

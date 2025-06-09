@@ -111,6 +111,7 @@ const ZWaveJS = (function () {
 			return new Promise((resolve, reject) => {
 				$.ajax({
 					type: 'GET',
+					timeout: 0,
 					url: URL || `zwave-js/ui/${networkId}/${API}/${Method}`,
 					success: (data) => resolve(data),
 					error: (jqXHR, textStatus, errorThrown) =>
@@ -123,6 +124,7 @@ const ZWaveJS = (function () {
 			return new Promise((resolve, reject) => {
 				$.ajax({
 					type: 'POST',
+					timeout: 0,
 					data: JSON.stringify(Data),
 					url: URL || `zwave-js/ui/${networkId}/${API}/${Method}`,
 					success: (data) => resolve(data),
@@ -133,6 +135,16 @@ const ZWaveJS = (function () {
 				});
 			});
 		}
+	};
+
+	const DisableButton = (Button) => {
+		$(Button).data('original_text', $(Button).text());
+		$(Button).text('Please wait...');
+		$(Button).prop('disabled', true);
+	};
+	const EnableButton = (Button) => {
+		$(Button).text($(Button).data('original_text'));
+		$(Button).prop('disabled', false);
 	};
 
 	const StartExclusion = () => {
@@ -168,8 +180,7 @@ const ZWaveJS = (function () {
 	const SubmitDSK = (Button) => {
 		Runtime.Post(undefined, undefined, [$('#zwjs-dsk').val()], `zwave-js/ui/${networkId}/s2/dsk`).then((R) => {
 			if (R.callSuccess) {
-				$(Button).text('Please wait...');
-				$(Button).prop('disabled', true);
+				DisableButton(Button);
 			} else {
 				alert(R.response);
 			}
@@ -177,8 +188,7 @@ const ZWaveJS = (function () {
 	};
 
 	const SubmitProvisioningEntry = (Button) => {
-		$(Button).text('Please wait...');
-		$(Button).prop('disabled', true);
+		DisableButton(Button);
 
 		const Entry = JSON.parse(atob($('#zwjs-qrdata').attr('data-entry')));
 		Entry.securityClasses = [];
@@ -239,8 +249,7 @@ const ZWaveJS = (function () {
 
 		Runtime.Post(undefined, undefined, [Granted], `zwave-js/ui/${networkId}/s2/grant`).then((R) => {
 			if (R.callSuccess) {
-				$(Button).text('Please wait...');
-				$(Button).prop('disabled', true);
+				DisableButton(Button);
 			} else {
 				alert(R.response);
 			}
@@ -264,11 +273,64 @@ const ZWaveJS = (function () {
 		}
 	};
 
-	const SetNameLocation = () => {
+	const CheckNodeHealth = (Button) => {
+		DisableButton(Button);
+		const AddTesting = () => {
+			$('#zwjs-node-health-check').append(
+				`<tr><td style="text-align:center"><div class="zwjs-rating" wait>Testing...</div></td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td></tr>`
+			);
+		};
+
+		const RemoveTesting = () => {
+			$('#zwjs-node-health-check tr:last').remove();
+		};
+
+		const FeedBack = (topic, data) => {
+			RemoveTesting();
+			const Rating = () => {
+				if (data.check.lastResult.rating > 5) {
+					return `<div class="zwjs-rating" good>${data.check.lastResult.rating}/10</div>`;
+				}
+				if (data.check.lastResult.rating > 3) {
+					return `<div class="zwjs-rating" warn>${data.check.lastResult.rating}/10</div>`;
+				}
+				return `<div class="zwjs-rating" bad>${data.check.lastResult.rating}/10</div>`;
+			};
+
+			$('#zwjs-node-health-check').append(
+				`<tr><td style="text-align:center">${Rating()}</td><td style="text-align:center">${data.check.lastResult.failedPingsNode}</td><td style="text-align:center">${data.check.lastResult.latency} ms</td><td style="text-align:center">${data.check.lastResult.numNeighbors}</td><td style="text-align:center">-${data.check.lastResult.minPowerlevel} dBm</td><td style="text-align:center">${data.check.lastResult.snrMargin} dBm</td></tr>`
+			);
+			AddTesting();
+		};
+
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/healthcheck`, FeedBack);
+		AddTesting();
+		Runtime.Post('NODE', 'checkLifelineHealth', { nodeId: selectedNode.nodeId })
+			.then((data) => {
+				if (data.callSuccess) {
+					setTimeout(() => {
+						EnableButton(Button);
+						RemoveTesting();
+						RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/healthcheck`, FeedBack);
+					}, 250);
+				} else {
+					alert(data.response);
+				}
+			})
+			.catch((Error) => {
+				EnableButton(Button);
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/healthcheck`, FeedBack);
+				alert(Error.message);
+			});
+	};
+
+	const SetNameLocation = (Button) => {
+		DisableButton(Button);
 		Runtime.Post('NODE', 'setName', { nodeId: selectedNode.nodeId, value: $('#zwjs-node-edit-name').val() })
 			.then((data) => {
 				if (!data.callSuccess) {
 					alert(data.response);
+					EnableButton(Button);
 				} else {
 					Runtime.Post('NODE', 'setLocation', {
 						nodeId: selectedNode.nodeId,
@@ -277,6 +339,7 @@ const ZWaveJS = (function () {
 						.then((data) => {
 							if (!data.callSuccess) {
 								alert(data.response);
+								EnableButton(Button);
 							} else {
 								const ND = $('#zwjs-node-list')
 									.treeList('data')
@@ -288,9 +351,11 @@ const ZWaveJS = (function () {
 								nodeSelected(undefined, { nodeData: ND });
 
 								alert('Name & Location Set Successfully!');
+								EnableButton(Button);
 							}
 						})
 						.catch((Error) => {
+							EnableButton(Button);
 							alert(Error.message);
 						});
 				}
@@ -301,12 +366,13 @@ const ZWaveJS = (function () {
 	};
 
 	let AssociationGroups;
-	const ResetAllAssociations = () => {
+	const ResetAllAssociations = (Button) => {
 		if (
 			confirm(
 				'Are you sure you wish to wipe all Associations? this includes the LifeLine associations, you will need to re-create them after.'
 			)
 		) {
+			DisableButton(Button);
 			Runtime.Post('CONTROLLER', 'getAllAssociations', [selectedNode.nodeId])
 				.then((response) => {
 					if (response.callSuccess) {
@@ -321,17 +387,21 @@ const ZWaveJS = (function () {
 										await Runtime.Post('CONTROLLER', 'removeAssociations', Params);
 									} catch (Error) {
 										alert(Error.message);
+										EnableButton(Button);
 									}
 								}
 							});
 						});
 						alert('All associations successfully removed!');
+						EnableButton(Button);
 						processAssociationGPSelect();
 					} else {
 						alert(response.response);
+						EnableButton(Button);
 					}
 				})
 				.catch((Error) => {
+					EnableButton(Button);
 					alert(Error.message);
 				});
 		}
@@ -342,7 +412,8 @@ const ZWaveJS = (function () {
 		$(El).closest('tr').css({ textDecoration: 'line-through', color: 'silver' });
 	};
 
-	const CommitAssociations = () => {
+	const CommitAssociations = (Button) => {
+		DisableButton(Button);
 		const Addresses = [];
 		$("[data-role='zwjs-remove-association']").each(function (index) {
 			const Node = parseInt($(this).find('td').first().text());
@@ -362,20 +433,22 @@ const ZWaveJS = (function () {
 			Runtime.Post('CONTROLLER', 'removeAssociations', Params)
 				.then((response) => {
 					if (response.callSuccess) {
-						CommitAssociationsAdd();
+						CommitAssociationsAdd(Button);
 					} else {
+						EnableButton(Button);
 						alert(response.response);
 					}
 				})
 				.catch((Error) => {
 					alert(Error.message);
+					EnableButton(Button);
 				});
 		} else {
-			CommitAssociationsAdd();
+			CommitAssociationsAdd(Button);
 		}
 	};
 
-	const CommitAssociationsAdd = () => {
+	const CommitAssociationsAdd = (Button) => {
 		const Addresses = [];
 		$("[data-role='zwjs-new-association']").each(function (index) {
 			const Node = parseInt($(this).find("[data-role='zwjs-node']").first().val());
@@ -396,8 +469,10 @@ const ZWaveJS = (function () {
 				.then((response) => {
 					if (response.callSuccess) {
 						alert('Associations have been successfully updated!');
+						EnableButton(Button);
 						processAssociationGPSelect();
 					} else {
+						EnableButton(Button);
 						alert(response.response);
 					}
 				})
@@ -406,6 +481,7 @@ const ZWaveJS = (function () {
 				});
 		} else {
 			alert('Associations have been successfully updated!');
+			EnableButton(Button);
 			processAssociationGPSelect();
 		}
 	};
@@ -1080,6 +1156,7 @@ const ZWaveJS = (function () {
 		PreppNewAssociation,
 		CommitAssociations,
 		ResetAllAssociations,
-		MarkAssoDelete
+		MarkAssoDelete,
+		CheckNodeHealth
 	};
 })();

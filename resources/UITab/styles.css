@@ -235,3 +235,31 @@ i.zwjs-state-green {
 	stroke: red !important;
 	stroke-width: 20 !important;
 }
+
+.zwjs-rating[good] {
+	background-color: rgb(135, 169, 128);
+	padding: 2px;
+	border-radius: 4px;
+	color: white;
+}
+
+.zwjs-rating[warn] {
+	background-color: orange;
+	padding: 2px;
+	border-radius: 4px;
+	color: black;
+}
+
+.zwjs-rating[bad] {
+	background-color: red;
+	padding: 2px;
+	border-radius: 4px;
+	color: white;
+}
+
+.zwjs-rating[wait] {
+	background-color: grey;
+	padding: 2px;
+	border-radius: 4px;
+	color: white;
+}
