@@ -275,6 +275,7 @@ const ZWaveJS = (function () {
 
 	const CheckNodeHealth = (Button) => {
 		DisableButton(Button);
+		$("#zwjs-node-health-check").find("tr:gt(0)").remove();
 		const AddTesting = () => {
 			$('#zwjs-node-health-check').append(
 				`<tr><td style="text-align:center"><div class="zwjs-rating" wait>Testing...</div></td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td></tr>`
