@@ -13,6 +13,7 @@ const ZWaveJS = (function () {
 	let TPL_SidePanel = undefined;
 	let TPL_ControllerManagement = undefined;
 	let TPL_NodeManagement = undefined;
+	let TPL_ValueManagement = undefined;
 
 	// Runtime event Callbacks
 	const commsStatus = (topic, data) => {
@@ -147,6 +148,32 @@ const ZWaveJS = (function () {
 		$(Button).prop('disabled', false);
 	};
 
+	const DecodeObject = (Item) => {
+		return JSON.parse(atob(Item));
+	};
+
+	const JSONFormatter = {};
+	JSONFormatter.json = {
+		replacer: function (match, pIndent, pKey, pVal, pEnd) {
+			var key = '<span class=zwjs-json-key>';
+			var val = '<span class=zwjs-json-value>';
+			var str = '<span class=zwjs-json-string>';
+			var r = pIndent || '';
+			if (pKey) r = r + key + pKey + '</span>';
+			if (pVal) r = r + (pVal[0] === '"' ? str : val) + pVal + '</span>';
+			return r + (pEnd || '');
+		},
+		prettyPrint: function (obj) {
+			var jsonLine = /^( *)("[\w]+": )?("[^"]*"|[\w.+-]*)?([,[{])?$/gm;
+			return JSON.stringify(obj, null, 3)
+				.replace(/&/g, '&amp;')
+				.replace(/\\"/g, '&quot;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(jsonLine, JSONFormatter.json.replacer);
+		}
+	};
+
 	const StartExclusion = () => {
 		Runtime.Post('CONTROLLER', 'beginExclusion').then((R) => {
 			if (R.callSuccess) {
@@ -208,10 +235,9 @@ const ZWaveJS = (function () {
 	};
 
 	const SetPEActive = (El, Entry) => {
-		Entry = JSON.parse(atob(Entry));
+		Entry = DecodeObject(Entry);
 		delete Entry.checked;
 		delete Entry.shortDSK;
-		delete Entry.B64;
 		Entry.status = $(El).prop('checked') ? 0 : 1;
 
 		Runtime.Post('CONTROLLER', 'provisionSmartStartNode', [Entry]).then((R) => {
@@ -223,10 +249,9 @@ const ZWaveJS = (function () {
 
 	const DeletePE = (El, Entry) => {
 		if (confirm('Are you sure you wish to delete this Provisioning Entry? Note: it will not exclude the device.')) {
-			Entry = JSON.parse(atob(Entry));
+			Entry = DecodeObject(Entry);
 			delete Entry.checked;
 			delete Entry.shortDSK;
-			delete Entry.B64;
 			Runtime.Post('CONTROLLER', 'unprovisionSmartStartNode', [Entry.dsk]).then((R) => {
 				if (R.callSuccess) {
 					$(El).parent().parent().remove();
@@ -275,7 +300,7 @@ const ZWaveJS = (function () {
 
 	const CheckNodeHealth = (Button) => {
 		DisableButton(Button);
-		$("#zwjs-node-health-check").find("tr:gt(0)").remove();
+		$('#zwjs-node-health-check').find('tr:gt(0)').remove();
 		const AddTesting = () => {
 			$('#zwjs-node-health-check').append(
 				`<tr><td style="text-align:center"><div class="zwjs-rating" wait>Testing...</div></td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td></tr>`
@@ -671,7 +696,6 @@ const ZWaveJS = (function () {
 							if (E.status === 0) {
 								E.checked = 'checked';
 							}
-							E.B64 = btoa(JSON.stringify(E));
 						});
 						resolve({ entries: R.response });
 					} else {
@@ -690,7 +714,7 @@ const ZWaveJS = (function () {
 		}
 
 		let Data = {};
-		if (FunctionIDORObject && typeof FunctionIDORObject !== 'object') {
+		if (FunctionIDORObject && RenderFunctions[FunctionIDORObject]) {
 			try {
 				Data = await RenderFunctions[FunctionIDORObject]();
 			} catch (Response) {
@@ -699,6 +723,8 @@ const ZWaveJS = (function () {
 			}
 		} else if (FunctionIDORObject && typeof FunctionIDORObject === 'object') {
 			Data = FunctionIDORObject;
+		} else if (FunctionIDORObject && typeof FunctionIDORObject === 'string') {
+			Data = DecodeObject(FunctionIDORObject);
 		}
 
 		const Output = AdvancedPanels.find((P) => P.id === TemplateID).compiled(Data);
@@ -761,7 +787,7 @@ const ZWaveJS = (function () {
 							}
 						],
 						open: function (tray) {
-							var trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
+							const trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
 							const State = {
 								Network: $('#zwjs-controller-info').text(),
 								Status: $('#zwjs-controller-status').text()
@@ -818,7 +844,7 @@ const ZWaveJS = (function () {
 							}
 						],
 						open: function (tray) {
-							var trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
+							const trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
 							const State = {
 								NodeID: $('#zwjs-node-info-id').text(),
 								Status: $('#zwjs-node-status').text(),
@@ -828,7 +854,6 @@ const ZWaveJS = (function () {
 						}
 					};
 					RED.tray.show(Options);
-
 					setTimeout(() => {
 						$('.zwjs-tray-menu > div[default]').trigger('click');
 					}, 250);
@@ -1013,6 +1038,100 @@ const ZWaveJS = (function () {
 		});
 
 		$('#zwjs-cc-list').treeList('data', Items);
+		$('#zwjs-cc-list').on('treelistselect', function (event, item) {
+			CloseTray();
+			const Options = {
+				width: 700,
+				title: 'Value Management',
+				buttons: [
+					{
+						id: 'zwjs-tray-about',
+						text: 'About Zwave JS',
+						click: function () {
+							CloseTray();
+						}
+					},
+					{
+						id: 'zwjs-tray-close',
+						text: 'Close',
+						click: function () {
+							CloseTray();
+						}
+					}
+				],
+				open: function (tray) {
+					const trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
+
+					let Property;
+					if (typeof item.valueId.property === 'number') {
+						Property = `0x${parseInt(item.valueId.property).toString(16).padStart(2, '0').toUpperCase()}`;
+					} else {
+						Property = item.valueId.property;
+					}
+
+					if (item.valueId.propertyKey) {
+						if (typeof item.valueId.propertyKey === 'number') {
+							Property += ` / 0x${parseInt(item.valueId.propertyKey).toString(16).padStart(2, '0').toUpperCase()}`;
+						} else {
+							Property += ` / ${item.valueId.propertyKey}`;
+						}
+					}
+
+					const State = {
+						CCID: `0x${parseInt(item.valueId.commandClass).toString(16).padStart(2, '0').toUpperCase()}`,
+						CCName: item.valueId.commandClassName,
+						ValueLabel: item.label,
+						NodeID: selectedNode.nodeId,
+						ValueID: item.valueId,
+						MetaData: item.metadata,
+						Property: Property
+					};
+
+					delete State.ValueID.commandClassName;
+					delete State.ValueID.propertyName;
+					delete State.ValueID.propertyKeyName;
+
+					State.examples = {
+						nocmd: {
+							payload: {
+								cmd: {
+									api: 'VALUE'
+								},
+								cmdProperties: {
+									nodeId: selectedNode.nodeId,
+									valueId: State.ValueID
+								}
+							}
+						},
+						cmd: {
+							topic: selectedNode.nodeId,
+							valueId: State.ValueID
+						}
+					};
+					if (State.MetaData.writeable) {
+						State.examples.nocmd.payload.cmd.method = 'setValue | getValue';
+						State.examples.nocmd.payload.cmdProperties.value = 'Some Value (setValue Only)';
+						State.examples.nocmd.payload.cmdProperties.setValueOptions = {
+							transitionDuration: '5s'
+						};
+
+						State.examples.cmd.payload = 'Some Value (Set Value Only)';
+						State.examples.cmd.payload.options = {
+							transitionDuration: '5s'
+						};
+					} else {
+						State.examples.nocmd.payload.cmd.method = 'getValue';
+					}
+
+					trayBody.append(TPL_ValueManagement(State));
+
+					setTimeout(() => {
+						$('.zwjs-tray-menu > div[default]').trigger('click');
+					}, 250);
+				}
+			};
+			RED.tray.show(Options);
+		});
 	};
 
 	// Node Selected
@@ -1079,10 +1198,19 @@ const ZWaveJS = (function () {
 
 	// Init
 	const init = () => {
+		Handlebars.registerHelper('json', function (context) {
+			return btoa(JSON.stringify(context));
+		});
+
+		Handlebars.registerHelper('pretty', function (context) {
+			return JSONFormatter.json.prettyPrint(context);
+		});
+
 		// Templates
 		TPL_SidePanel = Handlebars.compile($('#ZWJS_TPL_SidePanel').html());
 		TPL_ControllerManagement = Handlebars.compile($('#ZWJS_TPL_Tray-Controller').html());
 		TPL_NodeManagement = Handlebars.compile($('#ZWJS_TPL_Tray-Node').html());
+		TPL_ValueManagement = Handlebars.compile($('#ZWJS_TPL_Tray-Node-Value').html());
 
 		// Container
 		const Content = $('<div>').addClass('red-ui-sidebar-info').css({

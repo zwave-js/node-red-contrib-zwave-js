@@ -117,6 +117,8 @@
 #zwjs-advanced-content {
 	display: inline-block;
 	width: calc(100% - 250px);
+	overflow: scroll;
+	height: calc(90vh - 145px);
 
 	vertical-align: top;
 	padding: 20px;
@@ -263,3 +265,16 @@ i.zwjs-state-green {
 	border-radius: 4px;
 	color: white;
 }
+
+.zwjs-json-key {
+	color: rgb(199, 48, 53);
+}
+
+.zwjs-json-value {
+	color: rgb(243, 135, 48);
+}
+
+.zwjs-json-string {
+	color: rgb(130, 152, 52);
+}
+
