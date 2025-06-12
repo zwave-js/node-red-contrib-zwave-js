@@ -2,6 +2,14 @@ const { getNodes, getValueDB } = require('./Fetchers');
 const { Message, MessagePriority, MessageType } = require('zwave-js');
 
 const process = async function (DriverInstance, Method, Args) {
+	if (Method === 'beginJoiningNetwork') {
+		return DriverInstance.controller.beginJoiningNetwork(...Args);
+	}
+
+	if (Method === 'beginLeavingNetwork') {
+		return DriverInstance.controller.beginLeavingNetwork();
+	}
+
 	if (Method === 'getAllAssociationGroups') {
 		try {
 			const Formated = {};
@@ -21,7 +29,6 @@ const process = async function (DriverInstance, Method, Args) {
 			return Promise.reject(Err);
 		}
 	}
-	
 
 	if (Method === 'getAllAssociations') {
 		try {

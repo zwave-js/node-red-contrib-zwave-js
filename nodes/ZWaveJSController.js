@@ -1,4 +1,8 @@
 const { getProfile } = require('./lib/RequestResponseProfiles');
+const AllowedControllerCommands = require('./lib/AllowedUsersCommands').Controller;
+const AllowedNodeCommands = require('./lib/AllowedUsersCommands').Node;
+const AllowedValueCommands = require('./lib/AllowedUsersCommands').Value;
+const AllowedCCCommands = require('./lib/AllowedUsersCommands').CC;
 
 module.exports = (RED) => {
 	const init = function (config) {
@@ -52,6 +56,10 @@ module.exports = (RED) => {
 			if (Req.cmd) {
 				switch (Req.cmd.api) {
 					case 'CONTROLLER':
+						if (!AllowedControllerCommands.includes(Req.cmd.method)) {
+							done(new Error('Sorry! This method is limited to the UI only, or is an invalid method.'));
+							return;
+						}
 						self.runtime
 							.controllerCommand(Req.cmd.method, Req.cmdProperties?.args)
 							.then((Result) => {
@@ -71,6 +79,10 @@ module.exports = (RED) => {
 						break;
 
 					case 'CC':
+						if (!AllowedCCCommands.includes(Req.cmd.method)) {
+							done(new Error('Sorry! This method is limited to the UI only, or is an invalid method.'));
+							return;
+						}
 						if (Req.cmdProperties?.commandClass && Req.cmdProperties?.method && Req.cmdProperties?.nodeId) {
 							self.runtime
 								.ccCommand(
@@ -101,6 +113,10 @@ module.exports = (RED) => {
 						break;
 
 					case 'VALUE':
+						if (!AllowedValueCommands.includes(Req.cmd.method)) {
+							done(new Error('Sorry! This method is limited to the UI only, or is an invalid method.'));
+							return;
+						}
 						if (Req.cmdProperties?.nodeId && Req.cmdProperties?.valueId) {
 							self.runtime
 								.valueCommand(
@@ -130,6 +146,10 @@ module.exports = (RED) => {
 						break;
 
 					case 'NODE':
+						if (!AllowedNodeCommands.includes(Req.cmd.method)) {
+							done(new Error('Sorry! This method is limited to the UI only, or is an invalid method.'));
+							return;
+						}
 						if (Req.cmdProperties?.nodeId) {
 							self.runtime
 								.nodeCommand(Req.cmd.method, Req.cmdProperties.nodeId, Req.cmdProperties.value)

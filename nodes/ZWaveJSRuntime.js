@@ -127,15 +127,15 @@ module.exports = function (RED) {
 				Name = Name.replace(/ /g, '_');
 
 				const API = {
-					Driver: this.driverInstance,
+					Nodes: this.driverInstance.controller.nodes,
 					toJSON: function () {
 						return {
-							Driver: 'Sorry, The Driver cannot be represented here. It can only be used by Function nodes.'
+							Nodes: 'Sorry, The Nodes collection cannot be represented here. It can only be used by Function nodes.'
 						};
 					}
 				};
 
-				Object.defineProperty(API, 'Driver', {
+				Object.defineProperty(API, 'Nodes', {
 					writable: false
 				});
 
@@ -266,12 +266,12 @@ module.exports = function (RED) {
 										false
 									);
 								};
-								request.body.args = [5, CB];
+								request.body = [5, CB];
 							} else {
-								request.body.args = undefined;
+								request.body = undefined;
 							}
 							self
-								.nodeCommand(Method, request.body.nodeId, request.body.value, request.body.args)
+								.nodeCommand(Method, request.body.nodeId, request.body.value, request.body)
 								.then((R) => {
 									response.json({ callSuccess: true, response: R });
 								})
@@ -291,6 +291,25 @@ module.exports = function (RED) {
 							break;
 
 						case 'CONTROLLER':
+							if (Method === 'beginJoiningNetwork') {
+								const options = {
+									strategy: 0,
+									userCallbacks: {
+										showDSK: (DSK) => {
+											RED.comms.publish(
+												`zwave-js/ui/${self.id}/controller/dsk`,
+												{ nodeId: request.body.nodeId, check: { round, totalRounds, lastRating, lastResult } },
+												false
+											);
+										},
+										done: () => {}
+									}
+								};
+
+								request.body = [options];
+							} else {
+								request.body = undefined;
+							}
 							self
 								.controllerCommand(Method, request.body)
 								.then((R) => {

@@ -24,6 +24,9 @@ const getProfile = (Name, Result, NodeID) => {
 	if (Name === 'pollValue') return makeEvent('POLL_VALUE_RESPONSE');
 	if (Name === 'getValueDB') return makeEvent('VALUE_DB');
 	if (Name === 'getNodes') return makeEvent('NODE_LIST');
+	if (Name === 'setValue') return makeEvent('SET_VALUE_RESPONSE');
+	if (Name === 'refreshInfo') return makeEvent('REFRESH_INFO_RESPONSE');
+	if (Name === 'proprietaryFunction') return makeEvent('PROPRIETARY_FUNCTION_RESULT');
 
 	return undefined;
 };
