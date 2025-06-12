@@ -310,6 +310,7 @@ module.exports = function (RED) {
 							} else {
 								request.body = undefined;
 							}
+							console.log(request.body)
 							self
 								.controllerCommand(Method, request.body)
 								.then((R) => {
@@ -469,12 +470,12 @@ module.exports = function (RED) {
 		// Driver callback subscriptions that occure after driver ready
 		const wireSubDriverEvents = () => {
 			// Joined As Slave
-			self.driverInstance?.on(event_NetworkJoined.driverName, () => {
+			self.driverInstance?.controller.on(event_NetworkJoined.driverName, () => {
 				RED.comms.publish(`zwave-js/ui/${self.id}/controller/slave/joined`, {}, false);
 			});
 
 			// Left As Slave
-			self.driverInstance?.on(event_NetworkLeft.driverName, () => {
+			self.driverInstance?.controller.on(event_NetworkLeft.driverName, () => {
 				RED.comms.publish(`zwave-js/ui/${self.id}/controller/slave/left`, {}, false);
 			});
 

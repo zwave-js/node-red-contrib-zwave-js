@@ -193,7 +193,7 @@ const ZWaveJS = (function () {
 
 	const JoinAsSlave = (Button) => {
 		DisableButton(Button);
-		Runtime.Post('CONTROLLER', 'beginJoiningNetwork').then((R) => {
+		Runtime.Post('CONTROLLER', 'beginJoiningNetwork', {}).then((R) => {
 			if (!R.callSuccess) {
 				EnableButton(Button);
 				alert(R.response);
@@ -202,7 +202,8 @@ const ZWaveJS = (function () {
 	};
 
 	const LeaveAsSlave = (Button) => {
-		Runtime.Post('CONTROLLER', 'beginLeavingNetwork').then((R) => {
+		DisableButton(Button);
+		Runtime.Post('CONTROLLER', 'beginLeavingNetwork', {}).then((R) => {
 			if (!R.callSuccess) {
 				EnableButton(Button);
 				alert(R.response);
