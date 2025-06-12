@@ -50,6 +50,8 @@ const event_InterviewFailed = new SanitizedEventName('interview failed');
 const event_InterviewCompleted = new SanitizedEventName('interview completed');
 const event_Ready = new SanitizedEventName('ready');
 const event_RebuildRoutesProgress = new SanitizedEventName('rebuild routes progress');
+const event_NetworkJoined = new SanitizedEventName('network joined');
+const event_NetworkLeft = new SanitizedEventName('network left');
 
 module.exports = function (RED) {
 	const init = function (config) {
@@ -296,13 +298,11 @@ module.exports = function (RED) {
 									strategy: 0,
 									userCallbacks: {
 										showDSK: (DSK) => {
-											RED.comms.publish(
-												`zwave-js/ui/${self.id}/controller/dsk`,
-												{ nodeId: request.body.nodeId, check: { round, totalRounds, lastRating, lastResult } },
-												false
-											);
+											RED.comms.publish(`zwave-js/ui/${self.id}/controller/slave/dsk`, { slaveJoinDSK: DSK }, false);
 										},
-										done: () => {}
+										done: () => {
+											return;
+										}
 									}
 								};
 
@@ -468,6 +468,16 @@ module.exports = function (RED) {
 
 		// Driver callback subscriptions that occure after driver ready
 		const wireSubDriverEvents = () => {
+			// Joined As Slave
+			self.driverInstance?.on(event_NetworkJoined.driverName, () => {
+				RED.comms.publish(`zwave-js/ui/${self.id}/controller/slave/joined`, {}, false);
+			});
+
+			// Left As Slave
+			self.driverInstance?.on(event_NetworkLeft.driverName, () => {
+				RED.comms.publish(`zwave-js/ui/${self.id}/controller/slave/left`, {}, false);
+			});
+
 			// Al Nodes Ready
 			self.driverInstance?.on(event_AllNodesReady.driverName, () => {
 				const Timestamp = new Date().getTime();

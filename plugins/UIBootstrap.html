@@ -189,6 +189,7 @@
 		<div child>Settings</div>
 		<div child>Rebuild Routes</div>
 		<div child>Firmware Update</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Slave',this)">Secondary Controller Mode</div>
 
 		<div parent>Nodes</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_NodeAddMode',this,'SetInclusionOptions')">Add</div>
@@ -198,6 +199,33 @@
 	</div>
 	<div id="zwjs-advanced-content"></div>
 </script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Controller-Slave">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">
+			<strong>Note!</strong> Before using this Runtime as a Secondary Controller, the transceiver it is managing, needs to be in a <strong>Reset</strong> state (this can be done in <strong>Settings</strong> to the left.)
+			<br />
+			<br />
+			<strong>Also Note!</strong> Before a node can be controlled, it must be manually interviewed. The <strong>LifeLine</strong> Assocoation may need to be updated also, if you wish for this runtime to handle updates (this depends on the Max LifeLines, a device may support)
+			<br />
+			<br />
+			<strong>Lastly!</strong> Set your <strong>Primary</strong> Controller to <strong>Inclusion/Exclusion</strong> Mode, before joining or leaving a network.
+		</div>
+		<div>
+			<button onclick="ZWaveJS.JoinAsSlave(this)">Join Network</button><button onclick="ZWaveJS.LeaveAsSlave(this)">Leave Network</button>
+		</div>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Controller-Slave-DSK">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">Your <strong>Primary</strong> Controller is asking for the <strong>DSK</strong> (this is the first 5 digits below) </div>
+		{{slaveJoinDSK}}
+	</fieldset>
+</script>
+
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Controller-Info">

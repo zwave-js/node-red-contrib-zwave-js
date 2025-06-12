@@ -40,6 +40,23 @@ const ZWaveJS = (function () {
 		RenderAdvanced('ZWJS_TPL_NRemoved', undefined, data);
 	};
 
+	const handleSlaveOps = (topic, data) => {
+		if (topic.endsWith('dsk')) {
+			data.slaveJoinDSK = slaveJoinDSK.toString();
+			RenderAdvanced('ZWJS_TPL_Tray-Controller-Slave-DSK', undefined, data);
+		}
+
+		if (topic.endsWith('joined')) {
+			CloseTray();
+			RefreshNodes();
+		}
+
+		if (topic.endsWith('left')) {
+			CloseTray();
+			RefreshNodes();
+		}
+	};
+
 	let clientSideAuth = false;
 	const SClassMap = {
 		0: 'S2 Unauthenticated',
@@ -172,6 +189,25 @@ const ZWaveJS = (function () {
 				.replace(/>/g, '&gt;')
 				.replace(jsonLine, JSONFormatter.json.replacer);
 		}
+	};
+
+	const JoinAsSlave = (Button) => {
+		DisableButton(Button);
+		Runtime.Post('CONTROLLER', 'beginJoiningNetwork').then((R) => {
+			if (!R.callSuccess) {
+				EnableButton(Button);
+				alert(R.response);
+			}
+		});
+	};
+
+	const LeaveAsSlave = (Button) => {
+		Runtime.Post('CONTROLLER', 'beginLeavingNetwork').then((R) => {
+			if (!R.callSuccess) {
+				EnableButton(Button);
+				alert(R.response);
+			}
+		});
 	};
 
 	const StartExclusion = () => {
@@ -1001,6 +1037,10 @@ const ZWaveJS = (function () {
 		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/sleep`, commsNodeState);
 		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/awake`, commsNodeState);
 		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/dead`, commsNodeState);
+
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/slave/dsk`, handleSlaveOps);
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/slave/joined`, handleSlaveOps);
+		RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/slave/left`, handleSlaveOps);
 	};
 
 	const listCCs = (Collection) => {
@@ -1286,6 +1326,8 @@ const ZWaveJS = (function () {
 		CommitAssociations,
 		ResetAllAssociations,
 		MarkAssoDelete,
-		CheckNodeHealth
+		CheckNodeHealth,
+		JoinAsSlave,
+		LeaveAsSlave
 	};
 })();
