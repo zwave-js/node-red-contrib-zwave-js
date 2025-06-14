@@ -116,11 +116,14 @@
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Node-Value-Current">
 	<fieldset class=zwjs-fieldset>
-		{{#if Writeable}}
-			hello
+		{{#if writeable}}
+		Current value is <span class="zwjs-cc-value" edit>{{currentValue}}</span>
+			Edit me
 		{{else}}
 		    <div class="zwjs-hint">Note: This value is ReadOnly</div>
+			Current value is <span class="zwjs-cc-value" edit>{{currentValue}}</span>
 		{{/if}}
+		
 	</fieldset>
 </script>
 

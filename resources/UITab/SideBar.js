@@ -39,7 +39,7 @@ const ZWaveJS = (function () {
 		RefreshNodes();
 		RenderAdvanced('ZWJS_TPL_NRemoved', undefined, data);
 	};
-	const handleValueUpdate = (topic, data) => {
+	const commsHandleValueUpdate = (topic, data) => {
 		const ValueID = data.eventBody.valueId;
 		const NewValue = data.eventBody.newValue;
 		const Hash = getValueUpdateHash(ValueID);
@@ -50,7 +50,7 @@ const ZWaveJS = (function () {
 		}
 	};
 
-	const handleSlaveOps = (topic, data) => {
+	const commsHandleSlaveOps = (topic, data) => {
 		if (topic.endsWith('dsk')) {
 			data.slaveJoinDSK = slaveJoinDSK.toString();
 			RenderAdvanced('ZWJS_TPL_Tray-Controller-Slave-DSK', undefined, data);
@@ -161,12 +161,12 @@ const ZWaveJS = (function () {
 				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/awake`, commsNodeState);
 				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/dead`, commsNodeState);
 
-				RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/slave/dsk`, handleSlaveOps);
-				RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/slave/joined`, handleSlaveOps);
-				RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/slave/left`, handleSlaveOps);
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/slave/dsk`, commsHandleSlaveOps);
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/slave/joined`, commsHandleSlaveOps);
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/slave/left`, commsHandleSlaveOps);
 
-				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/valueadded`, handleValueUpdate);
-				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/valueupdate`, handleValueUpdate);
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/valueadded`, commsHandleValueUpdate);
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/valueupdate`, commsHandleValueUpdate);
 				return;
 
 			case false:
@@ -185,12 +185,12 @@ const ZWaveJS = (function () {
 				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/awake`, commsNodeState);
 				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/dead`, commsNodeState);
 
-				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/controller/slave/dsk`, handleSlaveOps);
-				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/controller/slave/joined`, handleSlaveOps);
-				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/controller/slave/left`, handleSlaveOps);
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/controller/slave/dsk`, commsHandleSlaveOps);
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/controller/slave/joined`, commsHandleSlaveOps);
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/controller/slave/left`, commsHandleSlaveOps);
 
-				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/valueadded`, handleValueUpdate);
-				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/valueupdate`, handleValueUpdate);
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/valueadded`, commsHandleValueUpdate);
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/valueupdate`, commsHandleValueUpdate);
 				return;
 		}
 	};
@@ -1115,7 +1115,7 @@ const ZWaveJS = (function () {
 			CCGroups[CCID].forEach((V) => {
 				const getCurrentValue = (value) => {
 					if (value !== undefined) {
-						return `<span class="zwjs-cc-id" id="zwjs-value-${getValueUpdateHash(V.valueId)}" style="padding:1px;float:right;color:rgb(46, 145, 205); min-width:80px">${V.currentValue} ${V.metadata.unit || ''}</span>`;
+						return `<span class="zwjs-cc-value" id="zwjs-value-${getValueUpdateHash(V.valueId)}" style="padding:1px;float:right;color:rgb(46, 145, 205); min-width:80px">${V.currentValue} ${V.metadata.unit  || ''}</span>`;
 					} else {
 						return '';
 					}
@@ -1190,7 +1190,7 @@ const ZWaveJS = (function () {
 						editInfo: {
 							valueId: item.valueInfo.valueId,
 							writeable: item.valueInfo.metadata.writeable,
-							currentValue: item.valueInfo.currentInfo
+							currentValue: item.valueInfo.currentValue
 						}
 					};
 

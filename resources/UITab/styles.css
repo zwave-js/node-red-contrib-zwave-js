@@ -40,6 +40,22 @@
 	font-size: 12px;
 }
 
+.zwjs-cc-value {
+	background-color: var(--red-ui-palette-header-background);
+	text-align: center;
+	border-radius: 4px;
+	font-size: 12px;
+	padding:1px;
+	float:right;
+	color:rgb(46, 145, 205);
+	min-width:80px;
+}
+
+.zwjs-cc-value[edit] {
+	display: inline-block;
+	float:none;
+}
+
 #zwjs-endpoint-list div[selected] {
 	background-color: rgb(135, 169, 128);
 	color: white;
@@ -277,4 +293,3 @@ i.zwjs-state-green {
 .zwjs-json-string {
 	color: rgb(130, 152, 52);
 }
-
