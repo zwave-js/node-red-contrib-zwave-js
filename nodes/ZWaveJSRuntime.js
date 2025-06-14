@@ -238,8 +238,24 @@ module.exports = function (RED) {
 
 					switch (TargetAPI) {
 						case 'CONTROLLER':
+							let option = undefined;
+							if (Method === 'beginJoiningNetwork') {
+								option = [
+									{
+										strategy: 0,
+										userCallbacks: {
+											showDSK: (DSK) => {
+												RED.comms.publish(`zwave-js/ui/${self.id}/controller/slave/dsk`, { slaveJoinDSK: DSK }, false);
+											},
+											done: () => {
+												return;
+											}
+										}
+									}
+								];
+							}
 							self
-								.controllerCommand(Method)
+								.controllerCommand(Method, option)
 								.then((R) => {
 									response.json({ callSuccess: true, response: R });
 								})
@@ -260,20 +276,22 @@ module.exports = function (RED) {
 
 					switch (TargetAPI) {
 						case 'NODE':
+							const Params = {
+								nodeId: request.body.nodeId,
+								value: request.body.value
+							};
 							if (Method === 'checkLifelineHealth') {
 								const CB = (round, totalRounds, lastRating, lastResult) => {
 									RED.comms.publish(
 										`zwave-js/ui/${self.id}/nodes/healthcheck`,
-										{ nodeId: request.body.nodeId, check: { round, totalRounds, lastRating, lastResult } },
+										{ nodeId: Params.nodeId, check: { round, totalRounds, lastRating, lastResult } },
 										false
 									);
 								};
-								request.body = [5, CB];
-							} else {
-								request.body = undefined;
+								Params.args = [5, CB];
 							}
 							self
-								.nodeCommand(Method, request.body.nodeId, request.body.value, request.body)
+								.nodeCommand(Method, Params.nodeId, Params.value, Params.args)
 								.then((R) => {
 									response.json({ callSuccess: true, response: R });
 								})
@@ -293,24 +311,6 @@ module.exports = function (RED) {
 							break;
 
 						case 'CONTROLLER':
-							if (Method === 'beginJoiningNetwork') {
-								const options = {
-									strategy: 0,
-									userCallbacks: {
-										showDSK: (DSK) => {
-											RED.comms.publish(`zwave-js/ui/${self.id}/controller/slave/dsk`, { slaveJoinDSK: DSK }, false);
-										},
-										done: () => {
-											return;
-										}
-									}
-								};
-
-								request.body = [options];
-							} else {
-								request.body = undefined;
-							}
-							console.log(request.body)
 							self
 								.controllerCommand(Method, request.body)
 								.then((R) => {
@@ -989,6 +989,11 @@ module.exports = function (RED) {
 					}
 				};
 				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
+				RED.comms.publish(
+					`zwave-js/ui/${this.id}/nodes/valueupdate`,
+					{ nodeInfo: ThisNode, eventBody: Event.Event.eventBody },
+					false
+				);
 			});
 
 			// Value Added
@@ -1010,6 +1015,11 @@ module.exports = function (RED) {
 					}
 				};
 				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
+				RED.comms.publish(
+					`zwave-js/ui/${this.id}/nodes/valueadded`,
+					{ nodeInfo: ThisNode, eventBody: Event.Event.eventBody },
+					false
+				);
 			});
 
 			// Notification

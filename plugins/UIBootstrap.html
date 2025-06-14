@@ -93,21 +93,21 @@
 		<table>
 			<tr>
 				<td rowspan="3">
-					<span class="zwjs-node-id" nodeinfo>{{NodeID}}</span>
+					<span class="zwjs-node-id" nodeinfo>{{nodeId}}</span>
 				</td>
 			</tr>
 			<tr>
 				<td style="padding-left: 10px">
-					<span class="zwjs-cc-id" style="background-color:darkgray;color:white">{{CCID}}</span> - {{CCName}}
+					<span class="zwjs-cc-id" style="background-color:darkgray;color:white">{{ccId}}</span> - {{ccName}}
 					<br />
-					<span class="zwjs-cc-id" style="background-color:darkgray;color:white">{{Property}}</span> - {{ValueLabel}}
+					<span class="zwjs-cc-id" style="background-color:darkgray;color:white">{{property}}</span> - {{valueLabel}}
 				</td>
 			</tr>
 		</table>
 	</div>
 	<div class="zwjs-tray-menu">
 		<div parent>Value</div>
-		<div child default onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Value-Current',this, '{{json ValueID}}')">Update Value</div>
+		<div child default onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Value-Current',this, '{{json editInfo}}')">Update Value</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Value-Example',this,'{{json examples}}')">Example Usage</div>
 	</div>
 	<div id="zwjs-advanced-content"></div>
@@ -116,14 +116,18 @@
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Node-Value-Current">
 	<fieldset class=zwjs-fieldset>
-		<div class="zwjs-hint">Note: This value is ReadOnly</div>
+		{{#if Writeable}}
+			hello
+		{{else}}
+		    <div class="zwjs-hint">Note: This value is ReadOnly</div>
+		{{/if}}
 	</fieldset>
 </script>
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Node-Value-Example">
 	<fieldset class=zwjs-fieldset>
-		<div class="zwjs-hint">These <strong>msg</strong> examples, use the <strong>ValueAPI</strong>, which is the recommended API. <strong>Set Value Options</strong> is optional, and is dependant on the Property being set.</div>
+		<div class="zwjs-hint">These <strong>msg</strong> examples, use the <strong>ValueAPI</strong>, which is the recommended API. The <strong>payload</strong> (or <strong>value</strong>) property is only required when setting values. - The values used here, are an example (but use the current value as it is now)</div>
 		<legend>With CMD Factory:</legend>
 		<div>
 			<pre>{{{pretty cmd}}}</pre>

@@ -39,6 +39,15 @@ const ZWaveJS = (function () {
 		RefreshNodes();
 		RenderAdvanced('ZWJS_TPL_NRemoved', undefined, data);
 	};
+	const handleValueUpdate = (topic, data) => {
+		const ValueID = data.eventBody.valueId;
+		const NewValue = data.eventBody.newValue;
+		const Hash = getValueUpdateHash(ValueID);
+
+		if($('')){
+			// Update
+		}
+	};
 
 	const handleSlaveOps = (topic, data) => {
 		if (topic.endsWith('dsk')) {
@@ -123,6 +132,68 @@ const ZWaveJS = (function () {
 		});
 	};
 
+	const getValueUpdateHash = (Obj) => {
+		Obj = JSON.stringify(Obj);
+		Obj = `${selectedNode.nodeId}${Obj}`;
+		let hash = 5381;
+		for (let i = 0; i < Obj.length; i++) {
+			hash = (hash << 5) + hash + Obj.charCodeAt(i);
+		}
+		return (hash >>> 0).toString(16);
+	};
+
+	const setSubscription = (subscribe) => {
+		switch (subscribe) {
+			case true:
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/status`, commsStatus);
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/s2/grant`, commsGrant);
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/s2/dsk`, commsDSK);
+
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/added`, commsNodeAdded);
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/removed`, commsNodeRemoved);
+
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/interviewstarted`, commsNodeState);
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/interviewfailed`, commsNodeState);
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/interviewed`, commsNodeState);
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/ready`, commsNodeState);
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/sleep`, commsNodeState);
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/awake`, commsNodeState);
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/dead`, commsNodeState);
+
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/slave/dsk`, handleSlaveOps);
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/slave/joined`, handleSlaveOps);
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/slave/left`, handleSlaveOps);
+
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/valueadded`, handleValueUpdate);
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/valueupdated`, handleValueUpdate);
+				return;
+
+			case false:
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/status`, commsStatus);
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/s2/grant`, commsGrant);
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/s2/dsk`, commsDSK);
+
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/added`, commsNodeAdded);
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/removed`, commsNodeRemoved);
+
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/interviewstarted`, commsNodeState);
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/interviewfailed`, commsNodeState);
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/interviewed`, commsNodeState);
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/ready`, commsNodeState);
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/sleep`, commsNodeState);
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/awake`, commsNodeState);
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/dead`, commsNodeState);
+
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/controller/slave/dsk`, handleSlaveOps);
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/controller/slave/joined`, handleSlaveOps);
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/controller/slave/left`, handleSlaveOps);
+
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/valueadded`, handleValueUpdate);
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/valueupdated`, handleValueUpdate);
+				return;
+		}
+	};
+
 	// Runtime Communication Methods
 	const Runtime = {
 		Get: async function (API, Method, URL) {
@@ -193,7 +264,7 @@ const ZWaveJS = (function () {
 
 	const JoinAsSlave = (Button) => {
 		DisableButton(Button);
-		Runtime.Post('CONTROLLER', 'beginJoiningNetwork', {}).then((R) => {
+		Runtime.Get('CONTROLLER', 'beginJoiningNetwork').then((R) => {
 			if (!R.callSuccess) {
 				EnableButton(Button);
 				alert(R.response);
@@ -203,7 +274,7 @@ const ZWaveJS = (function () {
 
 	const LeaveAsSlave = (Button) => {
 		DisableButton(Button);
-		Runtime.Post('CONTROLLER', 'beginLeavingNetwork', {}).then((R) => {
+		Runtime.Get('CONTROLLER', 'beginLeavingNetwork').then((R) => {
 			if (!R.callSuccess) {
 				EnableButton(Button);
 				alert(R.response);
@@ -212,7 +283,7 @@ const ZWaveJS = (function () {
 	};
 
 	const StartExclusion = () => {
-		Runtime.Post('CONTROLLER', 'beginExclusion').then((R) => {
+		Runtime.Get('CONTROLLER', 'beginExclusion').then((R) => {
 			if (R.callSuccess) {
 				RenderAdvanced('ZWJS_TPL_NIFWait', undefined, { mode: 'Exclusion' });
 			} else {
@@ -782,8 +853,8 @@ const ZWaveJS = (function () {
 		}
 
 		// Kill any outstanding network task (we dont really need to await these)
-		Runtime.Post('CONTROLLER', 'stopInclusion');
-		Runtime.Post('CONTROLLER', 'stopExclusion');
+		Runtime.Get('CONTROLLER', 'stopInclusion');
+		Runtime.Get('CONTROLLER', 'stopExclusion');
 
 		// Finally Close Tray
 		RED.tray.close();
@@ -935,6 +1006,7 @@ const ZWaveJS = (function () {
 		if (!networkId) {
 			return;
 		}
+		$('#zwjs-node-list').treeList('empty');
 		Runtime.Get('CONTROLLER', 'getNodes')
 			.then((data) => {
 				if (data.callSuccess) {
@@ -988,18 +1060,8 @@ const ZWaveJS = (function () {
 	const NetworkSelected = function () {
 		// Remove Subscriptions
 		if (networkId) {
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/status`, commsStatus);
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/s2/grant`, commsGrant);
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/s2/dsk`, commsDSK);
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/added`, commsNodeAdded);
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/removed`, commsNodeRemoved);
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/interviewstarted`, commsNodeState);
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/interviewfailed`, commsNodeState);
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/interviewed`, commsNodeState);
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/ready`, commsNodeState);
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/sleep`, commsNodeState);
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/awake`, commsNodeState);
-			RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/dead`, commsNodeState);
+			// unsubscribe
+			setSubscription(false);
 			networkId = undefined;
 		}
 
@@ -1025,23 +1087,7 @@ const ZWaveJS = (function () {
 			});
 
 		// subscribe
-
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/status`, commsStatus);
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/s2/grant`, commsGrant);
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/s2/dsk`, commsDSK);
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/added`, commsNodeAdded);
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/removed`, commsNodeRemoved);
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/interviewstarted`, commsNodeState);
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/interviewfailed`, commsNodeState);
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/interviewed`, commsNodeState);
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/ready`, commsNodeState);
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/sleep`, commsNodeState);
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/awake`, commsNodeState);
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/dead`, commsNodeState);
-
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/slave/dsk`, handleSlaveOps);
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/slave/joined`, handleSlaveOps);
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/slave/left`, handleSlaveOps);
+		setSubscription(true);
 	};
 
 	const listCCs = (Collection) => {
@@ -1061,15 +1107,27 @@ const ZWaveJS = (function () {
 			const Name = CCGroups[CCID][0].valueId.commandClassName;
 			const Item = {
 				element: `<div><span class="zwjs-cc-id">0x${parseInt(CCID).toString(16).padStart(2, '0').toUpperCase()}</span> - ${Name}</div>`,
-				children: []
+				children: [],
+				parent: true
 			};
 
 			CCGroups[CCID].forEach((V) => {
+				const getCurrentValue = (value) => {
+					if (value !== undefined) {
+						return `<span class="zwjs-cc-id" id="zwjs-value-${getValueUpdateHash(V.valueId)}" style="padding:1px;float:right;color:rgb(46, 145, 205); min-width:80px">${V.currentValue} ${V.metadata.unit || ''}</span>`;
+					} else {
+						return '';
+					}
+				};
 				const sItem = {
-					label: V.metadata.label,
+					element: `<div style="width:100%; margin-right:30px">${V.metadata.label} ${getCurrentValue(V.currentValue)}</div>`,
 					icon: V.metadata.writeable ? 'fa fa-pencil' : '',
-					metadata: V.metadata,
-					valueId: V.valueId
+					parent: false,
+					valueInfo: {
+						metadata: V.metadata,
+						valueId: V.valueId,
+						currentValue: V.currentValue
+					}
 				};
 
 				Item.children.push(sItem);
@@ -1078,8 +1136,12 @@ const ZWaveJS = (function () {
 			Items.push(Item);
 		});
 
+		$('#zwjs-cc-list').treeList('empty');
 		$('#zwjs-cc-list').treeList('data', Items);
 		$('#zwjs-cc-list').on('treelistselect', function (event, item) {
+			if (Object.keys(item).length < 1 || item.parent === true) {
+				return;
+			}
 			CloseTray();
 			const Options = {
 				width: 700,
@@ -1104,33 +1166,32 @@ const ZWaveJS = (function () {
 					const trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
 
 					let Property;
-					if (typeof item.valueId.property === 'number') {
-						Property = `0x${parseInt(item.valueId.property).toString(16).padStart(2, '0').toUpperCase()}`;
+					if (typeof item.valueInfo.valueId.property === 'number') {
+						Property = `0x${parseInt(item.valueInfo.valueId.property).toString(16).padStart(2, '0').toUpperCase()}`;
 					} else {
-						Property = item.valueId.property;
+						Property = item.valueInfo.valueId.property;
 					}
 
-					if (item.valueId.propertyKey) {
-						if (typeof item.valueId.propertyKey === 'number') {
-							Property += ` / 0x${parseInt(item.valueId.propertyKey).toString(16).padStart(2, '0').toUpperCase()}`;
+					if (item.valueInfo.valueId.propertyKey) {
+						if (typeof item.valueInfo.valueId.propertyKey === 'number') {
+							Property += ` / 0x${parseInt(item.valueInfo.valueId.propertyKey).toString(16).padStart(2, '0').toUpperCase()}`;
 						} else {
-							Property += ` / ${item.valueId.propertyKey}`;
+							Property += ` / ${item.valueInfo.valueId.propertyKey}`;
 						}
 					}
 
 					const State = {
-						CCID: `0x${parseInt(item.valueId.commandClass).toString(16).padStart(2, '0').toUpperCase()}`,
-						CCName: item.valueId.commandClassName,
-						ValueLabel: item.label,
-						NodeID: selectedNode.nodeId,
-						ValueID: item.valueId,
-						MetaData: item.metadata,
-						Property: Property
+						ccId: `0x${parseInt(item.valueInfo.valueId.commandClass).toString(16).padStart(2, '0').toUpperCase()}`,
+						ccName: item.valueInfo.valueId.commandClassName,
+						valueLabel: item.valueInfo.metadata.label,
+						nodeId: selectedNode.nodeId,
+						property: Property,
+						editInfo: {
+							valueId: item.valueInfo.valueId,
+							writeable: item.valueInfo.metadata.writeable,
+							currentValue: item.valueInfo.currentInfo
+						}
 					};
-
-					delete State.ValueID.commandClassName;
-					delete State.ValueID.propertyName;
-					delete State.ValueID.propertyKeyName;
 
 					State.examples = {
 						nocmd: {
@@ -1140,26 +1201,27 @@ const ZWaveJS = (function () {
 								},
 								cmdProperties: {
 									nodeId: selectedNode.nodeId,
-									valueId: State.ValueID
+									valueId: { ...item.valueInfo.valueId }
 								}
 							}
 						},
 						cmd: {
 							topic: selectedNode.nodeId,
-							valueId: State.ValueID
+							valueId: { ...item.valueInfo.valueId }
 						}
 					};
-					if (State.MetaData.writeable) {
-						State.examples.nocmd.payload.cmd.method = 'setValue | getValue';
-						State.examples.nocmd.payload.cmdProperties.value = 'Some Value (setValue Only)';
-						State.examples.nocmd.payload.cmdProperties.setValueOptions = {
-							transitionDuration: '5s'
-						};
 
-						State.examples.cmd.payload = 'Some Value (Set Value Only)';
-						State.examples.cmd.payload.options = {
-							transitionDuration: '5s'
-						};
+					delete State.examples.cmd.valueId.commandClassName;
+					delete State.examples.cmd.valueId.propertyName;
+					delete State.examples.cmd.valueId.propertyKeyName;
+					delete State.examples.nocmd.payload.cmdProperties.valueId.commandClassName;
+					delete State.examples.nocmd.payload.cmdProperties.valueId.propertyName;
+					delete State.examples.nocmd.payload.cmdProperties.valueId.propertyKeyName;
+
+					if (item.valueInfo.metadata.writeable) {
+						State.examples.nocmd.payload.cmd.method = 'setValue | getValue';
+						State.examples.nocmd.payload.cmdProperties.value = item.valueInfo.currentValue;
+						State.examples.cmd.payload = item.valueInfo.currentValue;
 					} else {
 						State.examples.nocmd.payload.cmd.method = 'getValue';
 					}
@@ -1213,7 +1275,6 @@ const ZWaveJS = (function () {
 					const EPGroups = groupByEP(data.values);
 					const EPIDs = Object.keys(EPGroups);
 
-					$('#zwjs-endpoint-list').empty();
 					EPIDs.forEach((E) => {
 						const EP = E === '0' ? 'Root' : `EP${E}`;
 						const Button = $(`<div data-endpoint="${E}">${EP}</div>`);
@@ -1222,12 +1283,11 @@ const ZWaveJS = (function () {
 							$('#zwjs-endpoint-list > div').removeAttr('selected');
 							$(`#zwjs-endpoint-list > div[data-endpoint="${E}"]`).attr('selected', 'selected');
 						});
-						Button.data(EPGroups[E]);
 						$('#zwjs-endpoint-list').append(Button);
 					});
 
-					$('#zwjs-endpoint-list > div[data-endpoint="0"]').attr('selected', '');
-					listCCs(EPGroups['0']);
+					$('#zwjs-endpoint-list > div[data-endpoint="0"]').click();
+					//listCCs(EPGroups['0']);
 				} else {
 					alert(data.response);
 				}
