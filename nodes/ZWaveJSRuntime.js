@@ -991,7 +991,7 @@ module.exports = function (RED) {
 				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
 				RED.comms.publish(
 					`zwave-js/ui/${this.id}/nodes/valueupdate`,
-					{ nodeInfo: ThisNode, eventBody: Event.Event.eventBody },
+					{ nodeId: ThisNode.id, eventBody: Event.Event.eventBody },
 					false
 				);
 			});
@@ -1017,7 +1017,7 @@ module.exports = function (RED) {
 				InterestedDeviceNodes.forEach((Target) => Target.Callback(Event));
 				RED.comms.publish(
 					`zwave-js/ui/${this.id}/nodes/valueadded`,
-					{ nodeInfo: ThisNode, eventBody: Event.Event.eventBody },
+					{ nodeId: ThisNode.id, eventBody: Event.Event.eventBody },
 					false
 				);
 			});

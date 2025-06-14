@@ -44,8 +44,9 @@ const ZWaveJS = (function () {
 		const NewValue = data.eventBody.newValue;
 		const Hash = getValueUpdateHash(ValueID);
 
-		if($('')){
-			// Update
+		const TargetElement = `#zwjs-value-${Hash}`;
+		if ($(TargetElement).length > 0) {
+			$(TargetElement).text(NewValue);
 		}
 	};
 
@@ -165,7 +166,7 @@ const ZWaveJS = (function () {
 				RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/slave/left`, handleSlaveOps);
 
 				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/valueadded`, handleValueUpdate);
-				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/valueupdated`, handleValueUpdate);
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/valueupdate`, handleValueUpdate);
 				return;
 
 			case false:
@@ -189,7 +190,7 @@ const ZWaveJS = (function () {
 				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/controller/slave/left`, handleSlaveOps);
 
 				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/valueadded`, handleValueUpdate);
-				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/valueupdated`, handleValueUpdate);
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/valueupdate`, handleValueUpdate);
 				return;
 		}
 	};
