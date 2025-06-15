@@ -1008,8 +1008,34 @@ const ZWaveJS = (function () {
 				break;
 		}
 
+		const powerElem = $(`#zwjs-node-state-power-${Node.nodeId}`);
+
 		if (Node.powerSource.type === 'mains') {
-			$(`#zwjs-node-state-power-${Node.nodeId}`).addClass(['fa', 'fa-plug']);
+			powerElem.addClass(['fa', 'fa-plug', 'zwjs-state-green']);
+		} else {
+			powerElem.removeClass(
+				'fa-battery-empty fa-battery-quarter fa-battery-half fa-battery-three-quarters fa-battery-full'
+			);
+
+			powerElem.addClass('fa');
+
+			if (Node.powerSource.level <= 10) {
+				powerElem.addClass('fa-battery-empty');
+			} else if (Node.powerSource.level <= 25) {
+				powerElem.addClass('fa-battery-quarter');
+			} else if (Node.powerSource.level <= 75) {
+				powerElem.addClass('fa-battery-half');
+			} else if (Node.powerSource.level <= 85) {
+				powerElem.addClass('fa-battery-three-quarters');
+			} else {
+				powerElem.addClass('fa-battery-full');
+			}
+
+			if (Node.powerSource.isLow) {
+				powerElem.addClass('zwjs-state-red');
+			} else {
+				powerElem.addClass('zwjs-state-green');
+			}
 		}
 	};
 
