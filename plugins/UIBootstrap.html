@@ -41,7 +41,7 @@
 	<!--Controller Menu-->
 	<div class="red-ui-sidebar-header zwjs-sb-menu-header">
 		<a class="red-ui-tab-link-button" onclick="ZWaveJS.ShowNetworkManagement()"><i class="fa fa-cogs"></i></a>
-		<a class="red-ui-tab-link-button"><i class="fa fa-refresh"></i></a>
+		<a class="red-ui-tab-link-button" onclick="ZWaveJS.RefreshNodes('Refresh')"><i class="fa fa-refresh"></i></a>
 		<a class="red-ui-tab-link-button"><i class="fa fa-medkit"></i></a>
 	</div>
 
@@ -201,10 +201,37 @@
 		<div parent>Nodes</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_NodeAddMode',this,'SetInclusionOptions')">Add</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_NodeRemoveMode',this, 'PrepSSList')">Remove</div>
-		<div child>Failed Nodes</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_FailedNodes',this, 'PrepFailed')">Failed Nodes</div>
 
 	</div>
 	<div id="zwjs-advanced-content"></div>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_FailedNodes">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">Below is a list of Failed Nodes, from here you can attempt to ping them (which will remove the Failed flag  - if they respond), else you can remove them.</div>
+		<table class="zwjs-table" id="zwjs-failed-nodes" horizontal>
+				<tr>
+					<td style="text-align:center">Node ID</td>
+					<td style="text-align:center">Name</td>
+					<td style="text-align:center">Location</td>
+					<td style="text-align:center">Action</td>
+				</tr>
+				{{#each nodes}}
+					<tr>
+						<td style="text-align:center">{{nodeId}}</td>
+						<td style="text-align:center">{{nodeName}}</td>
+						<td style="text-align:center">{{nodeLocation}}</td>
+						
+						<td style="text-align:center">
+							<i class="fa fa-trash" aria-hidden="true" style="font-size: 18px;color: red;" onclick="ZWaveJS.RemoveFailedNode({{nodeId}})"></i>&nbsp;&nbsp;
+							<i class="fa fa-volume-control-phone" aria-hidden="true" style="font-size: 18px;" onclick="ZWaveJS.PingNodes({{nodeId}})"></i>
+						</td>
+					</tr>
+				{{/each}}
+		</table>
+	</fieldset>
 </script>
 
 <!-- prettier-ignore -->

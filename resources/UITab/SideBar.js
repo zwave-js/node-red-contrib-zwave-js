@@ -32,11 +32,11 @@ const ZWaveJS = (function () {
 		RenderNodeIconState(data.nodeInfo);
 	};
 	const commsNodeAdded = (topic, data) => {
-		RefreshNodes();
+		RefreshNodes('NewAdded', data.nodeId);
 		RenderAdvanced('ZWJS_TPL_NAdded', undefined, data);
 	};
 	const commsNodeRemoved = (topic, data) => {
-		RefreshNodes();
+		RefreshNodes('NodeRemoved', data.nodeId);
 		RenderAdvanced('ZWJS_TPL_NRemoved', undefined, data);
 	};
 	const commsHandleValueUpdate = (topic, data) => {
@@ -58,12 +58,12 @@ const ZWaveJS = (function () {
 
 		if (topic.endsWith('joined')) {
 			CloseTray();
-			RefreshNodes();
+			RefreshNodes('NetworkJoin');
 		}
 
 		if (topic.endsWith('left')) {
 			CloseTray();
-			RefreshNodes();
+			RefreshNodes('NetworkLeft');
 		}
 	};
 
@@ -481,9 +481,7 @@ const ZWaveJS = (function () {
 									.find((N) => N.nodeData.nodeId).nodeData;
 								ND.nodeName = $('#zwjs-node-edit-name').val();
 								ND.nodeLocation = $('#zwjs-node-edit-location').val();
-								$(`#zwjs-node-name-${selectedNode.nodeId}`).text(ND.nodeName);
-
-								nodeSelected(undefined, { nodeData: ND });
+								$(`#zwjs-node-name-${selectedNode.nodeId}`).text(ND.nodeName || 'No Name');
 
 								alert('Name & Location Set Successfully!');
 								EnableButton(Button);
@@ -658,6 +656,18 @@ const ZWaveJS = (function () {
 	};
 
 	const RenderFunctions = {
+		PrepFailed: () => {
+			return new Promise(async (resolve, reject) => {
+				Runtime.Get('CONTROLLER', 'getNodes').then((data) => {
+					if (data.callSuccess) {
+						const nodes = data.response.filter((N) => N.status === 'Dead');
+						resolve({ nodes });
+					} else {
+						alert(data.Response);
+					}
+				});
+			});
+		},
 		ControllerInfo: () => {
 			return new Promise(async (resolve, _) => {
 				const CD = $('#zwjs-controller-info').data('info');
@@ -1003,11 +1013,42 @@ const ZWaveJS = (function () {
 		}
 	};
 
-	const RefreshNodes = () => {
+	const RefreshNodes = (Reason, NodeID) => {
 		if (!networkId) {
 			return;
 		}
-		$('#zwjs-node-list').treeList('empty');
+
+		switch (Reason) {
+			case 'Refresh':
+			case 'NetworkJoin':
+			case 'NetworkLeft':
+			case 'NetworkSelected':
+				$('#zwjs-node-info-id').text('--');
+				$('#zwjs-node-info').text('No Node Selected');
+				$('#zwjs-endpoint-list').empty();
+				$('#zwjs-node-status').empty();
+				$('#zwjs-cc-list').treeList('empty');
+				$('#zwjs-node-list').treeList('empty');
+				selectedNode = undefined;
+				CloseTray();
+				break;
+
+			case 'NodeAdded':
+				break;
+
+			case 'NodeRemoved':
+				if (selectedNode && selectedNode.nodeId === NodeID) {
+					$('#zwjs-node-info-id').text('--');
+					$('#zwjs-node-info').text('No Node Selected');
+					$('#zwjs-endpoint-list').empty();
+					$('#zwjs-node-status').empty();
+					$('#zwjs-cc-list').treeList('empty');
+					$('#zwjs-node-list').treeList('empty');
+					selectedNode = undefined;
+				}
+				break;
+		}
+
 		Runtime.Get('CONTROLLER', 'getNodes')
 			.then((data) => {
 				if (data.callSuccess) {
@@ -1073,7 +1114,7 @@ const ZWaveJS = (function () {
 		networkId = $('#zwjs-network').val();
 
 		// get Nodes ansd Info
-		RefreshNodes();
+		RefreshNodes('NetworkSelected');
 
 		Runtime.Get(undefined, undefined, `zwave-js/ui/${networkId}/status`)
 			.then((data) => {
@@ -1115,7 +1156,7 @@ const ZWaveJS = (function () {
 			CCGroups[CCID].forEach((V) => {
 				const getCurrentValue = (value) => {
 					if (value !== undefined) {
-						return `<span class="zwjs-cc-value" id="zwjs-value-${getValueUpdateHash(V.valueId)}" style="padding:1px;float:right;color:rgb(46, 145, 205); min-width:80px">${V.currentValue} ${V.metadata.unit  || ''}</span>`;
+						return `<span class="zwjs-cc-value" id="zwjs-value-${getValueUpdateHash(V.valueId)}" style="padding:1px;float:right;color:rgb(46, 145, 205); min-width:80px">${V.currentValue} ${V.metadata.unit || ''}</span>`;
 					} else {
 						return '';
 					}
@@ -1244,14 +1285,13 @@ const ZWaveJS = (function () {
 			return;
 		}
 
-		CloseTray();
-
 		selectedNode = item.nodeData;
 
 		$('#zwjs-endpoint-list').empty();
 		$('#zwjs-cc-list').treeList('empty');
 		$('#zwjs-node-status').text(selectedNode.status);
 		$('#zwjs-node-info-id').text(selectedNode.nodeId);
+		CloseTray();
 
 		if (selectedNode.interviewStage !== 'Complete') {
 			$('#zwjs-node-info').text(`Node Interview Stage : ${selectedNode.interviewStage}`);
@@ -1390,6 +1430,7 @@ const ZWaveJS = (function () {
 		MarkAssoDelete,
 		CheckNodeHealth,
 		JoinAsSlave,
-		LeaveAsSlave
+		LeaveAsSlave,
+		RefreshNodes
 	};
 })();
