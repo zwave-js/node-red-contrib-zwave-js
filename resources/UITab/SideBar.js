@@ -52,7 +52,7 @@ const ZWaveJS = (function () {
 
 	const commsHandleSlaveOps = (topic, data) => {
 		if (topic.endsWith('dsk')) {
-			data.slaveJoinDSK = slaveJoinDSK.toString();
+			data.slaveJoinDSK = data.slaveJoinDSK.toString();
 			RenderAdvanced('ZWJS_TPL_Tray-Controller-Slave-DSK', undefined, data);
 		}
 
@@ -866,6 +866,8 @@ const ZWaveJS = (function () {
 		// Kill any outstanding network task (we dont really need to await these)
 		Runtime.Get('CONTROLLER', 'stopInclusion');
 		Runtime.Get('CONTROLLER', 'stopExclusion');
+		Runtime.Get('CONTROLLER', 'stopJoiningNetwork');
+		Runtime.Get('CONTROLLER', 'stopLeavingNetwork');
 
 		// Finally Close Tray
 		RED.tray.close();
@@ -989,6 +991,7 @@ const ZWaveJS = (function () {
 		$(`#zwjs-node-state-interview-${Node.nodeId}`).removeClass();
 		$(`#zwjs-node-state-status-${Node.nodeId}`).removeClass();
 		$(`#zwjs-node-state-power-${Node.nodeId}`).removeClass();
+		$(`#zwjs-node-state-security-${Node.nodeId}`).removeClass();
 
 		if (Node.interviewStage !== 'Complete') {
 			$(`#zwjs-node-state-interview-${Node.nodeId}`).addClass(['fa', 'fa-handshake-o', 'zwjs-state-amber']);
@@ -1036,6 +1039,21 @@ const ZWaveJS = (function () {
 			} else {
 				powerElem.addClass('zwjs-state-green');
 			}
+		}
+
+		switch (Node.highestSecurityClass) {
+			case 0:
+			case 1:
+			case 2:
+				$(`#zwjs-node-state-security-${Node.nodeId}`).addClass(['fa','fa-lock', 'zwjs-state-green']);
+				break;
+			case 7:
+				$(`#zwjs-node-state-security-${Node.nodeId}`).addClass(['fa','fa-lock', 'zwjs-state-amber']);
+				break;
+
+			default:
+				$(`#zwjs-node-state-security-${Node.nodeId}`).addClass(['fa','fa-unlock-alt', 'zwjs-state-red']);
+				break;
 		}
 	};
 
@@ -1099,6 +1117,7 @@ const ZWaveJS = (function () {
 						IconSpan.append(`<i id="zwjs-node-state-interview-${N.nodeId}" aria-hidden="true"></i>`);
 						IconSpan.append(`<i id="zwjs-node-state-status-${N.nodeId}" aria-hidden="true"></i>`);
 						IconSpan.append(`<i id="zwjs-node-state-power-${N.nodeId}" aria-hidden="true"></i>`);
+						IconSpan.append(`<i id="zwjs-node-state-security-${N.nodeId}" aria-hidden="true"></i>`);
 
 						RenderNodeIconState(N);
 
@@ -1354,7 +1373,6 @@ const ZWaveJS = (function () {
 					});
 
 					$('#zwjs-endpoint-list > div[data-endpoint="0"]').click();
-					//listCCs(EPGroups['0']);
 				} else {
 					alert(data.response);
 				}
@@ -1388,6 +1406,8 @@ const ZWaveJS = (function () {
 			display: 'flex',
 			flexDirection: 'column'
 		});
+
+		
 
 		Content.append(TPL_SidePanel({}));
 

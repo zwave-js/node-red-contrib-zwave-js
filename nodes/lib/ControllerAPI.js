@@ -10,6 +10,14 @@ const process = async function (DriverInstance, Method, Args) {
 		return DriverInstance.controller.beginLeavingNetwork();
 	}
 
+	if(Method === 'stopJoiningNetwork'){
+		return DriverInstance.controller.stopJoiningNetwork();
+	}
+
+	if(Method === 'stopLeavingNetwork'){
+		return DriverInstance.controller.stopLeavingNetwork();
+	}
+
 	if (Method === 'getAllAssociationGroups') {
 		try {
 			const Formated = {};
