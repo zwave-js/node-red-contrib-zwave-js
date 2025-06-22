@@ -264,11 +264,26 @@ const ZWaveJS = (function () {
 	};
 
 	const JoinAsSlave = (Button) => {
-		DisableButton(Button);
 		Runtime.Get('CONTROLLER', 'beginJoiningNetwork').then((R) => {
 			if (!R.callSuccess) {
 				EnableButton(Button);
 				alert(R.response);
+			} else {
+				const Result = R.response;
+				switch (Result) {
+					case 0:
+						DisableButton(Button);
+						break;
+					case 1:
+						alert('The Controller is currently too busy to perform the join.');
+						break;
+					case 2:
+						alert("The Controller's role does not permit joining as a secondary controller - try resetting it!");
+						break;
+					case 1:
+						alert('An unknown error occured.');
+						break;
+				}
 			}
 		});
 	};
@@ -1045,14 +1060,14 @@ const ZWaveJS = (function () {
 			case 0:
 			case 1:
 			case 2:
-				$(`#zwjs-node-state-security-${Node.nodeId}`).addClass(['fa','fa-lock', 'zwjs-state-green']);
+				$(`#zwjs-node-state-security-${Node.nodeId}`).addClass(['fa', 'fa-lock', 'zwjs-state-green']);
 				break;
 			case 7:
-				$(`#zwjs-node-state-security-${Node.nodeId}`).addClass(['fa','fa-lock', 'zwjs-state-amber']);
+				$(`#zwjs-node-state-security-${Node.nodeId}`).addClass(['fa', 'fa-lock', 'zwjs-state-amber']);
 				break;
 
 			default:
-				$(`#zwjs-node-state-security-${Node.nodeId}`).addClass(['fa','fa-unlock-alt', 'zwjs-state-red']);
+				$(`#zwjs-node-state-security-${Node.nodeId}`).addClass(['fa', 'fa-unlock-alt', 'zwjs-state-red']);
 				break;
 		}
 	};
@@ -1099,7 +1114,9 @@ const ZWaveJS = (function () {
 					data = data.response;
 
 					const Controller = data.find((N) => N.isControllerNode);
-					const Nodes = data.filter((N) => !N.isControllerNode);
+					const Nodes = data.filter(
+						(N) => !N.isControllerNode && (N.zwavePlusRoleType > 3 || N.zwavePlusRoleType === undefined)
+					);
 
 					const Info = `${Controller.deviceConfig.manufacturer} | ${Controller.deviceConfig.label} | v${Controller.firmwareVersion}`;
 					$('#zwjs-controller-info').text(Info);
@@ -1340,7 +1357,7 @@ const ZWaveJS = (function () {
 
 		if (selectedNode.interviewStage !== 'Complete') {
 			$('#zwjs-node-info').text(`Node Interview Stage : ${selectedNode.interviewStage}`);
-			return;
+			//	return;
 		}
 
 		const Info = `${selectedNode.deviceConfig.manufacturer} | ${selectedNode.deviceConfig.label} | v${selectedNode.firmwareVersion}`;
@@ -1406,8 +1423,6 @@ const ZWaveJS = (function () {
 			display: 'flex',
 			flexDirection: 'column'
 		});
-
-		
 
 		Content.append(TPL_SidePanel({}));
 

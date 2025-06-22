@@ -102,7 +102,16 @@
 			securityKeys_S2_AccessControl: {
 				value: '',
 				required: false
+			},
+			securityKeys_S2LR_Authenticated: {
+				value: '',
+				required: false
+			},
+			securityKeys_S2LR_AccessControl: {
+				value: '',
+				required: false
 			}
+			
 		},
 		label: function () {
 			return this.name;
@@ -179,6 +188,17 @@
 	<div class="form-row">
 	    <label for="node-config-input-securityKeys_S2_AccessControl"><i class="fa fa-lock"></i> S2 Acc Ctrl</label>
 	    <input type="text" id="node-config-input-securityKeys_S2_AccessControl" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()" style="display:unset; width:90px">Generate</button>
+	</div>
+
+	<h3>Security Keys (Long Range)</h3>
+	<hr />
+	<div class="form-row">
+	    <label for="node-config-input-securityKeys_S2LR_Authenticated"><i class="fa fa-lock"></i> S2 Auth</label>
+	    <input type="text" id="node-config-input-securityKeys_S2LR_Authenticated" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()" style="display:unset; width:90px">Generate</button>
+	</div>
+	<div class="form-row">
+	    <label for="node-config-input-securityKeys_S2LR_AccessControl"><i class="fa fa-lock"></i> S2 Acc Ctrl</label>
+	    <input type="text" id="node-config-input-securityKeys_S2LR_AccessControl" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()" style="display:unset; width:90px">Generate</button>
 	</div>
 
 	<h3>Scales</h3>

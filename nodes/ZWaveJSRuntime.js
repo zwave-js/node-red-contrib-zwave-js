@@ -240,20 +240,7 @@ module.exports = function (RED) {
 						case 'CONTROLLER':
 							let option = undefined;
 							if (Method === 'beginJoiningNetwork') {
-								option = [
-									{
-										strategy: 0,
-										userCallbacks: {
-											showDSK: (DSK) => {
-												console.log(DSK)
-												RED.comms.publish(`zwave-js/ui/${self.id}/controller/slave/dsk`, { slaveJoinDSK: DSK }, false);
-											},
-											done: () => {
-												return;
-											}
-										}
-									}
-								];
+								option = [{ strategy: 0 }];
 							}
 							self
 								.controllerCommand(Method, option)
@@ -369,12 +356,19 @@ module.exports = function (RED) {
 				dskPromise = resolve;
 			});
 		};
+		const showDSK = (DSK) => {
+			RED.comms.publish(`zwave-js/ui/${self.id}/controller/slave/dsk`, { slaveJoinDSK: DSK }, false);
+		};
+		const DSKDone = () => {
+			return;
+		};
 
 		// Driver settings
 		const ZWaveOptions = {
 			logConfig: {},
 			timeouts: {},
 			securityKeys: {},
+			securityKeysLongRange: {},
 			features: {
 				softReset: self.config.enableSoftReset
 			},
@@ -400,6 +394,10 @@ module.exports = function (RED) {
 				grantSecurityClasses: grantSecurityClasses,
 				validateDSKAndEnterPIN: validateDSKAndEnterPIN,
 				abort: s2Void
+			},
+			joinNetworkUserCallbacks: {
+				showDSK: showDSK,
+				done: DSKDone
 			},
 			disableOptimisticValueUpdate: !self.config.disableOptimisticValueUpdate
 		};
@@ -441,6 +439,18 @@ module.exports = function (RED) {
 		if (self.config.securityKeys_S2_Unauthenticated)
 			ZWaveOptions.securityKeys.S2_Unauthenticated = Buffer.from(self.config.securityKeys_S2_Unauthenticated, 'hex');
 
+		if (self.config.securityKeys_S2LR_Authenticated)
+			ZWaveOptions.securityKeysLongRange.S2_Authenticated = Buffer.from(
+				self.config.securityKeys_S2LR_Authenticated,
+				'hex'
+			);
+
+		if (self.config.securityKeys_S2LR_AccessControl)
+			ZWaveOptions.securityKeysLongRange.S2_AccessControl = Buffer.from(
+				self.config.securityKeys_S2LR_AccessControl,
+				'hex'
+			);
+
 		// Driver callback subscriptions
 		const wireDriverEvents = () => {
 			// Driver ready
@@ -455,10 +465,10 @@ module.exports = function (RED) {
 					Status: {
 						fill: 'yellow',
 						shape: 'dot',
-						text: 'Initializing network...'
+						text: 'Initializing network nodes...'
 					}
 				};
-				updateLatestStatus('Initializing network...');
+				updateLatestStatus('Initializing network nodes...');
 				ControllerNodeIDs.forEach((ID) => {
 					controllerNodes[ID](Status);
 				});
@@ -472,8 +482,6 @@ module.exports = function (RED) {
 		const wireSubDriverEvents = () => {
 			// Joined As Slave
 			self.driverInstance?.controller.on(event_NetworkJoined.driverName, () => {
-
-				
 				self.driverInstance?.controller.nodes.forEach((Node) => {
 					wireNodeEvents(Node);
 				});
