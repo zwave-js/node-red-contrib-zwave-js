@@ -1399,6 +1399,40 @@ const ZWaveJS = (function () {
 			});
 	};
 
+	const SelectFirstNetwork = () => {
+		const Networks = $('#zwjs-network');
+		if (Networks.children().length === 2) {
+			const Value = Networks.children()[1].val();
+			Networks.val(Value);
+			NetworkSelected();
+		}
+	};
+
+	const RemoveNetwork = (network) => {};
+
+	const ListOrAddNetworks = (search, network) => {
+		const Networks = $('#zwjs-network');
+		if (search) {
+			setTimeout(() => {
+				RED.nodes.eachConfig((c) => {
+					if (c.type === 'zwavejs-runtime' && c.d !== true) {
+						const found = Networks.children().filter((n) => n.val === c.id);
+						if (found.length < 1) {
+							Networks.append(new Option(c.name, c.id));
+						}
+					}
+				});
+				SelectFirstNetwork();
+			}, 1000);
+		} else {
+			const found = Networks.children().filter((n) => n.val === network.id);
+			if (found.length < 1) {
+				Networks.append(new Option(network.name, network.id));
+			}
+			SelectFirstNetwork();
+		}
+	};
+
 	// Init
 	const init = () => {
 		Handlebars.registerHelper('json', function (context) {
@@ -1449,23 +1483,9 @@ const ZWaveJS = (function () {
 		$(window).on('resize', resizeStack);
 		$(window).on('focus', resizeStack);
 
-		setTimeout(() => {
-			RED.nodes.eachConfig((c) => {
-				if (c.type === 'zwavejs-runtime') {
-					$('#zwjs-network').append(new Option(c.name, c.id));
-				}
-			});
+		ListOrAddNetworks(true);
 
-			if ($('#zwjs-network option').length === 2) {
-				const Value = $('#zwjs-network option:eq(1)').attr('value');
-				$('#zwjs-network').val(Value);
-				NetworkSelected();
-			}
-			RED.actions.add('zwjs:show-recent-interviewed-node', function () {
-				RED.sidebar.show('zwave-js');
-				nodeSelected(undefined, lastInterviewedNode);
-			});
-		}, 1000);
+		RED.comms.subscribe('zwave-js/ui/global/addnetwork', (topic, network) => ListOrAddNetworks(false, network));
 	};
 
 	return {
