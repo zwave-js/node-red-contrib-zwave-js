@@ -6,7 +6,6 @@
 const ZWaveJS = (function () {
 	let networkId = undefined;
 	let selectedNode = undefined;
-	let lastInterviewedNode = undefined;
 	const AdvancedPanels = [];
 	let QRS;
 
@@ -1072,6 +1071,22 @@ const ZWaveJS = (function () {
 		}
 	};
 
+	const ClearSelection = (Controller) => {
+		$('#zwjs-node-info-id').text('--');
+		$('#zwjs-node-info').text('No Node Selected');
+		$('#zwjs-endpoint-list').empty();
+		$('#zwjs-node-status').empty();
+		$('#zwjs-cc-list').treeList('empty');
+		$('#zwjs-node-list').treeList('empty');
+		selectedNode = undefined;
+
+		if (Controller) {
+			$('#zwjs-controller-info').text('No Network Selected');
+			$('#zwjs-controller-status').empty();
+			networkId = undefined;
+		}
+	};
+
 	const RefreshNodes = (Reason, NodeID) => {
 		if (!networkId) {
 			return;
@@ -1082,13 +1097,7 @@ const ZWaveJS = (function () {
 			case 'NetworkJoin':
 			case 'NetworkLeft':
 			case 'NetworkSelected':
-				$('#zwjs-node-info-id').text('--');
-				$('#zwjs-node-info').text('No Node Selected');
-				$('#zwjs-endpoint-list').empty();
-				$('#zwjs-node-status').empty();
-				$('#zwjs-cc-list').treeList('empty');
-				$('#zwjs-node-list').treeList('empty');
-				selectedNode = undefined;
+				ClearSelection();
 				CloseTray();
 				break;
 
@@ -1097,13 +1106,7 @@ const ZWaveJS = (function () {
 
 			case 'NodeRemoved':
 				if (selectedNode && selectedNode.nodeId === NodeID) {
-					$('#zwjs-node-info-id').text('--');
-					$('#zwjs-node-info').text('No Node Selected');
-					$('#zwjs-endpoint-list').empty();
-					$('#zwjs-node-status').empty();
-					$('#zwjs-cc-list').treeList('empty');
-					$('#zwjs-node-list').treeList('empty');
-					selectedNode = undefined;
+					ClearSelection();
 				}
 				break;
 		}
@@ -1162,14 +1165,13 @@ const ZWaveJS = (function () {
 
 	// Network Selecetd
 	const NetworkSelected = function () {
-		// Remove Subscriptions
 		if (networkId) {
 			// unsubscribe
 			setSubscription(false);
-			networkId = undefined;
 		}
 
-		if (!$('#zwjs-network').val()) {
+		if ($('#zwjs-network').val() === 'NONE') {
+			ClearSelection(true);
 			return;
 		}
 
@@ -1402,13 +1404,21 @@ const ZWaveJS = (function () {
 	const SelectFirstNetwork = () => {
 		const Networks = $('#zwjs-network');
 		if (Networks.children().length === 2) {
-			const Value = Networks.children()[1].val();
+			const Value = Networks.children().eq(1).val();
 			Networks.val(Value);
 			NetworkSelected();
 		}
 	};
 
-	const RemoveNetwork = (network) => {};
+	const RemoveNetwork = (network) => {
+		const Networks = $('#zwjs-network');
+		if (Networks.val() === network.id) {
+			ClearSelection(true);
+		}
+
+		Networks.children(`option[value="${network.id}"]`).remove();
+		SelectFirstNetwork();
+	};
 
 	const ListOrAddNetworks = (search, network) => {
 		const Networks = $('#zwjs-network');
@@ -1486,6 +1496,7 @@ const ZWaveJS = (function () {
 		ListOrAddNetworks(true);
 
 		RED.comms.subscribe('zwave-js/ui/global/addnetwork', (topic, network) => ListOrAddNetworks(false, network));
+		RED.comms.subscribe('zwave-js/ui/global/removenetwork', (topic, network) => RemoveNetwork(network));
 	};
 
 	return {
