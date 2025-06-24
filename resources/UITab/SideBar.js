@@ -166,6 +166,8 @@ const ZWaveJS = (function () {
 
 				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/valueadded`, commsHandleValueUpdate);
 				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/valueupdate`, commsHandleValueUpdate);
+
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/nvm/backupprogress`, NVMBackupProgressReport);
 				return;
 
 			case false:
@@ -190,6 +192,8 @@ const ZWaveJS = (function () {
 
 				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/valueadded`, commsHandleValueUpdate);
 				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/valueupdate`, commsHandleValueUpdate);
+
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/controller/nvm/backupprogress`, NVMBackupProgressReport);
 				return;
 		}
 	};
@@ -285,6 +289,49 @@ const ZWaveJS = (function () {
 				}
 			}
 		});
+	};
+
+	const NVMBackupProgressReport = (topic, data) => {
+		$('#zwjs-prog-contain-nvm').css({ display: 'block' });
+		const Read = data.bytesRead;
+		const Total = data.total;
+		const Percentage = (Read / Total) * 100;
+		$('#zwjs-prog-bar-nvm').css({ width: `${Percentage}%` });
+	};
+
+	const BackupController = (Button) => {
+		DisableButton(Button);
+		Runtime.Get('CONTROLLER', 'backupNVMRaw').then((R) => {
+			if (!R.callSuccess) {
+				EnableButton(Button);
+				alert(R.response);
+			} else {
+				$('#zwjs-prog-contain-nvm').css({ display: 'none' });
+				EnableButton(Button);
+				alert(`The Controller has been backed up. Saved to : ${R.response}`);
+			}
+		});
+	};
+
+	const ResetController = (Button) => {
+		if (
+			confirm(
+				'Are you sure you wish to continue? This will reset the controller back to Factory Standard, and if operating as the Primary Controller - will clear the Network of all Nodes.'
+			)
+		) {
+			DisableButton(Button);
+			Runtime.Get('CONTROLLER', 'hardReset').then((R) => {
+				if (!R.callSuccess) {
+					EnableButton(Button);
+					alert(R.response);
+				} else {
+					EnableButton(Button);
+					alert('The Controller has been Reset - It will now be refreshed in the UI');
+					CloseTray();
+					NetworkSelected();
+				}
+			});
+		}
 	};
 
 	const LeaveAsSlave = (Button) => {
@@ -1523,6 +1570,8 @@ const ZWaveJS = (function () {
 		CheckNodeHealth,
 		JoinAsSlave,
 		LeaveAsSlave,
-		RefreshNodes
+		RefreshNodes,
+		ResetController,
+		BackupController
 	};
 })();

@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const { Driver } = require('zwave-js');
 const { tryParseDSKFromQRCodeString, parseQRCodeString } = require('@zwave-js/core');
 const { ConfigManager } = require('@zwave-js/config');
@@ -238,13 +239,34 @@ module.exports = function (RED) {
 
 					switch (TargetAPI) {
 						case 'CONTROLLER':
-							let option = undefined;
+							let args = undefined;
 							if (Method === 'beginJoiningNetwork') {
-								option = [{ strategy: 0 }];
+								args = [{ strategy: 0 }];
+							}
+							if (Method === 'backupNVMRaw') {
+								args = [
+									(bytesRead, total) => {
+										RED.comms.publish(
+											`zwave-js/ui/${self.id}/controller/nvm/backupprogress`,
+											{ bytesRead, total },
+											false
+										);
+									}
+								];
 							}
 							self
-								.controllerCommand(Method, option)
+								.controllerCommand(Method, args)
 								.then((R) => {
+									if (Method === 'backupNVMRaw') {
+										const FileName = `${self.id}_${new Date().getTime()}.bin`;
+										const TargetFolder = path.join(RED.settings.userDir || '', 'zwave-controller-backups');
+										if (!fs.existsSync(TargetFolder)) {
+											fs.mkdirSync(TargetFolder);
+										}
+										const NVMFIle = path.join(TargetFolder, FileName);
+										fs.writeFileSync(NVMFIle, R);
+										R = NVMFIle;
+									}
 									response.json({ callSuccess: true, response: R });
 								})
 								.catch((error) => {

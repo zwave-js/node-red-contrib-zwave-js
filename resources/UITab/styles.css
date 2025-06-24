@@ -295,3 +295,18 @@ i.zwjs-state-green {
 .zwjs-json-string {
 	color: rgb(130, 152, 52);
 }
+
+.zwjs-progress-container {
+	display: none;
+	width: 100%;
+	margin-top: 20px;
+	background-color: #ddd;
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.zwjs-progress-bar {
+	width: 0%;
+	height: 30px;
+	background-color: rgb(46, 145, 205);
+}

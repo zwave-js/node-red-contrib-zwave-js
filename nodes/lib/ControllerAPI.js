@@ -2,6 +2,13 @@ const { getNodes, getValueDB } = require('./Fetchers');
 const { Message, MessagePriority, MessageType } = require('zwave-js');
 
 const process = async function (DriverInstance, Method, Args) {
+	if (Method === 'backupNVMRaw') {
+		return DriverInstance.controller.backupNVMRaw(...Args);
+	}
+	if (Method === 'hardReset') {
+		return DriverInstance.hardReset();
+	}
+
 	if (Method === 'beginJoiningNetwork') {
 		return DriverInstance.controller.beginJoiningNetwork(...Args);
 	}
@@ -10,11 +17,11 @@ const process = async function (DriverInstance, Method, Args) {
 		return DriverInstance.controller.beginLeavingNetwork();
 	}
 
-	if(Method === 'stopJoiningNetwork'){
+	if (Method === 'stopJoiningNetwork') {
 		return DriverInstance.controller.stopJoiningNetwork();
 	}
 
-	if(Method === 'stopLeavingNetwork'){
+	if (Method === 'stopLeavingNetwork') {
 		return DriverInstance.controller.stopLeavingNetwork();
 	}
 

@@ -194,7 +194,7 @@
 		<div child default onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Info',this, 'ControllerInfo')">Information</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Stats',this, 'ControllerStats')">Statistics</div>
 		<div child>Topology Map</div>
-		<div child>Settings</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Settings',this)">Settings</div>
 		<div child>Rebuild Routes</div>
 		<div child>Firmware Update</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Slave',this)">Secondary Controller Mode</div>
@@ -300,6 +300,32 @@
 			<td>Inclusion Status</td><td>{{inclusionState}}</td>
 		</tr>
 	</table>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Controller-Settings">
+	<fieldset class=zwjs-fieldset>
+		<legend>Reset Controller:</legend>
+		<div>
+			<button onclick="ZWaveJS.ResetController(this)" style="background-color:red">Reset</button>
+		</div>
+		<legend>RF Region:</legend>
+		<div>
+			<button onclick="">Set</button>
+		</div>
+		<legend>Power Level:</legend>
+		<div>
+			<button onclick="">Set</button>
+		</div>
+		<legend>Backup/Restore NVM</legend>
+		<div>
+			<button onclick="ZWaveJS.BackupController(this)">Backup</button>
+			<button onclick="">Restore</button>
+		</div>
+	</fieldset>
+	<div class="zwjs-progress-container" id="zwjs-prog-contain-nvm">
+  			<div class="zwjs-progress-bar" id="zwjs-prog-bar-nvm"></div>
+	</div>
 </script>
 
 <!-- prettier-ignore -->
