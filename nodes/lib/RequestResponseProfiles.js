@@ -1,11 +1,14 @@
 const getProfile = (Name, Result, NodeID) => {
 	const Timestamp = new Date().getTime();
 
-	const makeEvent = (eventName) => {
+	const makeEvent = (eventName, api) => {
 		const event = {
-			Type: 'EVENT',
+			Type: 'RESPONSE',
 			Event: {
-				event: eventName,
+				event: 'API_RESPONSE',
+				requestedAPI: api,
+				requestedMethod: Name,
+				eventSubject: eventName,
 				timestamp: Timestamp,
 				eventBody: Result
 			}
@@ -16,17 +19,17 @@ const getProfile = (Name, Result, NodeID) => {
 		return event;
 	};
 
-	if (Name === 'setName') return makeEvent('NODE_NAME_SET');
-	if (Name === 'setLocation') return makeEvent('NODE_LOCATION_SET');
-	if (Name === 'ping') return makeEvent('NODE_PING_RESPONSE');
-	if (Name === 'invokeCCAPI') return makeEvent('CCAPI_OPERATION_RESPONSE');
-	if (Name === 'getValue') return makeEvent('GET_VALUE_RESPONSE');
-	if (Name === 'pollValue') return makeEvent('POLL_VALUE_RESPONSE');
-	if (Name === 'getValueDB') return makeEvent('VALUE_DB');
-	if (Name === 'getNodes') return makeEvent('NODE_LIST');
-	if (Name === 'setValue') return makeEvent('SET_VALUE_RESPONSE');
-	if (Name === 'refreshInfo') return makeEvent('REFRESH_INFO_RESPONSE');
-	if (Name === 'proprietaryFunction') return makeEvent('PROPRIETARY_FUNCTION_RESULT');
+	if (Name === 'setName') return makeEvent('NODE_NAME_SET', 'NODE');
+	if (Name === 'setLocation') return makeEvent('NODE_LOCATION_SET', 'NODE');
+	if (Name === 'ping') return makeEvent('NODE_PING_RESPONSE', 'NODE');
+	if (Name === 'invokeCCAPI') return makeEvent('CCAPI_OPERATION_RESPONSE', 'CC');
+	if (Name === 'getValue') return makeEvent('GET_VALUE_RESPONSE', 'VALUE');
+	if (Name === 'pollValue') return makeEvent('POLL_VALUE_RESPONSE', 'VALUE');
+	if (Name === 'getValueDB') return makeEvent('VALUE_DB', 'DRIVER');
+	if (Name === 'getNodes') return makeEvent('NODE_LIST', 'CONTROLLER');
+	if (Name === 'setValue') return makeEvent('SET_VALUE_RESPONSE', 'VALUE');
+	if (Name === 'refreshInfo') return makeEvent('REFRESH_INFO_RESPONSE', 'NODE');
+	if (Name === 'proprietaryFunction') return makeEvent('PROPRIETARY_FUNCTION_RESULT', 'CONTROLLER');
 
 	return undefined;
 };

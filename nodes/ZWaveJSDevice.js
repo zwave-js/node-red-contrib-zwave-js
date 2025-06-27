@@ -77,7 +77,7 @@ module.exports = (RED) => {
 								.then((Result) => {
 									sendTrackingUpdate(Req, Result);
 									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties.nodeId);
-									if (Return && Return.Type === 'EVENT') {
+									if (Return && Return.Type === 'RESPONSE') {
 										send({ payload: Return.Event });
 										done();
 									} else {
@@ -110,7 +110,7 @@ module.exports = (RED) => {
 								.then((Result) => {
 									sendTrackingUpdate(Req, Result);
 									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties.nodeId);
-									if (Return && Return.Type === 'EVENT') {
+									if (Return && Return.Type === 'RESPONSE') {
 										send({ payload: Return.Event });
 										done();
 									} else {
@@ -136,7 +136,7 @@ module.exports = (RED) => {
 							.then((Result) => {
 								sendTrackingUpdate(Req, Result);
 								const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties.nodeId);
-								if (Return && Return.Type === 'EVENT') {
+								if (Return && Return.Type === 'RESPONSE') {
 									send({ payload: Return.Event });
 									done();
 								} else {

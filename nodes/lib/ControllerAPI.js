@@ -1,12 +1,9 @@
-const { getNodes, getValueDB } = require('./Fetchers');
+const { getNodes } = require('./Fetchers');
 const { Message, MessagePriority, MessageType } = require('zwave-js');
 
 const process = async function (DriverInstance, Method, Args) {
 	if (Method === 'backupNVMRaw') {
 		return DriverInstance.controller.backupNVMRaw(...Args);
-	}
-	if (Method === 'hardReset') {
-		return DriverInstance.hardReset();
 	}
 
 	if (Method === 'beginJoiningNetwork') {
@@ -113,14 +110,6 @@ const process = async function (DriverInstance, Method, Args) {
 
 	if (Method === 'stopExclusion') {
 		return DriverInstance.controller.stopExclusion();
-	}
-
-	if (Method === 'getValueDB') {
-		try {
-			return getValueDB(DriverInstance, Args);
-		} catch (Err) {
-			return Promise.reject(Err);
-		}
 	}
 
 	if (Method === 'getNodes') {

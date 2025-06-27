@@ -3,6 +3,7 @@ const AllowedControllerCommands = require('./lib/AllowedUsersCommands').Controll
 const AllowedNodeCommands = require('./lib/AllowedUsersCommands').Node;
 const AllowedValueCommands = require('./lib/AllowedUsersCommands').Value;
 const AllowedCCCommands = require('./lib/AllowedUsersCommands').CC;
+const AllowedDriverCommands = require('./lib/AllowedUsersCommands').Driver;
 
 module.exports = (RED) => {
 	const init = function (config) {
@@ -55,6 +56,29 @@ module.exports = (RED) => {
 
 			if (Req.cmd) {
 				switch (Req.cmd.api) {
+					case 'DRIVER':
+						if (!AllowedDriverCommands.includes(Req.cmd.method)) {
+							done(new Error('Sorry! This method is limited to the UI only, or is an invalid method.'));
+							return;
+						}
+						self.runtime
+							.driverCommand(Req.cmd.method, Req.cmdProperties?.args)
+							.then((Result) => {
+								sendTrackingUpdate(Req, Result);
+								const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId);
+								if (Return && Return.Type === 'RESPONSE') {
+									send({ payload: Return.Event });
+									done();
+								} else {
+									done();
+								}
+							})
+							.catch((Error) => {
+								sendTrackingUpdate(Req, Error);
+								done(Error);
+							});
+						break;
+
 					case 'CONTROLLER':
 						if (!AllowedControllerCommands.includes(Req.cmd.method)) {
 							done(new Error('Sorry! This method is limited to the UI only, or is an invalid method.'));
@@ -65,7 +89,7 @@ module.exports = (RED) => {
 							.then((Result) => {
 								sendTrackingUpdate(Req, Result);
 								const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId);
-								if (Return && Return.Type === 'EVENT') {
+								if (Return && Return.Type === 'RESPONSE') {
 									send({ payload: Return.Event });
 									done();
 								} else {
@@ -96,7 +120,7 @@ module.exports = (RED) => {
 								.then((Result) => {
 									sendTrackingUpdate(Req, Result);
 									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId);
-									if (Return && Return.Type === 'EVENT') {
+									if (Return && Return.Type === 'RESPONSE') {
 										send({ payload: Return.Event });
 										done();
 									} else {
@@ -129,7 +153,7 @@ module.exports = (RED) => {
 								.then((Result) => {
 									sendTrackingUpdate(Req, Result);
 									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId);
-									if (Return && Return.Type === 'EVENT') {
+									if (Return && Return.Type === 'RESPONSE') {
 										send({ payload: Return.Event });
 										done();
 									} else {
@@ -156,7 +180,7 @@ module.exports = (RED) => {
 								.then((Result) => {
 									sendTrackingUpdate(Req, Result);
 									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId);
-									if (Return && Return.Type === 'EVENT') {
+									if (Return && Return.Type === 'RESPONSE') {
 										send({ payload: Return.Event });
 										done();
 									} else {

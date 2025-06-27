@@ -306,9 +306,29 @@ const ZWaveJS = (function () {
 				EnableButton(Button);
 				alert(R.response);
 			} else {
-				$('#zwjs-prog-contain-nvm').css({ display: 'none' });
+				const CD = $('#zwjs-controller-info').data('info');
+				const FileName = `zwave_nvm_${CD.homeId}.bin`;
+
+				const byteArray = Object.values(R.response);
+				const uint8Array = new Uint8Array(byteArray);
+				const blob = new Blob([uint8Array], { type: 'application/octet-stream' });
+				const url = URL.createObjectURL(blob);
+
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = FileName;
+				document.body.appendChild(a);
+				alert(`Controller Backup is now completed, your browser will now downlaod the file: ${FileName}`);
+				a.click();
+
+				document.body.removeChild(a);
+				URL.revokeObjectURL(url);
+
+				setTimeout(() => {
+					$('#zwjs-prog-contain-nvm').css({ display: 'none' });
+				}, 100);
+
 				EnableButton(Button);
-				alert(`The Controller has been backed up. Saved to : ${R.response}`);
 			}
 		});
 	};
@@ -320,7 +340,7 @@ const ZWaveJS = (function () {
 			)
 		) {
 			DisableButton(Button);
-			Runtime.Get('CONTROLLER', 'hardReset').then((R) => {
+			Runtime.Get('DRIVER', 'hardReset').then((R) => {
 				if (!R.callSuccess) {
 					EnableButton(Button);
 					alert(R.response);
@@ -1412,7 +1432,7 @@ const ZWaveJS = (function () {
 		const Info = `${selectedNode.deviceConfig.manufacturer} | ${selectedNode.deviceConfig.label} | v${selectedNode.firmwareVersion}`;
 		$('#zwjs-node-info').text(Info);
 
-		Runtime.Post('CONTROLLER', 'getValueDB', [selectedNode.nodeId])
+		Runtime.Post('DRIVER', 'getValueDB', [selectedNode.nodeId])
 			.then((data) => {
 				if (data.callSuccess) {
 					data = data.response[0];

@@ -8,6 +8,7 @@ const ControllerAPI_Process = require('./lib/ControllerAPI').process;
 const ValueAPI_Process = require('./lib/ValueAPI').process;
 const CCAPI_Process = require('./lib/CCAPI').process;
 const NodeAPI_Process = require('./lib/NodeAPI').process;
+const Driver_Process = require('./lib/DriverAPI').process;
 const { getNodes } = require('./lib/Fetchers');
 
 const APP_NAME = 'node-red-contrib-zwave-js';
@@ -110,6 +111,13 @@ module.exports = function (RED) {
 		self.nodeCommand = function (Method, NodeID, Value, Args) {
 			if (self.driverInstance) {
 				return NodeAPI_Process(self.driverInstance, Method, NodeID, Value, Args);
+			}
+			return Promise.reject('Driver Instance');
+		};
+
+		self.driverCommand = function (Method, Args) {
+			if (self.driverInstance) {
+				return Driver_Process(self.driverInstance, Method, Args);
 			}
 			return Promise.reject('Driver Instance');
 		};
@@ -257,16 +265,17 @@ module.exports = function (RED) {
 							self
 								.controllerCommand(Method, args)
 								.then((R) => {
-									if (Method === 'backupNVMRaw') {
-										const FileName = `${self.id}_${new Date().getTime()}.bin`;
-										const TargetFolder = path.join(RED.settings.userDir || '', 'zwave-controller-backups');
-										if (!fs.existsSync(TargetFolder)) {
-											fs.mkdirSync(TargetFolder);
-										}
-										const NVMFIle = path.join(TargetFolder, FileName);
-										fs.writeFileSync(NVMFIle, R);
-										R = NVMFIle;
-									}
+									response.json({ callSuccess: true, response: R });
+								})
+								.catch((error) => {
+									response.json({ callSuccess: false, response: error.message });
+								});
+							break;
+
+						case 'DRIVER':
+							self
+								.driverCommand(Method)
+								.then((R) => {
 									response.json({ callSuccess: true, response: R });
 								})
 								.catch((error) => {
@@ -323,6 +332,17 @@ module.exports = function (RED) {
 						case 'CONTROLLER':
 							self
 								.controllerCommand(Method, request.body)
+								.then((R) => {
+									response.json({ callSuccess: true, response: R });
+								})
+								.catch((error) => {
+									response.json({ callSuccess: false, response: error.message });
+								});
+							break;
+
+						case 'DRIVER':
+							self
+								.driverCommand(Method, request.body)
 								.then((R) => {
 									response.json({ callSuccess: true, response: R });
 								})
