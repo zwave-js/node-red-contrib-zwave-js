@@ -56,13 +56,15 @@ const ZWaveJS = (function () {
 		}
 
 		if (topic.endsWith('joined')) {
-			CloseTray();
-			RefreshNodes('NetworkJoin');
+			RenderAdvanced('ZWJS_TPL_Tray-Controller-Slave-JoinState', undefined, {
+				message: 'Your Controller has now Joined the network, please Restart the Driver below'
+			});
 		}
 
 		if (topic.endsWith('left')) {
-			CloseTray();
-			RefreshNodes('NetworkLeft');
+			RenderAdvanced('ZWJS_TPL_Tray-Controller-Slave-JoinState', undefined, {
+				message: 'Your Controller has now Left the network, please Restart the Driver below'
+			});
 		}
 	};
 
@@ -168,6 +170,7 @@ const ZWaveJS = (function () {
 				RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/valueupdate`, commsHandleValueUpdate);
 
 				RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/nvm/backupprogress`, NVMBackupProgressReport);
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/nvm/restoreprogress`, NVMRestoreProgressReport);
 				return;
 
 			case false:
@@ -194,6 +197,7 @@ const ZWaveJS = (function () {
 				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/valueupdate`, commsHandleValueUpdate);
 
 				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/controller/nvm/backupprogress`, NVMBackupProgressReport);
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/controller/nvm/restoreprogress`, NVMRestoreProgressReport);
 				return;
 		}
 	};
@@ -266,6 +270,12 @@ const ZWaveJS = (function () {
 		}
 	};
 
+	const RestartDriver = (Button) => {
+		Runtime.Get('DRIVER', 'Restart').then((R) => {
+			CloseTray();
+		});
+	};
+
 	const JoinAsSlave = (Button) => {
 		Runtime.Get('CONTROLLER', 'beginJoiningNetwork').then((R) => {
 			if (!R.callSuccess) {
@@ -291,12 +301,67 @@ const ZWaveJS = (function () {
 		});
 	};
 
+	const NVMRestoreProgressReport = (topic, data) => {
+		$('#zwjs-prog-contain-nvm').css({ display: 'block' });
+		const Done = data.done;
+		const Total = data.total;
+		const Percentage = (Done / Total) * 100;
+		$('#zwjs-prog-bar-nvm').css({ width: `${Percentage}%` });
+		$('#zwjs-prog-bar-nvm').text(`${data.label} ${Math.round(Percentage)}%`);
+	};
+
 	const NVMBackupProgressReport = (topic, data) => {
 		$('#zwjs-prog-contain-nvm').css({ display: 'block' });
 		const Read = data.bytesRead;
 		const Total = data.total;
 		const Percentage = (Read / Total) * 100;
 		$('#zwjs-prog-bar-nvm').css({ width: `${Percentage}%` });
+		$('#zwjs-prog-bar-nvm').text(`${data.label} ${Math.round(Percentage)}%`);
+	};
+
+	const RestoreController = (Button) => {
+		if (
+			confirm(
+				'Note: This will alter the Controllers NVM, and will be configured according to the backup file you will restore to - Do you wish to comntinue?'
+			)
+		) {
+			const promptFileUpload = () => {
+				const fileInput = document.createElement('input');
+				fileInput.type = 'file';
+				fileInput.style.display = 'none';
+				document.body.appendChild(fileInput);
+
+				fileInput.addEventListener('change', async () => {
+					const file = fileInput.files[0];
+					if (!file) {
+						alert('No file selected');
+						document.body.removeChild(fileInput);
+						return;
+					}
+
+					const reader = new FileReader();
+					reader.onload = function (e) {
+						const arrayBuffer = e.target.result;
+						const byteArray = new Uint8Array(arrayBuffer);
+						Runtime.Post('CONTROLLER', 'restoreNVM', [{ bytes: byteArray }]).then((R) => {
+							if (!R.callSuccess) {
+								EnableButton(Button);
+								alert(R.response);
+							} else {
+								EnableButton(Button);
+								alert('The restore has been completed! - Please allow a few minutes for the controller to reboot.');
+							}
+						});
+					};
+					reader.readAsArrayBuffer(file);
+					document.body.removeChild(fileInput);
+				});
+
+				fileInput.click();
+			};
+			DisableButton(Button);
+			promptFileUpload();
+		}
 	};
 
 	const BackupController = (Button) => {
@@ -1592,6 +1657,8 @@ const ZWaveJS = (function () {
 		LeaveAsSlave,
 		RefreshNodes,
 		ResetController,
-		BackupController
+		BackupController,
+		RestoreController,
+		RestartDriver
 	};
 })();

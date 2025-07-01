@@ -209,6 +209,16 @@
 </script>
 
 <!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Controller-Slave-JoinState">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">{{message}}</div>
+		<div>
+			<button onclick="ZWaveJS.RestartDriver()">Restart Driver</button>
+		</div>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_FailedNodes">
 	<fieldset class=zwjs-fieldset>
 		<div class="zwjs-hint">Below is a list of Failed Nodes, from here you can attempt to ping them (which will remove the Failed flag  - if they respond), else you can remove them.</div>
@@ -320,8 +330,9 @@
 		<legend>Backup/Restore NVM</legend>
 		<div>
 			<button onclick="ZWaveJS.BackupController(this)">Backup</button>
-			<button onclick="">Restore</button>
+			<button onclick="ZWaveJS.RestoreController(this)">Restore</button>
 		</div>
+		
 	</fieldset>
 	<div class="zwjs-progress-container" id="zwjs-prog-contain-nvm">
   			<div class="zwjs-progress-bar" id="zwjs-prog-bar-nvm"></div>

@@ -309,4 +309,8 @@ i.zwjs-state-green {
 	width: 0%;
 	height: 30px;
 	background-color: rgb(46, 145, 205);
+	text-align: center;
+	line-height: 30px;
+	color: white;
+	overflow: hidden;
 }

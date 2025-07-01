@@ -165,7 +165,11 @@ module.exports = function (RED) {
 		};
 
 		// Create HTTP API
-		const createHTTPAPI = () => {
+		const createHTTPAPI = (resetHTTP) => {
+			if (resetHTTP) {
+				removeHTTPAPI();
+			}
+
 			RED.comms.publish('zwave-js/ui/global/addnetwork', { name: self.config.name, id: self.id }, false);
 
 			RED.httpAdmin.get(`/zwave-js/ui/${self.id}/status`, RED.auth.needsPermission('flows.write'), (_, response) => {
@@ -256,7 +260,7 @@ module.exports = function (RED) {
 									(bytesRead, total) => {
 										RED.comms.publish(
 											`zwave-js/ui/${self.id}/controller/nvm/backupprogress`,
-											{ bytesRead, total },
+											{ bytesRead, total, label: 'Extracting NVM...' },
 											false
 										);
 									}
@@ -273,6 +277,15 @@ module.exports = function (RED) {
 							break;
 
 						case 'DRIVER':
+							if (Method === 'Restart') {
+								Shutdown().then(() => {
+									RED.comms.publish('zwave-js/ui/global/removenetwork', { id: self.id }, false);
+									response.json({ callSuccess: true });
+									Startup(true);
+								});
+								break;
+							}
+
 							self
 								.driverCommand(Method)
 								.then((R) => {
@@ -295,10 +308,7 @@ module.exports = function (RED) {
 
 					switch (TargetAPI) {
 						case 'NODE':
-							const Params = {
-								nodeId: request.body.nodeId,
-								value: request.body.value
-							};
+							let args = undefined;
 							if (Method === 'checkLifelineHealth') {
 								const CB = (round, totalRounds, lastRating, lastResult) => {
 									RED.comms.publish(
@@ -307,10 +317,10 @@ module.exports = function (RED) {
 										false
 									);
 								};
-								Params.args = [5, CB];
+								args = [5, CB];
 							}
 							self
-								.nodeCommand(Method, Params.nodeId, Params.value, Params.args)
+								.nodeCommand(Method, request.body.nodeId, request.body.value, args)
 								.then((R) => {
 									response.json({ callSuccess: true, response: R });
 								})
@@ -330,8 +340,29 @@ module.exports = function (RED) {
 							break;
 
 						case 'CONTROLLER':
+							let Args = request.body;
+							if (Method === 'restoreNVM') {
+								const byteArray = Object.values(Args[0].bytes);
+								const uint8Array = new Uint8Array(byteArray);
+								const Send = (Label, done, total) => {
+									RED.comms.publish(
+										`zwave-js/ui/${self.id}/controller/nvm/restoreprogress`,
+										{ done, total, label: Label },
+										false
+									);
+								};
+								Args = [
+									uint8Array,
+									(bytesRead, total) => {
+										Send('Converting Restore...', bytesRead, total);
+									},
+									(bytesWritten, total) => {
+										Send('Writing to NVM...', bytesWritten, total);
+									}
+								];
+							}
 							self
-								.controllerCommand(Method, request.body)
+								.controllerCommand(Method, Args)
 								.then((R) => {
 									response.json({ callSuccess: true, response: R });
 								})
@@ -372,14 +403,9 @@ module.exports = function (RED) {
 			removeHTTPAPI();
 			controllerNodes = {};
 			deviceNodes = {};
-			if (self.driverInstance) {
-				self.driverInstance.destroy().then(() => {
-					self.driverInstance = undefined;
-					done();
-				});
-			} else {
+			Shutdown().then(() => {
 				done();
-			}
+			});
 		});
 
 		// S2 Callbacks
@@ -494,11 +520,11 @@ module.exports = function (RED) {
 			);
 
 		// Driver callback subscriptions
-		const wireDriverEvents = () => {
+		const wireDriverEvents = (resetHTTP) => {
 			// Driver ready
 			self.driverInstance?.once(event_DriverReady.driverName, () => {
 				exposeGlobalAPI();
-				createHTTPAPI();
+				createHTTPAPI(resetHTTP);
 				wireSubDriverEvents();
 
 				const ControllerNodeIDs = Object.keys(controllerNodes);
@@ -524,10 +550,6 @@ module.exports = function (RED) {
 		const wireSubDriverEvents = () => {
 			// Joined As Slave
 			self.driverInstance?.controller.on(event_NetworkJoined.driverName, () => {
-				self.driverInstance?.controller.nodes.forEach((Node) => {
-					wireNodeEvents(Node);
-				});
-
 				RED.comms.publish(`zwave-js/ui/${self.id}/controller/slave/joined`, {}, false);
 			});
 
@@ -1101,36 +1123,47 @@ module.exports = function (RED) {
 			});
 		};
 
-		try {
-			self.driverInstance = new Driver(self.config.serialPort, ZWaveOptions);
-		} catch (err) {
-			self.error(err);
-			return;
-		}
+		const Shutdown = async () => {
+			if (self.driverInstance) {
+				await self.driverInstance.destroy();
+				self.driverInstance = undefined;
+			}
+		};
 
-		if (self.config.enableStatistics) {
-			self.driverInstance?.enableStatistics({
-				applicationName: APP_NAME,
-				applicationVersion: APP_VERSION
+		const Startup = (resetHTTP) => {
+			try {
+				self.driverInstance = new Driver(self.config.serialPort, ZWaveOptions);
+			} catch (err) {
+				self.error(err);
+				return;
+			}
+
+			if (self.config.enableStatistics) {
+				self.driverInstance?.enableStatistics({
+					applicationName: APP_NAME,
+					applicationVersion: APP_VERSION
+				});
+			} else {
+				self.driverInstance?.disableStatistics();
+			}
+
+			wireDriverEvents(resetHTTP);
+
+			self.driverInstance?.on('error', (Err) => {
+				self.error(Err);
 			});
-		} else {
-			self.driverInstance?.disableStatistics();
-		}
 
-		wireDriverEvents();
+			self.driverInstance
+				.start()
+				.catch((e) => {
+					self.error(e);
+				})
+				.then(() => {
+					//
+				});
+		};
 
-		self.driverInstance?.on('error', (Err) => {
-			self.error(Err);
-		});
-
-		self.driverInstance
-			.start()
-			.catch((e) => {
-				self.error(e);
-			})
-			.then(() => {
-				//
-			});
+		Startup(false);
 	};
 
 	RED.nodes.registerType('zwavejs-runtime', init);

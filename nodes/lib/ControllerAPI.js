@@ -6,6 +6,10 @@ const process = async function (DriverInstance, Method, Args) {
 		return DriverInstance.controller.backupNVMRaw(...Args);
 	}
 
+	if (Method === 'restoreNVM') {
+		return DriverInstance.controller.restoreNVM(...Args);
+	}
+
 	if (Method === 'beginJoiningNetwork') {
 		return DriverInstance.controller.beginJoiningNetwork(...Args);
 	}

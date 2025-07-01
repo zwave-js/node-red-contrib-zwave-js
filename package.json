@@ -6,11 +6,11 @@
 	"dependencies": {
 		"limiter": "^3.0.0",
 		"lodash": "^4.17.21",
-		"zwave-js":"^15.6.0"
+		"zwave-js":"^15.8.0"
 	},
 	"devDependencies": {
-		"eslint": "^9.28.0",
-		"prettier": "^3.5.3"
+		"eslint": "^9.30.0",
+		"prettier": "^3.6.2"
 	},
 	"engines": {
 		"node": ">=20.0.0"
