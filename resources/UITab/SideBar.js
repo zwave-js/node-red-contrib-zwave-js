@@ -56,15 +56,13 @@ const ZWaveJS = (function () {
 		}
 
 		if (topic.endsWith('joined')) {
-			RenderAdvanced('ZWJS_TPL_Tray-Controller-Slave-JoinState', undefined, {
-				message: 'Your Controller has now Joined the network, please Restart the Driver below'
-			});
+			CloseTray();
+			RefreshNodes('NetworkJoin');
 		}
 
 		if (topic.endsWith('left')) {
-			RenderAdvanced('ZWJS_TPL_Tray-Controller-Slave-JoinState', undefined, {
-				message: 'Your Controller has now Left the network, please Restart the Driver below'
-			});
+			CloseTray();
+			RefreshNodes('NetworkLeft');
 		}
 	};
 
@@ -268,12 +266,6 @@ const ZWaveJS = (function () {
 				.replace(/>/g, '&gt;')
 				.replace(jsonLine, JSONFormatter.json.replacer);
 		}
-	};
-
-	const RestartDriver = (Button) => {
-		Runtime.Get('DRIVER', 'Restart').then((R) => {
-			CloseTray();
-		});
 	};
 
 	const JoinAsSlave = (Button) => {
@@ -1357,6 +1349,7 @@ const ZWaveJS = (function () {
 						return '';
 					}
 				};
+
 				const sItem = {
 					element: `<div style="width:100%; margin-right:30px">${V.metadata.label} ${getCurrentValue(V.currentValue)}</div>`,
 					icon: V.metadata.writeable ? 'fa fa-pencil' : '',
@@ -1658,7 +1651,6 @@ const ZWaveJS = (function () {
 		RefreshNodes,
 		ResetController,
 		BackupController,
-		RestoreController,
-		RestartDriver
+		RestoreController
 	};
 })();

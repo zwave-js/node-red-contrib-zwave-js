@@ -550,6 +550,9 @@ module.exports = function (RED) {
 		const wireSubDriverEvents = () => {
 			// Joined As Slave
 			self.driverInstance?.controller.on(event_NetworkJoined.driverName, () => {
+				self.driverInstance?.controller.nodes.forEach((Node) => {
+					wireNodeEvents(Node);
+				});
 				RED.comms.publish(`zwave-js/ui/${self.id}/controller/slave/joined`, {}, false);
 			});
 
