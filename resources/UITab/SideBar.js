@@ -51,7 +51,8 @@ const ZWaveJS = (function () {
 
 	const commsHandleSlaveOps = (topic, data) => {
 		if (topic.endsWith('dsk')) {
-			data.slaveJoinDSK = data.slaveJoinDSK.toString();
+			data.slaveJoinDSK = data.slaveJoinDSK.toString().substring(0, 5);
+
 			RenderAdvanced('ZWJS_TPL_Tray-Controller-Slave-DSK', undefined, data);
 		}
 
@@ -1126,71 +1127,103 @@ const ZWaveJS = (function () {
 	};
 
 	const RenderNodeIconState = (Node) => {
-		$(`#zwjs-node-state-interview-${Node.nodeId}`).removeClass();
-		$(`#zwjs-node-state-status-${Node.nodeId}`).removeClass();
-		$(`#zwjs-node-state-power-${Node.nodeId}`).removeClass();
-		$(`#zwjs-node-state-security-${Node.nodeId}`).removeClass();
+		const el_interview = $(`#zwjs-node-state-interview-${Node.nodeId}`);
+		const el_status = $(`#zwjs-node-state-status-${Node.nodeId}`);
+		const el_power = $(`#zwjs-node-state-power-${Node.nodeId}`);
+		const el_security = $(`#zwjs-node-state-security-${Node.nodeId}`);
+
+		el_interview.removeClass();
+		el_status.removeClass();
+		el_power.removeClass();
+		el_security.removeClass();
 
 		if (Node.interviewStage !== 'Complete') {
-			$(`#zwjs-node-state-interview-${Node.nodeId}`).addClass(['fa', 'fa-handshake-o', 'zwjs-state-amber']);
+			el_interview.addClass(['fa', 'fa-handshake-o', 'zwjs-state-amber']);
+			RED.popover.tooltip(el_interview, 'Pending Interview');
 		} else {
-			$(`#zwjs-node-state-interview-${Node.nodeId}`).addClass(['fa', 'fa-check', 'zwjs-state-green']);
+			el_interview.addClass(['fa', 'fa-check', 'zwjs-state-green']);
+			RED.popover.tooltip(el_interview, 'Fully Interviewed');
 		}
 
 		switch (Node.status) {
 			case 'Alive':
-				$(`#zwjs-node-state-status-${Node.nodeId}`).addClass(['fa', 'fa-sun-o', 'zwjs-state-green']);
+				el_status.addClass(['fa', 'fa-sun-o', 'zwjs-state-green']);
+				RED.popover.tooltip(el_status, 'Alive/Awake');
 				break;
 			case 'Asleep':
-				$(`#zwjs-node-state-status-${Node.nodeId}`).addClass(['fa', 'fa-moon-o', 'zwjs-state-amber']);
+				el_status.addClass(['fa', 'fa-moon-o', 'zwjs-state-amber']);
+				RED.popover.tooltip(el_status, 'Alseep');
 				break;
 			case 'Dead':
-				$(`#zwjs-node-state-status-${Node.nodeId}`).addClass(['fa', 'fa-exclamation-triangle', 'zwjs-state-red']);
+				$el_status.addClass(['fa', 'fa-exclamation-triangle', 'zwjs-state-red']);
+				RED.popover.tooltip(el_status, 'Dead/Not Responding');
 				break;
 		}
 
-		const powerElem = $(`#zwjs-node-state-power-${Node.nodeId}`);
-
 		if (Node.powerSource.type === 'mains') {
-			powerElem.addClass(['fa', 'fa-plug', 'zwjs-state-green']);
+			el_power.addClass(['fa', 'fa-plug', 'zwjs-state-green']);
+			RED.popover.tooltip(el_power, 'Mains Powered');
 		} else {
-			powerElem.removeClass(
+			el_power.removeClass(
 				'fa-battery-empty fa-battery-quarter fa-battery-half fa-battery-three-quarters fa-battery-full'
 			);
+			RED.popover.tooltip(el_power, `Battery Powered: (${Node.powerSource.level}%)`);
 
-			powerElem.addClass('fa');
+			el_power.addClass('fa');
 
 			if (Node.powerSource.level <= 10) {
-				powerElem.addClass('fa-battery-empty');
+				el_power.addClass('fa-battery-empty');
 			} else if (Node.powerSource.level <= 25) {
-				powerElem.addClass('fa-battery-quarter');
+				el_power.addClass('fa-battery-quarter');
 			} else if (Node.powerSource.level <= 75) {
-				powerElem.addClass('fa-battery-half');
+				el_power.addClass('fa-battery-half');
 			} else if (Node.powerSource.level <= 85) {
-				powerElem.addClass('fa-battery-three-quarters');
+				el_power.addClass('fa-battery-three-quarters');
 			} else {
-				powerElem.addClass('fa-battery-full');
+				el_power.addClass('fa-battery-full');
 			}
 
 			if (Node.powerSource.isLow) {
-				powerElem.addClass('zwjs-state-red');
+				el_power.addClass('zwjs-state-red');
 			} else {
-				powerElem.addClass('zwjs-state-green');
+				el_power.addClass('zwjs-state-green');
 			}
 		}
+
+		const GetSecurityClassLabel = (SC) => {
+			switch (SC) {
+				case 0:
+					return 'S2 | Unauthenticated';
+
+				case 1:
+					return 'S2 | Authenticated';
+
+				case 2:
+					return 'S2 | Access Control';
+
+				case 7:
+					return 'S0 | Legacy';
+
+				default:
+					return 'No Security';
+			}
+		};
 
 		switch (Node.highestSecurityClass) {
 			case 0:
 			case 1:
 			case 2:
-				$(`#zwjs-node-state-security-${Node.nodeId}`).addClass(['fa', 'fa-lock', 'zwjs-state-green']);
+				el_security.addClass(['fa', 'fa-lock', 'zwjs-state-green']);
+				RED.popover.tooltip(el_security, GetSecurityClassLabel(Node.highestSecurityClass));
 				break;
 			case 7:
-				$(`#zwjs-node-state-security-${Node.nodeId}`).addClass(['fa', 'fa-lock', 'zwjs-state-amber']);
+				el_security.addClass(['fa', 'fa-lock', 'zwjs-state-amber']);
+				RED.popover.tooltip(el_security, GetSecurityClassLabel(Node.highestSecurityClass));
 				break;
 
 			default:
-				$(`#zwjs-node-state-security-${Node.nodeId}`).addClass(['fa', 'fa-unlock-alt', 'zwjs-state-red']);
+				el_security.addClass(['fa', 'fa-unlock-alt', 'zwjs-state-red']);
+				RED.popover.tooltip(el_security, GetSecurityClassLabel(Node.highestSecurityClass));
 				break;
 		}
 	};
