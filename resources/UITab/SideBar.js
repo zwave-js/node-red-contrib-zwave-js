@@ -67,6 +67,8 @@ const ZWaveJS = (function () {
 		}
 	};
 
+	const CFirmwareReport = (topic, data) => {};
+
 	let clientSideAuth = false;
 	const SClassMap = {
 		0: 'S2 Unauthenticated',
@@ -170,6 +172,10 @@ const ZWaveJS = (function () {
 
 				RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/nvm/backupprogress`, NVMBackupProgressReport);
 				RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/nvm/restoreprogress`, NVMRestoreProgressReport);
+
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/firmwareupdate/progress`, CFirmwareReport);
+				RED.comms.subscribe(`zwave-js/ui/${networkId}/controller/firmwareupdate/finished`, CFirmwareReport);
+
 				return;
 
 			case false:
@@ -197,6 +203,10 @@ const ZWaveJS = (function () {
 
 				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/controller/nvm/backupprogress`, NVMBackupProgressReport);
 				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/controller/nvm/restoreprogress`, NVMRestoreProgressReport);
+
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/controller/firmwareupdate/progress`, CFirmwareReport);
+				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/controller/firmwareupdate/finished`, CFirmwareReport);
+
 				return;
 		}
 	};

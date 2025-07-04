@@ -1,6 +1,14 @@
 const { CommandClasses } = require('@zwave-js/core');
 
 const process = async function (DriverInstance, Method, NodeID, Value, Args) {
+	if (Method === 'updateFirmware') {
+		const Node = DriverInstance.controller.nodes.get(NodeID);
+		if (Node) {
+			return Node.updateFirmware(Args);
+		} else {
+			return Promise.reject(new Error(`Node ${NodeID} does not exist`));
+		}
+	}
 	if (Method === 'ping') {
 		const Node = DriverInstance.controller.nodes.get(NodeID);
 		if (Node) {

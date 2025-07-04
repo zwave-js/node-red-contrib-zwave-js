@@ -196,7 +196,7 @@
 		<div child>Topology Map</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Settings',this)">Settings</div>
 		<div child>Rebuild Routes</div>
-		<div child>Firmware Update</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Firmware',this)">Firmware Update</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Slave',this)">Secondary Controller Mode</div>
 
 		<div parent>Nodes</div>
@@ -351,6 +351,24 @@
 </script>
 
 <!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Controller-Firmware">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">
+			This software is provided as-is.<br /><br />
+			The developer(s) of <strong>node-red-contrib-zwave-js</strong> or any libraries it uses,
+			are not responsible for any damage that may result from your attempt to upgrade the firmware.<br /><br />
+			You are performing this upgrade, soley at your own risk.
+		</div>
+		<div>
+			<button onclick="ZWaveJS.UpdateCFirmware(this)">Update Firmware</button>
+		</div>
+	</fieldset>
+	<div class="zwjs-progress-container" id="zwjs-prog-contain-cfirmware">
+  			<div class="zwjs-progress-bar" id="zwjs-prog-bar-cfirmware"></div>
+	</div>
+</script>
+
+<!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Node-Info">
 	<fieldset class=zwjs-fieldset>
 		<legend>Hardware Information:</legend>
@@ -451,7 +469,13 @@
 			are not responsible for any damage that may result from your attempt to upgrade the firmware.<br /><br />
 			You are performing this upgrade, soley at your own risk.
 		</div>
+		<div>
+			<button onclick="ZWaveJS.UpdateNFirmware(this)">Update Firmware</button>
+		</div>
 	</fieldset>
+	<div class="zwjs-progress-container" id="zwjs-prog-contain-nfirmware">
+  			<div class="zwjs-progress-bar" id="zwjs-prog-bar-nfirmware"></div>
+	</div>
 </script>
 
 <!-- prettier-ignore -->

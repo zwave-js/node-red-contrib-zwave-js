@@ -1,6 +1,10 @@
 const { getValueDB } = require('./Fetchers');
 
 const process = async function (DriverInstance, Method, Args) {
+	if (Method === 'firmwareUpdateOTW') {
+		return DriverInstance.firmwareUpdateOTW(...Args);
+	}
+
 	if (Method === 'hardReset') {
 		return DriverInstance.hardReset();
 	}

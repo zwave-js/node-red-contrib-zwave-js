@@ -38,7 +38,8 @@ const event_ExclusionStarted = new SanitizedEventName('exclusion started');
 const event_ExclusionFailed = new SanitizedEventName('exclusion failed');
 const event_ExclusionStopped = new SanitizedEventName('exclusion stopped');
 const event_RebuildRoutesDone = new SanitizedEventName('rebuild routes done');
-//const event_FirmwareUpdateFinished = new SanitizedEventName('firmware update finished');
+const event_FirmwareUpdateFinished = new SanitizedEventName('firmware update finished');
+const event_FirmwareUpdateProgress = new SanitizedEventName('firmware update progress');
 const event_ValueNotification = new SanitizedEventName('value notification');
 const event_Notification = new SanitizedEventName('notification');
 const event_ValueUpdated = new SanitizedEventName('value updated');
@@ -559,6 +560,16 @@ module.exports = function (RED) {
 			// Left As Slave
 			self.driverInstance?.controller.on(event_NetworkLeft.driverName, () => {
 				RED.comms.publish(`zwave-js/ui/${self.id}/controller/slave/left`, {}, false);
+			});
+
+			// Firmware Update Progress (Controller)
+			self.driverInstance?.controller.on(event_FirmwareUpdateProgress.driverName, (progress) => {
+				RED.comms.publish(`zwave-js/ui/${self.id}/controller/firmwareupdate/progress`, { progress }, false);
+			});
+
+			// Firmware Update Completed (Controller)
+			self.driverInstance?.controller.on(event_FirmwareUpdateFinished.driverName, (result) => {
+				RED.comms.publish(`zwave-js/ui/${self.id}/controller/firmwareupdate/finished`, { result }, false);
 			});
 
 			// Al Nodes Ready
