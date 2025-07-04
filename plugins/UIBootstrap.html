@@ -4,7 +4,6 @@
 <script type="text/javascript" src="resources/node-red-contrib-zwave-js/UITab/SideBar.js"></script>
 <script type="text/javascript" src="resources/node-red-contrib-zwave-js/UITab/handlebars.min.js"></script>
 
-
 <script>
 	ZWaveJS.init();
 </script>
@@ -272,7 +271,6 @@
 	</fieldset>
 </script>
 
-
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Controller-Info">
 	<table class="zwjs-table" vertical>
@@ -366,6 +364,15 @@
 	<div class="zwjs-progress-container" id="zwjs-prog-contain-cfirmware">
   			<div class="zwjs-progress-bar" id="zwjs-prog-bar-cfirmware"></div>
 	</div>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Controller-Firmware-Done">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">{{Message}}</div>
+	
+	</fieldset>
+	
 </script>
 
 <!-- prettier-ignore -->
@@ -488,7 +495,6 @@
 		{{/each}}
 	</table>
 </script>
-
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_NodeAddMode">
@@ -634,7 +640,6 @@
 	</fieldset>
 </script>
 
-
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_QRRead">
 	<fieldset class="zwjs-fieldset">
@@ -688,7 +693,3 @@
 	    <i class="fa fa-check" aria-hidden="true" style="font-size: 20px;color: green;vertical-align: middle;"></i> The Smart Start device has been successfully added. When it is next powered on, and requests inclusion, it will be automatically added.
 	</fieldset>
 </script>
-
-
-
-

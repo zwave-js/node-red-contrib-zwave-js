@@ -564,12 +564,12 @@ module.exports = function (RED) {
 
 			// Firmware Update Progress (Controller)
 			self.driverInstance?.controller.on(event_FirmwareUpdateProgress.driverName, (progress) => {
-				RED.comms.publish(`zwave-js/ui/${self.id}/controller/firmwareupdate/progress`, { progress }, false);
+				RED.comms.publish(`zwave-js/ui/${self.id}/controller/firmwareupdate/progress`, { ...progress }, false);
 			});
 
 			// Firmware Update Completed (Controller)
 			self.driverInstance?.controller.on(event_FirmwareUpdateFinished.driverName, (result) => {
-				RED.comms.publish(`zwave-js/ui/${self.id}/controller/firmwareupdate/finished`, { result }, false);
+				RED.comms.publish(`zwave-js/ui/${self.id}/controller/firmwareupdate/finished`, { ...result }, false);
 			});
 
 			// Al Nodes Ready
