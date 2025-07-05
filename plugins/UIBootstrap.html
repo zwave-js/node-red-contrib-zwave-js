@@ -193,7 +193,7 @@
 		<div child default onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Info',this, 'ControllerInfo')">Information</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Stats',this, 'ControllerStats')">Statistics</div>
 		<div child>Topology Map</div>
-		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Settings',this)">Settings</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Settings',this,'ControllerSettings')">Settings</div>
 		<div child>Rebuild Routes</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Firmware',this)">Firmware Update</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Slave',this)">Secondary Controller Mode</div>
@@ -319,6 +319,25 @@
 		</div>
 		<legend>RF Region:</legend>
 		<div>
+			<select id="zwjs-controller-setting-region" {{{RDisabled}}}">
+				{{#select Region}}
+				    <option>NOT SUPPORTED</option>
+					<option value="0x00">Europe</option>
+					<option value="0x01">USA</option>
+					<option value="0x02">Australia/New Zealand</option>
+					<option value="0x03">Hong Kong</option>
+					<option value="0x05">India</option>
+					<option value="0x06">Israel</option>
+					<option value="0x07">Russia</option>
+					<option value="0x08">China</option>
+					<option value="0x09">USA (Long Range)</option>
+					<option value="0x0b">Europe (Long Range)</option>
+					<option value="0x20">Japan</option>
+					<option value="0x21">Korea</option>
+					<option value="0xfe">Unknown</option>
+					<option value="0xff">Default (EU)</option>
+				{{/select}}
+			</select>
 			<button onclick="">Set</button>
 		</div>
 		<legend>Power Level:</legend>
@@ -454,7 +473,9 @@
 			<table class="zwjs-table" id="zwjs-node-health-check" horizontal>
 				<tr>
 					<td style="text-align:center">Rating</td>
-					<td style="text-align:center">Failed Pings</td>
+					<td style="text-align:center">Failed Pings (Node)</td>
+					<td style="text-align:center">Failed Pings (Contr)</td>
+					<td style="text-align:center">Route Changes</td>
 					<td style="text-align:center">Latency</td>
 					<td style="text-align:center">Neighbors</td>
 					<td style="text-align:center">Min Power Level</td>

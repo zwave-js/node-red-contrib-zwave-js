@@ -67,6 +67,12 @@ const ZWaveJS = (function () {
 			return btoa(JSON.stringify(context));
 		});
 
+		Handlebars.registerHelper('select', function (context, options) {
+			const $el = $('<select />').html(options.fn(this));
+			$el.find(`[value="${context}"]`).attr({ selected: 'selected' });
+			return $el.html();
+		});
+
 		Handlebars.registerHelper('pretty', function (context) {
 			return JSONFormatter.json.prettyPrint(context);
 		});
@@ -601,7 +607,7 @@ const ZWaveJS = (function () {
 		$('#zwjs-node-health-check').find('tr:gt(0)').remove();
 		const AddTesting = () => {
 			$('#zwjs-node-health-check').append(
-				`<tr><td style="text-align:center"><div class="zwjs-rating" wait>Testing...</div></td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td></tr>`
+				`<tr><td style="text-align:center"><div class="zwjs-rating" wait>Testing...</div></td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td></tr>`
 			);
 		};
 
@@ -622,7 +628,7 @@ const ZWaveJS = (function () {
 			};
 
 			$('#zwjs-node-health-check').append(
-				`<tr><td style="text-align:center">${Rating()}</td><td style="text-align:center">${data.check.lastResult.failedPingsNode}</td><td style="text-align:center">${data.check.lastResult.latency} ms</td><td style="text-align:center">${data.check.lastResult.numNeighbors}</td><td style="text-align:center">-${data.check.lastResult.minPowerlevel} dBm</td><td style="text-align:center">${data.check.lastResult.snrMargin} dBm</td></tr>`
+				`<tr><td style="text-align:center">${Rating()}</td><td style="text-align:center">${data.check.lastResult.failedPingsNode}</td><td style="text-align:center">${data.check.lastResult.failedPingsController ?? 0}</td><td style="text-align:center">${data.check.lastResult.routeChanges}</td><td style="text-align:center">${data.check.lastResult.latency} ms</td><td style="text-align:center">${data.check.lastResult.numNeighbors}</td><td style="text-align:center">${data.check.lastResult.minPowerlevel} dBm</td><td style="text-align:center">${data.check.lastResult.snrMargin} dBm</td></tr>`
 			);
 			AddTesting();
 		};
@@ -716,6 +722,7 @@ const ZWaveJS = (function () {
 					data = data.response;
 
 					const Controller = data.find((N) => N.isControllerNode);
+
 					const Nodes = data.filter(
 						(N) => !N.isControllerNode && (N.zwavePlusRoleType > 3 || N.zwavePlusRoleType === undefined)
 					);
@@ -896,6 +903,23 @@ const ZWaveJS = (function () {
 				resolve(CD.statistics);
 			});
 		},
+		ControllerSettings: () => {
+			return new Promise(async (resolve, _) => {
+				let Region = await Runtime.Get('CONTROLLER', 'getRFRegion');
+				let RDisabled = '';
+				if (Region.callSuccess) {
+					Region = `0x${Region.response.toString(16).padStart(2, '0')}`;
+				} else {
+					RDisabled = 'disabled="disabled"';
+				}
+
+				const Power = await Runtime.Get('CONTROLLER', 'getPowerlevel');
+				if (Power.callSuccess) {
+				}
+
+				resolve({ Region, Power, RDisabled });
+			});
+		},
 		NodeInfo: () => {
 			return new Promise(async (resolve, _) => {
 				const ND = $('#zwjs-node-list')
@@ -1036,6 +1060,48 @@ const ZWaveJS = (function () {
 		}
 	};
 
+	// Update Controller Firmware
+	const UpdateCFirmware = (Button) => {
+		if (confirm('Note: This will update the Controllers firmware, do you wish to proceed?')) {
+			const promptFileUpload = () => {
+				const fileInput = document.createElement('input');
+				fileInput.type = 'file';
+				fileInput.style.display = 'none';
+				document.body.appendChild(fileInput);
+
+				fileInput.addEventListener('change', async () => {
+					const file = fileInput.files[0];
+					if (!file) {
+						alert('No file selected');
+						document.body.removeChild(fileInput);
+						return;
+					}
+
+					DisableButton(Button);
+					const reader = new FileReader();
+					reader.onload = function (e) {
+						const arrayBuffer = e.target.result;
+						const byteArray = new Uint8Array(arrayBuffer);
+						Runtime.Post('DRIVER', 'firmwareUpdateOTW', [{ bytes: byteArray }]).then((R) => {
+							if (R.callSuccess) {
+								EnableButton(Button);
+							} else {
+								// Handled with the completed comms hook
+								EnableButton(Button);
+							}
+						});
+					};
+					reader.readAsArrayBuffer(file);
+					document.body.removeChild(fileInput);
+				});
+
+				fileInput.click();
+			};
+
+			promptFileUpload();
+		}
+	};
+
 	/*
 	 * Driver COMMS Callbacks
 	 * Methods here are those used in the subscriptions to the COMMS api
@@ -1148,7 +1214,7 @@ const ZWaveJS = (function () {
 			$('#zwjs-prog-contain-cfirmware').css({ display: 'block' });
 			const Percentage = data.progress;
 			$('#zwjs-prog-bar-cfirmware').css({ width: `${Percentage}%` });
-			$('#zwjs-prog-bar-cfirmware').text(`${data.label} ${Math.round(Percentage)}%`);
+			$('#zwjs-prog-bar-cfirmware').text(`Flashing Chip... ${Math.round(Percentage)}%`);
 		}
 
 		if (topic.endsWith('finished')) {
@@ -1731,6 +1797,7 @@ const ZWaveJS = (function () {
 		RefreshNodes,
 		ResetController,
 		BackupController,
-		RestoreController
+		RestoreController,
+		UpdateCFirmware
 	};
 })();

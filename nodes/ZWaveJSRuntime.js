@@ -249,10 +249,10 @@ module.exports = function (RED) {
 				(request, response) => {
 					const TargetAPI = request.params.api;
 					const Method = request.params.method;
+					let args = undefined;
 
 					switch (TargetAPI) {
 						case 'CONTROLLER':
-							let args = undefined;
 							if (Method === 'beginJoiningNetwork') {
 								args = [{ strategy: 0 }];
 							}
@@ -306,15 +306,15 @@ module.exports = function (RED) {
 				(request, response) => {
 					const TargetAPI = request.params.api;
 					const Method = request.params.method;
+					let args = undefined;
 
 					switch (TargetAPI) {
 						case 'NODE':
-							let args = undefined;
 							if (Method === 'checkLifelineHealth') {
 								const CB = (round, totalRounds, lastRating, lastResult) => {
 									RED.comms.publish(
 										`zwave-js/ui/${self.id}/nodes/healthcheck`,
-										{ nodeId: Params.nodeId, check: { round, totalRounds, lastRating, lastResult } },
+										{ nodeId: request.body.nodeId, check: { round, totalRounds, lastRating, lastResult } },
 										false
 									);
 								};
@@ -341,9 +341,9 @@ module.exports = function (RED) {
 							break;
 
 						case 'CONTROLLER':
-							let Args = request.body;
+							args = request.body;
 							if (Method === 'restoreNVM') {
-								const byteArray = Object.values(Args[0].bytes);
+								const byteArray = Object.values(args[0].bytes);
 								const uint8Array = new Uint8Array(byteArray);
 								const Send = (Label, done, total) => {
 									RED.comms.publish(
@@ -352,7 +352,7 @@ module.exports = function (RED) {
 										false
 									);
 								};
-								Args = [
+								args = [
 									uint8Array,
 									(bytesRead, total) => {
 										Send('Converting Restore...', bytesRead, total);
@@ -363,7 +363,7 @@ module.exports = function (RED) {
 								];
 							}
 							self
-								.controllerCommand(Method, Args)
+								.controllerCommand(Method, args)
 								.then((R) => {
 									response.json({ callSuccess: true, response: R });
 								})
@@ -373,8 +373,14 @@ module.exports = function (RED) {
 							break;
 
 						case 'DRIVER':
+							args = request.body;
+							if (Method === 'firmwareUpdateOTW') {
+								const byteArray = Object.values(args[0].bytes);
+								const uint8Array = new Uint8Array(byteArray);
+								args = [uint8Array];
+							}
 							self
-								.driverCommand(Method, request.body)
+								.driverCommand(Method, args)
 								.then((R) => {
 									response.json({ callSuccess: true, response: R });
 								})
