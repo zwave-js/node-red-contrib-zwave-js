@@ -916,9 +916,11 @@ const ZWaveJS = (function () {
 		ControllerInfo: () => {
 			return new Promise(async (resolve, _) => {
 				const CD = $('#zwjs-controller-info').data('info');
+				const versions = await Runtime.Get(undefined, undefined, `zwave-js/ui/${networkId}/version`);
 				const Response = {
 					configuration: $('#zwjs-network option:selected').text(),
 					serialPort: RED.nodes.node(networkId).serialPort,
+					...versions.response,
 					...CD
 				};
 				resolve(Response);

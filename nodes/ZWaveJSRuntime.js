@@ -1,6 +1,6 @@
 const path = require('path');
-const fs = require('fs');
 const { Driver } = require('zwave-js');
+const driverVersion = require('zwave-js/package.json').version;
 const { tryParseDSKFromQRCodeString, parseQRCodeString } = require('@zwave-js/core');
 const { ConfigManager } = require('@zwave-js/config');
 
@@ -11,8 +11,8 @@ const NodeAPI_Process = require('./lib/NodeAPI').process;
 const Driver_Process = require('./lib/DriverAPI').process;
 const { getNodes } = require('./lib/Fetchers');
 
-const APP_NAME = 'node-red-contrib-zwave-js';
-const APP_VERSION = '10.0.0';
+const APP_NAME = require('../package.json').name;
+const APP_VERSION = require('../package.json').version;
 const FWK = '127c49b6f2928a6579e82ecab64a83fc94a6436f03d5cb670b8ac44412687b75f0667843';
 
 class SanitizedEventName {
@@ -175,6 +175,17 @@ module.exports = function (RED) {
 
 			RED.httpAdmin.get(`/zwave-js/ui/${self.id}/status`, RED.auth.needsPermission('flows.write'), (_, response) => {
 				response.json({ callSuccess: true, response: lastStatus });
+			});
+
+			RED.httpAdmin.get(`/zwave-js/ui/${self.id}/version`, RED.auth.needsPermission('flows.write'), (_, response) => {
+				response.json({
+					callSuccess: true,
+					response: {
+						driverVersion: driverVersion,
+						configVersion: self.driverInstance.configManager.configVersion,
+						moudleVersion: APP_VERSION
+					}
+				});
 			});
 
 			RED.httpAdmin.post(
