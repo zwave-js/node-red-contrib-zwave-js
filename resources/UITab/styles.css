@@ -326,3 +326,15 @@ i.zwjs-state-green {
 	font-size: 26px;
 	font-weight: bold;
 }
+
+.zwjs-title {
+	font-size: 20px;
+	border-bottom: 1px solid var(--zwave-js-main-color);
+	margin-top: 40px;
+	margin-bottom: 15px;
+	color: lightslategray;
+	padding: 5px;
+}
+.zwjs-title:first-of-type {
+	margin-top: 10px;
+}

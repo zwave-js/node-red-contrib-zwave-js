@@ -131,11 +131,11 @@
 <script type="text/template" id="ZWJS_TPL_Tray-Node-Value-Example">
 	<fieldset class=zwjs-fieldset>
 		<div class="zwjs-hint">These <strong>msg</strong> examples, use the <strong>ValueAPI</strong>, which is the recommended API. The <strong>payload</strong> (or <strong>value</strong>) property is only required when setting values. - The values used here, are an example (but use the current value as it is now)</div>
-		<legend>With CMD Factory:</legend>
+		<div class="zwjs-title">With CMD Factory:</div>
 		<div>
 			<pre>{{{pretty cmd}}}</pre>
 		</div>
-		<legend>Without CMD Factory:</legend>
+		<div class="zwjs-title">Without CMD Factory:</div>
 		<div>
 			<pre>{{{pretty nocmd}}}</pre>
 		</div>
@@ -296,7 +296,7 @@
 			<td>Firmware</td><td>{{firmwareVersion}}</td>
 		</tr>
 		<tr>
-			<td>Protocol Version</td><td>{{protocolVersion}}</td>
+			<td>SDK Version</td><td>{{sdkVersion}}</td>
 		</tr>
 		<tr>
 			<td>Supported Data Rates</td><td>{{supportedDataRates}}</td>
@@ -313,11 +313,11 @@
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Controller-Settings">
 	<fieldset class=zwjs-fieldset>
-		<legend>Reset Controller:</legend>
+		<div class="zwjs-title">Reset Controller:</div>
 		<div>
 			<button onclick="ZWaveJS.ResetController(this)" style="background-color:red">Reset</button>
 		</div>
-		<legend>RF Region:</legend>
+		<div class="zwjs-title">RF Region:</div>
 		<div>
 			<select id="zwjs-controller-setting-region" {{{RDisabled}}}">
 				{{#select Region}}
@@ -340,11 +340,18 @@
 			</select>
 			<button onclick="">Set</button>
 		</div>
-		<legend>Power Level:</legend>
+		<div class="zwjs-title">Power Level (Classic) dbm:</div>
 		<div>
+			<input type="number" min="-10" Max="20" id="zwjs-controller-setting-power-classic" value="{{Power}}" />
+			<button onclick="ZWaveJS.SetClassicPowerLevel(this)"">Set</button>
+		</div>
+		<div class="zwjs-title">Max Power Level (Long Range) dbm:</div>
+		<div>
+			<input type="number" id="zwjs-controller-setting-power-lr" value="{{LRPower}}"  />
+			
 			<button onclick="">Set</button>
 		</div>
-		<legend>Backup/Restore NVM</legend>
+		<div class="zwjs-title">Backup/Restore NVM</div>
 		<div>
 			<button onclick="ZWaveJS.BackupController(this)">Backup</button>
 			<button onclick="ZWaveJS.RestoreController(this)">Restore</button>
@@ -358,8 +365,17 @@
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Controller-Stats">
+	<div class="zwjs-title">Statistics</div>
 	<table class="zwjs-table" vertical>
-		{{#each .}}
+		{{#each statistics}}
+			<tr>
+				<td>{{@key}}</td><td>{{this}}</td>
+			</tr>
+		{{/each}}
+	</table>
+	<div class="zwjs-title">Background RSSI</div>
+	<table class="zwjs-table" vertical>
+		{{#each backgroundRSSI}}
 			<tr>
 				<td>{{@key}}</td><td>{{this}}</td>
 			</tr>
@@ -397,7 +413,7 @@
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Node-Info">
 	<fieldset class=zwjs-fieldset>
-		<legend>Hardware Information:</legend>
+		<div class="zwjs-title">Hardware Information:</div>
 		<table class="zwjs-table" vertical>
 			<tr>
 				<td>Node ID</td><td>{{nodeId}}</td>
@@ -415,13 +431,16 @@
 				<td>Firmware</td><td>{{firmwareVersion}}</td>
 			</tr>
 			<tr>
+				<td>SDK Version</td><td>{{sdkVersion}}</td>
+			</tr>
+			<tr>
 				<td>Status</td><td>{{status}}</td>
 			</tr>
 		</table>
 	</fieldset>
 
 	<fieldset class=zwjs-fieldset>
-		<legend>Update the Name & Location:</legend>
+		<div class="zwjs-title">Update the Name & Location:</div>
 		<div class="zwjs-hint">If the device supports the 'Node Name & Location' CC - it will also get updated, meaning the values here will persist across networks.</div>
 		<table class="zwjs-table" vertical>
 				<tr>
@@ -508,6 +527,7 @@
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Node-Stats">
+	<div class="zwjs-title">Statistics:</div>
 	<table class="zwjs-table" vertical>
 		{{#each .}}
 			<tr>
@@ -520,7 +540,7 @@
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_NodeAddMode">
 	<fieldset class="zwjs-fieldset">
-		<legend>Please select the Node Inclusion strategy:</legend>
+		<div class="zwjs-title">Please select the Node Inclusion strategy:</div>
 
 	    <div class="zwjs-hint">If greyed out, check encryption settings (i.e missing keys)</div>
 	  
@@ -555,7 +575,7 @@
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_NodeRemoveMode">
 	<fieldset class="zwjs-fieldset">
-		<legend>Manage Node Removal:</legend>
+		<div class="zwjs-title">Manage Node Removal:</div>
 
 		<div class="zwjs-hint">
 			Click <strong>Start</strong> to remove a Node via a Node Information Frame (NIF),<br />
@@ -595,7 +615,7 @@
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_NIFWait">
 	<fieldset class="zwjs-fieldset">
-		<legend>Waiting for the Node Information Frame (NIF):</legend>
+		<div class="zwjs-title">Waiting for the Node Information Frame (NIF):</div>
 	    <div class="zwjs-hint">Place your Node into <strong>{{mode}}</strong> mode</div>
 	  </fieldset>
 </script>
@@ -603,7 +623,7 @@
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_SecurityGrant">
 	<fieldset class="zwjs-fieldset">
-		<legend>Choose the security classes below you wish to Grant:</legend>
+		<div class="zwjs-title">Choose the security classes below you wish to Grant:</div>
 	    <div class="zwjs-hint">The below security classes are reqeusted by the Node</div>
 		{{#each classes}}
 			<div>
@@ -620,7 +640,7 @@
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_DSK">
 	<fieldset class="zwjs-fieldset">
-		<legend>Authenticate the Node:</legend>
+		<div class="zwjs-title">Authenticate the Node:</div>
 	    <div class="zwjs-hint">Validate the Node by providng the DSK (Device Specific Key)</div>
 		<div>
 			<input type="text" id="zwjs-dsk" style="width: 60px;text-align: center;height: 30px;vertical-align: baseline;"> {{dsk}}
@@ -634,7 +654,7 @@
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_NAdded">
 	<fieldset class="zwjs-fieldset">
-		<legend>Node Added:</legend>
+		<div class="zwjs-title">Node Added:</div>
 	    <div>
 			<i class="fa fa-check" aria-hidden="true" style="font-size: 20px;color: green;vertical-align: middle;"></i> Node {{nodeId}} was added to the network
 		</div>
@@ -656,7 +676,7 @@
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_NRemoved">
 	<fieldset class="zwjs-fieldset">
-		<legend>Node Removed:</legend>
+		<div class="zwjs-title">Node Removed:</div>
 		<i class="fa fa-trash" aria-hidden="true" style="font-size: 20px;color: green;vertical-align: middle;"></i> Node {{nodeId}} was removed from the network
 	</fieldset>
 </script>
@@ -664,7 +684,7 @@
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_QRRead">
 	<fieldset class="zwjs-fieldset">
-		<legend>Scan A Smart Start QR Code:</legend>
+		<div class="zwjs-title">Scan A Smart Start QR Code:</div>
 	    <div class="zwjs-hint">Note: Your browser may only support webcam access, if Node RED is served under <strong>HTTPS</strong></div>
         <video id="zwjs-camera-view"></video>
 	</fieldset>
@@ -673,7 +693,7 @@
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_PrePro">
 	<fieldset class="zwjs-fieldset">
-		<legend>Smart Start Device:</legend>
+		<div class="zwjs-title">Smart Start Device:</div>
 	    <div class="zwjs-hint">Review the device provisioning entry below and Confirm.</div>
 		<table class="zwjs-table" id="zwjs-qrdata" data-entry="{{QRProvisioningInformation}}" vertical>
 			<tr>
@@ -710,7 +730,7 @@
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_SSDone">
 	<fieldset class="zwjs-fieldset">
-		<legend>Entry sucessfully Added:</legend>
+		<div class="zwjs-title">Entry sucessfully Added:</div>
 	    <i class="fa fa-check" aria-hidden="true" style="font-size: 20px;color: green;vertical-align: middle;"></i> The Smart Start device has been successfully added. When it is next powered on, and requests inclusion, it will be automatically added.
 	</fieldset>
 </script>

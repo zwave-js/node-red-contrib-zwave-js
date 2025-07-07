@@ -123,6 +123,26 @@ const ZWaveJS = (function () {
 		RED.comms.subscribe('zwave-js/ui/global/removenetwork', (topic, network) => commsRemoveNetwork(network));
 	};
 
+	// Set Class PowerLevel
+	const SetClassicPowerLevel = (Button) => {
+		DisableButton(Button);
+		const PL = parseInt($('#zwjs-controller-setting-power-classic').val());
+		const Calibration = 0;
+		Runtime.Post('CONTROLLER', 'setPowerlevel', [PL, Calibration])
+			.then((data) => {
+				if (data.callSuccess) {
+					alert('Power Level Set Succcessfully');
+					EnableButton(Button);
+				} else {
+					alert(data.response);
+					EnableButton(Button);
+				}
+			})
+			.catch((Error) => {
+				alert(Error.message);
+			});
+	};
+
 	// Network Selecetd
 	const NetworkSelected = function () {
 		if (networkId) {
@@ -168,7 +188,14 @@ const ZWaveJS = (function () {
 			.then((data) => {
 				if (data.callSuccess) {
 					const RCD = data.response.find((N) => N.isControllerNode);
+					if (RCD.statistics.backgroundRSSI) {
+						RCD.backgroundRSSI = FlattenChannelAverages(RCD.statistics.backgroundRSSI);
+					} else {
+						RCD.backgroundRSSI = {};
+					}
+
 					delete RCD.statistics.backgroundRSSI;
+
 					$('#zwjs-controller-info').data('info', RCD);
 
 					const Options = {
@@ -900,7 +927,7 @@ const ZWaveJS = (function () {
 		ControllerStats: () => {
 			return new Promise(async (resolve, _) => {
 				const CD = $('#zwjs-controller-info').data('info');
-				resolve(CD.statistics);
+				resolve({ statistics: FormatObjectKeys(CD.statistics), backgroundRSSI: FormatObjectKeys(CD.backgroundRSSI) });
 			});
 		},
 		ControllerSettings: () => {
@@ -913,11 +940,17 @@ const ZWaveJS = (function () {
 					RDisabled = 'disabled="disabled"';
 				}
 
-				const Power = await Runtime.Get('CONTROLLER', 'getPowerlevel');
+				let Power = await Runtime.Get('CONTROLLER', 'getPowerlevel');
 				if (Power.callSuccess) {
+					Power = Power.response.powerlevel;
 				}
 
-				resolve({ Region, Power, RDisabled });
+				let LRPower = await Runtime.Get('CONTROLLER', 'getMaxLongRangePowerlevel');
+				if (LRPower.callSuccess) {
+					LRPower = LRPower.response;
+				}
+
+				resolve({ Region, RDisabled, Power, LRPower });
 			});
 		},
 		NodeInfo: () => {
@@ -933,7 +966,7 @@ const ZWaveJS = (function () {
 				const ND = $('#zwjs-node-list')
 					.treeList('data')
 					.find((N) => N.nodeData.nodeId === selectedNode.nodeId).nodeData;
-				resolve(ND.statistics);
+				resolve(FormatObjectKeys(ND.statistics));
 			});
 		},
 		NodeAssociationGroups: () => {
@@ -1279,6 +1312,37 @@ const ZWaveJS = (function () {
 	 * Helpers/Things
 	 * Methods/things used in all this vortex of chaos!
 	 */
+
+	// Fomat Object
+	const FormatObjectKeys = (obj) => {
+		const formatted = {};
+
+		for (const key in obj) {
+			const title = key
+				.replace(/([a-z])([A-Z])/g, '$1 $2') // lowercase followed by uppercase
+				.replace(/([a-zA-Z])([0-9]+)/g, '$1 $2') // letters followed by numbers
+				.replace(/([0-9]+)([a-zA-Z])/g, '$1 $2') // numbers followed by letters
+				.replace(/^./, (str) => str.toUpperCase()); // capitalize first letter
+
+			formatted[title] = obj[key];
+		}
+
+		return formatted;
+	};
+
+	// Flatten RSSI
+	const FlattenChannelAverages = (backgroundRSSI) => {
+		const flattenedRSSI = {};
+		for (const key in backgroundRSSI) {
+			if (key.startsWith('channel')) {
+				flattenedRSSI[`${key}average`] = backgroundRSSI[key].average;
+			} else {
+				flattenedRSSI[key] = backgroundRSSI[key];
+			}
+		}
+
+		return flattenedRSSI;
+	};
 
 	// Hashes the ValueID - so we can  identify it with a simple hash
 	const getValueUpdateHash = (Obj) => {
@@ -1798,6 +1862,7 @@ const ZWaveJS = (function () {
 		ResetController,
 		BackupController,
 		RestoreController,
-		UpdateCFirmware
+		UpdateCFirmware,
+		SetClassicPowerLevel
 	};
 })();

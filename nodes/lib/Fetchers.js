@@ -28,6 +28,7 @@ const getNodes = (DriverInstance) => {
 			productId: N.productId,
 			productType: N.productType,
 			firmwareVersion: N.firmwareVersion,
+			sdkVersion: N.sdkVersion,
 			deviceConfig: N.deviceConfig,
 			isControllerNode: N.isControllerNode,
 			supportsBeaming: N.supportsBeaming,

@@ -100,6 +100,14 @@ const process = async function (DriverInstance, Method, Args) {
 		return DriverInstance.controller.setRFRegion(...Args);
 	}
 
+	if (Method === 'getMaxLongRangePowerlevel') {
+		return DriverInstance.controller.getMaxLongRangePowerlevel();
+	}
+
+	if (Method === 'setMaxLongRangePowerlevel') {
+		return DriverInstance.controller.setMaxLongRangePowerlevel(...Args);
+	}
+
 	if (Method === 'beginInclusion') {
 		return DriverInstance.controller.beginInclusion(...Args);
 	}
