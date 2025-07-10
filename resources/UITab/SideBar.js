@@ -901,6 +901,29 @@ const ZWaveJS = (function () {
 
 	// Render Advanded info (also used internally)
 	const RenderFunctions = {
+		RenderMap: () => {
+			return new Promise(async (resolve, reject) => {
+				Runtime.Get('CONTROLLER', 'getNodes').then((data) => {
+					if (data.callSuccess) {
+						const nodes = data.response.filter((N) => N.status === 'Dead');
+						resolve();
+						setTimeout(async () => {
+							ZWJSMermaid.initialize({ startOnLoad: false });
+							await ZWJSMermaid.run({
+								querySelector: '.zwjs-mermaid'
+							});
+							svgPanZoom('.zwjs-mermaid svg', {
+								zoomEnabled: true,
+								controlIconsEnabled: true,
+								panEnabled: true
+							});
+						}, 100);
+					} else {
+						alert(data.Response);
+					}
+				});
+			});
+		},
 		PrepFailed: () => {
 			return new Promise(async (resolve, reject) => {
 				Runtime.Get('CONTROLLER', 'getNodes').then((data) => {
@@ -1254,7 +1277,7 @@ const ZWaveJS = (function () {
 
 		if (topic.endsWith('finished')) {
 			let Message;
-			switch (data.result.status) {
+			switch (data.status) {
 				case 0:
 					Message = 'A timeout occured';
 					break;
@@ -1421,8 +1444,8 @@ const ZWaveJS = (function () {
 			{ address: `zwave-js/ui/${networkId}/nodes/valueupdate`, method: commsHandleValueUpdate },
 			{ address: `zwave-js/ui/${networkId}/controller/nvm/backupprogress`, method: commsNVMBackupProgressReport },
 			{ address: `zwave-js/ui/${networkId}/controller/nvm/restoreprogress`, method: commsNVMRestoreProgressReport },
-			{ address: `zwave-js/ui/${networkId}/controller/firmwareupdate/progress`, method: commsCFirmwareReport },
-			{ address: `zwave-js/ui/${networkId}/controller/firmwareupdate/finished`, method: commsCFirmwareReport }
+			{ address: `zwave-js/ui/${networkId}/driver/firmwareupdate/progress`, method: commsCFirmwareReport },
+			{ address: `zwave-js/ui/${networkId}/driver/firmwareupdate/finished`, method: commsCFirmwareReport }
 		];
 
 		const op = RED.comms[subscribe ? 'subscribe' : 'unsubscribe'];

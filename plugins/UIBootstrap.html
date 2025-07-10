@@ -1,8 +1,14 @@
 <!--Core-->
 <link rel="stylesheet" href="resources/node-red-contrib-zwave-js/UITab/styles.css" />
-<script type="text/javascript" src="resources/node-red-contrib-zwave-js/UITab/qr-scanner.umd.min.js"></script>
 <script type="text/javascript" src="resources/node-red-contrib-zwave-js/UITab/SideBar.js"></script>
-<script type="text/javascript" src="resources/node-red-contrib-zwave-js/UITab/handlebars.min.js"></script>
+<script type="text/javascript" src="resources/node-red-contrib-zwave-js/QRS/qr-scanner.umd.min.js"></script>
+<script type="text/javascript" src="resources/node-red-contrib-zwave-js/HB/dist/handlebars.min.js"></script>
+<script type="text/javascript" src="resources/node-red-contrib-zwave-js/SVGZ/dist/svg-pan-zoom.min.js"></script>
+
+<script type="module">
+	import ZWJSMermaid from '/resources/node-red-contrib-zwave-js/Mermaid/dist/mermaid.esm.min.mjs';
+	window.ZWJSMermaid = ZWJSMermaid;
+</script>
 
 <script>
 	ZWaveJS.init();
@@ -192,7 +198,7 @@
 		<div parent>Controller</div>
 		<div child default onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Info',this, 'ControllerInfo')">Information</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Stats',this, 'ControllerStats')">Statistics</div>
-		<div child>Topology Map</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Map',this, 'RenderMap')">Topology Map</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Settings',this,'ControllerSettings')">Settings</div>
 		<div child>Rebuild Routes</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Firmware',this)">Firmware Update</div>
@@ -205,6 +211,108 @@
 
 	</div>
 	<div id="zwjs-advanced-content"></div>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Controller-Map">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">The map below is based on statistics for each ZWave Node, specifically the <strong>Last Working Route(s)</strong> to the Node, from the Controller</div>
+		<div class="zwjs-mermaid" id="zwjs-mermaid">
+flowchart TD
+    A(fa:fa-wifi<br>Controller<br>RSSI: -57dB)
+    B(fa:fa-battery<br>Node 2<br>RSSI: -60dB)
+    C(fa:fa-plug<br>Node 3<br>Load: 14W)
+    D(fa:fa-thermometer-half<br>Node 4<br>Temp: 22°C)
+    E(fa:fa-lightbulb<br>Node 5<br>Lux: 800)
+    F(fa:fa-plug<br>Node 6<br>Load: 9W)
+    G(fa:fa-wind<br>Node 7<br>Fan Speed: 3)
+    H(fa:fa-door-open<br>Node 8<br>Status: Open)
+    I(fa:fa-battery-full<br>Node 9<br>RSSI: -65dB)
+    J(fa:fa-tint<br>Node 10<br>Humidity: 45%)
+    K(fa:fa-plug<br>Node 11<br>Load: 23W)
+    L(fa:fa-wifi<br>Node 12<br>RSSI: -58dB)
+    M(fa:fa-solar-panel<br>Node 13<br>Output: 5.4V)
+    N(fa:fa-fire<br>Node 14<br>Smoke: No)
+    O(fa:fa-plug<br>Node 15<br>Load: 18W)
+    P(fa:fa-wind<br>Node 16<br>Speed: 2)
+    Q(fa:fa-thermometer-half<br>Node 17<br>Temp: 25°C)
+    R(fa:fa-lightbulb<br>Node 18<br>Lux: 650)
+    S(fa:fa-tint<br>Node 19<br>Humidity: 52%)
+    T(fa:fa-battery-half<br>Node 20<br>RSSI: -62dB)
+    U(fa:fa-signal<br>Node 21<br>RSSI: -61dB)
+    V(fa:fa-bolt<br>Node 22<br>Voltage: 3.3V)
+    W(fa:fa-door-closed<br>Node 23<br>Status: Closed)
+    X(fa:fa-sun<br>Node 24<br>UV: Moderate)
+    Y(fa:fa-rss<br>Node 25<br>RSSI: -59dB)
+    Z(fa:fa-bolt<br>Node 26<br>Load: 7W)
+    AA(fa:fa-satellite<br>Node 27<br>Ping: 28ms)
+    AB(fa:fa-signal<br>Node 28<br>RSSI: -64dB)
+    AC(fa:fa-lightbulb<br>Node 29<br>Lux: 720)
+    AD(fa:fa-plug<br>Node 30<br>Load: 11W)
+
+    %% Connections (animated)
+    B b@--> A
+    C c@==> B
+    D d@--> C
+    E e@--> B
+    F f@==> C
+    G g@--> D
+    H h@--> E
+    I i@==> B
+    J j@--> F
+    K k@==> A
+    L l@--> G
+    M m@==> H
+    N n@--> I
+    O o@--> J
+    P p@==> A
+    Q q@--> K
+    R r@--> L
+    S s@--> M
+    T t@--> N
+    U u@==> A
+    V v@--> O
+    W w@--> P
+    X x@--> Q
+    Y y@==> R
+    Z z@--> S
+    AA aa@--> T
+    AB ab@--> U
+    AC ac@==> A
+    AD ad@--> AB
+
+    %% Animate all links
+    b@{animate: true}
+    c@{animate: true}
+    d@{animate: true}
+    e@{animate: true}
+    f@{animate: true}
+    g@{animate: true}
+    h@{animate: true}
+    i@{animate: true}
+    j@{animate: true}
+    k@{animate: true}
+    l@{animate: true}
+    m@{animate: true}
+    n@{animate: true}
+    o@{animate: true}
+    p@{animate: true}
+    q@{animate: true}
+    r@{animate: true}
+    s@{animate: true}
+    t@{animate: true}
+    u@{animate: true}
+    v@{animate: true}
+    w@{animate: true}
+    x@{animate: true}
+    y@{animate: true}
+    z@{animate: true}
+    aa@{animate: true}
+    ab@{animate: true}
+    ac@{animate: true}
+    ad@{animate: true}
+		</div>
+	</fieldset>
 </script>
 
 <!-- prettier-ignore -->

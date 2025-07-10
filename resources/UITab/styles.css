@@ -338,3 +338,7 @@ i.zwjs-state-green {
 .zwjs-title:first-of-type {
 	margin-top: 10px;
 }
+
+.zwjs-mermaid svg {
+	height: calc(90vh - 300px) !important;
+}

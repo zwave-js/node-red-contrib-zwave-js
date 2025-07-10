@@ -4,13 +4,18 @@
 	"license": "MIT",
 	"description": "The most powerful, high performing and highly polished Z-Wave node for Node-RED based on Z-Wave JS. If you want a fully featured Z-Wave framework in your Node-RED instance, you have found it.",
 	"dependencies": {
-		"limiter": "^3.0.0",
-		"lodash": "^4.17.21",
-		"zwave-js":"^15.8.0"
+		"mermaid": "^11.8.1",
+		"qr-scanner": "^1.4.2",
+		"zwave-js": "^15.8.0",
+		"svg-pan-zoom": "^3.6.2",
+		"handlebars":"^4.7.8"
 	},
 	"devDependencies": {
-		"eslint": "^9.30.0",
+		"eslint": "^9.30.1",
 		"prettier": "^3.6.2"
+	},
+	"scripts": {
+		"postinstall": "node ./ensure-client-needs.js"
 	},
 	"engines": {
 		"node": ">=20.0.0"
