@@ -123,6 +123,24 @@ const ZWaveJS = (function () {
 		RED.comms.subscribe('zwave-js/ui/global/removenetwork', (topic, network) => commsRemoveNetwork(network));
 	};
 
+	// Remove Failed
+	const RemoveFailedNode = (NodeID, Row) => {
+		if (confirm('Are you sure you wish to remove this Node from your network?')) {
+			Runtime.Post('CONTROLLER', 'removeFailedNode', [NodeID]).then((data) => {
+				if (data.callSuccess) {
+					$(Row).closest('tr').remove();
+				} else {
+					alert(data.response);
+				}
+			});
+		}
+	};
+
+	// Ping Node
+	const PingNode = (NodeID) => {
+		
+	};
+
 	// Set Class PowerLevel
 	const SetClassicPowerLevel = (Button) => {
 		DisableButton(Button);
@@ -905,8 +923,38 @@ const ZWaveJS = (function () {
 			return new Promise(async (resolve, reject) => {
 				Runtime.Get('CONTROLLER', 'getNodes').then((data) => {
 					if (data.callSuccess) {
-						const nodes = data.response.filter((N) => N.status === 'Dead');
-						resolve();
+						const nodes = data.response;
+
+						let nodeString = '';
+						let routeString = '';
+						nodeString += `0(fa:fa-wifi<br />Controller)\r\n`;
+
+						const Nodes = nodes.filter((N) => !N.isControllerNode);
+						Nodes.forEach((v, i, a) => {
+							let Name;
+							if (v.nodeName) {
+								Name = `${v.nodeId} - ${v.nodeName}`;
+							} else {
+								Name = `${v.nodeId} - No Name`;
+							}
+							nodeString += `${v.nodeId}(fa:${v.powerSource.type === 'mains' ? 'fa-plug' : 'fa-battery-full'}<br />${Name}<br />RSSI: ${v.statistics?.rssi ?? '?'})\r\n`;
+							if (v.statistics !== undefined && v.statistics.lwr !== undefined) {
+								if (v.statistics.lwr.repeaters.length > 0) {
+									const Repeaters = v.statistics.lwr.repeaters;
+									if (Repeaters.length === 1) {
+										routeString += `${Repeaters[0]} <---> ${v.nodeId}\r\n`;
+									} else {
+										routeString += `${Repeaters.join(' <---> ')}\r\n`;
+									}
+								} else {
+									routeString += `0 <===> ${v.nodeId}\r\n`;
+								}
+							}
+						});
+
+						let result = `${nodeString}${routeString}`;
+						resolve({ map: result });
+
 						setTimeout(async () => {
 							ZWJSMermaid.initialize({ startOnLoad: false });
 							await ZWJSMermaid.run({
@@ -917,7 +965,7 @@ const ZWaveJS = (function () {
 								controlIconsEnabled: true,
 								panEnabled: true
 							});
-						}, 100);
+						}, 50);
 					} else {
 						alert(data.Response);
 					}
@@ -1500,7 +1548,7 @@ const ZWaveJS = (function () {
 				RED.popover.tooltip(el_status, 'Alseep');
 				break;
 			case 'Dead':
-				$el_status.addClass(['fa', 'fa-exclamation-triangle', 'zwjs-state-red']);
+				el_status.addClass(['fa', 'fa-exclamation-triangle', 'zwjs-state-red']);
 				RED.popover.tooltip(el_status, 'Dead/Not Responding');
 				break;
 		}
@@ -1888,6 +1936,7 @@ const ZWaveJS = (function () {
 		BackupController,
 		RestoreController,
 		UpdateCFirmware,
-		SetClassicPowerLevel
+		SetClassicPowerLevel,
+		RemoveFailedNode
 	};
 })();
