@@ -137,9 +137,7 @@ const ZWaveJS = (function () {
 	};
 
 	// Ping Node
-	const PingNode = (NodeID) => {
-		
-	};
+	const PingNode = (NodeID) => {};
 
 	// Set Class PowerLevel
 	const SetClassicPowerLevel = (Button) => {
@@ -1549,6 +1547,10 @@ const ZWaveJS = (function () {
 				break;
 			case 'Dead':
 				el_status.addClass(['fa', 'fa-exclamation-triangle', 'zwjs-state-red']);
+				RED.popover.tooltip(el_status, 'Dead/Not Responding');
+				break;
+			case 'Unknown':
+				el_status.addClass(['fa', 'fa-question-circle', 'zwjs-state-red']);
 				RED.popover.tooltip(el_status, 'Dead/Not Responding');
 				break;
 		}
