@@ -6,7 +6,7 @@
 	"dependencies": {
 		"mermaid": "^11.8.1",
 		"qr-scanner": "^1.4.2",
-		"zwave-js": "15.9.1-0-pr-7994-05c9835",
+		"zwave-js": "15.10.1-0-pr-7994-97b3a51",
 		"svg-pan-zoom": "^3.6.2",
 		"handlebars": "^4.7.8"
 	},
