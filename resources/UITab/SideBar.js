@@ -159,6 +159,45 @@ const ZWaveJS = (function () {
 			});
 	};
 
+	// Set LR PowerLevel
+	const SetLWPowerLevel = (Button) => {
+		DisableButton(Button);
+		const PL = parseInt($('#zwjs-controller-setting-power-lr').val());
+		const Calibration = 0;
+		Runtime.Post('CONTROLLER', 'setMaxLongRangePowerlevel', [PL])
+			.then((data) => {
+				if (data.callSuccess) {
+					alert('Power Level Set Succcessfully');
+					EnableButton(Button);
+				} else {
+					alert(data.response);
+					EnableButton(Button);
+				}
+			})
+			.catch((Error) => {
+				alert(Error.message);
+			});
+	};
+
+	// Set Region
+	const SetRegion = (Button) => {
+		DisableButton(Button);
+		const R = parseInt($('#zwjs-controller-setting-region option:selected').val());
+		Runtime.Post('CONTROLLER', 'setRFRegion', [R])
+			.then((data) => {
+				if (data.callSuccess) {
+					alert('Region Set Succcessfully');
+					EnableButton(Button);
+				} else {
+					alert(data.response);
+					EnableButton(Button);
+				}
+			})
+			.catch((Error) => {
+				alert(Error.message);
+			});
+	};
+
 	// Network Selecetd
 	const NetworkSelected = function () {
 		if (networkId) {
@@ -1939,6 +1978,8 @@ const ZWaveJS = (function () {
 		RestoreController,
 		UpdateCFirmware,
 		SetClassicPowerLevel,
+		SetLWPowerLevel,
+		SetRegion,
 		RemoveFailedNode
 	};
 })();

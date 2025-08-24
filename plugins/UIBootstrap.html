@@ -345,6 +345,7 @@
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Controller-Settings">
 	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint"><strong>WARNING!</strong> Certain settings, such as Power Levels, must comply with the legal limits in your region. Refer to your local laws for guidance.</div>
 		<div class="zwjs-title">Reset Controller:</div>
 		<div>
 			<button onclick="ZWaveJS.ResetController(this)" style="background-color:red">Reset</button>
@@ -370,18 +371,18 @@
 					<option value="0xff">Default (EU)</option>
 				{{/select}}
 			</select>
-			<button onclick="">Set</button>
+			<button onclick="ZWaveJS.SetRegion(this)">Set</button>
 		</div>
 		<div class="zwjs-title">Power Level (Classic) dbm:</div>
 		<div>
 			<input type="number" min="-10" Max="20" id="zwjs-controller-setting-power-classic" value="{{Power}}" />
-			<button onclick="ZWaveJS.SetClassicPowerLevel(this)"">Set</button>
+			<button onclick="ZWaveJS.SetClassicPowerLevel(this)">Set</button>
 		</div>
 		<div class="zwjs-title">Max Power Level (Long Range) dbm:</div>
 		<div>
 			<input type="number" id="zwjs-controller-setting-power-lr" value="{{LRPower}}"  />
 			
-			<button onclick="">Set</button>
+			<button onclick="ZWaveJS.SetLWPowerLevel(this)">Set</button>
 		</div>
 		<div class="zwjs-title">Backup/Restore NVM</div>
 		<div>
