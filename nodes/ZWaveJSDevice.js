@@ -27,7 +27,8 @@ module.exports = (RED) => {
 			}
 		};
 
-		self.runtime.registerDeviceNode(self.id, config.filteredNodeId, callback);
+		const Nodes = config.nodeMode === 'All' ? '0' : config.filteredNodeId;
+		self.runtime.registerDeviceNode(self.id, Nodes, callback);
 
 		self.on('close', (_, done) => {
 			self.runtime.deregisterDeviceNode(self.id);

@@ -75,7 +75,7 @@ module.exports = function (RED) {
 
 		// Public methods (used by config clients)
 		self.registerDeviceNode = (DeviceNodeID, NodeIDs, Callback) => {
-			const Nodes = NodeIDs.split(',').map((N) => parseInt(N))
+			const Nodes = NodeIDs.split(',').map((N) => parseInt(N));
 			deviceNodes[DeviceNodeID] = { Nodes, Callback };
 		};
 		self.deregisterDeviceNode = (DeviceNodeID) => {
@@ -870,7 +870,7 @@ module.exports = function (RED) {
 			Node.on(event_Ready.driverName, (ThisNode) => {
 				const Timestamp = new Date().getTime();
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
-					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
+					(I) => I.Nodes.includes(Node.id) || I.Nodes[0] === 0
 				);
 				const Event = {
 					Type: 'EVENT',
@@ -892,7 +892,7 @@ module.exports = function (RED) {
 			Node.on(event_Alive.driverName, (ThisNode, OldStatus) => {
 				const Timestamp = new Date().getTime();
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
-					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
+					(I) => I.Nodes.includes(Node.id) || I.Nodes[0] === 0
 				);
 				const Event = {
 					Type: 'EVENT',
@@ -915,7 +915,7 @@ module.exports = function (RED) {
 			Node.on(event_Wake.driverName, (ThisNode, OldStatus) => {
 				const Timestamp = new Date().getTime();
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
-					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
+					(I) => I.Nodes.includes(Node.id) || I.Nodes[0] === 0
 				);
 				const Event = {
 					Type: 'EVENT',
@@ -938,7 +938,7 @@ module.exports = function (RED) {
 			Node.on(event_Sleep.driverName, (ThisNode, OldStatus) => {
 				const Timestamp = new Date().getTime();
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
-					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
+					(I) => I.Nodes.includes(Node.id) || I.Nodes[0] === 0
 				);
 				const Event = {
 					Type: 'EVENT',
@@ -961,7 +961,7 @@ module.exports = function (RED) {
 			Node.on(event_Dead.driverName, (ThisNode, OldStatus) => {
 				const Timestamp = new Date().getTime();
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
-					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
+					(I) => I.Nodes.includes(Node.id) || I.Nodes[0] === 0
 				);
 				const Event = {
 					Type: 'EVENT',
@@ -1064,7 +1064,7 @@ module.exports = function (RED) {
 			Node.on(event_ValueNotification.driverName, (ThisNode, Args) => {
 				const Timestamp = new Date().getTime();
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
-					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
+					(I) => I.Nodes.includes(Node.id) || I.Nodes[0] === 0
 				);
 				const { value, ...valueId } = Args;
 				const Event = {
@@ -1085,7 +1085,7 @@ module.exports = function (RED) {
 			Node.on(event_ValueUpdated.driverName, (ThisNode, Args) => {
 				const Timestamp = new Date().getTime();
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
-					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
+					(I) => I.Nodes.includes(Node.id) || I.Nodes[0] === 0
 				);
 				const { newValue, prevValue, ...valueId } = Args;
 				const Event = {
@@ -1111,7 +1111,7 @@ module.exports = function (RED) {
 			Node.on(event_ValueAdded.driverName, (ThisNode, Args) => {
 				const Timestamp = new Date().getTime();
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
-					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
+					(I) => I.Nodes.includes(Node.id) || I.Nodes[0] === 0
 				);
 				const { newValue, ...valueId } = Args;
 				const Event = {
@@ -1137,7 +1137,7 @@ module.exports = function (RED) {
 			Node.on(event_Notification.driverName, (Endpoint, CC, Args) => {
 				const Timestamp = new Date().getTime();
 				const InterestedDeviceNodes = Object.values(deviceNodes).filter(
-					(I) => I.NodeIDs?.includes(Node.id) || I.NodeIDs === undefined
+					(I) => I.Nodes.includes(Node.id) || I.Nodes[0] === 0
 				);
 				const Event = {
 					Type: 'EVENT',
