@@ -18,6 +18,7 @@ const ZWaveJS = (function () {
 	let TPL_ValueManagement = undefined;
 	let AssociationGroups;
 	let clientSideAuth = false;
+	let nodesExpanded = true;
 
 	/*
 	 * Driver Communciation Methods
@@ -121,6 +122,29 @@ const ZWaveJS = (function () {
 
 		RED.comms.subscribe('zwave-js/ui/global/addnetwork', (topic, network) => commsListOrAddNetworks(false, network));
 		RED.comms.subscribe('zwave-js/ui/global/removenetwork', (topic, network) => commsRemoveNetwork(network));
+	};
+
+	// Collapse LIst
+	const NodeCollapseToggle = () => {
+		switch (nodesExpanded) {
+			case true:
+				$('#zwjs-node-list')
+					.treeList('data')
+					.forEach((LI) => {
+						LI.treeList.collapse();
+					});
+				nodesExpanded = false;
+				break;
+
+			case false:
+				$('#zwjs-node-list')
+					.treeList('data')
+					.forEach((LI) => {
+						LI.treeList.expand();
+					});
+				nodesExpanded = true;
+				break;
+		}
 	};
 
 	// Remove Failed
@@ -307,9 +331,7 @@ const ZWaveJS = (function () {
 				if (data.callSuccess) {
 					const RND = data.response.find((N) => N.nodeId === selectedNode.nodeId);
 					delete RND.statistics.lwr;
-					$('#zwjs-node-list')
-						.treeList('data')
-						.find((N) => N.nodeData.nodeId === RND.nodeId).nodeData = RND;
+					GetNodeGroup(selectedNode.nodeLocation).children.find((N) => N.nodeData.nodeId === RND.nodeId).nodeData = RND;
 
 					const Options = {
 						width: 900,
@@ -534,12 +556,7 @@ const ZWaveJS = (function () {
 								alert(data.response);
 								EnableButton(Button);
 							} else {
-								const ND = $('#zwjs-node-list')
-									.treeList('data')
-									.find((N) => N.nodeData.nodeId).nodeData;
-								ND.nodeName = $('#zwjs-node-edit-name').val();
-								ND.nodeLocation = $('#zwjs-node-edit-location').val();
-								$(`#zwjs-node-name-${selectedNode.nodeId}`).text(ND.nodeName || 'No Name');
+								RefreshNodes('Named');
 
 								alert('Name & Location Set Successfully!');
 								EnableButton(Button);
@@ -789,6 +806,7 @@ const ZWaveJS = (function () {
 				break;
 
 			case 'NodeAdded':
+			case 'Named':
 				break;
 
 			case 'NodeRemoved':
@@ -815,32 +833,69 @@ const ZWaveJS = (function () {
 
 					// Render List
 					const TreeData = [];
-					Nodes.forEach((N) => {
-						const Label = $('<div>');
-						Label.append(`<span class="zwjs-node-id">${N.nodeId}</span>`);
-						Label.append(`<span id="zwjs-node-name-${N.nodeId}">${N.nodeName || 'No Name'}</span>`);
-						const IconSpan = $('<span>').addClass('zwjs-node-state-group');
-						Label.append(IconSpan);
+					const getInitials = (name) => {
+						if (!name) return '';
+						return name
+							.split(/\s+/)
+							.map((word) => word[0] || '')
+							.join('')
+							.toUpperCase();
+					};
+					const groupedNodes = Nodes.reduce((acc, node) => {
+						const location = node.nodeLocation || 'No Location';
+						if (!acc[location]) {
+							acc[location] = [];
+						}
+						acc[location].push(node);
+						return acc;
+					}, {});
 
-						IconSpan.append(`<i id="zwjs-node-state-interview-${N.nodeId}" aria-hidden="true"></i>`);
-						IconSpan.append(`<i id="zwjs-node-state-status-${N.nodeId}" aria-hidden="true"></i>`);
-						IconSpan.append(`<i id="zwjs-node-state-power-${N.nodeId}" aria-hidden="true"></i>`);
-						IconSpan.append(`<i id="zwjs-node-state-security-${N.nodeId}" aria-hidden="true"></i>`);
+					Object.keys(groupedNodes).forEach((LK) => {
+						const GLabel = $(`<div><span class="zwjs-node-id">${getInitials(LK)}</span> ${LK}</div>`);
+						const GIconSpan = $('<span group>').addClass('zwjs-node-state-group');
+						GLabel.append(GIconSpan);
+						GIconSpan.append(`<i aria-hidden="true">Int</i>`);
+						GIconSpan.append(`<i aria-hidden="true">Sta</i>`);
+						GIconSpan.append(`<i aria-hidden="true">Pow</i>`);
+						GIconSpan.append(`<i aria-hidden="true">Sec</i>`);
 
-						RenderNodeIconState(N);
+						const Group = {
+							id: `zwjs-node-list-entry-location-${LK.replace(/ /g, '-')}`,
+							element: GLabel,
+							children: [],
+							expanded: nodesExpanded
+						};
 
-						TreeData.push({
-							id: `zwjs-node-list-entry-${N.nodeId}`,
-							element: Label,
-							nodeData: N
-							//icon: 'fa fa-circle'
+						TreeData.push(Group);
+
+						groupedNodes[LK].forEach((N) => {
+							const Label = $('<div>');
+							Label.append(`<span class="zwjs-node-id">${N.nodeId}</span>`);
+							Label.append(`<span id="zwjs-node-name-${N.nodeId}">${N.nodeName || 'No Name'}</span>`);
+							const IconSpan = $('<span>').addClass('zwjs-node-state-group');
+							Label.append(IconSpan);
+
+							IconSpan.append(`<i id="zwjs-node-state-interview-${N.nodeId}" aria-hidden="true"></i>`);
+							IconSpan.append(`<i id="zwjs-node-state-status-${N.nodeId}" aria-hidden="true"></i>`);
+							IconSpan.append(`<i id="zwjs-node-state-power-${N.nodeId}" aria-hidden="true"></i>`);
+							IconSpan.append(`<i id="zwjs-node-state-security-${N.nodeId}" aria-hidden="true"></i>`);
+
+							Group.children.push({
+								id: `zwjs-node-list-entry-${N.nodeId}`,
+								element: Label,
+								nodeData: N
+							});
 						});
 					});
 
 					$('#zwjs-node-list').treeList('data', TreeData);
 
-					TreeData.forEach((N) => {
-						RenderNodeIconState(N.nodeData);
+					TreeData.forEach((G) => {
+						G.children.forEach((N) => {
+							if (N.nodeData) {
+								RenderNodeIconState(N.nodeData);
+							}
+						});
 					});
 				} else {
 					alert(data.response);
@@ -970,9 +1025,7 @@ const ZWaveJS = (function () {
 						Nodes.forEach((v, i, a) => {
 							let Name;
 							if (v.nodeName) {
-								Name = `${v.nodeId} - ${v.nodeName}`;
-							} else {
-								Name = `${v.nodeId} - No Name`;
+								Name = `${v.nodeId} - ${v.nodeName || 'No Name'}`;
 							}
 							nodeString += `${v.nodeId}(fa:${v.powerSource.type === 'mains' ? 'fa-plug' : 'fa-battery-full'}<br />${Name}<br />RSSI: ${v.statistics?.rssi ?? '?'})\r\n`;
 							if (v.statistics !== undefined && v.statistics.lwr !== undefined) {
@@ -1065,17 +1118,17 @@ const ZWaveJS = (function () {
 		},
 		NodeInfo: () => {
 			return new Promise(async (resolve, _) => {
-				const ND = $('#zwjs-node-list')
-					.treeList('data')
-					.find((N) => N.nodeData.nodeId === selectedNode.nodeId).nodeData;
+				const ND = GetNodeGroup(selectedNode.nodeLocation).children.find(
+					(N) => N.nodeData.nodeId === selectedNode.nodeId
+				).nodeData;
 				resolve(ND);
 			});
 		},
 		NodeStats: () => {
 			return new Promise(async (resolve, _) => {
-				const ND = $('#zwjs-node-list')
-					.treeList('data')
-					.find((N) => N.nodeData.nodeId === selectedNode.nodeId).nodeData;
+				const ND = GetNodeGroup(selectedNode.nodeLocation).children.find(
+					(N) => N.nodeData.nodeId === selectedNode.nodeId
+				).nodeData;
 				resolve(FormatObjectKeys(ND.statistics));
 			});
 		},
@@ -1258,9 +1311,8 @@ const ZWaveJS = (function () {
 
 	// Node Status
 	const commsNodeState = (topic, data) => {
-		$('#zwjs-node-list')
-			.treeList('data')
-			.find((N) => N.nodeData.nodeId === data.nodeInfo.nodeId).nodeData = data.nodeInfo;
+		GetNodeGroup(data.nodeInfo.nodeLocation).children.find((N) => N.nodeData.nodeId === data.nodeInfo.nodeId).nodeData =
+			data.nodeInfo;
 
 		if (selectedNode && selectedNode.nodeId === data.nodeInfo.nodeId) {
 			nodeSelected(undefined, { nodeData: data.nodeInfo });
@@ -1422,6 +1474,15 @@ const ZWaveJS = (function () {
 	 * Helpers/Things
 	 * Methods/things used in all this vortex of chaos!
 	 */
+
+	// Get Node Group
+	const GetNodeGroup = (Group) => {
+		const safeGroup = Group && Group.trim() !== '' ? Group : 'No Location';
+		const G = `zwjs-node-list-entry-location-${safeGroup.replace(/ /g, '-')}`;
+		return $('#zwjs-node-list')
+			.treeList('data')
+			.find((N) => N.id === G);
+	};
 
 	// Fomat Object
 	const FormatObjectKeys = (obj) => {
@@ -1980,6 +2041,7 @@ const ZWaveJS = (function () {
 		SetClassicPowerLevel,
 		SetLWPowerLevel,
 		SetRegion,
-		RemoveFailedNode
+		RemoveFailedNode,
+		NodeCollapseToggle
 	};
 })();

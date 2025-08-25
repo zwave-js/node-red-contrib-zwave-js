@@ -75,7 +75,8 @@ module.exports = function (RED) {
 
 		// Public methods (used by config clients)
 		self.registerDeviceNode = (DeviceNodeID, NodeIDs, Callback) => {
-			deviceNodes[DeviceNodeID] = { NodeIDs, Callback };
+			const Nodes = NodeIDs.split(',').map((N) => parseInt(N))
+			deviceNodes[DeviceNodeID] = { Nodes, Callback };
 		};
 		self.deregisterDeviceNode = (DeviceNodeID) => {
 			delete deviceNodes[DeviceNodeID];

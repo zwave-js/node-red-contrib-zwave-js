@@ -223,6 +223,11 @@ table.zwjs-table[vertical] td:nth-of-type(2) {
 	color: gray;
 }
 
+.zwjs-node-state-group[group] {
+	font-size: 12px;
+	text-align: center;
+}
+
 .zwjs-node-state-group i {
 	margin-right: 5px;
 	min-width: 20px;

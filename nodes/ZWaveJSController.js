@@ -36,21 +36,6 @@ module.exports = (RED) => {
 			done();
 		});
 
-		const sendTrackingUpdate = (Req, Response) => {
-			if (Req.cmd.trackingToken !== undefined) {
-				const Timestamp = new Date().getTime();
-				const TrackingResponse = {
-					event: 'TRACKING_TOKEN_RETURN',
-					timestamp: Timestamp,
-					eventBody: {
-						token: Req.cmd.trackingToken,
-						response: Response
-					}
-				};
-				self.send({ payload: TrackingResponse });
-			}
-		};
-
 		self.on('input', (msg, send, done) => {
 			const Req = msg.payload;
 
@@ -64,7 +49,6 @@ module.exports = (RED) => {
 						self.runtime
 							.driverCommand(Req.cmd.method, Req.cmdProperties?.args)
 							.then((Result) => {
-								sendTrackingUpdate(Req, Result);
 								const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId);
 								if (Return && Return.Type === 'RESPONSE') {
 									send({ payload: Return.Event });
@@ -74,7 +58,6 @@ module.exports = (RED) => {
 								}
 							})
 							.catch((Error) => {
-								sendTrackingUpdate(Req, Error);
 								done(Error);
 							});
 						break;
@@ -87,7 +70,6 @@ module.exports = (RED) => {
 						self.runtime
 							.controllerCommand(Req.cmd.method, Req.cmdProperties?.args)
 							.then((Result) => {
-								sendTrackingUpdate(Req, Result);
 								const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId);
 								if (Return && Return.Type === 'RESPONSE') {
 									send({ payload: Return.Event });
@@ -97,7 +79,6 @@ module.exports = (RED) => {
 								}
 							})
 							.catch((Error) => {
-								sendTrackingUpdate(Req, Error);
 								done(Error);
 							});
 						break;
@@ -118,7 +99,6 @@ module.exports = (RED) => {
 									Req.cmdProperties.args
 								)
 								.then((Result) => {
-									sendTrackingUpdate(Req, Result);
 									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId);
 									if (Return && Return.Type === 'RESPONSE') {
 										send({ payload: Return.Event });
@@ -128,7 +108,6 @@ module.exports = (RED) => {
 									}
 								})
 								.catch((Error) => {
-									sendTrackingUpdate(Req, Error);
 									done(Error);
 								});
 						} else {
@@ -151,7 +130,6 @@ module.exports = (RED) => {
 									Req.cmdProperties.setValueOptions
 								)
 								.then((Result) => {
-									sendTrackingUpdate(Req, Result);
 									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId);
 									if (Return && Return.Type === 'RESPONSE') {
 										send({ payload: Return.Event });
@@ -161,7 +139,6 @@ module.exports = (RED) => {
 									}
 								})
 								.catch((Error) => {
-									sendTrackingUpdate(Req, Error);
 									done(Error);
 								});
 						} else {
@@ -178,7 +155,6 @@ module.exports = (RED) => {
 							self.runtime
 								.nodeCommand(Req.cmd.method, Req.cmdProperties.nodeId, Req.cmdProperties.value)
 								.then((Result) => {
-									sendTrackingUpdate(Req, Result);
 									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId);
 									if (Return && Return.Type === 'RESPONSE') {
 										send({ payload: Return.Event });
@@ -188,7 +164,6 @@ module.exports = (RED) => {
 									}
 								})
 								.catch((Error) => {
-									sendTrackingUpdate(Req, Error);
 									done(Error);
 								});
 						} else {

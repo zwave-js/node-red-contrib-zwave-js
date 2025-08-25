@@ -20,12 +20,16 @@
 				value: 'Fan',
 				required: true
 			},
+			filteredNodeId: {
+				value: '',
+				required: false
+			},
 			dataMode: {
 				value: 'SR',
 				required: true
 			},
-			outputs: {value: 1},
-			inputs: {value: 1}
+			outputs: { value: 1 },
+			inputs: { value: 1 }
 		},
 		inputs: 1,
 		outputs: 1,
@@ -40,9 +44,8 @@
 
 	RED.nodes.registerType('zwavejs-device', ZWJSDeviceNodeSettings);
 
-	function Save(){
-		switch($("#node-input-dataMode").val()){
-
+	function Save() {
+		switch ($('#node-input-dataMode').val()) {
 			case 'SR':
 				this.inputs = 1;
 				this.outputs = 1;
@@ -57,19 +60,39 @@
 				this.inputs = 1;
 				this.outputs = 0;
 				break;
-
 		}
-		
 	}
 
 	function Prep() {
-
-		$('#node-input-nodeMode').on('change', function() {
+		const self = this;
+		$('#node-input-nodeMode').on('change', function () {
 			if ($(this).val() === 'All') {
 				$('#node-input-multiMode-div').fadeOut(150);
-			}
-			else{
+				$('#node-input-filteredNodeId-div').fadeOut(150);
+			} else {
+				$.getJSON(`zwave-js/ui/${self.runtimeId}/CONTROLLER/getNodes`, (data) => {
+					if (data.callSuccess) {
+						const Nodes = data.response
+							.filter((N) => !N.isControllerNode)
+							.map((N) => ({ value: N.nodeId, label: `${N.nodeLocation || 'No Location'} | ${N.nodeId} | ${N.nodeName || 'No Name'}` }));
+
+						$('#node-input-filteredNodeId').typedInput({
+							type: 'nodes',
+							types: [
+								{
+									value: 'nodes',
+									multiple: true,
+									options: Nodes
+								}
+							]
+						});
+					} else {
+						alert(data.response);
+					}
+				});
+
 				$('#node-input-multiMode-div').fadeIn(150);
+				$('#node-input-filteredNodeId-div').fadeIn(150);
 			}
 		});
 	}
@@ -102,6 +125,10 @@
 			<option value="Fan">Fan-Out</option>
 			<option value="Multicast">Multicast</option>
 		</select>
+	</div>
+	<div class="form-row" id="node-input-filteredNodeId-div">
+		<label for="node-input-filteredNodeId"><i class="fa fa-list-ol"></i> Nodes</label>
+		<input type="text" id="node-input-filteredNodeId">
 	</div>
 	<div class="form-row">
 	    <label for="node-input-dataMode"><i class="fa fa-exchange"></i> Data Mode</label>
