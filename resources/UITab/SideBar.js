@@ -541,7 +541,10 @@ const ZWaveJS = (function () {
 	// Set Name & Location
 	const SetNameLocation = (Button) => {
 		DisableButton(Button);
-		Runtime.Post('NODE', 'setName', { nodeId: selectedNode.nodeId, value: $('#zwjs-node-edit-name').val() })
+		Runtime.Post('NODE', 'setName', {
+			nodeId: selectedNode.nodeId,
+			value: $('#zwjs-node-edit-name').val() || undefined
+		})
 			.then((data) => {
 				if (!data.callSuccess) {
 					alert(data.response);
@@ -549,7 +552,7 @@ const ZWaveJS = (function () {
 				} else {
 					Runtime.Post('NODE', 'setLocation', {
 						nodeId: selectedNode.nodeId,
-						value: $('#zwjs-node-edit-location').val()
+						value: $('#zwjs-node-edit-location').val() || undefined
 					})
 						.then((data) => {
 							if (!data.callSuccess) {
