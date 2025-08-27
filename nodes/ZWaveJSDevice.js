@@ -58,6 +58,11 @@ module.exports = (RED) => {
 		self.on('input', (msg, send, done) => {
 			const Req = msg.payload;
 
+			if (!Req.cmd) {
+				done(new Error('msg.payload is not a valid ZWave command.'));
+				return;
+			}
+
 			if (!MethodChecks[Req.cmd.api].includes(Req.cmd.method)) {
 				done(new Error('Sorry! This API method is limited to the UI only, or is an invalid method.'));
 				return;
@@ -101,7 +106,7 @@ module.exports = (RED) => {
 							};
 							callback(Status);
 						} else {
-							self.error('cmdProperties is either missing or has fewer requied properties.');
+							self.error('cmdProperties is either missing or has fewer required properties.');
 							const Status = {
 								Type: 'STATUS',
 								Status: {
@@ -142,7 +147,7 @@ module.exports = (RED) => {
 							};
 							callback(Status);
 						} else {
-							self.error('cmdProperties is either missing or has fewer requied properties.');
+							self.error('cmdProperties is either missing or has fewer required properties.');
 							const Status = {
 								Type: 'STATUS',
 								Status: {
@@ -175,6 +180,10 @@ module.exports = (RED) => {
 							}
 						};
 						callback(Status);
+						break;
+
+					default:
+						done(new Error('Requested API is not valid'));
 						break;
 				}
 			};

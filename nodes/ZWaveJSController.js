@@ -37,6 +37,13 @@ module.exports = (RED) => {
 
 		self.runtime.registerControllerNode(self.id, callback);
 
+		const sendResponse = (msg, Req, Result, send, NodesCollection) => {
+			const Return = getProfile(Req.cmd.method, Result, NodesCollection, Req.cmd.id);
+			if (Return && Return.Type === 'RESPONSE') {
+				send({ ...msg, payload: Return.Event });
+			}
+		};
+
 		self.on('close', (_, done) => {
 			self.runtime.deregisterControllerNode(self.id);
 			done();
@@ -45,125 +52,105 @@ module.exports = (RED) => {
 		self.on('input', (msg, send, done) => {
 			const Req = msg.payload;
 
+			if (!Req.cmd) {
+				done(new Error('msg.payload is not a valid ZWave command.'));
+				return;
+			}
+
 			if (!MethodChecks[Req.cmd.api].includes(Req.cmd.method)) {
 				done(new Error('Sorry! This API method is limited to the UI only, or is an invalid method.'));
 				return;
 			}
 
-			if (Req.cmd) {
-				switch (Req.cmd.api) {
-					case 'DRIVER':
+			switch (Req.cmd.api) {
+				case 'DRIVER':
+					self.runtime
+						.driverCommand(Req.cmd.method, Req.cmdProperties?.args)
+						.then((Result) => {
+							sendResponse(msg, Req, Result, send, Req.cmdProperties?.nodeId);
+						})
+						.catch((Error) => {
+							self.error(Error, msg);
+						});
+					done();
+					break;
+
+				case 'CONTROLLER':
+					self.runtime
+						.controllerCommand(Req.cmd.method, Req.cmdProperties?.args)
+						.then((Result) => {
+							sendResponse(msg, Req, Result, send, Req.cmdProperties?.nodeId);
+						})
+						.catch((Error) => {
+							self.error(Error, msg);
+						});
+					done();
+					break;
+
+				case 'CC':
+					if (Req.cmdProperties?.commandClass && Req.cmdProperties?.method && Req.cmdProperties?.nodeId) {
 						self.runtime
-							.driverCommand(Req.cmd.method, Req.cmdProperties?.args)
+							.ccCommand(
+								Req.cmd.method,
+								Req.cmdProperties.commandClass,
+								Req.cmdProperties.method,
+								Req.cmdProperties.nodeId,
+								Req.cmdProperties.endpoint,
+								Req.cmdProperties.args
+							)
 							.then((Result) => {
-								const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId, Req.cmd.id);
-								if (Return && Return.Type === 'RESPONSE') {
-									send({...msg, payload: Return.Event });
-									done();
-								} else {
-									done();
-								}
+								sendResponse(msg, Req, Result, send, Req.cmdProperties?.nodeId);
 							})
 							.catch((Error) => {
-								done(Error);
+								self.error(Error, msg);
 							});
-						break;
+						done();
+					} else {
+						done(new Error('cmdProperties is either missing or has fewer required properties.'));
+					}
+					break;
 
-					case 'CONTROLLER':
+				case 'VALUE':
+					if (Req.cmdProperties?.nodeId && Req.cmdProperties?.valueId) {
 						self.runtime
-							.controllerCommand(Req.cmd.method, Req.cmdProperties?.args)
+							.valueCommand(
+								Req.cmd.method,
+								Req.cmdProperties.nodeId,
+								Req.cmdProperties.valueId,
+								Req.cmdProperties.value,
+								Req.cmdProperties.setValueOptions
+							)
 							.then((Result) => {
-								const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId, Req.cmd.id);
-								if (Return && Return.Type === 'RESPONSE') {
-									send({...msg, payload: Return.Event });
-									done();
-								} else {
-									done();
-								}
+								sendResponse(msg, Req, Result, send, Req.cmdProperties?.nodeId);
 							})
 							.catch((Error) => {
-								done(Error);
+								self.error(Error, msg);
 							});
-						break;
+						done();
+					} else {
+						done(new Error('cmdProperties is either missing or has fewer required properties.'));
+					}
+					break;
 
-					case 'CC':
-						if (Req.cmdProperties?.commandClass && Req.cmdProperties?.method && Req.cmdProperties?.nodeId) {
-							self.runtime
-								.ccCommand(
-									Req.cmd.method,
-									Req.cmdProperties.commandClass,
-									Req.cmdProperties.method,
-									Req.cmdProperties.nodeId,
-									Req.cmdProperties.endpoint,
-									Req.cmdProperties.args
-								)
-								.then((Result) => {
-									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId, Req.cmd.id);
-									if (Return && Return.Type === 'RESPONSE') {
-										send({...msg, payload: Return.Event });
-										done();
-									} else {
-										done();
-									}
-								})
-								.catch((Error) => {
-									done(Error);
-								});
-						} else {
-							done(new Error('cmdProperties is either missing or has fewer required properties.'));
-						}
-						break;
+				case 'NODE':
+					if (Req.cmdProperties?.nodeId) {
+						self.runtime
+							.nodeCommand(Req.cmd.method, Req.cmdProperties.nodeId, Req.cmdProperties.value)
+							.then((Result) => {
+								sendResponse(msg, Req, Result, send, Req.cmdProperties?.nodeId);
+							})
+							.catch((Error) => {
+								self.error(Error, msg);
+							});
+						done();
+					} else {
+						done(new Error('Missing cmdProperties.nodeId property.'));
+					}
+					break;
 
-					case 'VALUE':
-						if (Req.cmdProperties?.nodeId && Req.cmdProperties?.valueId) {
-							self.runtime
-								.valueCommand(
-									Req.cmd.method,
-									Req.cmdProperties.nodeId,
-									Req.cmdProperties.valueId,
-									Req.cmdProperties.value,
-									Req.cmdProperties.setValueOptions
-								)
-								.then((Result) => {
-									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId, Req.cmd.id);
-									if (Return && Return.Type === 'RESPONSE') {
-										send({...msg, payload: Return.Event });
-										done();
-									} else {
-										done();
-									}
-								})
-								.catch((Error) => {
-									done(Error);
-								});
-						} else {
-							done(new Error('cmdProperties is either missing or has fewer required properties.'));
-						}
-						break;
-
-					case 'NODE':
-						if (Req.cmdProperties?.nodeId) {
-							self.runtime
-								.nodeCommand(Req.cmd.method, Req.cmdProperties.nodeId, Req.cmdProperties.value)
-								.then((Result) => {
-									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId, Req.cmd.id);
-									if (Return && Return.Type === 'RESPONSE') {
-										send({...msg, payload: Return.Event });
-										done();
-									} else {
-										done();
-									}
-								})
-								.catch((Error) => {
-									done(Error);
-								});
-						} else {
-							done(new Error('Missing cmdProperties.nodeId property.'));
-						}
-						break;
-				}
-			} else {
-				done(new Error('msg.payload is not a valid command.'));
+				default:
+					done(new Error('Requested API is not valid'));
+					break;
 			}
 		});
 	};
