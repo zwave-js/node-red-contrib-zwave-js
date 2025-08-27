@@ -1,9 +1,11 @@
 const { getProfile } = require('./lib/RequestResponseProfiles');
-const AllowedControllerCommands = require('./lib/AllowedUsersCommands').Controller;
-const AllowedNodeCommands = require('./lib/AllowedUsersCommands').Node;
-const AllowedValueCommands = require('./lib/AllowedUsersCommands').Value;
-const AllowedCCCommands = require('./lib/AllowedUsersCommands').CC;
-const AllowedDriverCommands = require('./lib/AllowedUsersCommands').Driver;
+const MethodChecks = {
+	CC: require('./lib/AllowedUsersCommands').CC,
+	NODE: require('./lib/AllowedUsersCommands').Node,
+	VALUE: require('./lib/AllowedUsersCommands').Value,
+	CONTROLLER: require('./lib/AllowedUsersCommands').Controller,
+	DRIVER: require('./lib/AllowedUsersCommands').Controller
+};
 
 module.exports = (RED) => {
 	const init = function (config) {
@@ -12,12 +14,16 @@ module.exports = (RED) => {
 		self.config = config;
 		self.runtime = RED.nodes.getNode(self.config.runtimeId);
 
+		let clearTimer;
+
 		const callback = (Data) => {
 			switch (Data.Type) {
 				case 'STATUS':
 					self.status(Data.Status);
+					if (clearTimer) (clearTimeout(clearTimer), (clearTimer = undefined));
+
 					if (Data.Status.clearTime) {
-						setTimeout(() => {
+						clearTimer = setTimeout(() => {
 							self.status({});
 						}, Data.Status.clearTime);
 					}
@@ -39,17 +45,18 @@ module.exports = (RED) => {
 		self.on('input', (msg, send, done) => {
 			const Req = msg.payload;
 
+			if (!MethodChecks[Req.cmd.api].includes(Req.cmd.method)) {
+				done(new Error('Sorry! This API method is limited to the UI only, or is an invalid method.'));
+				return;
+			}
+
 			if (Req.cmd) {
 				switch (Req.cmd.api) {
 					case 'DRIVER':
-						if (!AllowedDriverCommands.includes(Req.cmd.method)) {
-							done(new Error('Sorry! This method is limited to the UI only, or is an invalid method.'));
-							return;
-						}
 						self.runtime
 							.driverCommand(Req.cmd.method, Req.cmdProperties?.args)
 							.then((Result) => {
-								const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId);
+								const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId, Req.cmd.id);
 								if (Return && Return.Type === 'RESPONSE') {
 									send({ payload: Return.Event });
 									done();
@@ -63,14 +70,10 @@ module.exports = (RED) => {
 						break;
 
 					case 'CONTROLLER':
-						if (!AllowedControllerCommands.includes(Req.cmd.method)) {
-							done(new Error('Sorry! This method is limited to the UI only, or is an invalid method.'));
-							return;
-						}
 						self.runtime
 							.controllerCommand(Req.cmd.method, Req.cmdProperties?.args)
 							.then((Result) => {
-								const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId);
+								const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId, Req.cmd.id);
 								if (Return && Return.Type === 'RESPONSE') {
 									send({ payload: Return.Event });
 									done();
@@ -84,10 +87,6 @@ module.exports = (RED) => {
 						break;
 
 					case 'CC':
-						if (!AllowedCCCommands.includes(Req.cmd.method)) {
-							done(new Error('Sorry! This method is limited to the UI only, or is an invalid method.'));
-							return;
-						}
 						if (Req.cmdProperties?.commandClass && Req.cmdProperties?.method && Req.cmdProperties?.nodeId) {
 							self.runtime
 								.ccCommand(
@@ -99,7 +98,7 @@ module.exports = (RED) => {
 									Req.cmdProperties.args
 								)
 								.then((Result) => {
-									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId);
+									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId, Req.cmd.id);
 									if (Return && Return.Type === 'RESPONSE') {
 										send({ payload: Return.Event });
 										done();
@@ -116,10 +115,6 @@ module.exports = (RED) => {
 						break;
 
 					case 'VALUE':
-						if (!AllowedValueCommands.includes(Req.cmd.method)) {
-							done(new Error('Sorry! This method is limited to the UI only, or is an invalid method.'));
-							return;
-						}
 						if (Req.cmdProperties?.nodeId && Req.cmdProperties?.valueId) {
 							self.runtime
 								.valueCommand(
@@ -130,7 +125,7 @@ module.exports = (RED) => {
 									Req.cmdProperties.setValueOptions
 								)
 								.then((Result) => {
-									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId);
+									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId, Req.cmd.id);
 									if (Return && Return.Type === 'RESPONSE') {
 										send({ payload: Return.Event });
 										done();
@@ -147,15 +142,11 @@ module.exports = (RED) => {
 						break;
 
 					case 'NODE':
-						if (!AllowedNodeCommands.includes(Req.cmd.method)) {
-							done(new Error('Sorry! This method is limited to the UI only, or is an invalid method.'));
-							return;
-						}
 						if (Req.cmdProperties?.nodeId) {
 							self.runtime
 								.nodeCommand(Req.cmd.method, Req.cmdProperties.nodeId, Req.cmdProperties.value)
 								.then((Result) => {
-									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId);
+									const Return = getProfile(Req.cmd.method, Result, Req.cmdProperties?.nodeId, Req.cmd.id);
 									if (Return && Return.Type === 'RESPONSE') {
 										send({ payload: Return.Event });
 										done();

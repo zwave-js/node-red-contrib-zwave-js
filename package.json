@@ -8,7 +8,8 @@
 		"qr-scanner": "^1.4.2",
 		"zwave-js": "^15.2.0",
 		"svg-pan-zoom": "^3.6.2",
-		"handlebars": "^4.7.8"
+		"handlebars": "^4.7.8",
+		"limiter":"^3.0.0"
 	},
 	"devDependencies": {
 		"eslint": "^9.34.0",

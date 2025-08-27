@@ -17,7 +17,11 @@
 				required: true
 			},
 			multiMode: {
-				value: 'Fan',
+				value: 'Multicast',
+				required: true
+			},
+			fanRate: {
+				value: 250,
 				required: true
 			},
 			filteredNodeId: {
@@ -69,12 +73,17 @@
 			if ($(this).val() === 'All') {
 				$('#node-input-multiMode-div').fadeOut(150);
 				$('#node-input-filteredNodeId-div').fadeOut(150);
+				$('#node-input-fanRate-div').fadeOut(150);
 			} else {
-				$.getJSON(`zwave-js/ui/${self.runtimeId}/CONTROLLER/getNodes`, (data) => {
+				const ID = self.runtimeId || $('#node-input-runtimeId').val()
+				$.getJSON(`zwave-js/ui/${ID}/CONTROLLER/getNodes`, (data) => {
 					if (data.callSuccess) {
 						const Nodes = data.response
 							.filter((N) => !N.isControllerNode)
-							.map((N) => ({ value: N.nodeId, label: `${N.nodeLocation || 'No Location'} | ${N.nodeId} | ${N.nodeName || 'No Name'}` }));
+							.map((N) => ({
+								value: N.nodeId,
+								label: `${N.nodeLocation || 'No Location'} | ${N.nodeId} | ${N.nodeName || 'No Name'}`
+							}));
 
 						$('#node-input-filteredNodeId').typedInput({
 							type: 'nodes',
@@ -93,6 +102,15 @@
 
 				$('#node-input-multiMode-div').fadeIn(150);
 				$('#node-input-filteredNodeId-div').fadeIn(150);
+				$('#node-input-multiMode').trigger('change')
+			}
+		});
+
+		$('#node-input-multiMode').on('change', function () {
+			if ($(this).val() === 'Multicast') {
+				$('#node-input-fanRate-div').fadeOut(150);
+			} else {
+				$('#node-input-fanRate-div').fadeIn(150);
 			}
 		});
 	}
@@ -125,6 +143,10 @@
 			<option value="Fan">Fan-Out</option>
 			<option value="Multicast">Multicast</option>
 		</select>
+	</div>
+	<div class="form-row" id="node-input-fanRate-div">
+	    <label for="node-input-fanRate"><i class="fa fa-clock-o"></i> Fan Rate</label>
+	    <input type="number" id="node-input-fanRate">
 	</div>
 	<div class="form-row" id="node-input-filteredNodeId-div">
 		<label for="node-input-filteredNodeId"><i class="fa fa-list-ol"></i> Nodes</label>

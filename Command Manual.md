@@ -9,7 +9,8 @@ To construct a command, you will send the following `payload`
 {
     cmd: {
         api: 'NODE' | 'VALUE' | 'CONTROLLER' | 'DRIVER',
-        method: // See below
+        method: // See below,
+        id: // Anything you want, and will be retruned in the response (optional)
     },
     cmdProperties: {
         // See below
@@ -71,5 +72,35 @@ Example : the Central Scene CC (Scene 4)
 }
 ```
 
+The response object
+--------
+Each call to the API, will yield a response `payload` (in most cases), such response is below
 
+```js
+{
+  id: // Your id object if provided,
+  event: "API_RESPONSE",
+  requestedAPI: "<Requested API>",
+  requestedMethod: "<Requested Method>",
+  eventSubject: // See Below,
+  timestamp: 1756288035750,
+  eventBody: // Various Types (can be undefined),
+  nodeId: // The Node ID that returned the Response
+}
+```
+
+Response event subjects
+--------
+What subject is returned is dependant on the API & Method
+ - `NODE_NAME_SET`
+ - `NODE_LOCATION_SET`
+ - `NODE_PING_RESPONSE`
+ - `CCAPI_OPERATION_RESPONSE`
+ - `GET_VALUE_RESPONSE`
+ - `POLL_VALUE_RESPONSE`
+ - `VALUE_DB`
+ - `NODE_LIST`
+ - `SET_VALUE_RESPONSE`
+ - `REFRESH_INFO_RESPONSE`
+ - `PROPRIETARY_FUNCTION_RESULT`
 

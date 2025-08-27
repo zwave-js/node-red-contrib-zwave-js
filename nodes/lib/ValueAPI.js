@@ -1,5 +1,11 @@
 const process = async function (DriverInstance, Method, NodeID, VID, Value, ValueOptions) {
-	const Node = DriverInstance.controller.nodes.get(NodeID);
+	let Node;
+	if (Array.isArray(NodeID)) {
+		Node = DriverInstance.controller.getMulticastGroup(NodeID);
+	} else {
+		Node = DriverInstance.controller.nodes.get(NodeID);
+	}
+
 	if (!Node) {
 		return Promise.reject(new Error(`Node ${NodeID} does not exist`));
 	}
