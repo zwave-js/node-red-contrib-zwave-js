@@ -43,8 +43,8 @@
 				value: 'payload',
 				required: false
 			},
-			trackingToken: {
-				value: '',
+			trackingId: {
+				value: 'id',
 				required: false
 			}
 		},
@@ -151,49 +151,53 @@
 	    <input type="text" id="node-input-name">
 	</div>
 	<div class="form-row">
-	    <label for="node-input-api"><i class="fa fa-tag"></i> API</label>
+	    <label for="node-input-api"><i class="fa fa-list-alt"></i> API</label>
 	    <select id="node-input-api">
 			<option value="VALUE">Value API</option>
 			<option value="CC">Command Class API</option>
 		</select>
 	</div>
 	<div class="form-row" data-for-api="CC">
-	    <label for="node-input-commandClass"><i class="fa fa-tag"></i> Command Class</label>
+	    <label for="node-input-commandClass"><i class="fa fa-search"></i> Class</label>
 	    <select id="node-input-commandClass">
 			<option value="">Select Command Class</option>
 		</select>
 	</div>
 	<div class="form-row">
-	    <label for="node-input-method"><i class="fa fa-tag"></i> Method</label>
+	    <label for="node-input-method"><i class="fa fa-terminal"></i> Method</label>
 	    <select id="node-input-method">
 			<option value="setValue">Set Value</option>
 			<option value="getValue">Get Value</option>
 		</select>
 	</div>
+	<div class="form-row">
+	    <label for="node-input-trackingId"><i class="fa fa-id-card-o"></i> Tracking ID</label>
+	    <input type="text" id="node-input-trackingId" jsonata>
+	</div>
 	<h3>Command Properties</h3>
 	<hr />
 	<div class="form-row">
-	    <label for="node-input-nodeId"><i class="fa fa-tag"></i> Node ID</label>
+	    <label for="node-input-nodeId"><i class="fa fa-microchip"></i> Node ID</label>
 	    <input type="text" id="node-input-nodeId" jsonata>
 	</div>
 	<div class="form-row" data-for-api="CC">
-	    <label for="node-input-endpoint"><i class="fa fa-tag"></i> Endpoint</label>
+	    <label for="node-input-endpoint"><i class="fa fa-sitemap"></i> Endpoint</label>
 	    <input type="text" id="node-input-endpoint" jsonata>
 	</div>
 	<div class="form-row" data-for-api="CC">
-	    <label for="node-input-args"><i class="fa fa-tag"></i> Args</label>
+	    <label for="node-input-args"><i class="fa fa-keyboard-o"></i> Args</label>
 	    <input type="text" id="node-input-args" jsonata>
 	</div>
 	<div class="form-row" data-for-api="VALUE">
-	    <label for="node-input-valueId"><i class="fa fa-tag"></i> Value ID</label>
+	    <label for="node-input-valueId"><i class="fa fa-id-card-o""></i> Value ID</label>
 	    <input type="text" id="node-input-valueId" jsonata>
 	</div>
 	<div class="form-row" data-for-api="VALUE">
-	    <label for="node-input-value"><i class="fa fa-tag"></i> Value</label>
+	    <label for="node-input-value"><i class="fa fa-keyboard-o"></i> Value</label>
 	    <input type="text" id="node-input-value" jsonata>
 	</div>
 	<div class="form-row" data-for-api="VALUE">
-	    <label for="node-input-valueSetOptions"><i class="fa fa-tag"></i> Options</label>
+	    <label for="node-input-valueSetOptions"><i class="fa fa-cogs"></i> Options</label>
 	    <input type="text" id="node-input-valueSetOptions" jsonata>
 	</div>
 

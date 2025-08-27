@@ -20,12 +20,12 @@ module.exports = (RED) => {
 			let Value;
 			let NodeID;
 			let Options;
-			let TrackingToken;
+			let TrackingID;
 
 			(async () => {
-				if (config.trackingToken) {
-					const EXP = RED.util.prepareJSONataExpression(config.trackingToken, self);
-					TrackingToken = await evalExpression(EXP, msg);
+				if (config.trackingId) {
+					const EXP = RED.util.prepareJSONataExpression(config.trackingId, self);
+					TrackingID = await evalExpression(EXP, msg);
 				}
 
 				if (config.valueId) {
@@ -76,8 +76,8 @@ module.exports = (RED) => {
 					}
 				};
 
-				if (TrackingToken) {
-					CMD.cmd.trackingToken = TrackingToken;
+				if (TrackingID) {
+					CMD.cmd.id = TrackingID;
 				}
 
 				if (Value !== undefined) {
@@ -100,9 +100,9 @@ module.exports = (RED) => {
 			let TrackingToken;
 
 			(async () => {
-				if (config.trackingToken) {
-					const EXP = RED.util.prepareJSONataExpression(config.trackingToken, self);
-					TrackingToken = await evalExpression(EXP, msg);
+				if (config.trackingId) {
+					const EXP = RED.util.prepareJSONataExpression(config.trackingId, self);
+					TrackingID = await evalExpression(EXP, msg);
 				}
 
 				if (config.nodeId) {
@@ -147,8 +147,8 @@ module.exports = (RED) => {
 					}
 				};
 
-				if (TrackingToken) {
-					CMD.cmd.trackingToken = TrackingToken;
+				if (TrackingID) {
+					CMD.cmd.id = TrackingID;
 				}
 
 				if (Endpoint !== undefined) {
