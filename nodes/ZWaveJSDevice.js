@@ -30,6 +30,16 @@ module.exports = (RED) => {
 
 				case 'EVENT':
 					self.send({ payload: Data.Event });
+					const Status = {
+						Type: 'STATUS',
+						Status: {
+							fill: 'yellow',
+							shape: 'dot',
+							text: `Realtime update received (Node: ${Data.Event.nodeId})`,
+							clearTime: 3000
+						}
+					};
+					callback(Status);
 					break;
 			}
 		};
