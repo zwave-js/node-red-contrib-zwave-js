@@ -48,6 +48,13 @@ module.exports = (RED) => {
 			done();
 		});
 
+		const sendResponse = (msg, Req, Result, send, NodesCollection) => {
+			const Return = getProfile(Req.cmd.method, Result, NodesCollection, Req.cmd.id);
+			if (Return && Return.Type === 'RESPONSE') {
+				send({ ...msg, payload: Return.Event });
+			}
+		};
+
 		self.on('input', (msg, send, done) => {
 			const Req = msg.payload;
 
@@ -56,10 +63,15 @@ module.exports = (RED) => {
 				return;
 			}
 
-			let TargetNodes;
+			if (self.config.nodeMode !== 'All' && Req.cmdProperties?.nodeId) {
+				const AllowedNodes = config.filteredNodeId.split(',').map((N) => parseInt(N));
+				if (!AllowedNodes.includes(Req.cmdProperties?.nodeId)) {
+					done(new Error('The target node(s) are not enabled on this Device Node instance'));
+					return;
+				}
+			}
 
 			const run = (NodesCollection) => {
-				console.log(NodesCollection);
 				switch (Req.cmd.api) {
 					case 'CC':
 						if (Req.cmdProperties.commandClass && Req.cmdProperties.method) {
@@ -73,16 +85,10 @@ module.exports = (RED) => {
 									Req.cmdProperties.args
 								)
 								.then((Result) => {
-									const Return = getProfile(Req.cmd.method, Result, NodesCollection, Req.cmd.id);
-									if (Return && Return.Type === 'RESPONSE') {
-										send({...msg, payload: Return.Event });
-										done();
-									} else {
-										done();
-									}
+									sendResponse(msg, Req, Result, send, NodesCollection);
 								})
 								.catch((Error) => {
-									done(Error);
+									self.error(Error, msg);
 								});
 							const Status = {
 								Type: 'STATUS',
@@ -90,12 +96,22 @@ module.exports = (RED) => {
 									fill: 'green',
 									shape: 'dot',
 									text: 'Sent',
-									clearTime: 1000
+									clearTime: 3000
 								}
 							};
 							callback(Status);
 						} else {
-							done(new Error('cmdProperties is either missing or has fewer requied properties.'));
+							self.error('cmdProperties is either missing or has fewer requied properties.');
+							const Status = {
+								Type: 'STATUS',
+								Status: {
+									fill: 'red',
+									shape: 'dot',
+									text: 'Error',
+									clearTime: 3000
+								}
+							};
+							callback(Status);
 						}
 						break;
 
@@ -110,16 +126,10 @@ module.exports = (RED) => {
 									Req.cmdProperties.setValueOptions
 								)
 								.then((Result) => {
-									const Return = getProfile(Req.cmd.method, Result, NodesCollection, Req.cmd.id);
-									if (Return && Return.Type === 'RESPONSE') {
-										send({...msg, payload: Return.Event });
-										done();
-									} else {
-										done();
-									}
+									sendResponse(msg, Req, Result, send, NodesCollection);
 								})
 								.catch((Error) => {
-									done(Error);
+									self.error(Error, msg);
 								});
 							const Status = {
 								Type: 'STATUS',
@@ -127,12 +137,22 @@ module.exports = (RED) => {
 									fill: 'green',
 									shape: 'dot',
 									text: 'Sent',
-									clearTime: 1000
+									clearTime: 3000
 								}
 							};
 							callback(Status);
 						} else {
-							done(new Error('cmdProperties is either missing or has fewer requied properties.'));
+							self.error('cmdProperties is either missing or has fewer requied properties.');
+							const Status = {
+								Type: 'STATUS',
+								Status: {
+									fill: 'red',
+									shape: 'dot',
+									text: 'Error',
+									clearTime: 3000
+								}
+							};
+							callback(Status);
 						}
 						break;
 
@@ -140,16 +160,10 @@ module.exports = (RED) => {
 						self.runtime
 							.nodeCommand(Req.cmd.method, NodesCollection, Req.cmdProperties.value)
 							.then((Result) => {
-								const Return = getProfile(Req.cmd.method, Result, NodesCollection, Req.cmd.id);
-								if (Return && Return.Type === 'RESPONSE') {
-									send({...msg, payload: Return.Event });
-									done();
-								} else {
-									done();
-								}
+								sendResponse(msg, Req, Result, send, NodesCollection);
 							})
 							.catch((Error) => {
-								done(Error);
+								self.error(Error, msg);
 							});
 						const Status = {
 							Type: 'STATUS',
@@ -157,7 +171,7 @@ module.exports = (RED) => {
 								fill: 'green',
 								shape: 'dot',
 								text: 'Sent',
-								clearTime: 1000
+								clearTime: 3000
 							}
 						};
 						callback(Status);
@@ -166,18 +180,28 @@ module.exports = (RED) => {
 			};
 
 			(async () => {
+				let TargetNodes;
+
 				if (self.config.nodeMode === 'All') {
 					if (!Req.cmdProperties?.nodeId) {
 						done(new Error('Missing cmdProperties.nodeId.'));
 					} else {
 						TargetNodes = Req.cmdProperties.nodeId;
 						run(TargetNodes);
+						done();
 					}
 				} else {
+					if (Req.cmdProperties?.nodeId) {
+						TargetNodes = Req.cmdProperties.nodeId;
+						run(TargetNodes);
+						done();
+						return;
+					}
 					TargetNodes = config.filteredNodeId.split(',').map((N) => parseInt(N));
 					switch (self.config.multiMode) {
 						case 'Multicast':
 							run(TargetNodes);
+							done();
 							break;
 
 						case 'Fan':
@@ -187,7 +211,7 @@ module.exports = (RED) => {
 									Status: {
 										fill: 'yellow',
 										shape: 'dot',
-										text: 'Throttling',
+										text: 'Throttled...',
 										clearTime: 10000
 									}
 								};
@@ -195,6 +219,7 @@ module.exports = (RED) => {
 								await RateLimiter.removeTokens(1);
 								run(TargetNodes[i]);
 							}
+							done();
 							break;
 					}
 				}
