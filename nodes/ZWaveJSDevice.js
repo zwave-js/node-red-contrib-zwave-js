@@ -75,7 +75,7 @@ module.exports = (RED) => {
 								.then((Result) => {
 									const Return = getProfile(Req.cmd.method, Result, NodesCollection, Req.cmd.id);
 									if (Return && Return.Type === 'RESPONSE') {
-										send({ payload: Return.Event });
+										send({...msg, payload: Return.Event });
 										done();
 									} else {
 										done();
@@ -112,7 +112,7 @@ module.exports = (RED) => {
 								.then((Result) => {
 									const Return = getProfile(Req.cmd.method, Result, NodesCollection, Req.cmd.id);
 									if (Return && Return.Type === 'RESPONSE') {
-										send({ payload: Return.Event });
+										send({...msg, payload: Return.Event });
 										done();
 									} else {
 										done();
@@ -142,7 +142,7 @@ module.exports = (RED) => {
 							.then((Result) => {
 								const Return = getProfile(Req.cmd.method, Result, NodesCollection, Req.cmd.id);
 								if (Return && Return.Type === 'RESPONSE') {
-									send({ payload: Return.Event });
+									send({...msg, payload: Return.Event });
 									done();
 								} else {
 									done();
