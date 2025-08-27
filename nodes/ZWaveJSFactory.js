@@ -97,7 +97,7 @@ module.exports = (RED) => {
 			let NodeID;
 			let Endpoint;
 			let Args;
-			let TrackingToken;
+			let TrackingID;
 
 			(async () => {
 				if (config.trackingId) {
