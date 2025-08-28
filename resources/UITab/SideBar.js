@@ -19,6 +19,7 @@ const ZWaveJS = (function () {
 	let AssociationGroups;
 	let clientSideAuth = false;
 	let nodesExpanded = true;
+	let SelectedNodeVIDs = {};
 
 	/*
 	 * Driver Communciation Methods
@@ -64,8 +65,23 @@ const ZWaveJS = (function () {
 
 	// Init UI
 	const init = () => {
-		Handlebars.registerHelper('json', function (context) {
-			return btoa(JSON.stringify(context));
+		$.get('resources/node-red-contrib-zwave-js/UITab/ValueEditors.html', function (html) {
+			Handlebars.registerPartial('ValueEditors', html);
+		});
+
+		Handlebars.registerHelper('json', function (object) {
+			return JSON.stringify(object, undefined, 2);
+		});
+
+		Handlebars.registerHelper('encode', function (object) {
+			return btoa(JSON.stringify(object));
+		});
+
+		Handlebars.registerHelper('eq', function (actual, expected, options) {
+			if (actual === expected) {
+				return options.fn(this);
+			}
+			return options.inverse(this);
 		});
 
 		Handlebars.registerHelper('select', function (context, options) {
@@ -122,6 +138,57 @@ const ZWaveJS = (function () {
 
 		RED.comms.subscribe('zwave-js/ui/global/addnetwork', (topic, network) => commsListOrAddNetworks(false, network));
 		RED.comms.subscribe('zwave-js/ui/global/removenetwork', (topic, network) => commsRemoveNetwork(network));
+	};
+
+	// Update Value
+	const UpdateValue = (Button, VID) => {
+		DisableButton(Button);
+		VID = DecodeObject(VID);
+
+		let Value;
+		switch ($('#zwjs-cc-value-new').attr('type')) {
+			case 'number':
+				Value = parseInt($('#zwjs-cc-value-new').val());
+				break;
+
+			case 'checkbox':
+				Value = $('#zwjs-cc-value-new').prop('checked');
+				break;
+		}
+
+		Runtime.Post('VALUE', 'setValue', { nodeId: selectedNode.nodeId, valueId: VID, value: Value }).then((data) => {
+			if (data.callSuccess) {
+				switch (data.response.status) {
+					case 0:
+						alert('The Node does not support the command');
+						break;
+					case 1:
+						alert('The Node is working on the requested change');
+						break;
+					case 2:
+						alert('The Node rejected the change');
+						break;
+					case 3:
+						alert('The target Endpoint was not found on the Node');
+						break;
+					case 4:
+						alert('The set command has not been implemented for this CC');
+						break;
+					case 5:
+						alert('The provided value was not valid');
+						break;
+
+					default:
+						alert('The update was successfull');
+						break;
+				}
+
+				EnableButton(Button);
+			} else {
+				alert(data.response);
+				EnableButton(Button);
+			}
+		});
 	};
 
 	// Collapse LIst
@@ -1338,13 +1405,19 @@ const ZWaveJS = (function () {
 
 	// Value Update
 	const commsHandleValueUpdate = (topic, data) => {
-		const ValueID = data.eventBody.valueId;
-		const NewValue = data.eventBody.newValue;
-		const Hash = getValueUpdateHash(ValueID);
+		if (selectedNode) {
+			const ValueID = data.eventBody.valueId;
+			const NewValue = data.eventBody.newValue;
+			const Hash = getValueUpdateHash(ValueID);
 
-		const TargetElement = `#zwjs-value-${Hash}`;
-		if ($(TargetElement).length > 0) {
-			$(TargetElement).text(NewValue);
+			if (SelectedNodeVIDs[Hash]) {
+				SelectedNodeVIDs[Hash].currentValue = NewValue;
+			}
+
+			const TargetElement = `#zwjs-value-${Hash}`;
+			if ($(TargetElement).length > 0) {
+				$(TargetElement).text(NewValue);
+			}
 		}
 	};
 
@@ -1746,6 +1819,7 @@ const ZWaveJS = (function () {
 		}
 
 		selectedNode = item.nodeData;
+		SelectedNodeVIDs = {};
 
 		$('#zwjs-endpoint-list').empty();
 		$('#zwjs-cc-list').treeList('empty');
@@ -1787,7 +1861,8 @@ const ZWaveJS = (function () {
 						$('#zwjs-endpoint-list').append(Button);
 					});
 
-					$('#zwjs-endpoint-list > div[data-endpoint="0"]').click();
+					listCCs(EPGroups['0']);
+					$(`#zwjs-endpoint-list > div[data-endpoint="0"]`).attr('selected', 'selected');
 				} else {
 					alert(data.response);
 				}
@@ -1821,22 +1896,30 @@ const ZWaveJS = (function () {
 
 			CCGroups[CCID].forEach((V) => {
 				const getCurrentValue = (value) => {
+					let Display;
 					if (value !== undefined) {
-						return `<span class="zwjs-cc-value" id="zwjs-value-${getValueUpdateHash(V.valueId)}" style="padding:1px;float:right;color:rgb(46, 145, 205); min-width:80px">${V.currentValue} ${V.metadata.unit || ''}</span>`;
+						if (typeof value === 'object' && !Array.isArray(value)) {
+							Display = '(Complex)';
+						} else {
+							Display = `${value} ${V.metadata.unit || ''}`;
+						}
+						return `<span class="zwjs-cc-value" id="zwjs-value-${getValueUpdateHash(V.valueId)}" style="padding:1px;float:right;color:rgb(46, 145, 205); min-width:80px">${Display}</span>`;
 					} else {
 						return '';
 					}
+				};
+
+				SelectedNodeVIDs[getValueUpdateHash(V.valueId)] = {
+					metadata: V.metadata,
+					valueId: V.valueId,
+					currentValue: V.currentValue
 				};
 
 				const sItem = {
 					element: `<div style="width:100%; margin-right:30px">${V.metadata.label} ${getCurrentValue(V.currentValue)}</div>`,
 					icon: V.metadata.writeable ? 'fa fa-pencil' : '',
 					parent: false,
-					valueInfo: {
-						metadata: V.metadata,
-						valueId: V.valueId,
-						currentValue: V.currentValue
-					}
+					valueInfo: SelectedNodeVIDs[getValueUpdateHash(V.valueId)]
 				};
 
 				Item.children.push(sItem);
@@ -1896,13 +1979,21 @@ const ZWaveJS = (function () {
 						nodeId: selectedNode.nodeId,
 						property: Property,
 						editInfo: {
+							valueLabel: item.valueInfo.metadata.label,
 							valueId: item.valueInfo.valueId,
 							writeable: item.valueInfo.metadata.writeable,
-							currentValue: item.valueInfo.currentValue
+							currentValue: item.valueInfo.currentValue,
+							type: item.valueInfo.metadata.type,
+							states: item.valueInfo.metadata.states,
+							allowManualEntry:
+								item.valueInfo.metadata.allowManualEntry !== undefined
+									? item.valueInfo.metadata.allowManualEntry
+									: item.valueInfo.metadata.writeable
 						}
 					};
 
 					State.examples = {
+						valueLabel: item.valueInfo.metadata.label,
 						nocmd: {
 							payload: {
 								cmd: {
@@ -2045,6 +2136,7 @@ const ZWaveJS = (function () {
 		SetLWPowerLevel,
 		SetRegion,
 		RemoveFailedNode,
-		NodeCollapseToggle
+		NodeCollapseToggle,
+		UpdateValue
 	};
 })();

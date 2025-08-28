@@ -17,6 +17,32 @@ const getProfile = (Name, Result, NodeID, ID) => {
 		if (NodeID !== undefined) {
 			event.Event.nodeId = NodeID;
 		}
+
+		if (eventName === 'SET_VALUE_RESPONSE') {
+			switch (Result.status) {
+				case 0:
+					event.Event.eventBody.status = 'NO_SUPPORT';
+					break;
+				case 1:
+					event.Event.eventBody.status = 'OK_PENDING_CHANGE';
+					break;
+				case 2:
+					event.Event.eventBody.status = 'REJECTED';
+					break;
+				case 3:
+					event.Event.eventBody.status = 'ENDPOINT_NOT_FOUND';
+					break;
+				case 4:
+					event.Event.eventBody.status = 'SET_NOT_IMPLEMENTED';
+					break;
+				case 5:
+					event.Event.eventBody.status = 'INVALID_VALUE';
+					break;
+				default:
+					event.Event.eventBody.status = 'OK';
+			}
+		}
+
 		return event;
 	};
 

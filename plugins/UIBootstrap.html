@@ -113,8 +113,8 @@
 	</div>
 	<div class="zwjs-tray-menu">
 		<div parent>Value</div>
-		<div child default onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Value-Current',this, '{{json editInfo}}')">Update Value</div>
-		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Value-Example',this,'{{json examples}}')">Example Usage</div>
+		<div child default onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Value-Current',this, '{{encode editInfo}}')">Update Value</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Value-Example',this,'{{encode examples}}')">Example Usage</div>
 	</div>
 	<div id="zwjs-advanced-content"></div>
 </script>
@@ -122,12 +122,11 @@
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Node-Value-Current">
 	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-title">{{valueLabel}}:</div>
 		{{#if writeable}}
-		Current value is <span class="zwjs-cc-value" edit>{{currentValue}}</span>
-			Edit me
+			{{> ValueEditors}}
 		{{else}}
-		    <div class="zwjs-hint">Note: This value is ReadOnly</div>
-			Current value is <span class="zwjs-cc-value" edit>{{currentValue}}</span>
+		    <div class="zwjs-hint">Sorry: This value is ReadOnly</div>
 		{{/if}}
 		
 	</fieldset>
@@ -136,6 +135,7 @@
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Node-Value-Example">
 	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-title">{{valueLabel}}:</div>
 		<div class="zwjs-hint">These <strong>msg</strong> examples, use the <strong>ValueAPI</strong>, which is the recommended API. The <strong>payload</strong> (or <strong>value</strong>) property is only required when setting values. - The values used here, are an example (but use the current value as it is now)</div>
 		<div class="zwjs-title">With CMD Factory:</div>
 		<div>
@@ -638,8 +638,8 @@
 			<td>{{label}}</td>
 			<td style="text-align:center">{{shortDSK}}</td>
 			<td style="text-align:center">{{nodeId}}</td>
-			<td style="text-align:center"><input type="checkbox" onchange="ZWaveJS.SetPEActive(this,'{{json .}}')" {{checked}}/></td>
-			<td style="text-align:center"><i class="fa fa-trash" aria-hidden="true" style="font-size: 18px;color: red;" onclick="ZWaveJS.DeletePE(this,'{{json .}}')""></i></td>
+			<td style="text-align:center"><input type="checkbox" onchange="ZWaveJS.SetPEActive(this,'{{encode .}}')" {{checked}}/></td>
+			<td style="text-align:center"><i class="fa fa-trash" aria-hidden="true" style="font-size: 18px;color: red;" onclick="ZWaveJS.DeletePE(this,'{{encode .}}')""></i></td>
 		</tr>
 	  {{/each}}
    </table>
