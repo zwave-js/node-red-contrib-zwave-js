@@ -146,14 +146,17 @@ const ZWaveJS = (function () {
 		VID = DecodeObject(VID);
 
 		let Value;
-		switch ($('#zwjs-cc-value-new').attr('type')) {
-			case 'number':
-				Value = parseInt($('#zwjs-cc-value-new').val());
-				break;
 
-			case 'checkbox':
-				Value = $('#zwjs-cc-value-new').prop('checked');
-				break;
+		if ($('#zwjs-cc-value-new').attr('type')) {
+			switch ($('#zwjs-cc-value-new').attr('type')) {
+				case 'number':
+					Value = parseInt($('#zwjs-cc-value-new').val());
+					break;
+
+				case 'checkbox':
+					Value = $('#zwjs-cc-value-new').prop('checked');
+					break;
+			}
 		}
 
 		Runtime.Post('VALUE', 'setValue', { nodeId: selectedNode.nodeId, valueId: VID, value: Value }).then((data) => {

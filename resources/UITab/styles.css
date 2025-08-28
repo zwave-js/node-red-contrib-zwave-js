@@ -346,6 +346,6 @@ i.zwjs-state-green {
 
 .zwjs-mermaid svg {
 	height: calc(90vh - 300px) !important;
-	max-width: none !important;;
+	max-width: none !important;
 	width: 100% !important;
 }
