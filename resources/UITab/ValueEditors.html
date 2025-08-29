@@ -6,41 +6,63 @@
   <div class="zwjs-hint">This property is an object and not a primitive type</div>
 {{/eq}}
 
-<div>
+
     {{#eq allowManualEntry false}}
+        <div>
+            <select id="zwjs-cc-value-new"> 
+                {{#select currentValue}}
+                    {{#each states}}
+                        <option value="{{@key}}">{{this}}</option>
+                    {{/each}}
+                {{/select}}
+            </select>
 
-        <select id="zwjs-cc-value-new"> 
-            {{#each states}}
-                <option value="{{@key}}">{{this}}</option>
-            {{/each}}
-        </select>
+            <button onclick="ZWaveJS.UpdateValue(this,'{{encode valueId}}')">Send Update</button>
+        </div>
         
-
     {{else}}
+        <div>
+            {{#eq type "number"}}
+                <input id="zwjs-cc-value-new" type="number" value="{{currentValue}}">
+            {{/eq}}
 
-        {{#eq type "number"}}
-            <input id="zwjs-cc-value-new" type="number" value="{{currentValue}}">
-        {{/eq}}
+            {{#eq type "boolean"}}
+                <input id="zwjs-cc-value-new"  type="checkbox" {{#if currentValue}}checked{{/if}}>
+            {{/eq}}
 
-        {{#eq type "boolean"}}
-            <input id="zwjs-cc-value-new"  type="checkbox" {{#if currentValue}}checked{{/if}}>
-        {{/eq}}
+            {{#eq type "color"}}
+                <input id="zwjs-cc-value-new"  type="color" value="{{currentValue}}">
+            {{/eq}}
 
-        {{#eq type "color"}}
-            <input id="zwjs-cc-value-new"  type="color" value="{{currentValue}}">
-        {{/eq}}
+            {{#eq type "duration"}}
+                <input id="zwjs-cc-value-new"  type="color" value="{{currentValue}}">
+            {{/eq}}
 
-        {{#eq type "duration"}}
-            <input id="zwjs-cc-value-new"  type="color" value="{{currentValue}}">
-        {{/eq}}
+            {{#eq type "any"}}
+                <textarea id="zwjs-cc-value-new"  style="width:100%; height: 180px;">{{json currentValue}}</textarea>
+            {{/eq}}
+            <button onclick="ZWaveJS.UpdateValue(this,'{{encode valueId}}')">Send Update</button>
+        <div>
 
-        {{#eq type "any"}}
-            <textarea id="zwjs-cc-value-new"  style="width:100%; height: 180px;">{{json currentValue}}</textarea>
-        {{/eq}}
+        {{#if states}}
+            <div>
+                <div class="zwjs-hint">This property also has a set list of values</div>
+
+                <select id="zwjs-cc-value-new-defined"> 
+
+                    {{#select currentValue}}
+                        <option value="">Select Value</option>
+                        {{#each states}}
+                            <option value="{{@key}}">{{this}}</option>
+                        {{/each}}
+                    {{/select}}
+                </select>
+                <button onclick="ZWaveJS.UpdateValue(this,'{{encode valueId}}', true)">Send Update</button>
+            </div>
+        {{/if}}
+
 
     {{/eq}}
 
-    <button onclick="ZWaveJS.UpdateValue(this,'{{encode valueId}}')">Send Update</button>
-</div>
 
 

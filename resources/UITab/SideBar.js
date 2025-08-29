@@ -74,7 +74,9 @@ const ZWaveJS = (function () {
 		});
 
 		Handlebars.registerHelper('encode', function (object) {
-			return btoa(JSON.stringify(object));
+			const json = JSON.stringify(object);
+			const encoded = btoa(String.fromCharCode(...new TextEncoder().encode(json)));
+			return encoded;
 		});
 
 		Handlebars.registerHelper('eq', function (actual, expected, options) {
@@ -141,21 +143,30 @@ const ZWaveJS = (function () {
 	};
 
 	// Update Value
-	const UpdateValue = (Button, VID) => {
+	const UpdateValue = (Button, VID, Defined) => {
 		DisableButton(Button);
 		VID = DecodeObject(VID);
 
 		let Value;
 
-		if ($('#zwjs-cc-value-new').attr('type')) {
-			switch ($('#zwjs-cc-value-new').attr('type')) {
-				case 'number':
-					Value = parseInt($('#zwjs-cc-value-new').val());
-					break;
+		if (Defined) {
+			Value = parseInt($('#zwjs-cc-value-new-defined').val());
+			$('#zwjs-cc-value-new').val(Value);
+		} else {
+			const $el = $('#zwjs-cc-value-new');
+			if ($el.is('input')) {
+				switch ($el.attr('type')) {
+					case 'number':
+						Value = parseInt($el.val());
+						break;
 
-				case 'checkbox':
-					Value = $('#zwjs-cc-value-new').prop('checked');
-					break;
+					case 'checkbox':
+						Value = $el.prop('checked');
+						break;
+				}
+			}
+			if ($el.is('select')) {
+				Value = parseInt($el.val());
 			}
 		}
 
@@ -1620,7 +1631,8 @@ const ZWaveJS = (function () {
 
 	// Decodes an object that has been converted to Base64 (serialised via a HB function (json) - found in the init method)
 	const DecodeObject = (Item) => {
-		return JSON.parse(atob(Item));
+		const decoded = new TextDecoder().decode(Uint8Array.from(atob(Item), (c) => c.charCodeAt(0)));
+		return JSON.parse(decoded);
 	};
 
 	// The JSON formatter, used to present sexy json (root created at top of this file)
