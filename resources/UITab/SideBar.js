@@ -268,7 +268,6 @@ const ZWaveJS = (function () {
 	const SetLWPowerLevel = (Button) => {
 		DisableButton(Button);
 		const PL = parseInt($('#zwjs-controller-setting-power-lr').val());
-		const Calibration = 0;
 		Runtime.Post('CONTROLLER', 'setMaxLongRangePowerlevel', [PL])
 			.then((data) => {
 				if (data.callSuccess) {
@@ -855,7 +854,7 @@ const ZWaveJS = (function () {
 					case 2:
 						alert("The Controller's role does not permit joining as a secondary controller - try resetting it!");
 						break;
-					case 1:
+					case 3:
 						alert('An unknown error occured.');
 						break;
 				}
@@ -1109,7 +1108,9 @@ const ZWaveJS = (function () {
 						Nodes.forEach((v, i, a) => {
 							let Name;
 							if (v.nodeName) {
-								Name = `${v.nodeId} - ${v.nodeName || 'No Name'}`;
+								Name = `${v.nodeId} - ${v.nodeName}`;
+							} else {
+								Name = `${v.nodeId} - No Name`;
 							}
 							nodeString += `${v.nodeId}(fa:${v.powerSource.type === 'mains' ? 'fa-plug' : 'fa-battery-full'}<br />${Name}<br />RSSI: ${v.statistics?.rssi ?? '?'})\r\n`;
 							if (v.statistics !== undefined && v.statistics.lwr !== undefined) {
@@ -1362,14 +1363,8 @@ const ZWaveJS = (function () {
 					reader.onload = function (e) {
 						const arrayBuffer = e.target.result;
 						const byteArray = new Uint8Array(arrayBuffer);
-						Runtime.Post('DRIVER', 'firmwareUpdateOTW', [{ bytes: byteArray }]).then((R) => {
-							if (R.callSuccess) {
-								EnableButton(Button);
-							} else {
-								// Handled with the completed comms hook
-								EnableButton(Button);
-							}
-						});
+						// Handled in COMMS
+						Runtime.Post('DRIVER', 'firmwareUpdateOTW', [{ bytes: byteArray }]);
 					};
 					reader.readAsArrayBuffer(file);
 					document.body.removeChild(fileInput);
@@ -2152,6 +2147,7 @@ const ZWaveJS = (function () {
 		SetRegion,
 		RemoveFailedNode,
 		NodeCollapseToggle,
-		UpdateValue
+		UpdateValue,
+		PingNode
 	};
 })();
