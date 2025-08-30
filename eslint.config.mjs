@@ -2,6 +2,9 @@ import globals from 'globals';
 import js from '@eslint/js';
 
 export default [
+	{
+		ignores: ['node_modules/**', 'resources/HB/**', 'resources/Mermaid/**', 'resources/QRS/**', 'resources/SVGZ/**']
+	},
 	js.configs.recommended,
 	{
 		languageOptions: {
