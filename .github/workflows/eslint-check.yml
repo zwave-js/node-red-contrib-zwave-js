@@ -3,8 +3,7 @@ name: ESLint Check
 on:
   workflow_dispatch:
   pull_request:
-    branches: ["main"]
-
+  
 jobs:
   lint:
     name: Run ESLint
