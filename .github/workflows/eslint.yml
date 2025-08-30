@@ -1,4 +1,4 @@
-name: 'ESLint Check'
+name: ESLint
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
   
 jobs:
   lint:
-    name: 'Run ESLint'
+    name: Run ESLint Check
     runs-on: ubuntu-latest
 
     steps:
