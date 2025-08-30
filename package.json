@@ -10,14 +10,16 @@
 		"zwave-js": "^15.2.0",
 		"svg-pan-zoom": "^3.6.2",
 		"handlebars": "^4.7.8",
-		"limiter":"^3.0.0" 
+		"limiter": "^3.0.0"
 	},
 	"devDependencies": {
 		"eslint": "^9.34.0",
 		"prettier": "^3.6.2"
 	},
 	"scripts": {
-		"postinstall": "node ./ensure-client-needs.js"
+		"postinstall": "node ./ensure-client-needs.js",
+		"lint-check": "./node_modules/.bin/eslint . --quiet",
+		"lint-check-all": "./node_modules/.bin/eslint ."
 	},
 	"engines": {
 		"node": ">=20.0.0"
