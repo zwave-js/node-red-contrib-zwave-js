@@ -789,7 +789,7 @@ const ZWaveJS = (function () {
 		$('#zwjs-node-health-check').find('tr:gt(0)').remove();
 		const AddTesting = () => {
 			$('#zwjs-node-health-check').append(
-				`<tr><td style="text-align:center"><div class="zwjs-rating" wait>Testing...</div></td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td></tr>`
+				'<tr><td style="text-align:center"><div class="zwjs-rating" wait>Testing...</div></td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td></tr>'
 			);
 		};
 
@@ -937,10 +937,10 @@ const ZWaveJS = (function () {
 						const GLabel = $(`<div><span class="zwjs-node-id">${getInitials(LK)}</span> ${LK}</div>`);
 						const GIconSpan = $('<span group>').addClass('zwjs-node-state-group');
 						GLabel.append(GIconSpan);
-						GIconSpan.append(`<i aria-hidden="true">Int</i>`);
-						GIconSpan.append(`<i aria-hidden="true">Sta</i>`);
-						GIconSpan.append(`<i aria-hidden="true">Pow</i>`);
-						GIconSpan.append(`<i aria-hidden="true">Sec</i>`);
+						GIconSpan.append('<i aria-hidden="true">Int</i>');
+						GIconSpan.append('<i aria-hidden="true">Sta</i>');
+						GIconSpan.append('<i aria-hidden="true">Pow</i>');
+						GIconSpan.append('<i aria-hidden="true">Sec</i>');
 
 						const Group = {
 							id: `zwjs-node-list-entry-location-${LK.replace(/ /g, '-')}`,
@@ -1102,7 +1102,7 @@ const ZWaveJS = (function () {
 
 						let nodeString = '';
 						let routeString = '';
-						nodeString += `0(fa:fa-wifi<br />Controller)\r\n`;
+						nodeString += '0(fa:fa-wifi<br />Controller)\r\n';
 
 						const Nodes = nodes.filter((N) => !N.isControllerNode);
 						Nodes.forEach((v, i, a) => {
@@ -1872,7 +1872,7 @@ const ZWaveJS = (function () {
 					});
 
 					listCCs(EPGroups['0']);
-					$(`#zwjs-endpoint-list > div[data-endpoint="0"]`).attr('selected', 'selected');
+					$('#zwjs-endpoint-list > div[data-endpoint="0"]').attr('selected', 'selected');
 				} else {
 					alert(data.response);
 				}

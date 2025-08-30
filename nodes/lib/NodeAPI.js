@@ -1,9 +1,8 @@
 const { CommandClasses } = require('@zwave-js/core');
 
 const process = async function (DriverInstance, Method, NodeID, Value, Args) {
-
-	if(Array.isArray(NodeID)){
-		return Promise.reject(new Error(`This API does not support Multicast`));
+	if (Array.isArray(NodeID)) {
+		return Promise.reject(new Error('This API does not support Multicast'));
 	}
 
 	const Node = DriverInstance.controller.nodes.get(NodeID);

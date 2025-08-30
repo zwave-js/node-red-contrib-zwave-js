@@ -30,7 +30,8 @@ module.exports = (RED) => {
 
 				case 'EVENT':
 					self.send({ payload: Data.Event });
-					const Status = {
+
+					callback({
 						Type: 'STATUS',
 						Status: {
 							fill: 'yellow',
@@ -38,8 +39,7 @@ module.exports = (RED) => {
 							text: `Realtime update received (Node: ${Data.Event.nodeId})`,
 							clearTime: 3000
 						}
-					};
-					callback(Status);
+					});
 					break;
 			}
 		};
@@ -180,7 +180,8 @@ module.exports = (RED) => {
 							.catch((Error) => {
 								self.error(Error, msg);
 							});
-						const Status = {
+
+						callback({
 							Type: 'STATUS',
 							Status: {
 								fill: 'green',
@@ -188,8 +189,7 @@ module.exports = (RED) => {
 								text: 'Sent',
 								clearTime: 3000
 							}
-						};
-						callback(Status);
+						});
 						break;
 
 					default:
@@ -225,7 +225,7 @@ module.exports = (RED) => {
 
 						case 'Fan':
 							for (let i = 0; i < TargetNodes.length; i++) {
-								let Status = {
+								callback({
 									Type: 'STATUS',
 									Status: {
 										fill: 'yellow',
@@ -233,8 +233,7 @@ module.exports = (RED) => {
 										text: 'Throttled...',
 										clearTime: 10000
 									}
-								};
-								callback(Status);
+								});
 								await RateLimiter.removeTokens(1);
 								run(TargetNodes[i]);
 							}

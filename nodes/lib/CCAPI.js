@@ -1,7 +1,6 @@
 const process = async function (DriverInstance, Method, CommandClass, CCMethod, NodeID, Endpoint, Args) {
-
-	if(Array.isArray(NodeID)){
-		return Promise.reject(new Error(`This API does not support Multicast`));
+	if (Array.isArray(NodeID)) {
+		return Promise.reject(new Error('This API does not support Multicast'));
 	}
 
 	if (Method === 'invokeCCAPI') {
