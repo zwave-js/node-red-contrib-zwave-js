@@ -1,7 +1,6 @@
-/* eslint-env jquery */
-/* eslint-env browser */
 /* eslint no-undef: "warn"*/
-/* eslint no-unused-vars: "warn"*/
+
+// eslint-disable-next-line no-unused-vars
 const ZWaveJS = (function () {
 	/*
 	 * Just Stuff
@@ -241,7 +240,15 @@ const ZWaveJS = (function () {
 	};
 
 	// Ping Node
-	const PingNode = (NodeID) => {};
+	const PingNode = (NodeID) => {
+		Runtime.Post('NODE', 'ping', { nodeId: NodeID }).then((data) => {
+			if (data.callSuccess) {
+				alert('Power Level Set Succcessfully');
+			} else {
+				alert(data.response);
+			}
+		});
+	};
 
 	// Set Class PowerLevel
 	const SetClassicPowerLevel = (Button) => {
@@ -682,7 +689,7 @@ const ZWaveJS = (function () {
 			$('#zwjs-asso-mappings').append(
 				'<tr><td style="text-align:center">Target Node</td><td style="text-align:center">Target Endpoint</td><td style="text-align:center">Delete</td></tr>'
 			);
-			Mapped.forEach((v, i) => {
+			Mapped.forEach((v) => {
 				$('#zwjs-asso-mappings').append(
 					`<tr><td style="text-align:center">${v.nodeId}</td><td style="text-align:center">${v.endpoint === undefined ? '&lt;Node-Associtation&gt;' : v.endpoint}</td><td style="text-align:center"><i class="fa fa-trash" aria-hidden="true" style="font-size: 18px;color: red; cursor:pointer" onclick="ZWaveJS.MarkAssoDelete(this)"></i></td></tr>`
 				);
@@ -701,7 +708,7 @@ const ZWaveJS = (function () {
 	const CommitAssociations = (Button) => {
 		DisableButton(Button);
 		const Addresses = [];
-		$("[data-role='zwjs-remove-association']").each(function (index) {
+		$("[data-role='zwjs-remove-association']").each(function () {
 			const Node = parseInt($(this).find('td').first().text());
 			let Endpoint = parseInt($(this).find('td').first().next().text());
 			if (isNaN(Endpoint)) {
@@ -745,8 +752,8 @@ const ZWaveJS = (function () {
 			Runtime.Post('CONTROLLER', 'getAllAssociations', [selectedNode.nodeId])
 				.then((response) => {
 					if (response.callSuccess) {
-						response.response.forEach(function (E, i) {
-							Object.keys(E.associations).forEach(async function (G, i) {
+						response.response.forEach(function (E) {
+							Object.keys(E.associations).forEach(async function (G) {
 								if (E.associations[G].length > 0) {
 									const Params = [];
 									Params.push(E.associationAddress);
@@ -1094,7 +1101,7 @@ const ZWaveJS = (function () {
 	// Render Advanded info (also used internally)
 	const RenderFunctions = {
 		RenderMap: () => {
-			return new Promise(async (resolve, reject) => {
+			return new Promise(async (resolve) => {
 				Runtime.Get('CONTROLLER', 'getNodes').then((data) => {
 					if (data.callSuccess) {
 						const nodes = data.response;
@@ -1104,7 +1111,7 @@ const ZWaveJS = (function () {
 						nodeString += '0(fa:fa-wifi<br />Controller)\r\n';
 
 						const Nodes = nodes.filter((N) => !N.isControllerNode);
-						Nodes.forEach((v, i, a) => {
+						Nodes.forEach((v) => {
 							let Name;
 							if (v.nodeName) {
 								Name = `${v.nodeId} - ${v.nodeName}`;
@@ -1147,7 +1154,7 @@ const ZWaveJS = (function () {
 			});
 		},
 		PrepFailed: () => {
-			return new Promise(async (resolve, reject) => {
+			return new Promise(async (resolve) => {
 				Runtime.Get('CONTROLLER', 'getNodes').then((data) => {
 					if (data.callSuccess) {
 						const nodes = data.response.filter((N) => N.status === 'Dead');
@@ -1159,7 +1166,7 @@ const ZWaveJS = (function () {
 			});
 		},
 		ControllerInfo: () => {
-			return new Promise(async (resolve, _) => {
+			return new Promise(async (resolve) => {
 				const CD = $('#zwjs-controller-info').data('info');
 				const versions = await Runtime.Get(undefined, undefined, `zwave-js/ui/${networkId}/version`);
 				const Response = {
@@ -1172,13 +1179,13 @@ const ZWaveJS = (function () {
 			});
 		},
 		ControllerStats: () => {
-			return new Promise(async (resolve, _) => {
+			return new Promise(async (resolve) => {
 				const CD = $('#zwjs-controller-info').data('info');
 				resolve({ statistics: FormatObjectKeys(CD.statistics), backgroundRSSI: FormatObjectKeys(CD.backgroundRSSI) });
 			});
 		},
 		ControllerSettings: () => {
-			return new Promise(async (resolve, _) => {
+			return new Promise(async (resolve) => {
 				let Region = await Runtime.Get('CONTROLLER', 'getRFRegion');
 				let RDisabled = '';
 				if (Region.callSuccess) {
@@ -1201,7 +1208,7 @@ const ZWaveJS = (function () {
 			});
 		},
 		NodeInfo: () => {
-			return new Promise(async (resolve, _) => {
+			return new Promise(async (resolve) => {
 				const ND = GetNodeGroup(selectedNode.nodeLocation).children.find(
 					(N) => N.nodeData.nodeId === selectedNode.nodeId
 				).nodeData;
@@ -1209,7 +1216,7 @@ const ZWaveJS = (function () {
 			});
 		},
 		NodeStats: () => {
-			return new Promise(async (resolve, _) => {
+			return new Promise(async (resolve) => {
 				const ND = GetNodeGroup(selectedNode.nodeLocation).children.find(
 					(N) => N.nodeData.nodeId === selectedNode.nodeId
 				).nodeData;
@@ -2066,7 +2073,7 @@ const ZWaveJS = (function () {
 	// Do the Asso adding (after removal)
 	const CommitAssociationsAdd = (Button) => {
 		const Addresses = [];
-		$("[data-role='zwjs-new-association']").each(function (index) {
+		$("[data-role='zwjs-new-association']").each(function () {
 			const Node = parseInt($(this).find("[data-role='zwjs-node']").first().val());
 			let Endpoint = parseInt($(this).find("[data-role='zwjs-endpoint']").first().val());
 			if (isNaN(Endpoint)) {

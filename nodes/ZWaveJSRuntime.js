@@ -663,11 +663,11 @@ module.exports = function (RED) {
 			});
 
 			// inclusion started
-			self.driverInstance?.controller.on(event_InclusionStarted.driverName, (IsSecure, _Strategy) => {
+			self.driverInstance?.controller.on(event_InclusionStarted.driverName, (InclusionStrategy) => {
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Body = {
-					isSecureInclude: IsSecure
+					inclusionStrategy: InclusionStrategy
 				};
 				const Event = {
 					Type: 'EVENT',

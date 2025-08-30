@@ -16,7 +16,8 @@ export default [
 			globals: {
 				...globals.es2021,
 				...globals.node,
-				...globals.browser
+				...globals.browser,
+				...globals.jquery
 			}
 		},
 		rules: {
@@ -71,7 +72,7 @@ export default [
 			'no-unsafe-finally': 'error',
 			'no-unsafe-negation': 'error',
 			'no-unused-labels': 'error',
-			'no-unused-vars': 'warn',
+			'no-unused-vars': 'error',
 			'no-useless-catch': 'error',
 			'no-useless-escape': 'error',
 			'no-with': 'error',
