@@ -1,4 +1,3 @@
-/* eslint-disable prefer-const */
 /* eslint-env jquery */
 /* eslint-env browser */
 /* eslint no-undef: "warn"*/
@@ -1127,7 +1126,7 @@ const ZWaveJS = (function () {
 							}
 						});
 
-						let result = `${nodeString}${routeString}`;
+						const result = `${nodeString}${routeString}`;
 						resolve({ map: result });
 
 						setTimeout(async () => {
