@@ -1,5 +1,104 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 9.1.3
+
+    **Maintenance Release**
+      - Update dependencies
+
+  - 9.1.2
+
+    **Bug Fixes**
+      - Fix Handling USB reset options correctly
+
+  - 9.1.1
+
+    **Bug Fixes**
+      - Fix NVM Backup
+
+  - 9.1.0
+
+    **Changes**  
+      - Bump ZWave JS from v12 to V14 + other dependencies
+
+    **New Features**
+      - Added ability to set the base config directory.  
+        Note: Installing configuration updates, now requires this to be utilised.  
+        This not considered a breaking change, as it does not affect use.
+
+  - 9.0.4
+
+    **Maintenance Release**
+      - Update dependencies
+
+
+  - 9.0.3
+
+    **Maintenance Release**
+      - Update dependencies
+      - Update Node/UI status with regards to Route Rebuilding
+
+  - 9.0.2
+
+    **Bug Fixes**
+      - Fix `CMD Factory` crashing Node RED, when required values are missing.
+
+  - 9.0.1
+
+    **Bug Fixes**
+      - Correctly attach to the network healing events.  
+        V12 of the Driver renamed these events (to accurately describe what they actually do)  
+        Seems I didn't update the event handlers  
+        (please note: ~~healing~~ route rebuilding was still occurring, just the events were not being triggered)  
+        Therefore Node RED was not aware of it's progress
+
+      - Check for `NodeId` in notification events for device nodes (I missed 1)  
+        This would have only affected notifications for `endpoints` > 0
+
+  - 9.0.0
+
+    **Breaking Changes**
+      - The min node version is now 18
+      - If you execute certain methods your self, the following have been renamed
+        - `beginHealingNetwork` -> `beginRebuildingRoutes`
+        - `stopHealingNetwork` -> `stopRebuildingRoutes`
+        - `healNode` -> `rebuildNodeRoutes`
+
+    **New Features**
+      - Added `getValueTimestamp` to the `Value API` - args will be the single Value ID  
+        The event will be `VALUE_TIMESTAMP`
+
+    **Changes**  
+      - Bump ZWave JS to v12
+      - The `lastSeen` property will now use the Drivers internal value, which is persistant between reboots 
+
+    **Deprecations**
+      - The old message format has now been deprecated, and support will be removed in V10.
+        [PLEASE SEE MIGRATION GUIDE](/APIChange-v9.md)
+      - Support for `responseThroughEvent` will be removed in V10 (all methods will return in v10)
+      - Support for `forceUpdate` will be removed in V10 (you will be requied to manage this your self if using the CC API)
+      - Support for `getLastEvents` will be removed in V10 (the introdcution of the persistant `lastSeen` value and `getValueTimestamp` has made this somewhat bloatware)
+
+  - 8.2.1
+
+    **Changes**  
+      - Bump ZWave JS
+
+    **Bug Fixes**
+      - Address Node RED 3.1 **evaluateJSONataExpression** Warning 
+
+
+  - 8.2.0
+
+    **Changes**  
+      - Update dependencies. 
+
+  - 8.1.0
+
+    **Changes**  
+      - Update dependencies. 
+      - Switch serial port list to use Driver provided methods, removing the dependency on the serilaport package
+
+
   - 8.0.0
 
     **Breaking Changes**
@@ -397,7 +496,7 @@
     - Bump Z-Wave JS to 7.12.1
 
   - 4.0.0 **Possible Breaking Changes**, **Deprecation Warnings**
-    - MAJOR API Transition : [PLEASE SEE MIGRATION GUIDE](/APIChange.md)
+    - MAJOR API Transition : [PLEASE SEE MIGRATION GUIDE](/APIChange-v4.md)
     - Added Node Firmware Update UI
     - Added Network Map UI
     - Added Association Group Managment UI
