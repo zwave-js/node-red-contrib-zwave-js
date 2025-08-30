@@ -7,6 +7,10 @@ const ZWaveJS = (function () {
 	 * Yeah... just stuff - pretty darn important as well!!
 	 */
 	const AdvancedPanels = [];
+	const SetValueOptionExamples = {
+		transitionDuration: '30s, 1m, 1m10s',
+		volume: 45
+	};
 	let networkId = undefined;
 	let selectedNode = undefined;
 	let QRS;
@@ -151,20 +155,24 @@ const ZWaveJS = (function () {
 			Value = parseInt($('#zwjs-cc-value-new-defined').val());
 			$('#zwjs-cc-value-new').val(Value);
 		} else {
-			const $el = $('#zwjs-cc-value-new');
-			if ($el.is('input')) {
-				switch ($el.attr('type')) {
+			const el = $('#zwjs-cc-value-new');
+			if (el.is('input')) {
+				switch (el.attr('type')) {
 					case 'number':
-						Value = parseInt($el.val());
+						Value = parseInt(el.val());
 						break;
 
 					case 'checkbox':
-						Value = $el.prop('checked');
+						Value = el.prop('checked');
+						break;
+
+					case 'color':
+						Value = el.val().substring(1);
 						break;
 				}
 			}
-			if ($el.is('select')) {
-				Value = parseInt($el.val());
+			if (el.is('select')) {
+				Value = parseInt(el.val());
 			}
 		}
 
@@ -2026,6 +2034,16 @@ const ZWaveJS = (function () {
 							valueId: { ...item.valueInfo.valueId }
 						}
 					};
+
+					if (item.valueInfo.metadata.valueChangeOptions) {
+						State.examples.cmd.options = {};
+						State.examples.nocmd.payload.cmdProperties.setValueOptions = {};
+
+						item.valueInfo.metadata.valueChangeOptions.forEach((OP) => {
+							State.examples.cmd.options[OP] = SetValueOptionExamples[OP];
+							State.examples.nocmd.payload.cmdProperties.setValueOptions[OP] = SetValueOptionExamples[OP];
+						});
+					}
 
 					delete State.examples.cmd.valueId.commandClassName;
 					delete State.examples.cmd.valueId.propertyName;
