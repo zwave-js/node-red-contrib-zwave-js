@@ -1436,7 +1436,7 @@ const ZWaveJS = (function () {
 				const cell = row.insertCell();
 				cell.style.textAlign = 'center';
 				if (groups[col][i] !== undefined) {
-					cell.textContent = groups[col][i];
+					cell.innerHTML = `<span class="zwjs-node-id">${groups[col][i]}</span>`;
 				}
 			});
 		}
