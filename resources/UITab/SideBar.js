@@ -1371,6 +1371,43 @@ const ZWaveJS = (function () {
 		}
 	};
 
+	// Update Node Firmware
+
+	const UpdateNFirmware = (Button) => {
+		if (confirm("Note: This will update the Nodes's firmware, do you wish to proceed?")) {
+			const promptFileUpload = () => {
+				const fileInput = document.createElement('input');
+				fileInput.type = 'file';
+				fileInput.style.display = 'none';
+				document.body.appendChild(fileInput);
+
+				fileInput.addEventListener('change', async () => {
+					const file = fileInput.files[0];
+					if (!file) {
+						alert('No file selected');
+						document.body.removeChild(fileInput);
+						return;
+					}
+
+					DisableButton(Button);
+					const reader = new FileReader();
+					reader.onload = function (e) {
+						const arrayBuffer = e.target.result;
+						const byteArray = new Uint8Array(arrayBuffer);
+						// Handled in COMMS
+						Runtime.Post('NODE', 'updateFirmware', [[{ data: byteArray }]]);
+					};
+					reader.readAsArrayBuffer(file);
+					document.body.removeChild(fileInput);
+				});
+
+				fileInput.click();
+			};
+
+			promptFileUpload();
+		}
+	};
+
 	// Update Controller Firmware
 	const UpdateCFirmware = (Button) => {
 		if (confirm('Note: This will update the Controllers firmware, do you wish to proceed?')) {
@@ -1552,6 +1589,38 @@ const ZWaveJS = (function () {
 		$('#zwjs-prog-bar-nvm').text(`${data.label} ${Math.round(Percentage)}%`);
 	};
 
+	// Node Firmware Update Callbacks
+	const commsNFirmwareReport = (topic, data) => {
+		if (topic.endsWith('progress')) {
+			$('#zwjs-prog-contain-nfirmware').css({ display: 'block' });
+			const Percentage = data.progress.progress;
+			$('#zwjs-prog-bar-nfirmware').css({ width: `${Percentage}%` });
+			$('#zwjs-prog-bar-nfirmware').text(`Flashing Chip... ${Math.round(Percentage)}%`);
+		}
+
+		if (topic.endsWith('finished')) {
+			let Message;
+			switch (data.result.status) {
+				case 0:
+					Message = 'A timeout occured';
+					break;
+				case 1:
+					Message = 'The maximum number of retry attempts for a firmware fragments were reached';
+					break;
+				case 2:
+					Message = 'The update was aborted by the bootloader';
+					break;
+				case 3:
+					Message = 'This controller does not support firmware updates';
+					break;
+
+				default:
+					Message = 'The update was successfull, please a few minutes for the Node to reinitialize';
+			}
+			RenderAdvanced('ZWJS_TPL_Tray-Firmware-Done', undefined, { Message });
+		}
+	};
+
 	// Controller Firmware Update Callbacks
 	const commsCFirmwareReport = (topic, data) => {
 		if (topic.endsWith('progress')) {
@@ -1580,7 +1649,7 @@ const ZWaveJS = (function () {
 				default:
 					Message = 'The update was successfull, please a few minutes for the Controller to reinitialize';
 			}
-			RenderAdvanced('ZWJS_TPL_Tray-Controller-Firmware-Done', undefined, { Message });
+			RenderAdvanced('ZWJS_TPL_Tray-Firmware-Done', undefined, { Message });
 		}
 	};
 
@@ -1742,6 +1811,8 @@ const ZWaveJS = (function () {
 			{ address: `zwave-js/ui/${networkId}/controller/nvm/restoreprogress`, method: commsNVMRestoreProgressReport },
 			{ address: `zwave-js/ui/${networkId}/driver/firmwareupdate/progress`, method: commsCFirmwareReport },
 			{ address: `zwave-js/ui/${networkId}/driver/firmwareupdate/finished`, method: commsCFirmwareReport },
+			{ address: `zwave-js/ui/${networkId}/nodes/firmwareupdate/progress`, method: commsNFirmwareReport },
+			{ address: `zwave-js/ui/${networkId}/nodes/firmwareupdate/finished`, method: commsNFirmwareReport },
 			{ address: `zwave-js/ui/${networkId}/rebuildroutes/progress`, method: commsRebuildRoutesProgress }
 		];
 
@@ -1789,6 +1860,7 @@ const ZWaveJS = (function () {
 
 		switch (Node.status) {
 			case 'Alive':
+			case 'Awake':
 				el_status.addClass(['fa', 'fa-sun-o', 'zwjs-state-green']);
 				RED.popover.tooltip(el_status, 'Alive/Awake');
 				break;
@@ -1991,7 +2063,7 @@ const ZWaveJS = (function () {
 				};
 
 				const sItem = {
-					element: `<div style="width:100%; margin-right:30px">${V.metadata.label} ${getCurrentValue(V.currentValue)}</div>`,
+					element: `<div style="width:100%; margin-right:30px">${V.metadata.label || V.valueId.property} ${getCurrentValue(V.currentValue)}</div>`,
 					icon: V.metadata.writeable ? 'fa fa-pencil' : '',
 					parent: false,
 					valueInfo: SelectedNodeVIDs[getValueUpdateHash(V.valueId)]
@@ -2225,6 +2297,7 @@ const ZWaveJS = (function () {
 		NodeCollapseToggle,
 		UpdateValue,
 		PingNode,
-		RebuildRoutes
+		RebuildRoutes,
+		UpdateNFirmware
 	};
 })();
