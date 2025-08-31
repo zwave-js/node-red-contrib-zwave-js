@@ -265,7 +265,7 @@ const ZWaveJS = (function () {
 	const PingNode = (NodeID) => {
 		Runtime.Post('NODE', 'ping', { nodeId: NodeID }).then((data) => {
 			if (data.callSuccess) {
-				alert('Power Level Set Succcessfully');
+				data.response ? alert('Ping was successful') : alert('Ping failed');
 			} else {
 				alert(data.response);
 			}
