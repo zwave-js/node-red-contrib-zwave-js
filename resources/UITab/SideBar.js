@@ -145,15 +145,15 @@ const ZWaveJS = (function () {
 	};
 
 	// Rebuid Routes
-	const RebuildRoutes = (button) => {
-		DisableButton(button);
-		const Battery = $('#zwjs-routes-battery').prop('checked');
+	const RebuildRoutes = (button, battery) => {
+		button && DisableButton(button);
+		const Battery = battery || $('#zwjs-routes-battery').prop('checked');
 		Runtime.Post('CONTROLLER', 'beginRebuildingRoutes', [{ includeSleeping: Battery }]).then((data) => {
 			if (data.callSuccess) {
-				EnableButton(button);
+				button && EnableButton(button);
 			} else {
 				alert(data.response);
-				EnableButton(button);
+				button && EnableButton(button);
 			}
 		});
 	};
@@ -1415,32 +1415,34 @@ const ZWaveJS = (function () {
 	// Rebuild Routes Progress
 	const commsRebuildRoutesProgress = (topic, data) => {
 		const nodes = {};
-		const table = $('#zwjs-routes-progress')[0];
-		for (const [node, status] of Object.entries(data.Progress)) {
-			nodes[node] = status;
-		}
-		const groups = {
-			pending: [],
-			done: [],
-			failed: [],
-			skipped: []
-		};
-		for (const [node, status] of Object.entries(nodes)) {
-			groups[status].push(node);
-		}
-		const maxRows = Math.max(groups.pending.length, groups.done.length, groups.failed.length, groups.skipped.length);
-		while (table.rows.length > 1) {
-			table.deleteRow(1);
-		}
-		for (let i = 0; i < maxRows; i++) {
-			const row = table.insertRow();
-			['pending', 'done', 'failed', 'skipped'].forEach((col) => {
-				const cell = row.insertCell();
-				cell.style.textAlign = 'center';
-				if (groups[col][i] !== undefined) {
-					cell.innerHTML = `<span class="zwjs-node-id">${groups[col][i]}</span>`;
-				}
-			});
+		const table = $('#zwjs-routes-progress')?.[0];
+		if (table) {
+			for (const [node, status] of Object.entries(data.Progress)) {
+				nodes[node] = status;
+			}
+			const groups = {
+				pending: [],
+				done: [],
+				failed: [],
+				skipped: []
+			};
+			for (const [node, status] of Object.entries(nodes)) {
+				groups[status].push(node);
+			}
+			const maxRows = Math.max(groups.pending.length, groups.done.length, groups.failed.length, groups.skipped.length);
+			while (table.rows.length > 1) {
+				table.deleteRow(1);
+			}
+			for (let i = 0; i < maxRows; i++) {
+				const row = table.insertRow();
+				['pending', 'done', 'failed', 'skipped'].forEach((col) => {
+					const cell = row.insertCell();
+					cell.style.textAlign = 'center';
+					if (groups[col][i] !== undefined) {
+						cell.innerHTML = `<span class="zwjs-node-id">${groups[col][i]}</span>`;
+					}
+				});
+			}
 		}
 	};
 
