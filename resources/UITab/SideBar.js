@@ -415,7 +415,8 @@ const ZWaveJS = (function () {
 					};
 					RED.tray.show(Options);
 					setTimeout(() => {
-						$('.zwjs-tray-menu > div[default]').trigger('click');
+						const el = $('.zwjs-tray-menu > div[default]')[0];
+						el.onclick.call(el);
 					}, 250);
 				} else {
 					alert(Error.message);
@@ -472,7 +473,8 @@ const ZWaveJS = (function () {
 					};
 					RED.tray.show(Options);
 					setTimeout(() => {
-						$('.zwjs-tray-menu > div[default]').trigger('click');
+						const el = $('.zwjs-tray-menu > div[default]')[0];
+						el.onclick.call(el);
 					}, 250);
 				} else {
 					alert(Error.message);
@@ -2110,7 +2112,8 @@ const ZWaveJS = (function () {
 					trayBody.append(TPL_ValueManagement(State));
 
 					setTimeout(() => {
-						$('.zwjs-tray-menu > div[default]').trigger('click');
+						const el = $('.zwjs-tray-menu > div[default]')[0];
+						el.onclick.call(el);
 					}, 250);
 				}
 			};
