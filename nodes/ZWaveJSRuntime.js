@@ -833,6 +833,11 @@ module.exports = function (RED) {
 
 			// Heal Progress
 			self.driverInstance?.controller.on(event_RebuildRoutesProgress.driverName, (Progress) => {
+				RED.comms.publish(
+					`zwave-js/ui/${this.id}/rebuildroutes/progress`,
+					{ Progress: Object.fromEntries(Progress) },
+					false
+				);
 				const Timestamp = new Date().getTime();
 				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Event = {
@@ -843,6 +848,7 @@ module.exports = function (RED) {
 				const Remain = [...Progress.values()].filter((V) => V === 'pending').length;
 				const Completed = Count - Remain;
 				const CompletedPercentage = Math.round((100 * Completed) / (Completed + Remain));
+
 				const Status = {
 					Type: 'STATUS',
 					Status: {
@@ -851,6 +857,7 @@ module.exports = function (RED) {
 						text: `Heal network progress : ${CompletedPercentage}%`
 					}
 				};
+
 				updateLatestStatus(`Heal network progress : ${CompletedPercentage}%`);
 				ControllerNodeIDs.forEach((ID) => {
 					controllerNodes[ID](Event);

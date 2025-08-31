@@ -144,6 +144,20 @@ const ZWaveJS = (function () {
 		RED.comms.subscribe('zwave-js/ui/global/removenetwork', (topic, network) => commsRemoveNetwork(network));
 	};
 
+	// Rebuid Routes
+	const RebuildRoutes = (button) => {
+		DisableButton(button);
+		const Battery = $('#zwjs-routes-battery').prop('checked');
+		Runtime.Post('CONTROLLER', 'beginRebuildingRoutes', [{ includeSleeping: Battery }]).then((data) => {
+			if (data.callSuccess) {
+				EnableButton(button);
+			} else {
+				alert(data.response);
+				EnableButton(button);
+			}
+		});
+	};
+
 	// Update Value
 	const UpdateValue = (Button, VID, Defined) => {
 		DisableButton(Button);
@@ -1396,6 +1410,38 @@ const ZWaveJS = (function () {
 	 * Methods here are those used in the subscriptions to the COMMS api
 	 */
 
+	// Rebuild Routes Progress
+	const commsRebuildRoutesProgress = (topic, data) => {
+		const nodes = {};
+		const table = $('#zwjs-routes-progress')[0];
+		for (const [node, status] of Object.entries(data.Progress)) {
+			nodes[node] = status;
+		}
+		const groups = {
+			pending: [],
+			done: [],
+			failed: [],
+			skipped: []
+		};
+		for (const [node, status] of Object.entries(nodes)) {
+			groups[status].push(node);
+		}
+		const maxRows = Math.max(groups.pending.length, groups.done.length, groups.failed.length, groups.skipped.length);
+		while (table.rows.length > 1) {
+			table.deleteRow(1);
+		}
+		for (let i = 0; i < maxRows; i++) {
+			const row = table.insertRow();
+			['pending', 'done', 'failed', 'skipped'].forEach((col) => {
+				const cell = row.insertCell();
+				cell.style.textAlign = 'center';
+				if (groups[col][i] !== undefined) {
+					cell.textContent = groups[col][i];
+				}
+			});
+		}
+	};
+
 	// Controller, Driver Status
 	const commsStatus = (topic, data) => {
 		$('#zwjs-controller-status').text(data.status);
@@ -1691,7 +1737,8 @@ const ZWaveJS = (function () {
 			{ address: `zwave-js/ui/${networkId}/controller/nvm/backupprogress`, method: commsNVMBackupProgressReport },
 			{ address: `zwave-js/ui/${networkId}/controller/nvm/restoreprogress`, method: commsNVMRestoreProgressReport },
 			{ address: `zwave-js/ui/${networkId}/driver/firmwareupdate/progress`, method: commsCFirmwareReport },
-			{ address: `zwave-js/ui/${networkId}/driver/firmwareupdate/finished`, method: commsCFirmwareReport }
+			{ address: `zwave-js/ui/${networkId}/driver/firmwareupdate/finished`, method: commsCFirmwareReport },
+			{ address: `zwave-js/ui/${networkId}/rebuildroutes/progress`, method: commsRebuildRoutesProgress }
 		];
 
 		const op = RED.comms[subscribe ? 'subscribe' : 'unsubscribe'];
@@ -2172,6 +2219,7 @@ const ZWaveJS = (function () {
 		RemoveFailedNode,
 		NodeCollapseToggle,
 		UpdateValue,
-		PingNode
+		PingNode,
+		RebuildRoutes
 	};
 })();

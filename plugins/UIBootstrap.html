@@ -173,6 +173,7 @@
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Stats',this,'NodeStats')">Statistics</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Associations',this,'NodeAssociationGroups')">Associations</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-HealthCheck',this)">Health Check</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Stats',this)">Priority Routing</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Firmware',this)">Firmware Update</div>
 
 	</div>
@@ -201,7 +202,7 @@
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Stats',this, 'ControllerStats')">Statistics</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Map',this, 'RenderMap')">Topology Map</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Settings',this,'ControllerSettings')">Settings</div>
-		<div child>Rebuild Routes</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Rebuild',this)">Rebuild Routes</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Firmware',this)">Firmware Update</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Slave',this)">Secondary Controller Mode</div>
 
@@ -212,6 +213,21 @@
 
 	</div>
 	<div id="zwjs-advanced-content"></div>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Controller-Rebuild">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">Note: Rebuilding routes can take time, especially those on networks that contain a number of battery-powered devices.</div>
+		<table class="zwjs-table" id="zwjs-routes-progress" horizontal>
+			<tr style="text-align:center">
+				<td>Pending</td><td>Done</td><td>Failed</td><td>Skipped</td>
+			</tr>
+		</table>
+		<div>
+			Include Battery Operated Device: <input type="checkbox" id="zwjs-routes-battery" checked> <button onclick="ZWaveJS.RebuildRoutes(this)">Begin Rebuild</button>
+		</div>
+	</fieldset>
 </script>
 
 <!-- prettier-ignore -->
