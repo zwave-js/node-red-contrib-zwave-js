@@ -854,11 +854,11 @@ module.exports = function (RED) {
 					Status: {
 						fill: 'yellow',
 						shape: 'dot',
-						text: `Heal network progress : ${CompletedPercentage}%`
+						text: `${event_RebuildRoutesProgress.nodeStatusName} : ${CompletedPercentage}%`
 					}
 				};
 
-				updateLatestStatus(`Heal network progress : ${CompletedPercentage}%`);
+				updateLatestStatus(`${event_RebuildRoutesProgress.nodeStatusName}  : ${CompletedPercentage}%`);
 				ControllerNodeIDs.forEach((ID) => {
 					controllerNodes[ID](Event);
 					controllerNodes[ID](Status);
