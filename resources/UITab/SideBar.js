@@ -2196,6 +2196,7 @@ const ZWaveJS = (function () {
 					minHeight: 160,
 					buttons: {},
 					close: function () {
+						document.activeElement.blur();
 						$(this).dialog('destroy');
 						MiniEdtiorDialog = undefined;
 					},
