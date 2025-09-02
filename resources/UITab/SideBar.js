@@ -11,6 +11,7 @@ const ZWaveJS = (function () {
 		transitionDuration: '30s, 1m, 1m10s',
 		volume: 45
 	};
+	const GroupMode = [true, true]; // Grouped, Expanded
 	let networkId = undefined;
 	let selectedNode = undefined;
 	let QRS;
@@ -20,8 +21,8 @@ const ZWaveJS = (function () {
 	let TPL_ValueManagement = undefined;
 	let AssociationGroups;
 	let clientSideAuth = false;
-	let nodesExpanded = true;
 	let SelectedNodeVIDs = {};
+	let MiniEdtiorDialog;
 
 	/*
 	 * Driver Communciation Methods
@@ -214,6 +215,10 @@ const ZWaveJS = (function () {
 
 					default:
 						alert('The update was successfull');
+						if (MiniEdtiorDialog) {
+							MiniEdtiorDialog.dialog('destroy');
+							MiniEdtiorDialog = undefined;
+						}
 						break;
 				}
 
@@ -226,24 +231,25 @@ const ZWaveJS = (function () {
 	};
 
 	// Collapse LIst
-	const NodeCollapseToggle = () => {
-		switch (nodesExpanded) {
-			case true:
-				$('#zwjs-node-list')
-					.treeList('data')
-					.forEach((LI) => {
-						LI.treeList.collapse();
-					});
-				nodesExpanded = false;
-				break;
+	const NodeCollapseToggle = (Mode, A) => {
+		$('i.zwjs-button-group').removeAttr('selected');
+		$(A).find('i.zwjs-button-group').attr('selected', '');
 
-			case false:
-				$('#zwjs-node-list')
-					.treeList('data')
-					.forEach((LI) => {
-						LI.treeList.expand();
-					});
-				nodesExpanded = true;
+		switch (Mode) {
+			case 1:
+				GroupMode[0] = true;
+				GroupMode[1] = true;
+				RefreshNodes('Sorted');
+				break;
+			case 2:
+				GroupMode[0] = true;
+				GroupMode[1] = false;
+				RefreshNodes('Sorted');
+				break;
+			case 3:
+				GroupMode[0] = false;
+				GroupMode[1] = true;
+				RefreshNodes('Sorted');
 				break;
 		}
 	};
@@ -504,7 +510,7 @@ const ZWaveJS = (function () {
 	};
 
 	// Render Advanced Panel Content
-	const RenderAdvanced = async (TemplateID, Target, FunctionIDORObject) => {
+	const RenderAdvanced = async (TemplateID, Target, FunctionIDORObject, WriteTarget) => {
 		if (!AdvancedPanels.find((P) => P.id === TemplateID)) {
 			const TPL = Handlebars.compile($(`#${TemplateID}`).html());
 			AdvancedPanels.push({ id: TemplateID, compiled: TPL });
@@ -525,8 +531,8 @@ const ZWaveJS = (function () {
 		}
 
 		const Output = AdvancedPanels.find((P) => P.id === TemplateID).compiled(Data);
-		$('#zwjs-advanced-content').empty();
-		$('#zwjs-advanced-content').append(Output);
+		$(WriteTarget || '#zwjs-advanced-content').empty();
+		$(WriteTarget || '#zwjs-advanced-content').append(Output);
 
 		if (Target) {
 			$('.zwjs-tray-menu div').removeAttr('active');
@@ -920,6 +926,7 @@ const ZWaveJS = (function () {
 
 			case 'NodeAdded':
 			case 'Named':
+			case 'Sorted':
 				break;
 
 			case 'NodeRemoved':
@@ -955,7 +962,7 @@ const ZWaveJS = (function () {
 							.toUpperCase();
 					};
 					const groupedNodes = Nodes.reduce((acc, node) => {
-						const location = node.nodeLocation || 'No Location';
+						const location = GroupMode[0] ? node.nodeLocation || 'No Location' : 'All Nodes';
 						if (!acc[location]) {
 							acc[location] = [];
 						}
@@ -976,7 +983,7 @@ const ZWaveJS = (function () {
 							id: `zwjs-node-list-entry-location-${LK.replace(/ /g, '-')}`,
 							element: GLabel,
 							children: [],
-							expanded: nodesExpanded
+							expanded: (GroupMode[0] && GroupMode[1]) || !GroupMode[0]
 						};
 
 						TreeData.push(Group);
@@ -1695,7 +1702,13 @@ const ZWaveJS = (function () {
 
 	// Get Node Group
 	const GetNodeGroup = (Group) => {
-		const safeGroup = Group && Group.trim() !== '' ? Group : 'No Location';
+		let safeGroup;
+		if (!GroupMode[0]) {
+			safeGroup = 'All Nodes';
+		} else {
+			safeGroup = Group && Group.trim() !== '' ? Group : 'No Location';
+		}
+
 		const G = `zwjs-node-list-entry-location-${safeGroup.replace(/ /g, '-')}`;
 		return $('#zwjs-node-list')
 			.treeList('data')
@@ -1997,6 +2010,12 @@ const ZWaveJS = (function () {
 					const EPGroups = groupByEP(data.values);
 					const EPIDs = Object.keys(EPGroups);
 
+					if (EPIDs.length < 2) {
+						$('#zwjs-endpoint-list').hide();
+					} else {
+						$('#zwjs-endpoint-list').show();
+					}
+
 					EPIDs.forEach((E) => {
 						const EP = E === '0' ? 'Root' : `EP${E}`;
 						const Button = $(`<div data-endpoint="${E}">${EP}</div>`);
@@ -2050,6 +2069,7 @@ const ZWaveJS = (function () {
 						} else {
 							Display = `${value} ${V.metadata.unit || ''}`;
 						}
+
 						return `<span class="zwjs-cc-value" id="zwjs-value-${getValueUpdateHash(V.valueId)}" style="padding:1px;float:right;color:rgb(46, 145, 205); min-width:80px">${Display}</span>`;
 					} else {
 						return '';
@@ -2077,10 +2097,123 @@ const ZWaveJS = (function () {
 
 		$('#zwjs-cc-list').treeList('empty');
 		$('#zwjs-cc-list').treeList('data', Items);
+		$('#zwjs-cc-list').off('treelistselect');
 		$('#zwjs-cc-list').on('treelistselect', function (event, item) {
 			if (Object.keys(item).length < 1 || item.parent === true) {
 				return;
 			}
+
+			let Property;
+			if (typeof item.valueInfo.valueId.property === 'number') {
+				Property = `0x${parseInt(item.valueInfo.valueId.property).toString(16).padStart(2, '0').toUpperCase()}`;
+			} else {
+				Property = item.valueInfo.valueId.property;
+			}
+
+			if (item.valueInfo.valueId.propertyKey) {
+				if (typeof item.valueInfo.valueId.propertyKey === 'number') {
+					Property += ` / 0x${parseInt(item.valueInfo.valueId.propertyKey).toString(16).padStart(2, '0').toUpperCase()}`;
+				} else {
+					Property += ` / ${item.valueInfo.valueId.propertyKey}`;
+				}
+			}
+
+			const State = {
+				ccId: `0x${parseInt(item.valueInfo.valueId.commandClass).toString(16).padStart(2, '0').toUpperCase()}`,
+				ccName: item.valueInfo.valueId.commandClassName,
+				valueLabel: item.valueInfo.metadata.label,
+				nodeId: selectedNode.nodeId,
+				property: Property,
+				editInfo: {
+					valueLabel: item.valueInfo.metadata.label,
+					valueId: item.valueInfo.valueId,
+					writeable: item.valueInfo.metadata.writeable,
+					currentValue: item.valueInfo.currentValue,
+					type: item.valueInfo.metadata.type,
+					states: item.valueInfo.metadata.states,
+					allowManualEntry:
+						item.valueInfo.metadata.allowManualEntry !== undefined
+							? item.valueInfo.metadata.allowManualEntry
+							: item.valueInfo.metadata.writeable
+				}
+			};
+
+			State.examples = {
+				valueLabel: item.valueInfo.metadata.label,
+				nocmd: {
+					payload: {
+						cmd: {
+							api: 'VALUE'
+						},
+						cmdProperties: {
+							nodeId: selectedNode.nodeId,
+							valueId: { ...item.valueInfo.valueId }
+						}
+					}
+				},
+				cmd: {
+					topic: selectedNode.nodeId,
+					valueId: { ...item.valueInfo.valueId }
+				}
+			};
+
+			if (item.valueInfo.metadata.valueChangeOptions) {
+				State.examples.cmd.options = {};
+				State.examples.nocmd.payload.cmdProperties.setValueOptions = {};
+
+				item.valueInfo.metadata.valueChangeOptions.forEach((OP) => {
+					State.examples.cmd.options[OP] = SetValueOptionExamples[OP];
+					State.examples.nocmd.payload.cmdProperties.setValueOptions[OP] = SetValueOptionExamples[OP];
+				});
+			}
+
+			delete State.examples.cmd.valueId.commandClassName;
+			delete State.examples.cmd.valueId.propertyName;
+			delete State.examples.cmd.valueId.propertyKeyName;
+			delete State.examples.nocmd.payload.cmdProperties.valueId.commandClassName;
+			delete State.examples.nocmd.payload.cmdProperties.valueId.propertyName;
+			delete State.examples.nocmd.payload.cmdProperties.valueId.propertyKeyName;
+
+			if (item.valueInfo.metadata.writeable) {
+				State.examples.nocmd.payload.cmd.method = 'setValue | getValue';
+				State.examples.nocmd.payload.cmdProperties.value = item.valueInfo.currentValue;
+				State.examples.cmd.payload = item.valueInfo.currentValue;
+			} else {
+				State.examples.nocmd.payload.cmd.method = 'getValue';
+			}
+
+			// Mobile or Mini Editor
+			const Width = $(window).width() < 1024;
+			const Mini = $(event.originalEvent?.target).closest('.zwjs-cc-value').length;
+			if (Width || Mini) {
+				const Options = {
+					draggable: false,
+					modal: true,
+					resizable: false,
+					width: Width ? '90%' : '20%',
+					position: { my: 'center', at: 'center', of: window },
+					title: 'Mini Value Editor',
+					minHeight: 160,
+					buttons: {},
+					close: function () {
+						$(this).dialog('destroy');
+						MiniEdtiorDialog = undefined;
+					},
+					open: function () {
+						CloseTray();
+						ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Value-Current', undefined, State.editInfo, '#zwjs-mini-content');
+					}
+				};
+				const D = $('<div>').css({
+					padding: 10,
+					wordWrap: 'break-word'
+				});
+
+				D.append('<div id="zwjs-mini-content"></div>');
+				MiniEdtiorDialog = D.dialog(Options);
+				return;
+			}
+
 			CloseTray();
 			const Options = {
 				width: 700,
@@ -2103,85 +2236,6 @@ const ZWaveJS = (function () {
 				],
 				open: function (tray) {
 					const trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
-
-					let Property;
-					if (typeof item.valueInfo.valueId.property === 'number') {
-						Property = `0x${parseInt(item.valueInfo.valueId.property).toString(16).padStart(2, '0').toUpperCase()}`;
-					} else {
-						Property = item.valueInfo.valueId.property;
-					}
-
-					if (item.valueInfo.valueId.propertyKey) {
-						if (typeof item.valueInfo.valueId.propertyKey === 'number') {
-							Property += ` / 0x${parseInt(item.valueInfo.valueId.propertyKey).toString(16).padStart(2, '0').toUpperCase()}`;
-						} else {
-							Property += ` / ${item.valueInfo.valueId.propertyKey}`;
-						}
-					}
-
-					const State = {
-						ccId: `0x${parseInt(item.valueInfo.valueId.commandClass).toString(16).padStart(2, '0').toUpperCase()}`,
-						ccName: item.valueInfo.valueId.commandClassName,
-						valueLabel: item.valueInfo.metadata.label,
-						nodeId: selectedNode.nodeId,
-						property: Property,
-						editInfo: {
-							valueLabel: item.valueInfo.metadata.label,
-							valueId: item.valueInfo.valueId,
-							writeable: item.valueInfo.metadata.writeable,
-							currentValue: item.valueInfo.currentValue,
-							type: item.valueInfo.metadata.type,
-							states: item.valueInfo.metadata.states,
-							allowManualEntry:
-								item.valueInfo.metadata.allowManualEntry !== undefined
-									? item.valueInfo.metadata.allowManualEntry
-									: item.valueInfo.metadata.writeable
-						}
-					};
-
-					State.examples = {
-						valueLabel: item.valueInfo.metadata.label,
-						nocmd: {
-							payload: {
-								cmd: {
-									api: 'VALUE'
-								},
-								cmdProperties: {
-									nodeId: selectedNode.nodeId,
-									valueId: { ...item.valueInfo.valueId }
-								}
-							}
-						},
-						cmd: {
-							topic: selectedNode.nodeId,
-							valueId: { ...item.valueInfo.valueId }
-						}
-					};
-
-					if (item.valueInfo.metadata.valueChangeOptions) {
-						State.examples.cmd.options = {};
-						State.examples.nocmd.payload.cmdProperties.setValueOptions = {};
-
-						item.valueInfo.metadata.valueChangeOptions.forEach((OP) => {
-							State.examples.cmd.options[OP] = SetValueOptionExamples[OP];
-							State.examples.nocmd.payload.cmdProperties.setValueOptions[OP] = SetValueOptionExamples[OP];
-						});
-					}
-
-					delete State.examples.cmd.valueId.commandClassName;
-					delete State.examples.cmd.valueId.propertyName;
-					delete State.examples.cmd.valueId.propertyKeyName;
-					delete State.examples.nocmd.payload.cmdProperties.valueId.commandClassName;
-					delete State.examples.nocmd.payload.cmdProperties.valueId.propertyName;
-					delete State.examples.nocmd.payload.cmdProperties.valueId.propertyKeyName;
-
-					if (item.valueInfo.metadata.writeable) {
-						State.examples.nocmd.payload.cmd.method = 'setValue | getValue';
-						State.examples.nocmd.payload.cmdProperties.value = item.valueInfo.currentValue;
-						State.examples.cmd.payload = item.valueInfo.currentValue;
-					} else {
-						State.examples.nocmd.payload.cmd.method = 'getValue';
-					}
 
 					trayBody.append(TPL_ValueManagement(State));
 
@@ -2258,6 +2312,12 @@ const ZWaveJS = (function () {
 			const Value = Networks.children().eq(1).val();
 			Networks.val(Value);
 			NetworkSelected();
+		}
+
+		if (Networks.children().length < 3) {
+			Networks.parent().hide();
+		} else {
+			Networks.parent().show();
 		}
 	};
 

@@ -30,9 +30,16 @@
 	color: white;
 	text-align: center;
 	border-radius: 4px;
-	font-size: 12px;
+	font-size: 10px;
 	margin-right: 3px;
 	cursor: pointer;
+}
+
+#zwjs-node-status,
+#zwjs-node-status-tray,
+#zwjs-controller-status,
+#zwjs-controller-status-tray {
+	font-size: 12px;
 }
 
 .zwjs-cc-id {
@@ -67,7 +74,7 @@
 
 #zwjs-controller-info,
 #zwjs-controller-info-tray {
-	font-size: 14px;
+	font-size: 12px;
 	font-weight: bold;
 	color: gray;
 }
@@ -87,6 +94,15 @@
 	font-size: 12px;
 	min-width: 15px;
 }
+
+.zwjs-sb-menu-header a > i.zwjs-button-group {
+	filter: grayscale();
+}
+
+.zwjs-sb-menu-header a > i.zwjs-button-group[selected] {
+	filter: none;
+}
+
 .zwjs-tray-header {
 	width: 100%;
 	background-color: var(--red-ui-palette-header-background);
@@ -169,6 +185,10 @@ table.zwjs-table[vertical] td:first-of-type {
 }
 table.zwjs-table[vertical] td:nth-of-type(2) {
 	background-color: var(--red-ui-palette-header-background);
+}
+
+.zwjs-fieldset {
+	border: none;
 }
 
 .zwjs-fieldset div.zwjs-hint {

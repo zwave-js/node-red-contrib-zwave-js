@@ -47,8 +47,12 @@
 	<div class="red-ui-sidebar-header zwjs-sb-menu-header">
 		<a class="red-ui-tab-link-button" onclick="ZWaveJS.ShowNetworkManagement()"><i class="fa fa-cogs"></i></a>
 		<a class="red-ui-tab-link-button" onclick="ZWaveJS.RefreshNodes('Refresh')"><i class="fa fa-refresh"></i></a>
-		<a class="red-ui-tab-link-button" onclick="ZWaveJS.NodeCollapseToggle()"><i class="fa fa-list-ol"></i></a>
 		<a class="red-ui-tab-link-button" onclick="ZWaveJS.RebuildRoutes(undefined, true)"><i class="fa fa-medkit"></i></a>
+		 | 
+		<a class="red-ui-tab-link-button" onclick="ZWaveJS.NodeCollapseToggle(1, this)"><i class="fa fa-indent zwjs-button-group" selected></i></a>
+		<a class="red-ui-tab-link-button" onclick="ZWaveJS.NodeCollapseToggle(2, this)"><i class="fa fa-bars zwjs-button-group "></i></a>
+		<a class="red-ui-tab-link-button" onclick="ZWaveJS.NodeCollapseToggle(3, this)"><i class="fa fa-sort-numeric-asc zwjs-button-group"></i></a>
+		
 	</div>
 
 	<!--Stack-->
@@ -58,7 +62,7 @@
 			<div id="zwjs-node-list" style="width: 100%; height: 100%"></div>
 		</div>
 		<!--Node Info-->
-		<div>
+		<div style="overflow:hidden">
 			<div class="red-ui-sidebar-header" style="text-align: left; padding: 3px; padding-left: 10px;">
 				<table style="margin-left: 10px;">
 					<tr>
@@ -68,7 +72,7 @@
 					</tr>
 					<tr>
 						<td style="padding-left: 10px">
-							<span style="font-size: 14px; font-weight: bold; color: gray" id="zwjs-node-info">No Node Selected</span>
+							<span style="font-size: 12px; font-weight: bold; color: gray" id="zwjs-node-info">No Node Selected</span>
 							<br />
 							<span id="zwjs-node-status"></span>
 						</td>
@@ -128,7 +132,6 @@
 		{{else}}
 		    <div class="zwjs-hint">Sorry: This value is ReadOnly</div>
 		{{/if}}
-		
 	</fieldset>
 </script>
 
@@ -160,9 +163,9 @@
 			</tr>
 			<tr>
 				<td style="padding-left: 10px">
-					<span style="font-size: 14px; font-weight: bold; color: gray">{{NodeInfo}}</span>
+					<span style="font-size: 12px; font-weight: bold; color: gray">{{NodeInfo}}</span>
 					<br />
-					<span id="zwave-js-node-status">{{Status}}</span>
+					<span id="zwjs-node-status-tray">{{Status}}</span>
 				</td>
 			</tr>
 		</table>
