@@ -2,3 +2,7 @@
 .vscode
 node_modules
 package-lock.json
+resources/HB
+resources/QRS
+resources/SVGZ
+resources/Mermaid

@@ -1,0 +1,19 @@
+flowchart TD
+    A(fa:fa-wifi
+    Controller
+    RSSI : -57db)
+    B(Node 2)
+    C(Node 3)
+    D(fa:fa-battery
+    LR MS : 5645665456)
+    E(fa:fa-plug
+    Node 5)
+
+    B e@==> A
+    C h@--> B
+    D a@--> B
+    E k@==> A
+    e@{animate: true}
+    h@{animate: true}
+    a@{animate: true}
+    k@{animate: true}

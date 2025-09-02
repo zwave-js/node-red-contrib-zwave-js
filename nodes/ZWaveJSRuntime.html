@@ -1,0 +1,316 @@
+<script type="text/javascript">
+	const ZWJSRuntimeNodeSettings = {
+		category: 'config',
+		defaults: {
+			name: {
+				value: 'ZWave JS Runtime',
+				required: true
+			},
+			serialPort: {
+				value: '',
+				required: true
+			},
+			timeouts_ack: {
+				value: '',
+				required: false,
+				validate: Validate
+			},
+			timeouts_response: {
+				value: '',
+				required: false,
+				validate: Validate
+			},
+			timeouts_sendDataCallback: {
+				value: '',
+				required: false,
+				validate: Validate
+			},
+			timeouts_report: {
+				value: '',
+				required: false,
+				validate: Validate
+			},
+			timeouts_serialAPIStarted: {
+				value: '',
+				required: false,
+				validate: Validate
+			},
+			preferences_scales_temperature: {
+				value: '0',
+				required: true
+			},
+			preferences_scales_humidity: {
+				value: '0',
+				required: true
+			},
+			logConfig_level: {
+				value: 'off',
+				required: true
+			},
+			LogConfig_nodeFilter: {
+				value: '',
+				required: false
+			},
+			storage_deviceConfigPriorityDir: {
+				value: '',
+				required: false
+			},
+			storage_throttle: {
+				value: 'normal',
+				required: true
+			},
+			disableOptimisticValueUpdate: {
+				value: true,
+				required: true
+			},
+			enableSoftReset: {
+				value: true,
+				required: true
+			},
+			interview_queryAllUserCodes: {
+				value: false,
+				required: true
+			},
+			apiKeys_firmwareUpdateService: {
+				value: '',
+				required: false
+			},
+			enableStatistics: {
+				value: false,
+				required: true
+			},
+			enableGlobalAPI: {
+				value: false,
+				required: true
+			},
+			globalAPIName: {
+				value: '',
+				required: false
+			},
+			securityKeys_S0_Legacy: {
+				value: '',
+				required: false
+			},
+			securityKeys_S2_Unauthenticated: {
+				value: '',
+				required: false
+			},
+			securityKeys_S2_Authenticated: {
+				value: '',
+				required: false
+			},
+			securityKeys_S2_AccessControl: {
+				value: '',
+				required: false
+			},
+			securityKeys_S2LR_Authenticated: {
+				value: '',
+				required: false
+			},
+			securityKeys_S2LR_AccessControl: {
+				value: '',
+				required: false
+			}
+			
+		},
+		label: function () {
+			return this.name;
+		},
+		oneditprepare: prepEditor
+	};
+
+	RED.nodes.registerType('zwavejs-runtime', ZWJSRuntimeNodeSettings);
+
+	function Validate(v) {
+		if (v.length) {
+			return !isNaN(v);
+		}
+		return true;
+	}
+
+	function prepEditor() {
+		$.getJSON('zwave-js/ui/global/getports', (data) => {
+			if (data.callSuccess) {
+				data.response.forEach((SP) => {
+					$('#node-config-input-serialPort').append(new Option(SP, SP));
+				});
+				if(this.serialPort){
+					$('#node-config-input-serialPort').val(this.serialPort)
+				}
+			} else {
+				alert(data.response);
+			}
+		});
+	}
+
+	function genKey() {
+		const bytes = new Uint8Array(16);
+		window.crypto.getRandomValues(bytes);
+		const hexKey = [...bytes].map((x) => x.toString(16).padStart(2, '0')).join('');
+		$(event.target).prev().val(hexKey);
+	}
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/x-red" data-template-name="zwavejs-runtime">
+	<h3>Basic</h3>
+	<hr />
+	<div class="form-row">
+	    <label for="node-config-input-name"><i class="fa fa-tag"></i> Name</label>
+	    <input type="text" id="node-config-input-name">
+	</div>
+	<div class="form-row">
+	    <label for="node-config-input-serialPort"><i class="fa fa-terminal"></i> Serial Port</label>
+		<select id="node-config-input-serialPort">
+			<option value="">Select Port</option>
+			<option value="Custom">--Use Custom Path --</option>
+		</select>
+	</div>
+	<div class="form-row">
+	    <label for="node-config-input-enableStatistics"><i class="fa fa-line-chart"></i> Analytics</label>
+	    <input type="checkbox" id="node-config-input-enableStatistics">
+	</div>
+
+	<h3>Security Keys</h3>
+	<hr />
+	<div class="form-row">
+	    <label for="node-config-input-securityKeys_S0_Legacy"><i class="fa fa-lock"></i> S0</label>
+	    <input type="text" id="node-config-input-securityKeys_S0_Legacy" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()" style="display:unset; width:90px">Generate</button>
+	</div>
+	<div class="form-row">
+	    <label for="node-config-input-securityKeys_S2_Unauthenticated"><i class="fa fa-lock"></i> S2 UAuth</label>
+	    <input type="text" id="node-config-input-securityKeys_S2_Unauthenticated" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()" style="display:unset; width:90px">Generate</button>
+	</div>
+	<div class="form-row">
+	    <label for="node-config-input-securityKeys_S2_Authenticated"><i class="fa fa-lock"></i> S2 Auth</label>
+	    <input type="text" id="node-config-input-securityKeys_S2_Authenticated" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()" style="display:unset; width:90px">Generate</button>
+	</div>
+	<div class="form-row">
+	    <label for="node-config-input-securityKeys_S2_AccessControl"><i class="fa fa-lock"></i> S2 Acc Ctrl</label>
+	    <input type="text" id="node-config-input-securityKeys_S2_AccessControl" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()" style="display:unset; width:90px">Generate</button>
+	</div>
+
+	<h3>Security Keys (Long Range)</h3>
+	<hr />
+	<div class="form-row">
+	    <label for="node-config-input-securityKeys_S2LR_Authenticated"><i class="fa fa-lock"></i> S2 Auth</label>
+	    <input type="text" id="node-config-input-securityKeys_S2LR_Authenticated" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()" style="display:unset; width:90px">Generate</button>
+	</div>
+	<div class="form-row">
+	    <label for="node-config-input-securityKeys_S2LR_AccessControl"><i class="fa fa-lock"></i> S2 Acc Ctrl</label>
+	    <input type="text" id="node-config-input-securityKeys_S2LR_AccessControl" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()" style="display:unset; width:90px">Generate</button>
+	</div>
+
+	<h3>Scales</h3>
+	<hr />
+	<div class="form-row">
+	    <label for="node-config-input-preferences_scales_temperature"><i class="fa fa-thermometer-empty"></i> Temperature</label>
+	    <select id="node-config-input-preferences_scales_temperature">
+	        <option value="0">Celsius (°C)</option>
+	        <option value="1">Fahrenheit (°F)</option>
+	    </select>
+	</div>
+	<div class="form-row">
+	    <label for="node-config-input-preferences_scales_humidity"><i class="fa fa-tint"></i> Humidity</label>
+	    <select id="node-config-input-preferences_scales_humidity">
+	        <option value="0">Percentage (%)</option>
+	        <option value="1">Absolute Humidity (g/m³)</option>
+	    </select>
+	</div>
+
+	<h3>Logging</h3>
+	<hr />
+	<div class="form-row">
+	    <label for="node-config-input-logConfig_level"><i class="fa fa-exclamation-circle"></i> Level</label>
+	    <select id="node-config-input-logConfig_level">
+	        <option value="off">Logging Disabled</option>
+	        <option value="error">Error</option>
+	        <option value="warn">Warn</option>
+	        <option value="info">Info</option>
+	        <option value="verbose">Verbose</option>
+	        <option value="debug">Debug</option>
+	        <option value="silly">Silly</option>
+	    </select>
+	</div>
+	<div class="form-row">
+	    <label for="node-config-input-LogConfig_nodeFilter"><i class="fa fa-filter"></i> Node Filter</label>
+	    <input type="text" id="node-config-input-LogConfig_nodeFilter">
+	</div>
+
+	<h3>Firmware Update Service</h3>
+	<hr />
+	<div class="form-row">
+	    <label for="node-config-input-apiKeys_firmwareUpdateService"><i class="fa fa-key"></i> License Key</label>
+	    <input type="text" id="node-config-input-apiKeys_firmwareUpdateService">
+	</div>
+
+	<h3>Advanced Settings</h3>
+	<hr />
+	<div class="form-row">
+	    <label for="node-config-input-storage_throttle"><i class="fa fa-hdd-o"></i> IO Throttle</label>
+	    <select id="node-config-input-storage_throttle">
+	        <option value="fast">Fast</option>
+	        <option value="normal">Normal</option>
+	        <option value="slow">Slow</option>
+	    </select>
+	</div>
+	<div class="form-row">
+	    <label for="node-config-input-storage_deviceConfigPriorityDir"><i class="fa fa-folder"></i> CFG Dir</label>
+	    <input type="text" id="node-config-input-storage_deviceConfigPriorityDir">
+	</div>
+	<div class="form-row">
+	    <label for="node-config-input-disableOptimisticValueUpdate"><i class="fa fa-check"></i> Optimistic</label>
+	    <input type="checkbox" id="node-config-input-disableOptimisticValueUpdate">
+	</div>
+	<div class="form-row">
+	    <label for="node-config-input-interview_queryAllUserCodes"><i class="fa fa-th"></i> Intvw Codes</label>
+	    <input type="checkbox" id="node-config-input-interview_queryAllUserCodes">
+	</div>
+	<div class="form-row">
+	    <label for="node-config-input-enableSoftReset"><i class="fa fa-usb"></i> Soft Reset</label>
+	    <input type="checkbox" id="node-config-input-enableSoftReset">
+	</div>
+
+	<h3>Timeouts (ms)</h3>
+	<hr />
+	<div class="form-row">
+	    <label for="node-config-input-timeouts_ack"><i class="fa fa-clock-o"></i> ACK</label>
+	    <input type="number" id="node-config-input-timeouts_ack" placeholder="Use Default">
+	</div>
+	<div class="form-row">
+	    <label for="node-config-input-timeouts_response"><i class="fa fa-clock-o"></i> Response</label>
+	    <input type="number" id="node-config-input-timeouts_response" placeholder="Use Default">
+	</div>
+	<div class="form-row">
+	    <label for="node-config-input-timeouts_sendDataCallback"><i class="fa fa-clock-o"></i> Callback</label>
+	    <input type="number" id="node-config-input-timeouts_sendDataCallback" placeholder="Use Default">
+	</div>
+	<div class="form-row">
+	    <label for="node-config-input-timeouts_report"><i class="fa fa-clock-o"></i> Report</label>
+	    <input type="number" id="node-config-input-timeouts_report" placeholder="Use Default">
+	</div>
+	<div class="form-row">
+	    <label for="node-config-input-timeouts_serialAPIStarted"><i class="fa fa-clock-o"></i> Serial API</label>
+	    <input type="number" id="node-config-input-timeouts_serialAPIStarted" placeholder="Use Default">
+	</div>
+
+	<h3>Global API Access</h3>
+	<hr />
+	<div class="form-tips" id="node-tip">
+		Enabling this option, will expose an untethered instance of the Zwave Device collection in Global Context, that can be used in <code>Function</code> nodes. Care should be taken here, and a read up on the zwave-js documentation is highly encouraged before accessing any methods. Misuse can result in a crashed Driver Instance.
+	</div>
+	<br />
+	<div class="form-row">
+	    <label for="node-config-input-enableGlobalAPI"><i class="fa fa-check"></i> Enabled</label>
+	    <input type="checkbox" id="node-config-input-enableGlobalAPI">
+	</div>
+	<div class="form-row">
+	    <label for="node-config-input-globalAPIName"><i class="fa fa-tag"></i> Identifiyer</label>
+	    <input type="text" id="node-config-input-globalAPIName">
+	</div>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/markdown" data-help-name="zwavejs-runtime">
+	<p>A ZWave JS Driver Runtime Instance</p>
+</script>

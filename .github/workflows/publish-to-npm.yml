@@ -5,18 +5,26 @@ on:
     types: [published]
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
-    if: github.actor == 'marcus-j-davies'
+    if: ${{ github.actor == 'marcus-j-davies' }}
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
       - name: Setup Node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
-          node-version: 14
+          node-version: 20
           registry-url: https://registry.npmjs.org/
+
       - name: Publish package on NPM
-        run: npm publish --access public
+        run: |
+          if [ "${{ github.event.release.prerelease }}" = "true" ]; then
+            npm publish --access public --tag beta
+          else
+            npm publish --access public
+          fi
         env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
