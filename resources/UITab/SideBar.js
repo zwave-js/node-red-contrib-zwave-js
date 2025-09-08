@@ -720,8 +720,23 @@ const ZWaveJS = (function () {
 				'<tr><td style="text-align:center">Target Node</td><td style="text-align:center">Target Endpoint</td><td style="text-align:center">Delete</td></tr>'
 			);
 			Mapped.forEach((v) => {
+				let EP;
+				switch (v.endpoint) {
+					case undefined:
+						EP = '<span class="zwjs-asso-ep">NODE</span>';
+						break;
+
+					case 0:
+						EP = '<span class="zwjs-asso-ep">ROOT</span>';
+						break;
+
+					default:
+						EP = `<span class="zwjs-asso-ep">EP${v.endpoint}</span>`;
+						break;
+				}
+
 				$('#zwjs-asso-mappings').append(
-					`<tr><td style="text-align:center">${v.nodeId}</td><td style="text-align:center">${v.endpoint === undefined ? '&lt;Node-Associtation&gt;' : v.endpoint}</td><td style="text-align:center"><i class="fa fa-trash" aria-hidden="true" style="font-size: 18px;color: red; cursor:pointer" onclick="ZWaveJS.MarkAssoDelete(this)"></i></td></tr>`
+					`<tr><td style="text-align:center"><span class="zwjs-node-id">${v.nodeId}</span></td><td style="text-align:center">${EP}</td><td style="text-align:center"><i class="fa fa-trash" aria-hidden="true" style="font-size: 18px;color: red; cursor:pointer" onclick="ZWaveJS.MarkAssoDelete(this)"></i></td></tr>`
 				);
 			});
 		});

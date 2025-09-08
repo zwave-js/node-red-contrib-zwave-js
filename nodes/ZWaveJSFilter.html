@@ -1,4 +1,29 @@
+<script type="text/template" id="ZWJS_TPL_Filter">
+	<div style="padding:5px">
+		Name : <input type="text" value="Some Filter" /><br />
+		Command Class <select></select><br />
+		Property <select></select>
+	</div>
+</script>
+
 <script type="text/javascript">
+	const FilterTemplate = Handlebars.compile($('#ZWJS_TPL_Filter').html());
+	let ZWJSIndexMap = undefined;
+	function ZWJSGenerateFilterUUID() {
+		var d = new Date().getTime();
+		var d2 = (typeof performance !== 'undefined' && performance.now && performance.now() * 1000) || 0;
+		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+			var r = Math.random() * 16;
+			if (d > 0) {
+				r = (d + r) % 16 | 0;
+				d = Math.floor(d / 16);
+			} else {
+				r = (d2 + r) % 16 | 0;
+				d2 = Math.floor(d2 / 16);
+			}
+			return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+		});
+	}
 	const ZWJSFilterNodeSettings = {
 		category: 'ZWave JS',
 		color: 'rgb(46,145,205)',
@@ -7,6 +32,8 @@
 				value: 'ZWave Event Filter',
 				required: true
 			},
+			filters: { value: [] },
+			outputs: { value: 0 }
 		},
 		inputs: 1,
 		outputs: 1,
@@ -14,10 +41,45 @@
 		label: function () {
 			return this.name;
 		},
-		paletteLabel: 'Event Filter'
+		paletteLabel: 'Event Filter',
+		oneditprepare: SortUI
 	};
 
 	RED.nodes.registerType('zwavejs-filter', ZWJSFilterNodeSettings);
+
+	function SortUI() {
+		ZWJSIndexMap = {};
+		$('#filtersets').editableList({
+			header: $('<div>').append('<div>Filter Sets - order defines outputs</div>'),
+			sortable: true,
+			removable: true,
+			addButton: 'Add Filter Set',
+			addItem: AddItem
+			//sortItems: SortItems,
+			//removeItem: RemoveItem
+		});
+
+		this.filters.sort(compare).forEach((Item) => {
+			$('#filtersets').editableList('addItem', Item);
+		});
+	}
+
+	function AddItem(container, index, data) {
+		if (!data.id) {
+			data.index = index;
+			data.name = 'Filter Name';
+			data.valueIds = [];
+			data.events = ['VALUE_UPDATED'];
+			data.strict = false;
+			data.id = ZWJSGenerateFilterUUID();
+		}
+
+		data.originalIndex = index;
+		ZWJSIndexMap[data.originalIndex] = index;
+		$(container).data('data', data);
+		$(container).css({ minWidth: '400px' });
+		$(container).append(FilterTemplate(data));
+	}
 </script>
 
 <!-- prettier-ignore -->
@@ -27,6 +89,12 @@
 	<div class="form-row">
 	    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
 	    <input type="text" id="node-input-name">
+	</div>
+
+	<h3>Filters</h3>
+	<hr />
+	<div>
+	      <ol id="filtersets" style="min-height:350px;min-width:400px"> </ol>
 	</div>
 </script>
 

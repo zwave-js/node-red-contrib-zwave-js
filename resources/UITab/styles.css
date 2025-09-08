@@ -23,6 +23,7 @@
 	line-height: 30px;
 }
 
+.zwjs-asso-ep,
 #zwjs-endpoint-list div {
 	background-color: var(--zwave-js-main-color);
 	padding: 2px;
@@ -33,6 +34,11 @@
 	font-size: 10px;
 	margin-right: 3px;
 	cursor: pointer;
+}
+
+.zwjs-asso-ep {
+	font-size: 12px;
+	min-width: 30px;
 }
 
 #zwjs-node-status,
