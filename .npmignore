@@ -2,8 +2,10 @@
 .vscode
 node_modules
 .github
-package-lock.json
-.eslintrc.json
-.prettierrc.json
-GFXSources
+.eslintrc.js
+.prettierrc.js
 GHImages
+resources/HB
+resources/QRS
+resources/SVGZ
+resources/Mermaid

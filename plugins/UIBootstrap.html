@@ -1,0 +1,789 @@
+<!--Core-->
+<link rel="stylesheet" href="resources/node-red-contrib-zwave-js/UITab/styles.css" />
+<script type="text/javascript" src="resources/node-red-contrib-zwave-js/UITab/SideBar.js"></script>
+<script type="text/javascript" src="resources/node-red-contrib-zwave-js/QRS/qr-scanner.umd.min.js"></script>
+<script type="text/javascript" src="resources/node-red-contrib-zwave-js/HB/dist/handlebars.min.js"></script>
+<script type="text/javascript" src="resources/node-red-contrib-zwave-js/SVGZ/dist/svg-pan-zoom.min.js"></script>
+
+<script type="module">
+	import ZWJSMermaid from '/resources/node-red-contrib-zwave-js/Mermaid/dist/mermaid.esm.min.mjs';
+	window.ZWJSMermaid = ZWJSMermaid;
+</script>
+
+<script>
+	ZWaveJS.init();
+</script>
+
+<!-- Side Panel Template-->
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_SidePanel">
+	<!--Network Selector-->
+	<div class="red-ui-sidebar-header" style="text-align: center; height: 20px">
+		<i class="fa fa-cog" aria-hidden="true"></i>
+		Runtime :
+		<select id="zwjs-network" onchange="ZWaveJS.NetworkSelected()" style="height: 25px; vertical-align: baseline">
+			<option value="NONE">Select Network</option>			      
+		</select>
+	</div>
+
+	<!--Controller Info-->
+	<div class="red-ui-sidebar-header" style="text-align: left; padding: 3px; padding-left: 20px;">
+		<table>
+			<tr>
+				<td rowspan="3"><i class="fa fa-rss zwjs-node-icon"></i></td>
+			</tr>
+			<tr>
+				<td style="padding-left: 10px">
+					<span id="zwjs-controller-info">No Network Selected</span>
+					<br />
+					<span id="zwjs-controller-status"></span>
+				</td>
+			</tr>
+		</table>
+	</div>
+
+	<!--Controller Menu-->
+	<div class="red-ui-sidebar-header zwjs-sb-menu-header">
+		<a class="red-ui-tab-link-button" onclick="ZWaveJS.ShowNetworkManagement()"><i class="fa fa-cogs"></i></a>
+		<a class="red-ui-tab-link-button" onclick="ZWaveJS.RefreshNodes('Refresh')"><i class="fa fa-refresh"></i></a>
+		<a class="red-ui-tab-link-button" onclick="ZWaveJS.RebuildRoutes(undefined, true)"><i class="fa fa-medkit"></i></a>
+		 | 
+		<a class="red-ui-tab-link-button" onclick="ZWaveJS.NodeCollapseToggle(1, this)"><i class="fa fa-indent zwjs-button-group" selected></i></a>
+		<a class="red-ui-tab-link-button" onclick="ZWaveJS.NodeCollapseToggle(2, this)"><i class="fa fa-bars zwjs-button-group "></i></a>
+		<a class="red-ui-tab-link-button" onclick="ZWaveJS.NodeCollapseToggle(3, this)"><i class="fa fa-sort-numeric-asc zwjs-button-group"></i></a>
+		
+	</div>
+
+	<!--Stack-->
+	<div class="red-ui-sidebar-info-stack" id="zwjs-panel-stack" style="width: 100%; height: 100%">
+		<!-- Node List-->
+		<div>
+			<div id="zwjs-node-list" style="width: 100%; height: 100%"></div>
+		</div>
+		<!--Node Info-->
+		<div style="overflow:hidden">
+			<div class="red-ui-sidebar-header" style="text-align: left; padding: 3px; padding-left: 10px;">
+				<table style="margin-left: 10px;">
+					<tr>
+						<td rowspan="3">
+							<span class="zwjs-node-id" id="zwjs-node-info-id" nodeinfo>--</span>
+						</td>
+					</tr>
+					<tr>
+						<td style="padding-left: 10px">
+							<span style="font-size: 12px; font-weight: bold; color: gray" id="zwjs-node-info">No Node Selected</span>
+							<br />
+							<span id="zwjs-node-status"></span>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<div class="red-ui-sidebar-header zwjs-sb-menu-header">
+				<a class="red-ui-tab-link-button" onclick="ZWaveJS.ShowNodeManagement()"><i class="fa fa-cogs"></i></a>
+				<a class="red-ui-tab-link-button" onclick="ZWaveJS.InterviewCurrentNode()"><i class="fa fa-handshake-o"></i></a>
+				<a class="red-ui-tab-link-button"><i class="fa fa-medkit"></i></a>
+				<a class="red-ui-tab-link-button"><i class="fa fa-trash-o"></i></a>
+			</div>
+			<div class="red-ui-sidebar-header zwjs-sb-menu-header" id="zwjs-endpoint-list">
+				
+			</div>
+			<div id="zwjs-cc-list" style="width: 100%; height: 100%">
+
+			</div>
+		</div>
+	</div>
+</script>
+
+<!-- Tray Panel Template-->
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Node-Value">
+	<div class="zwjs-tray-header">
+		<table>
+			<tr>
+				<td rowspan="3">
+					<span class="zwjs-node-id" nodeinfo>{{nodeId}}</span>
+				</td>
+			</tr>
+			<tr>
+				<td style="padding-left: 10px">
+					<span class="zwjs-cc-id" style="background-color:darkgray;color:white">{{ccId}}</span> - {{ccName}}
+					<br />
+					<span class="zwjs-cc-id" style="background-color:darkgray;color:white">{{property}}</span> - {{valueLabel}}
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div class="zwjs-tray-menu">
+		<div parent>Value</div>
+		<div child default onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Value-Current',this, '{{encode editInfo}}')">Update Value</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Value-Example',this,'{{encode examples}}')">Example Usage</div>
+	</div>
+	<div id="zwjs-advanced-content"></div>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Node-Value-Current">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-title">{{valueLabel}}:</div>
+		{{#if writeable}}
+			{{> ValueEditors}}
+		{{else}}
+		    <div class="zwjs-hint">Sorry: This value is ReadOnly</div>
+		{{/if}}
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Node-Value-Example">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-title">{{valueLabel}}:</div>
+		<div class="zwjs-hint">These <strong>msg</strong> examples, use the <strong>ValueAPI</strong>, which is the recommended API. The <strong>payload</strong> (or <strong>value</strong>) property is only required when setting values. - The values used here, are an example (but use the current value as it is now)</div>
+		<div class="zwjs-hint">Note: If there are Set Value Options available - these are optional and not required.</div>
+		<div class="zwjs-title">With CMD Factory:</div>
+		<div>
+			<pre>{{{pretty cmd}}}</pre>
+		</div>
+		<div class="zwjs-title">Without CMD Factory:</div>
+		<div>
+			<pre>{{{pretty nocmd}}}</pre>
+		</div>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Node">
+	<div class="zwjs-tray-header">
+		<table>
+			<tr>
+				<td rowspan="3">
+					<span class="zwjs-node-id" nodeinfo>{{NodeID}}</span>
+				</td>
+			</tr>
+			<tr>
+				<td style="padding-left: 10px">
+					<span style="font-size: 12px; font-weight: bold; color: gray">{{NodeInfo}}</span>
+					<br />
+					<span id="zwjs-node-status-tray">{{Status}}</span>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div class="zwjs-tray-menu">
+		<div parent>Node</div>
+		<div child default onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Info',this, 'NodeInfo')">Information</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Stats',this,'NodeStats')">Statistics</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Associations',this,'NodeAssociationGroups')">Associations</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-HealthCheck',this)">Health Check</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Stats',this)">Priority Routing</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Firmware',this)">Firmware Update</div>
+
+	</div>
+	<div id="zwjs-advanced-content"></div>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Controller">
+	<div class="zwjs-tray-header">
+		<table>
+			<tr>
+				<td rowspan="3"><i class="fa fa-rss zwjs-node-icon"></i></td>
+			</tr>
+			<tr>
+				<td style="padding-left: 10px">
+					<span id="zwjs-controller-info-tray">{{Network}}</span>
+					<br />
+					<span id="zwjs-controller-status-tray">{{Status}}</span>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div class="zwjs-tray-menu">
+		<div parent>Controller</div>
+		<div child default onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Info',this, 'ControllerInfo')">Information</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Stats',this, 'ControllerStats')">Statistics</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Map',this, 'RenderMap')">Topology Map</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Settings',this,'ControllerSettings')">Settings</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Rebuild',this)">Rebuild Routes</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Firmware',this)">Firmware Update</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Slave',this)">Secondary Controller Mode</div>
+
+		<div parent>Nodes</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_NodeAddMode',this,'SetInclusionOptions')">Add</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_NodeRemoveMode',this, 'PrepSSList')">Remove</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_FailedNodes',this, 'PrepFailed')">Failed Nodes</div>
+
+	</div>
+	<div id="zwjs-advanced-content"></div>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Controller-Rebuild">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">Note: Rebuilding routes can take time, especially those on networks that contain a number of battery-powered devices.</div>
+		<table class="zwjs-table" id="zwjs-routes-progress" horizontal>
+			<tr style="text-align:center">
+				<td>Pending</td><td>Done</td><td>Failed</td><td>Skipped</td>
+			</tr>
+		</table>
+		<div>
+			Include Battery Operated Device: <input type="checkbox" id="zwjs-routes-battery" checked> <button onclick="ZWaveJS.RebuildRoutes(this)">Begin Rebuild</button>
+		</div>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Controller-Map">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">The map below is based on statistics for each ZWave Node, specifically the <strong>Last Working Route(s)</strong> to the Node, from the Controller</div>
+		<div class="zwjs-mermaid" id="zwjs-mermaid">
+			flowchart TD
+				{{map}}
+
+		</div>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Controller-Slave-JoinState">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">{{message}}</div>
+		<div>
+			<button onclick="ZWaveJS.RestartDriver()">Restart Driver</button>
+		</div>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_FailedNodes">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">Below is a list of Failed Nodes, from here you can attempt to ping them (which will remove the Failed flag  - if they respond), else you can remove them.</div>
+		<table class="zwjs-table" id="zwjs-failed-nodes" horizontal>
+				<tr>
+					<td style="text-align:center">Node ID</td>
+					<td style="text-align:center">Name</td>
+					<td style="text-align:center">Location</td>
+					<td style="text-align:center">Action</td>
+				</tr>
+				{{#each nodes}}
+					<tr>
+						<td style="text-align:center"><span class="zwjs-node-id">{{nodeId}}</span></td>
+						<td style="text-align:center">{{nodeName}}</td>
+						<td style="text-align:center">{{nodeLocation}}</td>
+						
+						<td style="text-align:center">
+							<i class="fa fa-trash" aria-hidden="true" style="font-size: 18px;color: red; cursor: pointer;" onclick="ZWaveJS.RemoveFailedNode({{nodeId}},this)"></i>&nbsp;|&nbsp; 
+							<i class="fa fa-volume-control-phone" aria-hidden="true" style="font-size: 18px; cursor: pointer;" onclick="ZWaveJS.PingNode({{nodeId}})"></i>
+						</td>
+					</tr>
+				{{/each}}
+		</table>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Controller-Slave">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">
+			<h3>EXPERIMENTAL</h3>
+			<strong>Note!</strong> Before using this Runtime as a Secondary Controller, the transceiver it is managing, needs to be in a <strong>Reset</strong> state (this can be done in <strong>Settings</strong> to the left.)
+			<br />
+			<br />
+			<strong>Also Note!</strong> Before a node can be controlled, it must be manually interviewed. The <strong>LifeLine</strong> Assocoation may need to be updated also, if you wish for this runtime to handle updates (this depends on the Max LifeLines, a device may support)
+			<br />
+			<br />
+			<strong>Lastly!</strong> Set your <strong>Primary</strong> Controller to <strong>Inclusion/Exclusion</strong> Mode, before joining or leaving a network.
+		</div>
+		<div>
+			<button onclick="ZWaveJS.JoinAsSlave(this)">Join Network</button><button onclick="ZWaveJS.LeaveAsSlave(this)">Leave Network</button>
+		</div>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Controller-Slave-DSK">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">Your <strong>Primary</strong> Controller is asking for the <strong>DSK</strong> (this is the 5 digits below) </div>
+		<div class="zwjs-dsk-show">{{slaveJoinDSK}}<div>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Controller-Info">
+	<div class="zwjs-title">Harware Information</div>
+	<table class="zwjs-table" vertical>
+		<tr>
+			<td>Configuration</td><td>{{configuration}}</td>
+		</tr>
+		<tr>
+			<td>Home ID</td><td>{{homeId}}</td>
+		</tr>
+		<tr>
+			<td>Serial Port</td><td>{{serialPort}}</td>
+		</tr>
+		<tr>
+			<td>Manufacture</td><td>{{deviceConfig.manufacturer}}</td>
+		</tr>
+		<tr>
+			<td>Model</td><td>{{deviceConfig.label}}</td>
+		</tr>
+		<tr>
+			<td>Description</td><td>{{deviceConfig.description}}</td>
+		</tr>
+		<tr>
+			<td>Firmware</td><td>{{firmwareVersion}}</td>
+		</tr>
+		<tr>
+			<td>SDK Version</td><td>{{sdkVersion}}</td>
+		</tr>
+		<tr>
+			<td>Supported Data Rates</td><td>{{supportedDataRates}}</td>
+		</tr>
+		<tr>
+			<td>Supports Long Range</td><td>{{supportsLongRange}}</td>
+		</tr>
+		<tr>
+			<td>Inclusion Status</td><td>{{inclusionState}}</td>
+		</tr>
+	</table>
+	<div class="zwjs-title">Software Information</div>
+	<table class="zwjs-table" vertical>
+		<tr>
+			<td>Module Version</td><td>{{moudleVersion}}</td>
+		</tr>
+		<tr>
+			<td>Driver Version</td><td>{{driverVersion}}</td>
+		</tr>
+		<tr>
+			<td>DB Version</td><td>{{configVersion}}</td>
+		</tr>
+		
+	</table>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Controller-Settings">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint"><strong>WARNING!</strong> Certain settings, such as Power Levels, must comply with the legal limits in your region. Refer to your local laws for guidance.</div>
+		<div class="zwjs-title">Reset Controller:</div>
+		<div>
+			<button onclick="ZWaveJS.ResetController(this)" style="background-color:red">Reset</button>
+		</div>
+		<div class="zwjs-title">RF Region:</div>
+		<div>
+			<select id="zwjs-controller-setting-region" {{{RDisabled}}}">
+				{{#select Region}}
+				    <option>NOT SUPPORTED</option>
+					<option value="0x00">Europe</option>
+					<option value="0x01">USA</option>
+					<option value="0x02">Australia/New Zealand</option>
+					<option value="0x03">Hong Kong</option>
+					<option value="0x05">India</option>
+					<option value="0x06">Israel</option>
+					<option value="0x07">Russia</option>
+					<option value="0x08">China</option>
+					<option value="0x09">USA (Long Range)</option>
+					<option value="0x0b">Europe (Long Range)</option>
+					<option value="0x20">Japan</option>
+					<option value="0x21">Korea</option>
+					<option value="0xfe">Unknown</option>
+					<option value="0xff">Default (EU)</option>
+				{{/select}}
+			</select>
+			<button onclick="ZWaveJS.SetRegion(this)">Set</button>
+		</div>
+		<div class="zwjs-title">Power Level (Classic) dbm:</div>
+		<div>
+			<input type="number" min="-10" Max="20" id="zwjs-controller-setting-power-classic" value="{{Power}}" />
+			<button onclick="ZWaveJS.SetClassicPowerLevel(this)">Set</button>
+		</div>
+		<div class="zwjs-title">Max Power Level (Long Range) dbm:</div>
+		<div>
+			<input type="number" id="zwjs-controller-setting-power-lr" value="{{LRPower}}"  />
+			
+			<button onclick="ZWaveJS.SetLWPowerLevel(this)">Set</button>
+		</div>
+		<div class="zwjs-title">Backup/Restore NVM</div>
+		<div>
+			<button onclick="ZWaveJS.BackupController(this)">Backup</button>
+			<button onclick="ZWaveJS.RestoreController(this)">Restore</button>
+		</div>
+		
+	</fieldset>
+	<div class="zwjs-progress-container" id="zwjs-prog-contain-nvm">
+  			<div class="zwjs-progress-bar" id="zwjs-prog-bar-nvm"></div>
+	</div>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Controller-Stats">
+	<div class="zwjs-title">Statistics</div>
+	<table class="zwjs-table" vertical>
+		{{#each statistics}}
+			<tr>
+				<td>{{@key}}</td><td>{{this}}</td>
+			</tr>
+		{{/each}}
+	</table>
+	<div class="zwjs-title">Background RSSI</div>
+	<table class="zwjs-table" vertical>
+		{{#each backgroundRSSI}}
+			<tr>
+				<td>{{@key}}</td><td>{{this}}</td>
+			</tr>
+		{{/each}}
+	</table>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Controller-Firmware">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">
+			This software is provided as-is.<br /><br />
+			The developer(s) of <strong>node-red-contrib-zwave-js</strong> or any libraries it uses,
+			are not responsible for any damage that may result from your attempt to upgrade the firmware.<br /><br />
+			You are performing this upgrade, soley at your own risk.
+		</div>
+		<div>
+			<button onclick="ZWaveJS.UpdateCFirmware(this)">Update Firmware</button>
+		</div>
+	</fieldset>
+	<div class="zwjs-progress-container" id="zwjs-prog-contain-cfirmware">
+  			<div class="zwjs-progress-bar" id="zwjs-prog-bar-cfirmware"></div>
+	</div>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Firmware-Done">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">{{Message}}</div>
+	
+	</fieldset>
+	
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Node-Info">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-title">Hardware Information:</div>
+		<table class="zwjs-table" vertical>
+			<tr>
+				<td>Node ID</td><td>{{nodeId}}</td>
+			</tr>
+			<tr>
+				<td>Manufacture</td><td>{{deviceConfig.manufacturer}}</td>
+			</tr>
+			<tr>
+				<td>Model</td><td>{{deviceConfig.label}}</td>
+			</tr>
+			<tr>
+				<td>Description</td><td>{{deviceConfig.description}}</td>
+			</tr>
+			<tr>
+				<td>Firmware</td><td>{{firmwareVersion}}</td>
+			</tr>
+			<tr>
+				<td>SDK Version</td><td>{{sdkVersion}}</td>
+			</tr>
+			<tr>
+				<td>Status</td><td>{{status}}</td>
+			</tr>
+		</table>
+	</fieldset>
+
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-title">Update the Name & Location:</div>
+		<div class="zwjs-hint">If the device supports the 'Node Name & Location' CC - it will also get updated, meaning the values here will persist across networks.</div>
+		<table class="zwjs-table" vertical>
+				<tr>
+					<td>Name</td><td><input type="text" id="zwjs-node-edit-name" value="{{nodeName}}"></td>
+				</tr>
+				<tr>
+					<td>Location</td><td><input type="text" id="zwjs-node-edit-location" value="{{nodeLocation}}"></td>
+				</tr>
+		</table>
+		<div>
+			<button onclick="ZWaveJS.SetNameLocation(this)">Save Changes</button>
+		</div>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Node-Associations">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">Choose the Endpoint, and the supported association group to see and edit the mappings. You can also completely wipe all associations on the device, to start over. </div>
+
+		<select id="zwjs-asso-endpoints" style="width:140px" onchange="ZWaveJS.processAssociationEPSelect()">
+			<option>Select Endpoint</option>
+			{{#each .}}
+			<option value="{{@key}}">Endpoint {{@key}}</option>
+			{{/each}}
+		</select>
+
+		<select id="zwjs-asso-groups" style="width:200px" onchange="ZWaveJS.processAssociationGPSelect()">
+			<option>Select Association Group</option>
+		</select>
+
+		<table class="zwjs-table" id="zwjs-asso-mappings" horizontal>
+				<tr>
+					<td style="text-align:center">Target Node</td>
+					<td style="text-align:center">Target Endpoint</td>
+					<td style="text-align:center">Delete</td>
+				</tr>
+		</table>
+		<div>
+			<button onclick="ZWaveJS.PreppNewAssociation()">Add Association</button> <button onclick="ZWaveJS.CommitAssociations(this)">Commit Changes</button><button style="background-color:red" onclick="ZWaveJS.ResetAllAssociations(this)">Wipe All Associations</button>
+		</div>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Node-HealthCheck">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">This should <strong>NOT</strong> be done while there is a lot of traffic on the network because it will negatively impact the test results</div>
+			<table class="zwjs-table" id="zwjs-node-health-check" horizontal>
+				<tr>
+					<td style="text-align:center">Rating</td>
+					<td style="text-align:center">Failed Pings (Node)</td>
+					<td style="text-align:center">Failed Pings (Contr)</td>
+					<td style="text-align:center">Route Changes</td>
+					<td style="text-align:center">Latency</td>
+					<td style="text-align:center">Neighbors</td>
+					<td style="text-align:center">Min Power Level</td>
+					<td style="text-align:center">SNR Margin</td>
+				</tr>
+		</table>
+		<div>
+			<button onclick="ZWaveJS.CheckNodeHealth(this)">Begin (5 Rounds)</button>
+		</div>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Node-Firmware">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">
+			This software is provided as-is.<br /><br />
+			The developer(s) of <strong>node-red-contrib-zwave-js</strong> or any libraries it uses,
+			are not responsible for any damage that may result from your attempt to upgrade the firmware.<br /><br />
+			You are performing this upgrade, soley at your own risk.
+		</div>
+		<div>
+			<button onclick="ZWaveJS.UpdateNFirmware(this)">Update Firmware</button>
+		</div>
+	</fieldset>
+	<div class="zwjs-progress-container" id="zwjs-prog-contain-nfirmware">
+  			<div class="zwjs-progress-bar" id="zwjs-prog-bar-nfirmware"></div>
+	</div>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Node-Stats">
+	<div class="zwjs-title">Statistics:</div>
+	<table class="zwjs-table" vertical>
+		{{#each .}}
+			<tr>
+				<td>{{@key}}</td><td>{{this}}</td>
+			</tr>
+		{{/each}}
+	</table>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_NodeAddMode">
+	<fieldset class="zwjs-fieldset">
+		<div class="zwjs-title">Please select the Node Inclusion strategy:</div>
+
+	    <div class="zwjs-hint">If greyed out, check encryption settings (i.e missing keys)</div>
+	  
+		<div>
+		  <input type="radio" id="0" name="ZWJS_IS" value="0" checked />
+		  <label for="0"><span class="zwjs-empises" positive>Recommended</span>S2 When Supported, S0 if absolutely necessary, esle no encryption.</label>
+		</div>
+	  
+		<div>
+		  <input type="radio" id="4" name="ZWJS_IS" value="4" />
+		  <label for="4">Require S2</label>
+		</div>
+		<div>
+			<input type="radio" id="SS" name="ZWJS_IS" value="SS" />
+			<label for="SS">Smart Start QR Code</label>
+		</div>
+		<div>
+		  <input type="radio" id="3" name="ZWJS_IS" value="3" />
+		  <label for="3"><span class="zwjs-empises" negative>Not Recommended</span>Require S0</label>
+		</div>
+		<div>
+			<input type="radio" id="2" name="ZWJS_IS" value="2" />
+			<label for="2">Insecure</label>
+		</div>
+		<div>
+			<button onclick="ZWaveJS.StartInclusion()">Start</button>
+		</div>
+	  </fieldset>
+	
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_NodeRemoveMode">
+	<fieldset class="zwjs-fieldset">
+		<div class="zwjs-title">Manage Node Removal:</div>
+
+		<div class="zwjs-hint">
+			Click <strong>Start</strong> to remove a Node via a Node Information Frame (NIF),<br />
+			or disable a Smart Start Entry listed below.
+			<br /><br />
+			<strong>Note:</strong> Disabling/Removing a Smart Start entry does not remove the associated node.
+		</div>
+	  
+		
+		
+		<div>
+			<button onclick="ZWaveJS.StartExclusion()">Start Removal</button>
+		</div>
+	</fieldset>
+	<table class="zwjs-table" style="margin-top:10px" horizontal>
+	  <tr>
+		  <td>Manufacture</td>
+		  <td>Label</td>
+		  <td style="text-align:center">DSK</td>
+		  <td style="text-align:center">Associated Node ID</td>
+		  <td style="text-align:center">Enabled</td>
+		  <td style="text-align:center">Delete</td>
+	  </tr>
+	  {{#each entries}}
+		<tr style="font-size:12px">
+			<td>{{manufacturer}}</td>
+			<td>{{label}}</td>
+			<td style="text-align:center">{{shortDSK}}</td>
+			<td style="text-align:center"><span class="zwjs-node-id">{{nodeId}}</span></td>
+			<td style="text-align:center"><input type="checkbox" onchange="ZWaveJS.SetPEActive(this,'{{encode .}}')" {{checked}}/></td>
+			<td style="text-align:center"><i class="fa fa-trash" aria-hidden="true" style="font-size: 18px;color: red;" onclick="ZWaveJS.DeletePE(this,'{{encode .}}')""></i></td>
+		</tr>
+	  {{/each}}
+   </table>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_NIFWait">
+	<fieldset class="zwjs-fieldset">
+		<div class="zwjs-title">Waiting for the Node Information Frame (NIF):</div>
+	    <div class="zwjs-hint">Place your Node into <strong>{{mode}}</strong> mode</div>
+	  </fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_SecurityGrant">
+	<fieldset class="zwjs-fieldset">
+		<div class="zwjs-title">Choose the security classes below you wish to Grant:</div>
+	    <div class="zwjs-hint">The below security classes are reqeusted by the Node</div>
+		{{#each classes}}
+			<div>
+				<input type="checkbox" name="ZWJS_SCLASS" value="{{classId}}" checked />
+				<label for="0">{{className}}</label>
+			</div>
+	  	{{/each}}
+		<div>
+			<button onclick="ZWaveJS.GrantClasses(this)">Confirm</button>
+		</div>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_DSK">
+	<fieldset class="zwjs-fieldset">
+		<div class="zwjs-title">Authenticate the Node:</div>
+	    <div class="zwjs-hint">Validate the Node by providng the DSK (Device Specific Key)</div>
+		<div>
+			<input type="text" id="zwjs-dsk" style="width: 60px;text-align: center;height: 30px;vertical-align: baseline;"> {{dsk}}
+		</div>
+		<div>
+			<button onclick="ZWaveJS.SubmitDSK(this)">Confirm</button>
+		</div>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_NAdded">
+	<fieldset class="zwjs-fieldset">
+		<div class="zwjs-title">Node Added:</div>
+	    <div>
+			<i class="fa fa-check" aria-hidden="true" style="font-size: 20px;color: green;vertical-align: middle;"></i> Node {{nodeId}} was added to the network
+		</div>
+		{{#if lowSecurity}}
+		    <div>
+				<i class="fa fa-exclamation-triangle" aria-hidden="true" style="font-size: 20px;color: orange;vertical-align: middle;"></i> Warning, it was added with a lesser security class than what was requested.
+			</div>
+		{{else}}
+		   <div>
+			    <i class="fa fa-check" aria-hidden="true" style="font-size: 20px;color: green;vertical-align: middle;"></i> Was added with the requested security class
+		   </div>
+		{{/if}}
+        <br />
+		<p>The Node will now be interviewed</p>
+		
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_NRemoved">
+	<fieldset class="zwjs-fieldset">
+		<div class="zwjs-title">Node Removed:</div>
+		<i class="fa fa-trash" aria-hidden="true" style="font-size: 20px;color: green;vertical-align: middle;"></i> Node {{nodeId}} was removed from the network
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_QRRead">
+	<fieldset class="zwjs-fieldset">
+		<div class="zwjs-title">Scan A Smart Start QR Code:</div>
+	    <div class="zwjs-hint">Note: Your browser may only support webcam access, if Node RED is served under <strong>HTTPS</strong></div>
+        <video id="zwjs-camera-view"></video>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_PrePro">
+	<fieldset class="zwjs-fieldset">
+		<div class="zwjs-title">Smart Start Device:</div>
+	    <div class="zwjs-hint">Review the device provisioning entry below and Confirm.</div>
+		<table class="zwjs-table" id="zwjs-qrdata" data-entry="{{QRProvisioningInformation}}" vertical>
+			<tr>
+				<td>Manufacturer</td><td>{{DeviceConfig.manufacturer}}</td>
+			</tr>
+			<tr>
+				<td>Model</td><td>{{DeviceConfig.label}}</td>
+			</tr>
+			<tr>
+				<td>Description</td><td>{{DeviceConfig.description}}</td>
+			</tr>
+			<tr>
+				<td>DSK</td><td>{{DSK}}</td>
+			</tr>
+			<tr>
+				<td>Security Classes</td>
+				<td>
+					{{#each classes}}
+					<div>
+						<input type="checkbox" name="ZWJS_SCLASS" value="{{classId}}" checked />
+						<label for="0">{{className}}</label>
+					</div>
+					{{/each}}
+
+				</td>
+			</tr>
+		</table>
+		<div>
+			<button onclick="ZWaveJS.SubmitProvisioningEntry(this)">Confirm</button>
+		</div>
+	</fieldset>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_SSDone">
+	<fieldset class="zwjs-fieldset">
+		<div class="zwjs-title">Entry sucessfully Added:</div>
+	    <i class="fa fa-check" aria-hidden="true" style="font-size: 20px;color: green;vertical-align: middle;"></i> The Smart Start device has been successfully added. When it is next powered on, and requests inclusion, it will be automatically added.
+	</fieldset>
+</script>

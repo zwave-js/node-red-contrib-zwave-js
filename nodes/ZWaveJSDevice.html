@@ -1,0 +1,171 @@
+<script type="text/javascript">
+	const ZWJSDeviceNodeSettings = {
+		category: 'ZWave JS',
+		color: 'rgb(46,145,205)',
+		defaults: {
+			name: {
+				value: 'ZWave Device',
+				required: true
+			},
+			runtimeId: {
+				value: '',
+				required: true,
+				type: 'zwavejs-runtime'
+			},
+			nodeMode: {
+				value: 'All',
+				required: true
+			},
+			multiMode: {
+				value: 'Multicast',
+				required: true
+			},
+			fanRate: {
+				value: 250,
+				required: true
+			},
+			filteredNodeId: {
+				value: '',
+				required: false
+			},
+			dataMode: {
+				value: 'SR',
+				required: true
+			},
+			outputs: { value: 1 },
+			inputs: { value: 1 }
+		},
+		inputs: 1,
+		outputs: 1,
+		icon: 'Device.svg',
+		label: function () {
+			return this.name;
+		},
+		paletteLabel: 'Device',
+		oneditprepare: Prep,
+		oneditsave: Save
+	};
+
+	RED.nodes.registerType('zwavejs-device', ZWJSDeviceNodeSettings);
+
+	function Save() {
+		switch ($('#node-input-dataMode').val()) {
+			case 'SR':
+				this.inputs = 1;
+				this.outputs = 1;
+				break;
+
+			case 'R':
+				this.inputs = 0;
+				this.outputs = 1;
+				break;
+
+			case 'S':
+				this.inputs = 1;
+				this.outputs = 0;
+				break;
+		}
+	}
+
+	function Prep() {
+		const self = this;
+		$('#node-input-nodeMode').on('change', function () {
+			if ($(this).val() === 'All') {
+				$('#node-input-multiMode-div').fadeOut(150);
+				$('#node-input-filteredNodeId-div').fadeOut(150);
+				$('#node-input-fanRate-div').fadeOut(150);
+			} else {
+				const ID = self.runtimeId || $('#node-input-runtimeId').val()
+				$.getJSON(`zwave-js/ui/${ID}/CONTROLLER/getNodes`, (data) => {
+					if (data.callSuccess) {
+						const Nodes = data.response
+							.filter((N) => !N.isControllerNode)
+							.map((N) => ({
+								value: N.nodeId,
+								label: `${N.nodeLocation || 'No Location'} | ${N.nodeId} | ${N.nodeName || 'No Name'}`
+							}));
+
+						$('#node-input-filteredNodeId').typedInput({
+							type: 'nodes',
+							types: [
+								{
+									value: 'nodes',
+									multiple: true,
+									options: Nodes
+								}
+							]
+						});
+					} else {
+						alert(data.response);
+					}
+				});
+
+				$('#node-input-multiMode-div').fadeIn(150);
+				$('#node-input-filteredNodeId-div').fadeIn(150);
+				$('#node-input-multiMode').trigger('change')
+			}
+		});
+
+		$('#node-input-multiMode').on('change', function () {
+			if ($(this).val() === 'Multicast') {
+				$('#node-input-fanRate-div').fadeOut(150);
+			} else {
+				$('#node-input-fanRate-div').fadeIn(150);
+			}
+		});
+	}
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/x-red" data-template-name="zwavejs-device">
+	<h3>Basic</h3>
+	<hr />
+	<div class="form-row">
+	    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+	    <input type="text" id="node-input-name">
+	</div>
+	<div class="form-row">
+	    <label for="node-input-runtimeId"><i class="fa fa-cog"></i> Runtime</label>
+	    <input type="text" id="node-input-runtimeId">
+	</div>
+	<h3>Operating Mode</h3>
+	<hr />
+	<div class="form-row">
+	    <label for="node-input-nodeMode"><i class="fa fa-th-large"></i> Node Mode</label>
+	    <select id="node-input-nodeMode">
+			<option value="All">All Nodes</option>
+			<option value="Multiple">Selected Nodes</option>
+		</select>
+	</div>
+	<div class="form-row" id="node-input-multiMode-div">
+	    <label for="node-input-multiMode"><i class="fa fa-bullhorn"></i> Broadcast</label>
+	    <select id="node-input-multiMode">
+			<option value="Fan">Fan-Out</option>
+			<option value="Multicast">Multicast</option>
+		</select>
+	</div>
+	<div class="form-row" id="node-input-fanRate-div">
+	    <label for="node-input-fanRate"><i class="fa fa-clock-o"></i> Fan Rate</label>
+	    <input type="number" id="node-input-fanRate">
+	</div>
+	<div class="form-row" id="node-input-filteredNodeId-div">
+		<label for="node-input-filteredNodeId"><i class="fa fa-list-ol"></i> Nodes</label>
+		<input type="text" id="node-input-filteredNodeId">
+	</div>
+	<div class="form-row">
+	    <label for="node-input-dataMode"><i class="fa fa-exchange"></i> Data Mode</label>
+		<select id="node-input-dataMode">
+			<option value="SR">Send/Receive</option>
+			<option value="S">Send</option>
+			<option value="R">Receive</option>
+		</select>
+	</div>
+	<div class="form-tips" id="node-tip">
+		Note: Message broadcasting is only supported when <strong>Node Mode</strong> is set to <code>Selected Nodes</code>, you must provide a <code>nodeId</code> propery in your commands otherwise.
+	</div>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/markdown" data-help-name="zwavejs-device">
+<p>A ZWave JS device allowing control of one or many devices</p>
+</script>

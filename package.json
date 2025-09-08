@@ -1,24 +1,28 @@
 {
 	"name": "node-red-contrib-zwave-js",
-	"version": "9.1.3",
+	"version": "10.0.0",
 	"license": "MIT",
+	"type": "commonjs",
 	"description": "The most powerful, high performing and highly polished Z-Wave node for Node-RED based on Z-Wave JS. If you want a fully featured Z-Wave framework in your Node-RED instance, you have found it.",
 	"dependencies": {
-		"limiter": "^3.0.0",
-		"lodash": "^4.17.21",
-		"winston": "^3.17.0",
-		"winston-transport": "^4.9.0",
-		"zwave-js": "^14.3.8"
+		"mermaid": "^11.11.0",
+		"qr-scanner": "^1.4.2",
+		"zwave-js": "^15.12.0",
+		"svg-pan-zoom": "^3.6.2",
+		"handlebars": "^4.7.8",
+		"limiter": "^3.0.0"
 	},
 	"devDependencies": {
-		"eslint": "^9.19.0",
-		"prettier": "^3.4.2"
+		"eslint": "^9.35.0",
+		"prettier": "^3.6.2"
 	},
 	"scripts": {
-		"validate": "node-red-dev validate -o validation_result.json"
+		"postinstall": "node ./ensure-client-needs.js",
+		"lint-check": "./node_modules/.bin/eslint . --quiet",
+		"lint-check-all": "./node_modules/.bin/eslint ."
 	},
 	"engines": {
-		"node": ">=18.0.0"
+		"node": ">=20.0.0"
 	},
 	"keywords": [
 		"node-red",
@@ -31,12 +35,16 @@
 		"home"
 	],
 	"node-red": {
-		"version": ">=2.0.0",
+		"version": ">=3.0.0",
 		"nodes": {
-			"zwave-js": "zwave-js/zwave-js.js",
-			"zwave-device": "zwave-js/zwave-device.js",
-			"event-filter": "zwave-js/event-filter.js",
-			"cmd-factory": "zwave-js/cmd-factory.js"
+			"zwavejs-runtime": "nodes/ZWaveJSRuntime.js",
+			"zwavejs-controller": "nodes/ZWaveJSController.js",
+			"zwavejs-device": "nodes/ZWaveJSDevice.js",
+			"zwavejs-filter": "nodes/ZWaveJSFilter.js",
+			"zwavejs-factory": "nodes/ZWaveJSFactory.js"
+		},
+		"plugins": {
+			"ui-bootstrap": "plugins/UIBootstrap.js"
 		}
 	},
 	"repository": {
