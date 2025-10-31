@@ -5,11 +5,13 @@ module.exports = function (RED) {
 	const ZWaveJS = require('zwave-js');
 	const { UIServer, SetupGlobals } = require('./ui/server.js');
 	const {
-		createDefaultTransportFormat,
 		CommandClasses,
 		ZWaveErrorCodes,
 		getCCName
 	} = require('@zwave-js/core');
+	const {
+		createDefaultTransportFormat
+	} = require('@zwave-js/core/bindings/log/node');
 	const Winston = require('winston');
 	const { Pin2LogTransport } = require('./Pin2LogTransport');
 
@@ -1033,7 +1035,7 @@ module.exports = function (RED) {
 					NodeCheck(Params[0]);
 					ReturnNode.id = Params[0];
 					const Format = ZWaveJS.guessFirmwareFileFormat(Params[2], Params[3]);
-					const Firmware = ZWaveJS.extractFirmware(Params[3], Format);
+					const Firmware = await ZWaveJS.extractFirmware(Params[3], Format);
 					const Package = {
 						data: Firmware.data,
 						firmwareTarget: Params[1]

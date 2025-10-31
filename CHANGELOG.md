@@ -1,5 +1,14 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 10.0.0
+
+    **Breaking Changes**
+      - Min Node Version is now >=20
+
+    **Changes**  
+      - Bump ZWave JS from v14 to V15
+      - Bump various dependencies 
+
   - 9.1.3
 
     **Maintenance Release**

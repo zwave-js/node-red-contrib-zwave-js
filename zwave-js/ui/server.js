@@ -660,7 +660,7 @@ class UIServer {
 		);
 	}
 
-	_SmartStartCallback(Event, Code) {
+	async _SmartStartCallback(Event, Code) {
 		switch (Event) {
 			case 'Started':
 				this._RED.comms.publish(`/zwave-js/${this._NetworkIdentifier}/cmd`, {
@@ -670,7 +670,7 @@ class UIServer {
 				return true;
 
 			case 'Code':
-				const inclusionPackage = ZWaveJS.parseQRCodeString(Code);
+				const inclusionPackage = await ZWaveJS.parseQRCodeString(Code);
 				if (inclusionPackage.version === 1) {
 					this._CM
 						.lookupDevice(

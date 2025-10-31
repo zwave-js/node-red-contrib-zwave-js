@@ -73,9 +73,9 @@ function SendStarted(req, res) {
 	}
 }
 
-function ParseCode(req, res) {
+async function ParseCode(req, res) {
 	if (CheckStatus(res)) {
-		const Result = _Callback('Code', req.params.Code);
+		const Result = await _Callback('Code', req.params.Code);
 		res.status(200);
 		res.end(Result.toString());
 	}
