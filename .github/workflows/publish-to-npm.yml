@@ -10,11 +10,11 @@ jobs:
     if: github.actor == 'marcus-j-davies'
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
       - name: Setup Node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v6
         with:
-          node-version: 14
+          node-version: 22
           registry-url: https://registry.npmjs.org/
       - name: Publish package on NPM
         run: npm publish --access public
