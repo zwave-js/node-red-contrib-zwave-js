@@ -1,7 +1,37 @@
 const { CommandClasses, isApplicationCC } = require('@zwave-js/core');
 const { Driver, getAPI } = require('zwave-js');
+const fs = require('fs');
+const path = require('path');
+
+const resolveDep = (depName) => {
+	const local = path.join(__dirname, '../node_modules', depName);
+	const global = path.join(__dirname, '../../../node_modules', depName);
+	if (fs.existsSync(local)) return local;
+	if (fs.existsSync(global)) return global;
+	return undefined;
+};
+
+const copyDep = (depName, targetFolder) => {
+	const src = resolveDep(depName);
+	if (!src) {
+		return;
+	}
+	if (!fs.existsSync(targetFolder)) {
+		fs.mkdirSync(targetFolder, { recursive: true });
+	}
+	fs.cpSync(src, targetFolder, { recursive: true });
+};
 
 module.exports = function (RED) {
+	const dependencies = [
+		{ name: 'mermaid', target: path.join(__dirname, '../resources/Mermaid') },
+		{ name: 'qr-scanner', target: path.join(__dirname, '../resources/QRS') },
+		{ name: 'svg-pan-zoom', target: path.join(__dirname, '../resources/SVGZ') },
+		{ name: 'handlebars', target: path.join(__dirname, '../resources/HB') }
+	];
+
+	dependencies.forEach((dep) => copyDep(dep.name, dep.target));
+
 	const CCList = {};
 
 	RED.httpAdmin.get(
