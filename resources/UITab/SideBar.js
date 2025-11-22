@@ -831,7 +831,7 @@ const ZWaveJS = (function () {
 	// Mark Asso for removal
 	const MarkAssoDelete = (El) => {
 		$(El).closest('tr').attr('data-role', 'zwjs-remove-association');
-		$(El).closest('tr').css({ textDecoration: 'line-through', color: 'silver' });
+		$(El).closest('tr').css({ filter: 'grayscale()' });
 	};
 
 	// Check Node Helath
