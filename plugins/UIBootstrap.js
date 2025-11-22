@@ -1,5 +1,5 @@
 const { CommandClasses, isApplicationCC } = require('@zwave-js/core');
-const { Driver, getAPI } = require('zwave-js');
+const { Driver, getAPI, getCCValues } = require('zwave-js');
 const fs = require('fs');
 const path = require('path');
 
@@ -33,6 +33,7 @@ module.exports = function (RED) {
 	dependencies.forEach((dep) => copyDep(dep.name, dep.target));
 
 	const CCList = {};
+	const CCProps = [];
 
 	RED.httpAdmin.get(
 		'/zwave-js/ui/global/getccmethods/:cc',
@@ -40,6 +41,18 @@ module.exports = function (RED) {
 		(request, response) => {
 			if (CCList[request.params.cc]) {
 				response.json({ callSuccess: true, response: CCList[request.params.cc] });
+			} else {
+				response.json({ callSuccess: true, response: [] });
+			}
+		}
+	);
+
+	RED.httpAdmin.get(
+		'/zwave-js/ui/global/getccproperties/:cc',
+		RED.auth.needsPermission('flows.write'),
+		(request, response) => {
+			if (CCProps[request.params.cc]) {
+				response.json({ callSuccess: true, response: CCProps[request.params.cc] });
 			} else {
 				response.json({ callSuccess: true, response: [] });
 			}
@@ -57,12 +70,33 @@ module.exports = function (RED) {
 								(m) => m !== 'constructor' && m !== 'supportsCommand'
 							);
 							CCList[CC] = Methods;
+
+							const Props = getCCValues(CommandClasses[CC]);
+							if (typeof Props === 'object') {
+								const Keys = Object.keys(Props);
+								const PropsArray = [];
+								Keys.forEach((PK) => {
+									const Prop = Props[PK];
+									if (typeof Prop === 'object') {
+										if (Prop.id) {
+											const VID = {
+												comandClass: Prop.id.commandClass,
+												property: Prop.id.property,
+												propertyKey: Prop.id.propertyKey
+											};
+											PropsArray.push(VID);
+										}
+									}
+								});
+								CCProps[CC] = PropsArray;
+							}
 						}
 					}
 				});
 			}
 			response.json({ callSuccess: true, response: Object.keys(CCList) });
 		} catch (Err) {
+			console.log(Err);
 			response.json({ callSuccess: false, response: Err });
 		}
 	});

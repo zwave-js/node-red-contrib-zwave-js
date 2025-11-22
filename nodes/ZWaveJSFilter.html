@@ -1,16 +1,27 @@
+/<!-- $.getJSON(`zwave-js/ui/global/getccproperties/${CC}`, (data) => {}); -->
 <script type="text/template" id="ZWJS_TPL_Filter">
 	<div style="padding:5px">
 		<div class="form-row">
-			<label for="node-input-cc"><i class="fa fa-tag"></i> Name</label>
-			<input type="text" id="node-input-name">
+			<labe><i class="fa fa-tag"></i> Name</label>
+			<input type="text" name="zwjz-f-name">
 		</div>
 		<div class="form-row">
-			<label for="node-input-cc"><i class="fa fa-search"></i> Class</label>
-			<input type="text" id="node-input-name">
+			<label><i class="fa fa-search"></i> Class</label>
+			<select name="zwjz-f-cc">
+				<option value="">Select Command Class</option>
+			</select>
 		</div>
 		<div class="form-row">
-			<label for="node-input-cc"><i class="fa fa-info-circle"></i> Property</label>
-			<input type="text" id="node-input-name">
+			<label><i class="fa fa-info-circle"></i> Property</label>
+			<select name="zwjz-f-p">
+				<option value="">Select Property</option>
+			</select>
+		</div>
+		<div class="form-row">
+			<label><i class="fa fa-info-circle"></i> Key</label>
+			<select name="zwjz-f-pk">
+				<option value="">Select Property Key (If applicable)</option>
+			</select>
 		</div>
 	</div>
 </script>
@@ -73,13 +84,77 @@
 		});
 	}
 
+	function populateCCDropdown(container) {
+		const ccSelect = $(container).find('[name="zwjz-f-cc"]');
+		const propertySelect = $(container).find('[name="zwjz-f-p"]');
+		const propertyKeySelect = $(container).find('[name="zwjz-f-pk"]');
+
+		// Store mapping from property → array of propertyKeys
+		let propertyKeyMap = {};
+
+		$.getJSON('zwave-js/ui/global/getcclist', (CCList) => {
+			if (!CCList.callSuccess) return;
+
+			// Populate CC dropdown
+			CCList.response.forEach((CC) => {
+				ccSelect.append(new Option(CC, CC));
+			});
+
+			// Handle CC change
+			ccSelect.off('change').on('change', function () {
+				const ccValue = $(this).val();
+				propertySelect.empty();
+				propertyKeySelect.empty().hide();
+				propertyKeyMap = {}; // Reset map
+
+				$.getJSON(`zwave-js/ui/global/getccproperties/${ccValue}`, (PropList) => {
+					if (!PropList.callSuccess) return;
+
+					// Build map: property → array of keys
+					PropList.response.forEach((P) => {
+						const keyArray = Array.isArray(P.propertyKey)
+							? P.propertyKey
+							: P.propertyKey !== undefined
+								? [P.propertyKey]
+								: [];
+
+						if (propertyKeyMap[P.property]) {
+							propertyKeyMap[P.property] = propertyKeyMap[P.property].concat(keyArray);
+						} else {
+							propertyKeyMap[P.property] = keyArray;
+						}
+
+						// Add property to dropdown if not already there
+						if (!propertySelect.find(`option[value="${P.property}"]`).length) {
+							propertySelect.append(new Option(P.property, P.property));
+						}
+					});
+				});
+			});
+
+			// Handle property change
+			propertySelect.off('change').on('change', function () {
+				const selectedProperty = $(this).val();
+				const keys = propertyKeyMap[selectedProperty] || [];
+
+				propertyKeySelect.empty();
+
+				if (keys.length > 0) {
+					keys.forEach((k) => {
+						propertyKeySelect.append(new Option(k, k));
+					});
+					propertyKeySelect.show();
+				} else {
+					propertyKeySelect.hide();
+				}
+			});
+		});
+	}
+
 	function AddItem(container, index, data) {
 		if (!data.id) {
 			data.index = index;
 			data.name = 'Filter Name';
-			data.valueIds = [];
-			data.events = ['VALUE_UPDATED'];
-			data.strict = false;
 			data.id = ZWJSGenerateFilterUUID();
 		}
 
@@ -88,6 +163,8 @@
 		$(container).data('data', data);
 		$(container).css({ minWidth: '400px' });
 		$(container).append(FilterTemplate(data));
+
+		populateCCDropdown(container);
 	}
 </script>
 

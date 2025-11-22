@@ -1146,6 +1146,16 @@ const ZWaveJS = (function () {
 
 	// Render Advanded info (also used internally)
 	const RenderFunctions = {
+		ListFilters: () => {
+			return new Promise((resolve) => {
+				const Filters = [];
+				RED.nodes.filterNodes({ type: 'zwavejs-filter' }).forEach((F) => {
+					Filters.push({ name: F.name, id: F.id });
+				});
+
+				resolve({ filters: Filters });
+			});
+		},
 		RenderMap: () => {
 			return new Promise(async (resolve) => {
 				Runtime.Get('CONTROLLER', 'getNodes').then((data) => {
