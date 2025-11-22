@@ -23,6 +23,7 @@ const ZWaveJS = (function () {
 	let clientSideAuth = false;
 	let SelectedNodeVIDs = {};
 	let MiniEdtiorDialog;
+	let ViewingValueID = undefined;
 
 	/*
 	 * Driver Communciation Methods
@@ -143,6 +144,19 @@ const ZWaveJS = (function () {
 
 		RED.comms.subscribe('zwave-js/ui/global/addnetwork', (topic, network) => commsListOrAddNetworks(false, network));
 		RED.comms.subscribe('zwave-js/ui/global/removenetwork', (topic, network) => commsRemoveNetwork(network));
+	};
+
+	// Save Filter
+	const UpdateFilter = () => {
+		const Node = RED.nodes.node($('#zwjs-filters').val());
+		Node.filters.push(ViewingValueID);
+		Node.outputs++;
+		Node.dirty = true;
+		Node.changed = true;
+		Node.resize = true;
+		RED.view.redraw(true);
+		RED.nodes.dirty(true);
+		CloseTray();
 	};
 
 	// Rebuid Routes
@@ -2128,6 +2142,8 @@ const ZWaveJS = (function () {
 				return;
 			}
 
+			ViewingValueID = item.valueInfo.valueId;
+
 			let Property;
 			if (typeof item.valueInfo.valueId.property === 'number') {
 				Property = `0x${parseInt(item.valueInfo.valueId.property).toString(16).padStart(2, '0').toUpperCase()}`;
@@ -2384,6 +2400,7 @@ const ZWaveJS = (function () {
 		UpdateValue,
 		PingNode,
 		RebuildRoutes,
-		UpdateNFirmware
+		UpdateNFirmware,
+		UpdateFilter
 	};
 })();
