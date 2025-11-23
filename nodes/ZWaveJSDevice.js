@@ -73,7 +73,12 @@ module.exports = (RED) => {
 				return;
 			}
 
-			if (!MethodChecks[Req.cmd.api].includes(Req.cmd.method)) {
+			try {
+				if (!MethodChecks[Req.cmd.api].includes(Req.cmd.method)) {
+					done(new Error('Sorry! This API method is limited to the UI only, or is an invalid method.'));
+					return;
+				}
+			} catch (Error) {
 				done(new Error('Sorry! This API method is limited to the UI only, or is an invalid method.'));
 				return;
 			}
