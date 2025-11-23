@@ -146,16 +146,27 @@ const ZWaveJS = (function () {
 		RED.comms.subscribe('zwave-js/ui/global/removenetwork', (topic, network) => commsRemoveNetwork(network));
 	};
 
-	// Save Filter
+	// Save Spliter
 	const UpdateSplitter = () => {
 		const Node = RED.nodes.node($('#zwjs-splitters').val());
-		Node.splits.push(ViewingValueID);
+
+		const NextIndex = Node.splits.length ? Math.max(...Node.splits.map((x) => x.index)) + 1 : 0;
+
+		const entry = {
+			valueId: ViewingValueID,
+			index: NextIndex,
+		};
+
+		Node.splits.push(entry);
+
 		Node.outputs++;
 		Node.dirty = true;
 		Node.changed = true;
 		Node.resize = true;
+
 		RED.view.redraw(true);
 		RED.nodes.dirty(true);
+
 		CloseTray();
 	};
 

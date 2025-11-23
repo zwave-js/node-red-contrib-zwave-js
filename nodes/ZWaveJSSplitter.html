@@ -1,19 +1,19 @@
 <script type="text/template" id="ZWJS_TPL_Split">
-	<div style="padding:5px">
-		<div class="form-row">
+	<div style="padding:3px">
+		<div class="form-row" style="height:24px">
 			<label><i class="fa fa-tag"></i> Name</label>
 			<input type="text" name="zwjz-s-name">
 		</div>
-		<div class="form-row">
-			<label><i class="fa fa-tag"></i> Class</label>
+		<div class="form-row" style="height:24px">
+			<label><i class="fa fa-search"></i> Class</label>
 			<input type="text" name="zwjz-c-name" value="{{commandClassName}}" readonly>
 		</div>
-		<div class="form-row">
-			<label><i class="fa fa-tag"></i> Property</label>
+		<div class="form-row" style="height:24px">
+			<label><i class="fa fa-info-circle"></i> Property</label>
 			<input type="text" name="zwjz-p-name" value="{{propertyName}}" readonly>
 		</div>
-		<div class="form-row">
-			<label><i class="fa fa-tag"></i> Key</label>
+		<div class="form-row" style="height:24px">
+			<label><i class="fa fa-info-circle"></i> Key</label>
 			<input type="text" name="zwjz-k-name" value="{{propertyKeyName}}" readonly>
 		</div>
 	</div>
@@ -35,7 +35,7 @@
 		},
 		inputs: 1,
 		outputs: 1,
-		icon: 'Filter.svg',
+		icon: 'Split.svg',
 		label: function () {
 			return this.name;
 		},

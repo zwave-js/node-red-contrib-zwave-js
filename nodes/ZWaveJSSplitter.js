@@ -16,9 +16,9 @@ module.exports = (RED) => {
 						VID = msg.payload.eventBody.valueId;
 						Match = self.config.splits.find(
 							(V) =>
-								V.commandClass === VID.commandClass &&
-								V.property === VID.property &&
-								(VID.propertyKey === undefined || V.propertyKey === VID.propertyKey)
+								V.valueId.commandClass === VID.commandClass &&
+								V.valueId.property === VID.property &&
+								(VID.propertyKey === undefined || V.valueId.propertyKey === VID.propertyKey)
 						);
 						break;
 
