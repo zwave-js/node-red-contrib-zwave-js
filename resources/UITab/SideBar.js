@@ -147,9 +147,9 @@ const ZWaveJS = (function () {
 	};
 
 	// Save Filter
-	const UpdateFilter = () => {
-		const Node = RED.nodes.node($('#zwjs-filters').val());
-		Node.filters.push(ViewingValueID);
+	const UpdateSplitter = () => {
+		const Node = RED.nodes.node($('#zwjs-splitters').val());
+		Node.splits.push(ViewingValueID);
 		Node.outputs++;
 		Node.dirty = true;
 		Node.changed = true;
@@ -1160,14 +1160,14 @@ const ZWaveJS = (function () {
 
 	// Render Advanded info (also used internally)
 	const RenderFunctions = {
-		ListFilters: () => {
+		ListSplitters: () => {
 			return new Promise((resolve) => {
-				const Filters = [];
-				RED.nodes.filterNodes({ type: 'zwavejs-filter' }).forEach((F) => {
-					Filters.push({ name: F.name, id: F.id });
+				const Splitters = [];
+				RED.nodes.filterNodes({ type: 'zwavejs-splitter' }).forEach((F) => {
+					Splitters.push({ name: F.name, id: F.id });
 				});
 
-				resolve({ filters: Filters });
+				resolve({ splitters: Splitters });
 			});
 		},
 		RenderMap: () => {
@@ -2401,6 +2401,6 @@ const ZWaveJS = (function () {
 		PingNode,
 		RebuildRoutes,
 		UpdateNFirmware,
-		UpdateFilter
+		UpdateSplitter
 	};
 })();

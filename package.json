@@ -39,7 +39,7 @@
 			"zwavejs-runtime": "nodes/ZWaveJSRuntime.js",
 			"zwavejs-controller": "nodes/ZWaveJSController.js",
 			"zwavejs-device": "nodes/ZWaveJSDevice.js",
-			"zwavejs-filter": "nodes/ZWaveJSFilter.js",
+			"zwavejs-splitter": "nodes/ZWaveJSSplitter.js",
 			"zwavejs-factory": "nodes/ZWaveJSFactory.js"
 		},
 		"plugins": {

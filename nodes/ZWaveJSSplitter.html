@@ -1,0 +1,102 @@
+<script type="text/template" id="ZWJS_TPL_Split">
+	<div style="padding:5px">
+		<div class="form-row">
+			<label><i class="fa fa-tag"></i> Name</label>
+			<input type="text" name="zwjz-s-name">
+		</div>
+		<div class="form-row">
+			<label><i class="fa fa-tag"></i> Class</label>
+			<input type="text" name="zwjz-c-name" value="{{commandClassName}}" readonly>
+		</div>
+		<div class="form-row">
+			<label><i class="fa fa-tag"></i> Property</label>
+			<input type="text" name="zwjz-p-name" value="{{propertyName}}" readonly>
+		</div>
+		<div class="form-row">
+			<label><i class="fa fa-tag"></i> Key</label>
+			<input type="text" name="zwjz-k-name" value="{{propertyKeyName}}" readonly>
+		</div>
+	</div>
+</script>
+
+<script type="text/javascript">
+	const SplitTemplate = Handlebars.compile($('#ZWJS_TPL_Split').html());
+	let ZWJSIndexMap = undefined;
+	const ZWJSSplitterNodeSettings = {
+		category: 'ZWave JS',
+		color: 'rgb(46,145,205)',
+		defaults: {
+			name: {
+				value: 'ZWave Event Splitter',
+				required: true
+			},
+			splits: { value: [] },
+			outputs: { value: 0 }
+		},
+		inputs: 1,
+		outputs: 1,
+		icon: 'Filter.svg',
+		label: function () {
+			return this.name;
+		},
+		paletteLabel: 'Event Splitter',
+		oneditprepare: SortUI
+	};
+
+	RED.nodes.registerType('zwavejs-splitter', ZWJSSplitterNodeSettings);
+
+	function compare(a, b) {
+		if (a.index < b.index) {
+			return -1;
+		}
+		if (a.index > b.index) {
+			return 1;
+		}
+		return 0;
+	}
+
+	function SortUI() {
+		ZWJSIndexMap = {};
+		$('#splitters').editableList({
+			header: $('<div>').append('<div>Splits - order defines outputs</div>'),
+			sortable: true,
+			removable: true,
+			addItem: AddItem
+			//sortItems: SortItems,
+			//removeItem: RemoveItem
+		});
+
+		this.splits.sort(compare).forEach((Item) => {
+			$('#splitters').editableList('addItem', Item);
+		});
+	}
+
+	function AddItem(container, index, data) {
+		data.originalIndex = index;
+		ZWJSIndexMap[data.originalIndex] = index;
+		$(container).data('data', data);
+		$(container).css({ minWidth: '400px' });
+		$(container).append(SplitTemplate(data));
+	}
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/x-red" data-template-name="zwavejs-splitter">
+	<h3>Basic</h3>
+	<hr />
+	<div class="form-row">
+	    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+	    <input type="text" id="node-input-name">
+	</div>
+
+	<h3>Filters</h3>
+	<hr />
+	<div>
+	      <ol id="splitters" style="min-height:350px;min-width:400px"> </ol>
+	</div>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/markdown" data-help-name="zwavejs-splitter">
+<p>A ZWave event splitter</p>
+</script>

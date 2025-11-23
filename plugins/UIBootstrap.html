@@ -119,7 +119,7 @@
 		<div parent>Value</div>
 		<div child default onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Value-Current',this, '{{encode editInfo}}')">Update Value</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Value-Example',this,'{{encode examples}}')">Example Usage</div>
-		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Value-Filter',this,'ListFilters')">Add To Filter</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Value-Filter',this,'ListSplitters')">Add To Filter</div>
 	</div>
 	<div id="zwjs-advanced-content"></div>
 </script>
@@ -127,17 +127,17 @@
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Node-Value-Filter">
 	<fieldset class=zwjs-fieldset>
-		<div class="zwjs-title">Select the Event Filter Node you wish to append to.</div>
-		<div class="zwjs-hint">Note: The target Event Filter Node will be modified and marked dirty, so a Deploy will be required, to commit the changes.</div>
+		<div class="zwjs-title">Select the Event Splitter Node you wish to append to.</div>
+		<div class="zwjs-hint">Note: The target Event Splitter Node will be modified and marked dirty, so a Deploy will be required, to commit the changes.</div>
 
-		<select id="zwjs-filters">
+		<select id="zwjs-splitters">
 			<option value="">Select Target</option>
-			{{#each filters}}
+			{{#each splitters}}
 				<option value="{{id}}">{{name}}</option>
 		    {{/each}}
 		</select>
 		<div>
-			<button onclick="ZWaveJS.UpdateFilter(this)">Save (Deploy Required)</button>
+			<button onclick="ZWaveJS.UpdateSplitter(this)">Save (Deploy Required)</button>
 		</div>
 	</fieldset>
 </script>
