@@ -155,6 +155,7 @@ const ZWaveJS = (function () {
 		const entry = {
 			valueId: ViewingValueID,
 			index: NextIndex,
+			name: $('#zwjs-splitter-output-name').val()
 		};
 
 		Node.splits.push(entry);
@@ -1178,7 +1179,16 @@ const ZWaveJS = (function () {
 					Splitters.push({ name: F.name, id: F.id });
 				});
 
-				resolve({ splitters: Splitters });
+				let Label = `${ViewingValueID.commandClassName.replace(/ /g, '_').toUpperCase()}.${ViewingValueID.propertyName.replace(/ /g, '_').toUpperCase()}`;
+
+				if (ViewingValueID.propertyKeyName) {
+					Label += `.${ViewingValueID.propertyKeyName.replace(/ /g, '_').toUpperCase()}`;
+				}
+
+				resolve({
+					splitters: Splitters,
+					label: Label
+				});
 			});
 		},
 		RenderMap: () => {

@@ -130,12 +130,26 @@
 		<div class="zwjs-title">Select the Event Splitter Node you wish to append to.</div>
 		<div class="zwjs-hint">Note: The target Event Splitter Node will be modified and marked dirty, so a Deploy will be required, to commit the changes.</div>
 
-		<select id="zwjs-splitters">
-			<option value="">Select Target</option>
-			{{#each splitters}}
-				<option value="{{id}}">{{name}}</option>
-		    {{/each}}
-		</select>
+		<table>
+			<tr>
+				<td>Target Splitter Node</td>
+				<td>
+					<select id="zwjs-splitters">
+							<option value="">Select Target</option>
+							{{#each splitters}}
+								<option value="{{id}}">{{name}}</option>
+							{{/each}}
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td>Output Pin Name</td>
+				<td><input type="text" id="zwjs-splitter-output-name" value="{{label}}"></td>
+			</tr>
+			
+		</table>
+		
+	
 		<div>
 			<button onclick="ZWaveJS.UpdateSplitter(this)">Save (Deploy Required)</button>
 		</div>

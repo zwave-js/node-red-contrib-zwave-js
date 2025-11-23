@@ -2,20 +2,22 @@
 	<div style="padding:3px">
 		<div class="form-row" style="height:24px">
 			<label><i class="fa fa-tag"></i> Name</label>
-			<input type="text" name="zwjz-s-name">
+			<input type="text" name="zwjz-s-name" value="{{name}}">
 		</div>
 		<div class="form-row" style="height:24px">
 			<label><i class="fa fa-search"></i> Class</label>
-			<input type="text" name="zwjz-c-name" value="{{commandClassName}}" readonly>
+			<input type="text" name="zwjz-c-name" value="{{valueId.commandClassName}}" readonly>
 		</div>
 		<div class="form-row" style="height:24px">
 			<label><i class="fa fa-info-circle"></i> Property</label>
-			<input type="text" name="zwjz-p-name" value="{{propertyName}}" readonly>
+			<input type="text" name="zwjz-p-name" value="{{valueId.propertyName}}" readonly>
 		</div>
-		<div class="form-row" style="height:24px">
-			<label><i class="fa fa-info-circle"></i> Key</label>
-			<input type="text" name="zwjz-k-name" value="{{propertyKeyName}}" readonly>
-		</div>
+		{{#if valueId.propertyKeyName}}
+			<div class="form-row" style="height:24px">
+				<label><i class="fa fa-info-circle"></i> Key</label>
+				<input type="text" name="zwjz-k-name" value="{{valueId.propertyKeyName}}" readonly>
+			</div>
+		{{/if}}
 	</div>
 </script>
 
@@ -39,8 +41,12 @@
 		label: function () {
 			return this.name;
 		},
+		outputLabels: function (index) {
+			return this.splits[index].name;
+		},
 		paletteLabel: 'Event Splitter',
-		oneditprepare: SortUI
+		oneditprepare: SortUI,
+		oneditsave: DoSave
 	};
 
 	RED.nodes.registerType('zwavejs-splitter', ZWJSSplitterNodeSettings);
@@ -55,20 +61,40 @@
 		return 0;
 	}
 
+	function DoSave() {
+		$('#node-input-outputs').val(JSON.stringify(ZWJSIndexMap));
+	}
+
 	function SortUI() {
 		ZWJSIndexMap = {};
 		$('#splitters').editableList({
 			header: $('<div>').append('<div>Splits - order defines outputs</div>'),
 			sortable: true,
 			removable: true,
-			addItem: AddItem
-			//sortItems: SortItems,
-			//removeItem: RemoveItem
+			addItem: AddItem,
+			sortItems: SortItems,
+			removeItem: RemoveItem
 		});
 
 		this.splits.sort(compare).forEach((Item) => {
 			$('#splitters').editableList('addItem', Item);
 		});
+	}
+
+	function SortItems(Items) {
+		for (let i = 0; i < Items.length; i++) {
+			ZWJSIndexMap[Items[i].data('data').originalIndex] = i;
+			Items[i].data('data').index = i;
+		}
+	}
+
+	function RemoveItem(Item) {
+		ZWJSIndexMap[Item.originalIndex] = -1;
+		const Items = $('#splitters').editableList('items');
+		for (let i = 0; i < Items.length; i++) {
+			ZWJSIndexMap[Items[i].data('data').originalIndex] = i;
+			Items[i].data('data').index = i;
+		}
 	}
 
 	function AddItem(container, index, data) {
@@ -82,6 +108,7 @@
 
 <!-- prettier-ignore -->
 <script type="text/x-red" data-template-name="zwavejs-splitter">
+	<input type="hidden" id="node-input-outputs">
 	<h3>Basic</h3>
 	<hr />
 	<div class="form-row">
