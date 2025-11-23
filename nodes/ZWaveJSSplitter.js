@@ -29,7 +29,8 @@ module.exports = (RED) => {
 				if (Match) {
 					PinIndex = Match.index;
 					msg.split = {
-						name: Match.name
+						name: Match.name,
+						outputPin: PinIndex
 					};
 
 					const out = new Array(self.config.splits.length);
