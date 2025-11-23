@@ -4,7 +4,7 @@ const MethodChecks = {
 	NODE: require('./lib/AllowedUsersCommands').Node,
 	VALUE: require('./lib/AllowedUsersCommands').Value,
 	CONTROLLER: require('./lib/AllowedUsersCommands').Controller,
-	DRIVER: require('./lib/AllowedUsersCommands').Controller
+	DRIVER: require('./lib/AllowedUsersCommands').Driver
 };
 
 module.exports = (RED) => {
