@@ -63,6 +63,17 @@
 
 	function DoSave() {
 		$('#node-input-outputs').val(JSON.stringify(ZWJSIndexMap));
+
+		this.splits = [];
+		const Items = $('#splitters').editableList('items').sort(compare);
+
+		for (let i = 0; i < Items.length; i++) {
+			const Data = Items[i].data('data');
+			Data.index = i;
+			delete Data.originalIndex;
+
+			this.splits.push(Data);
+		}
 	}
 
 	function SortUI() {
