@@ -78,7 +78,8 @@ module.exports = (RED) => {
 					done(new Error('Sorry! This API method is limited to the UI only, or is an invalid method.'));
 					return;
 				}
-			} catch (Error) {
+				// eslint-disable-next-line no-unused-vars
+			} catch (err) {
 				done(new Error('Sorry! This API method is limited to the UI only, or is an invalid method.'));
 				return;
 			}
