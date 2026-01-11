@@ -8,9 +8,9 @@ To construct a command, you will send the following `payload`
 ```js
 {
     cmd: {
-        api: 'NODE' | 'VALUE' | 'CONTROLLER' | 'DRIVER',
+        api: 'NODE' | 'VALUE' | 'CONTROLLER' | 'DRIVER' | 'CC',
         method: // See below,
-        id: // Anything you want, and will be retruned in the response (optional)
+        id: // Anything you want, and will be returned in the response (optional)
     },
     cmdProperties: {
         // See below
