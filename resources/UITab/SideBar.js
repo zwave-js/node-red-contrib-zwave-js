@@ -282,14 +282,19 @@ const ZWaveJS = (function () {
 
 	// Remove Failed
 	const RemoveFailedNode = (NodeID, Row) => {
-		if (confirm('Are you sure you wish to remove this Node from your network?')) {
-			Runtime.Post('CONTROLLER', 'removeFailedNode', [NodeID]).then((data) => {
-				if (data.callSuccess) {
-					$(Row).closest('tr').remove();
-				} else {
-					alert(data.response);
-				}
-			});
+		const ID = NodeID || selectedNode?.nodeId
+		if (ID) {
+			if (confirm('Are you sure you wish to remove this Node from your network?')) {
+				Runtime.Post('CONTROLLER', 'removeFailedNode', [ID]).then((data) => {
+					if (data.callSuccess) {
+						if (Row) {
+							$(Row).closest('tr').remove();
+						}
+					} else {
+						alert(data.response);
+					}
+				});
+			}
 		}
 	};
 
