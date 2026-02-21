@@ -1119,7 +1119,7 @@ const ZWaveJS = (function () {
 					reader.onload = function (e) {
 						const arrayBuffer = e.target.result;
 						const byteArray = new Uint8Array(arrayBuffer);
-						Runtime.Post('CONTROLLER', 'restoreNVM', [{ bytes: byteArray }]).then((R) => {
+						Runtime.Post('CONTROLLER', 'restoreNVM', [{ nvmData: byteArray }]).then((R) => {
 							if (!R.callSuccess) {
 								EnableButton(Button);
 								alert(R.response);
@@ -1467,7 +1467,18 @@ const ZWaveJS = (function () {
 						const arrayBuffer = e.target.result;
 						const byteArray = new Uint8Array(arrayBuffer);
 						// Handled in COMMS
-						Runtime.Post('NODE', 'updateFirmware', [[{ data: byteArray }]]);
+
+						const msg = {
+							nodeId: selectedNode.nodeId,
+							args: [[{
+								data: byteArray
+							}]]
+						}
+
+						Runtime.Post('NODE', 'updateFirmware', msg)
+							.catch((Error) => {
+								alert(Error.message);
+							});
 					};
 					reader.readAsArrayBuffer(file);
 					document.body.removeChild(fileInput);
@@ -1503,7 +1514,10 @@ const ZWaveJS = (function () {
 						const arrayBuffer = e.target.result;
 						const byteArray = new Uint8Array(arrayBuffer);
 						// Handled in COMMS
-						Runtime.Post('DRIVER', 'firmwareUpdateOTW', [{ bytes: byteArray }]);
+						Runtime.Post('DRIVER', 'firmwareUpdateOTW', [{ data: byteArray }])
+							.catch((Error) => {
+								alert(Error.message);
+							});
 					};
 					reader.readAsArrayBuffer(file);
 					document.body.removeChild(fileInput);
@@ -1566,7 +1580,7 @@ const ZWaveJS = (function () {
 		GetNodeGroup(data.nodeInfo.nodeLocation).children.find((N) => N.nodeData.nodeId === data.nodeInfo.nodeId).nodeData =
 			data.nodeInfo;
 
-		if (selectedNode && selectedNode.nodeId === data.nodeInfo.nodeId) {
+		if (selectedNode && selectedNode.nodeId === data.nodeInfo.nodeId && !topic.endsWith('sleep') && !topic.endsWith('awake')) {
 			nodeSelected(undefined, { nodeData: data.nodeInfo });
 		}
 
@@ -1687,7 +1701,7 @@ const ZWaveJS = (function () {
 					break;
 
 				default:
-					Message = 'The update was successfull, please a few minutes for the Node to reinitialize';
+					Message = 'The update was successfull, please wait a few minutes for the Node to reinitialize';
 			}
 			RenderAdvanced('ZWJS_TPL_Tray-Firmware-Done', undefined, { Message });
 		}

@@ -323,6 +323,7 @@ module.exports = function (RED) {
 
 					switch (TargetAPI) {
 						case 'NODE':
+							args = request.body.args
 							if (Method === 'checkLifelineHealth') {
 								const CB = (round, totalRounds, lastRating, lastResult) => {
 									RED.comms.publish(
@@ -333,6 +334,14 @@ module.exports = function (RED) {
 								};
 								args = [5, CB];
 							}
+
+							if (Method === 'updateFirmware') {
+								const D = args[0][0].data;
+								const byteArray = Array.isArray(D) ? D : Object.values(D);
+								const uint8Array = new Uint8Array(byteArray);
+								args = [[{ data: uint8Array }]];
+							}
+
 							self
 								.nodeCommand(Method, request.body.nodeId, request.body.value, args)
 								.then((R) => {
@@ -356,7 +365,8 @@ module.exports = function (RED) {
 						case 'CONTROLLER':
 							args = request.body;
 							if (Method === 'restoreNVM') {
-								const byteArray = Object.values(args[0].bytes);
+								const D = args[0].nvmData;
+								const byteArray = Array.isArray(D) ? D : Object.values(D);
 								const uint8Array = new Uint8Array(byteArray);
 								const Send = (Label, done, total) => {
 									RED.comms.publish(
@@ -388,7 +398,8 @@ module.exports = function (RED) {
 						case 'DRIVER':
 							args = request.body;
 							if (Method === 'firmwareUpdateOTW') {
-								const byteArray = Object.values(args[0].bytes);
+								const D = args[0].data;
+								const byteArray = Array.isArray(D) ? D : Object.values(D);
 								const uint8Array = new Uint8Array(byteArray);
 								args = [uint8Array];
 							}
@@ -875,7 +886,7 @@ module.exports = function (RED) {
 			}
 
 			// Firmware Update Progress (Node)
-			self.driverInstance?.on(event_NodeFirmwareUpdateProgress.driverName, (ThisNode, progress) => {
+			Node.on(event_NodeFirmwareUpdateProgress.driverName, (ThisNode, progress) => {
 				RED.comms.publish(
 					`zwave-js/ui/${self.id}/nodes/firmwareupdate/progress`,
 					{ nodeId: ThisNode.id, progress },
@@ -884,7 +895,7 @@ module.exports = function (RED) {
 			});
 
 			// Firmware Update Completed (Node)
-			self.driverInstance?.on(event_NodeFirmwareUpdateFinished.driverName, (ThisNode, result) => {
+			Node.on(event_NodeFirmwareUpdateFinished.driverName, (ThisNode, result) => {
 				RED.comms.publish(
 					`zwave-js/ui/${self.id}/nodes/firmwareupdate/finished`,
 					{ nodeId: ThisNode.id, result },

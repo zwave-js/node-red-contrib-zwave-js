@@ -18,7 +18,7 @@ module.exports = (RED) => {
 							(V) =>
 								V.valueId.commandClass === VID.commandClass &&
 								V.valueId.property === VID.property &&
-								(VID.propertyKey === undefined || V.valueId.propertyKey === VID.propertyKey)
+								V.valueId.propertyKey === VID.propertyKey
 						);
 						break;
 
