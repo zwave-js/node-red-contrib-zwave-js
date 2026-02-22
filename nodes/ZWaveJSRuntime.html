@@ -55,6 +55,10 @@
 				value: '',
 				required: false
 			},
+			storage_deviceConfigExternalDir: {
+				value: '',
+				required: false
+			},
 			storage_throttle: {
 				value: 'normal',
 				required: true
@@ -255,7 +259,11 @@
 	    </select>
 	</div>
 	<div class="form-row">
-	    <label for="node-config-input-storage_deviceConfigPriorityDir"><i class="fa fa-folder"></i> CFG Dir</label>
+	    <label for="node-config-input-storage_deviceConfigExternalDir"><i class="fa fa-folder"></i> CFG Dir</label>
+	    <input type="text" id="node-config-input-storage_deviceConfigExternalDir" placeholder="Use Default">
+	</div>
+	<div class="form-row">
+	    <label for="node-config-input-storage_deviceConfigPriorityDir"><i class="fa fa-folder"></i> Pri'y CFG Dir</label>
 	    <input type="text" id="node-config-input-storage_deviceConfigPriorityDir">
 	</div>
 	<div class="form-row">

@@ -523,6 +523,10 @@ module.exports = function (RED) {
 			ZWaveOptions.storage.deviceConfigPriorityDir = self.config.storage_deviceConfigPriorityDir;
 		}
 
+		if (self.config.storage_deviceConfigExternalDir) {
+			ZWaveOptions.storage.deviceConfigExternalDir = self.config.storage_deviceConfigExternalDir;
+		}
+
 		// Cleanup Logging config
 		const LogEnabled = self.config.logConfig_level !== 'off';
 		ZWaveOptions.logConfig.enabled = LogEnabled;

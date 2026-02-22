@@ -146,6 +146,23 @@ const ZWaveJS = (function () {
 		RED.comms.subscribe('zwave-js/ui/global/removenetwork', (topic, network) => commsRemoveNetwork(network));
 	};
 
+	// Install Config Update
+	const CFGUpdate = () => {
+		Runtime.Post('DRIVER', 'installConfigUpdate').then((data) => {
+			if (data.callSuccess) {
+				if (data.response) {
+					alert('An update to the configuration database has been installed.')
+				}
+				else {
+					alert('No update available.')
+				}
+			} else {
+				alert(data.response);
+
+			}
+		});
+	}
+
 	// Save Spliter
 	const UpdateSplitter = () => {
 		const Node = RED.nodes.node($('#zwjs-splitters').val());
@@ -2466,6 +2483,7 @@ const ZWaveJS = (function () {
 		RebuildRoutes,
 		UpdateNFirmware,
 		UpdateSplitter,
-		RebuildNodeRoutes
+		RebuildNodeRoutes,
+		CFGUpdate
 	};
 })();
