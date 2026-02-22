@@ -34,7 +34,7 @@ The Device Node
 | `VALUE` | `setValue` | `nodeId`, `valueId`, `value`, `[setValueOptions]` |
 | `VALUE` | `getValue` | `nodeId`, `valueId` |
 | `VALUE` | `pollValue` | `nodeId`, `valueId` |
-| `CC` | `invokeCCAPI` | `nodeId`, `commandClass`, `method`, `endpoint`, `[args]` |
+| `CC` | `invokeCCAPI` | `nodeId`, `commandClass`, `method`, `[endpoint]`, `[args[Any]]` |
 
 The Controller Node
 --------
@@ -45,7 +45,7 @@ The Controller Node
 |-----|--------| ---------------|
 | `CONTROLLER` | `getNodes` | |
 | `CONTROLLER` | `proprietaryFunction` | `args`|
-| `DRIVER` | `getValueDB` | `[nodeId]`|
+| `DRIVER` | `getValueDB` | `[args[NodeIDs]]`|
 
 The valueId object
 --------
