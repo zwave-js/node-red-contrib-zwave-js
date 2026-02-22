@@ -1621,7 +1621,7 @@ const ZWaveJS = (function () {
 		GetNodeGroup(data.nodeInfo.nodeLocation).children.find((N) => N.nodeData.nodeId === data.nodeInfo.nodeId).nodeData =
 			data.nodeInfo;
 
-		if (selectedNode && selectedNode.nodeId === data.nodeInfo.nodeId && !topic.endsWith('sleep') && !topic.endsWith('awake')) {
+		if (selectedNode && selectedNode.nodeId === data.nodeInfo.nodeId && !topic.endsWith('sleep') && !topic.endsWith('wakeup')) {
 			nodeSelected(undefined, { nodeData: data.nodeInfo });
 		}
 
