@@ -179,6 +179,23 @@ module.exports = function (RED) {
 				response.json({ callSuccess: true, response: lastStatus });
 			});
 
+
+			RED.httpAdmin.get(`/zwave-js/ui/${self.id}/rebuildroutesprogress`, RED.auth.needsPermission('flows.write'), (_, response) => {
+				if (self.driverInstance.controller.isRebuildingRoutes) {
+					response.json({
+						callSuccess: true,
+						response: Object.fromEntries(self.driverInstance.controller.rebuildRoutesProgress)
+					});
+				}
+				else {
+					response.json({
+						callSuccess: true,
+						response: false
+					});
+				}
+			});
+
+
 			RED.httpAdmin.get(`/zwave-js/ui/${self.id}/version`, RED.auth.needsPermission('flows.write'), (_, response) => {
 				response.json({
 					callSuccess: true,
@@ -351,7 +368,7 @@ module.exports = function (RED) {
 									response.json({ callSuccess: false, response: error.message });
 								});
 							break;
-							
+
 						case 'VALUE':
 							self
 								.valueCommand(Method, request.body.nodeId, request.body.valueId, request.body.value)

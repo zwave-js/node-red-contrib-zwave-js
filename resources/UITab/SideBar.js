@@ -1189,6 +1189,18 @@ const ZWaveJS = (function () {
 
 	// Render Advanded info (also used internally)
 	const RenderFunctions = {
+
+		GetRRCurrentProgress: () => {
+			Runtime.Get(undefined, undefined, `zwave-js/ui/${networkId}/rebuildroutesprogress`).then((data) => {
+				if (data.callSuccess) {
+					if (data.response !== false) {
+						// emulate the progress event
+						commsRebuildRoutesProgress(undefined, { Progress: data.response })
+					}
+
+				}
+			})
+		},
 		ListSplitters: () => {
 			return new Promise((resolve) => {
 				const Splitters = [];

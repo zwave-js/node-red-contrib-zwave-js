@@ -19,80 +19,85 @@
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_SidePanel">
 	<!--Network Selector-->
-	<div class="red-ui-sidebar-header" style="text-align: center; height: 20px">
-		<i class="fa fa-cog" aria-hidden="true"></i>
-		Runtime :
-		<select id="zwjs-network" onchange="ZWaveJS.NetworkSelected()" style="height: 25px; vertical-align: baseline">
-			<option value="NONE">Select Network</option>			      
-		</select>
-	</div>
+<div class="red-ui-sidebar-header" style="text-align: center; height: 20px">
+	<i class="fa fa-cog" aria-hidden="true"></i>
+	Runtime :
+	<select id="zwjs-network" onchange="ZWaveJS.NetworkSelected()" style="height: 25px; vertical-align: baseline">
+		<option value="NONE">Select Network</option>
+	</select>
+</div>
 
-	<!--Controller Info-->
-	<div class="red-ui-sidebar-header" style="text-align: left; padding: 3px; padding-left: 20px;">
-		<table>
-			<tr>
-				<td rowspan="3"><i class="fa fa-rss zwjs-node-icon"></i></td>
-			</tr>
-			<tr>
-				<td style="padding-left: 10px">
-					<span id="zwjs-controller-info">No Network Selected</span>
-					<br />
-					<span id="zwjs-controller-status"></span>
-				</td>
-			</tr>
-		</table>
-	</div>
+<!--Controller Info-->
+<div class="red-ui-sidebar-header" style="text-align: left; padding: 3px; padding-left: 20px;">
+	<table>
+		<tr>
+			<td rowspan="3"><i class="fa fa-rss zwjs-node-icon"></i></td>
+		</tr>
+		<tr>
+			<td style="padding-left: 10px">
+				<span id="zwjs-controller-info">No Network Selected</span>
+				<br />
+				<span id="zwjs-controller-status"></span>
+			</td>
+		</tr>
+	</table>
+</div>
 
-	<!--Controller Menu-->
-	<div class="red-ui-sidebar-header zwjs-sb-menu-header">
-		<a class="red-ui-tab-link-button" onclick="ZWaveJS.ShowNetworkManagement()"><i class="fa fa-cogs"></i></a>
-		<a class="red-ui-tab-link-button" onclick="ZWaveJS.RefreshNodes('Refresh')"><i class="fa fa-refresh"></i></a>
-		<a class="red-ui-tab-link-button" onclick="ZWaveJS.RebuildRoutes(undefined, true)"><i class="fa fa-medkit"></i></a>
-		 | 
-		<a class="red-ui-tab-link-button" onclick="ZWaveJS.NodeCollapseToggle(1, this)"><i class="fa fa-indent zwjs-button-group" selected></i></a>
-		<a class="red-ui-tab-link-button" onclick="ZWaveJS.NodeCollapseToggle(2, this)"><i class="fa fa-bars zwjs-button-group "></i></a>
-		<a class="red-ui-tab-link-button" onclick="ZWaveJS.NodeCollapseToggle(3, this)"><i class="fa fa-sort-numeric-asc zwjs-button-group"></i></a>
-		
-	</div>
+<!--Controller Menu-->
+<div class="red-ui-sidebar-header zwjs-sb-menu-header">
+	<a class="red-ui-tab-link-button" onclick="ZWaveJS.ShowNetworkManagement()"><i class="fa fa-cogs"></i></a>
+	<a class="red-ui-tab-link-button" onclick="ZWaveJS.RefreshNodes('Refresh')"><i class="fa fa-refresh"></i></a>
+	<a class="red-ui-tab-link-button" onclick="ZWaveJS.RebuildRoutes(undefined, true)"><i class="fa fa-medkit"></i></a>
+	|
+	<a class="red-ui-tab-link-button" onclick="ZWaveJS.NodeCollapseToggle(1, this)"><i
+			class="fa fa-indent zwjs-button-group" selected></i></a>
+	<a class="red-ui-tab-link-button" onclick="ZWaveJS.NodeCollapseToggle(2, this)"><i
+			class="fa fa-bars zwjs-button-group "></i></a>
+	<a class="red-ui-tab-link-button" onclick="ZWaveJS.NodeCollapseToggle(3, this)"><i
+			class="fa fa-sort-numeric-asc zwjs-button-group"></i></a>
 
-	<!--Stack-->
-	<div class="red-ui-sidebar-info-stack" id="zwjs-panel-stack" style="width: 100%; height: 100%">
-		<!-- Node List-->
-		<div>
-			<div id="zwjs-node-list" style="width: 100%; height: 100%"></div>
+</div>
+
+<!--Stack-->
+<div class="red-ui-sidebar-info-stack" id="zwjs-panel-stack" style="width: 100%; height: 100%">
+	<!-- Node List-->
+	<div>
+		<div id="zwjs-node-list" style="width: 100%; height: 100%"></div>
+	</div>
+	<!--Node Info-->
+	<div style="overflow:hidden">
+		<div class="red-ui-sidebar-header" style="text-align: left; padding: 3px; padding-left: 10px;">
+			<table style="margin-left: 10px;">
+				<tr>
+					<td rowspan="3">
+						<span class="zwjs-node-id" id="zwjs-node-info-id" nodeinfo>--</span>
+					</td>
+				</tr>
+				<tr>
+					<td style="padding-left: 10px">
+						<span style="font-size: 12px; font-weight: bold; color: gray" id="zwjs-node-info">No Node
+							Selected</span>
+						<br />
+						<span id="zwjs-node-status"></span>
+					</td>
+				</tr>
+			</table>
 		</div>
-		<!--Node Info-->
-		<div style="overflow:hidden">
-			<div class="red-ui-sidebar-header" style="text-align: left; padding: 3px; padding-left: 10px;">
-				<table style="margin-left: 10px;">
-					<tr>
-						<td rowspan="3">
-							<span class="zwjs-node-id" id="zwjs-node-info-id" nodeinfo>--</span>
-						</td>
-					</tr>
-					<tr>
-						<td style="padding-left: 10px">
-							<span style="font-size: 12px; font-weight: bold; color: gray" id="zwjs-node-info">No Node Selected</span>
-							<br />
-							<span id="zwjs-node-status"></span>
-						</td>
-					</tr>
-				</table>
-			</div>
-			<div class="red-ui-sidebar-header zwjs-sb-menu-header">
-				<a class="red-ui-tab-link-button" onclick="ZWaveJS.ShowNodeManagement()"><i class="fa fa-cogs"></i></a>
-				<a class="red-ui-tab-link-button" onclick="ZWaveJS.InterviewCurrentNode()"><i class="fa fa-handshake-o"></i></a>
-				<a class="red-ui-tab-link-button" onclick="ZWaveJS.RebuildNodeRoutes()"><i class="fa fa-medkit"></i></a>
-				<a class="red-ui-tab-link-button" onclick="ZWaveJS.RemoveFailedNode()"><i class="fa fa-trash-o"></i></a>
-			</div>
-			<div class="red-ui-sidebar-header zwjs-sb-menu-header" id="zwjs-endpoint-list">
-				
-			</div>
-			<div id="zwjs-cc-list" style="width: 100%; height: 100%">
+		<div class="red-ui-sidebar-header zwjs-sb-menu-header">
+			<a class="red-ui-tab-link-button" onclick="ZWaveJS.ShowNodeManagement()"><i class="fa fa-cogs"></i></a>
+			<a class="red-ui-tab-link-button" onclick="ZWaveJS.InterviewCurrentNode()"><i
+					class="fa fa-handshake-o"></i></a>
+			<a class="red-ui-tab-link-button" onclick="ZWaveJS.RebuildNodeRoutes()"><i class="fa fa-medkit"></i></a>
+			<a class="red-ui-tab-link-button" onclick="ZWaveJS.RemoveFailedNode()"><i class="fa fa-trash-o"></i></a>
+		</div>
+		<div class="red-ui-sidebar-header zwjs-sb-menu-header" id="zwjs-endpoint-list">
 
-			</div>
+		</div>
+		<div id="zwjs-cc-list" style="width: 100%; height: 100%">
+
 		</div>
 	</div>
+</div>
 </script>
 
 <!-- Tray Panel Template-->
@@ -237,7 +242,7 @@
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Stats',this, 'ControllerStats')">Statistics</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Map',this, 'RenderMap')">Topology Map</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Settings',this,'ControllerSettings')">Settings</div>
-		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Rebuild',this)">Rebuild Routes</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Rebuild',this,'GetRRCurrentProgress')">Rebuild Routes</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Firmware',this)">Firmware Update</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Slave',this)">Secondary Controller Mode</div>
 
