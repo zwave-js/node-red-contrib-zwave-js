@@ -1,3 +1,5 @@
+const { invokeMethod } = require('./Invoker');
+
 const process = async function (DriverInstance, Method, NodeID, VID, Value, ValueOptions) {
 	let Node;
 	if (Array.isArray(NodeID)) {
@@ -10,19 +12,9 @@ const process = async function (DriverInstance, Method, NodeID, VID, Value, Valu
 		return Promise.reject(new Error(`Node ${NodeID} does not exist`));
 	}
 
-	const _Method = Node[Method];
-	if (!_Method) {
-		return Promise.reject(new Error('Invalid Method'));
-	}
+	const Args = Method === 'setValue' ? [VID, Value, ValueOptions] : [VID]
+	return invokeMethod(Node, Method, Args)
 
-	switch (Method) {
-		case 'getValue':
-		case 'pollValue':
-			return _Method.apply(Node, [VID]);
-
-		case 'setValue':
-			return _Method.apply(Node, [VID, Value, ValueOptions]);
-	}
 };
 
 module.exports = { process };

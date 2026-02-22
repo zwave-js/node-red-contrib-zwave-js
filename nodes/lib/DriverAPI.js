@@ -1,4 +1,5 @@
 const { getValueDB } = require('./Fetchers');
+const { invokeMethod } = require('./Invoker');
 
 const process = async function (DriverInstance, Method, Args) {
 	if (Method === 'getValueDB') {
@@ -10,13 +11,8 @@ const process = async function (DriverInstance, Method, Args) {
 	}
 
 	/* Dynamic */
+	return invokeMethod(DriverInstance, Method, Args)
 
-	const _Method = DriverInstance[Method];
-	if (!_Method) {
-		return Promise.reject(new Error('Invalid Method'));
-	}
-	const Params = Args || [];
-	return _Method.apply(DriverInstance, Params);
 };
 
 module.exports = { process };

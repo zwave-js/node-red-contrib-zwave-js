@@ -171,6 +171,18 @@ const ZWaveJS = (function () {
 		CloseTray();
 	};
 
+	// Rebuid Routes (Nodes)
+	const RebuildNodeRoutes = () => {
+		Runtime.Post('CONTROLLER', 'rebuildNodeRoutes', [selectedNode.nodeId]).then((data) => {
+			if (data.callSuccess) {
+				alert('Rebuiliding Node routes completed successfully.')
+			} else {
+				alert(data.response);
+
+			}
+		});
+	};
+
 	// Rebuid Routes
 	const RebuildRoutes = (button, battery) => {
 		button && DisableButton(button);
@@ -456,7 +468,7 @@ const ZWaveJS = (function () {
 						el.onclick.call(el);
 					}, 250);
 				} else {
-					alert(Error.message);
+					alert(data.response);
 				}
 			})
 			.catch((Error) => {
@@ -514,7 +526,7 @@ const ZWaveJS = (function () {
 						el.onclick.call(el);
 					}, 250);
 				} else {
-					alert(Error.message);
+					alert(data.response);
 				}
 			})
 			.catch((Error) => {
@@ -1199,53 +1211,53 @@ const ZWaveJS = (function () {
 		RenderMap: () => {
 			return new Promise(async (resolve) => {
 				Runtime.Get('CONTROLLER', 'getNodes').then((data) => {
-					if (data.callSuccess) {
-						const nodes = data.response;
-
-						let nodeString = '';
-						let routeString = '';
-						nodeString += '0(fa:fa-wifi<br />Controller)\r\n';
-
-						const Nodes = nodes.filter((N) => !N.isControllerNode);
-						Nodes.forEach((v) => {
-							let Name;
-							if (v.nodeName) {
-								Name = `${v.nodeId} - ${v.nodeName}`;
-							} else {
-								Name = `${v.nodeId} - No Name`;
-							}
-							nodeString += `${v.nodeId}(fa:${v.powerSource.type === 'mains' ? 'fa-plug' : 'fa-battery-full'}<br />${Name}<br />RSSI: ${v.statistics?.rssi ?? '?'})\r\n`;
-							if (v.statistics !== undefined && v.statistics.lwr !== undefined) {
-								if (v.statistics.lwr.repeaters.length > 0) {
-									const Repeaters = v.statistics.lwr.repeaters;
-									if (Repeaters.length === 1) {
-										routeString += `${Repeaters[0]} <---> ${v.nodeId}\r\n`;
-									} else {
-										routeString += `${Repeaters.join(' <---> ')}\r\n`;
-									}
-								} else {
-									routeString += `0 <===> ${v.nodeId}\r\n`;
-								}
-							}
-						});
-
-						const result = `${nodeString}${routeString}`;
-						resolve({ map: result });
-
-						setTimeout(async () => {
-							ZWJSMermaid.initialize({ startOnLoad: false });
-							await ZWJSMermaid.run({
-								querySelector: '.zwjs-mermaid'
-							});
-							svgPanZoom('.zwjs-mermaid svg', {
-								zoomEnabled: true,
-								controlIconsEnabled: true,
-								panEnabled: true
-							});
-						}, 50);
-					} else {
+					if (!data.callSuccess) {
 						alert(data.Response);
+						return;
 					}
+					const nodes = data.response;
+
+					let nodeString = 'graph TD\r\n'; // TD = top-down
+					let routeString = '';
+
+					const Nodes = nodes.filter(n => !n.isControllerNode);
+					const Controller = nodes.find(n => n.isControllerNode);
+
+					// Controller node at the top
+					nodeString += `N0(fa:fa-wifi<br />Controller<br /><span style="font-size:10px">${Controller.deviceConfig?.manufacturer} - ${Controller.deviceConfig?.label}</span>)\r\n`;
+
+					Nodes.forEach((v) => {
+						const name = v.nodeName || 'No Name';
+						const icon = v.powerSource.type === 'mains' ? 'fa-plug' : 'fa-battery-full';
+						const device = `${v.deviceConfig?.manufacturer} - ${v.deviceConfig?.label}`
+
+						// Node definition
+						nodeString += `N${v.nodeId}(fa:${icon}<br />${v.nodeId} - ${name}<br /><span style="font-size:10px">${device}</span>)\r\n`;
+
+						// Bi-directional routes
+						const repeaters = v.statistics?.lwr?.repeaters || [];
+						if (repeaters.length > 0) {
+							repeaters.forEach(r => {
+								routeString += `N${v.nodeId} <---> N${r}\r\n`;
+							});
+						} else {
+							routeString += `N0 <===> N${v.nodeId}\r\n`; // Direct to controller
+						}
+					});
+
+					const result = `${nodeString}${routeString}`;
+					resolve({ map: result });
+
+					// Render Mermaid + enable zoom/pan
+					setTimeout(async () => {
+						ZWJSMermaid.initialize({ startOnLoad: false, securityLevel: 'loose', flowchart: { htmlLabels: true } });
+						await ZWJSMermaid.run({ querySelector: '.zwjs-mermaid' });
+						svgPanZoom('.zwjs-mermaid svg', {
+							zoomEnabled: true,
+							controlIconsEnabled: true,
+							panEnabled: true
+						});
+					}, 50);
 				});
 			});
 		},
@@ -1764,7 +1776,7 @@ const ZWaveJS = (function () {
 					}
 				});
 				SelectFirstNetwork();
-			}, 1000);
+			}, 5000);
 		} else {
 			const found = Networks.children().filter((n) => n.val === network.id);
 			if (found.length < 1) {
@@ -2441,6 +2453,7 @@ const ZWaveJS = (function () {
 		PingNode,
 		RebuildRoutes,
 		UpdateNFirmware,
-		UpdateSplitter
+		UpdateSplitter,
+		RebuildNodeRoutes
 	};
 })();

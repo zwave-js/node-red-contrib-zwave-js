@@ -351,6 +351,7 @@ module.exports = function (RED) {
 									response.json({ callSuccess: false, response: error.message });
 								});
 							break;
+							
 						case 'VALUE':
 							self
 								.valueCommand(Method, request.body.nodeId, request.body.valueId, request.body.value)

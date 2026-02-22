@@ -1,5 +1,6 @@
 const { getNodes } = require('./Fetchers');
 const { Message, MessagePriority, MessageType } = require('zwave-js');
+const { invokeMethod } = require('./Invoker');
 
 const process = async function (DriverInstance, Method, Args) {
 	if (Method === 'getNodes') {
@@ -68,14 +69,16 @@ const process = async function (DriverInstance, Method, Args) {
 		}
 	}
 
-	/* Dynamic */
-
-	const _Method = DriverInstance.controller[Method];
-	if (!_Method) {
-		return Promise.reject(new Error('Invalid Method'));
+	if (Method === 'beginRebuildingRoutes' || Method === 'rebuildNodeRoutes') {
+		if (DriverInstance.controller.isRebuildingRoutes) {
+			return Promise.reject(new Error('The controller is already rebuilding one or more routes.'));
+		}
 	}
-	const Params = Args || [];
-	return _Method.apply(DriverInstance.controller, Params);
+
+	/* Dynamic */
+	return invokeMethod(DriverInstance.controller, Method, Args)
+
+
 };
 
 module.exports = { process };

@@ -1,4 +1,5 @@
 const { CommandClasses } = require('@zwave-js/core');
+const { invokeMethod } = require('./Invoker');
 
 const process = async function (DriverInstance, Method, NodeID, Value, Args) {
 	if (Array.isArray(NodeID)) {
@@ -35,13 +36,10 @@ const process = async function (DriverInstance, Method, NodeID, Value, Args) {
 	}
 
 	/* Dynamic */
-
-	const _Method = Node[Method];
-	if (!_Method) {
-		return Promise.reject(new Error('Invalid Method'));
-	}
 	const Params = Args || (Value !== undefined ? [Value] : []);
-	return _Method.apply(Node, Params);
+	return invokeMethod(Node, Method, Params)
+
+
 };
 
 module.exports = { process };

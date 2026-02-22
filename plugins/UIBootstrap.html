@@ -47,7 +47,7 @@
 	<div class="red-ui-sidebar-header zwjs-sb-menu-header">
 		<a class="red-ui-tab-link-button" onclick="ZWaveJS.ShowNetworkManagement()"><i class="fa fa-cogs"></i></a>
 		<a class="red-ui-tab-link-button" onclick="ZWaveJS.RefreshNodes('Refresh')"><i class="fa fa-refresh"></i></a>
-		<a class="red-ui-tab-link-button" onclick="ZWaveJS.RebuildRoutes(undefined, true)"><i class="fa fa-medkit"></i></a>
+		<a class="red-ui-tab-link-button" onclick="ZWaveJS.RebuildRoutes(undefined, false)"><i class="fa fa-medkit"></i></a>
 		 | 
 		<a class="red-ui-tab-link-button" onclick="ZWaveJS.NodeCollapseToggle(1, this)"><i class="fa fa-indent zwjs-button-group" selected></i></a>
 		<a class="red-ui-tab-link-button" onclick="ZWaveJS.NodeCollapseToggle(2, this)"><i class="fa fa-bars zwjs-button-group "></i></a>
@@ -82,7 +82,7 @@
 			<div class="red-ui-sidebar-header zwjs-sb-menu-header">
 				<a class="red-ui-tab-link-button" onclick="ZWaveJS.ShowNodeManagement()"><i class="fa fa-cogs"></i></a>
 				<a class="red-ui-tab-link-button" onclick="ZWaveJS.InterviewCurrentNode()"><i class="fa fa-handshake-o"></i></a>
-				<a class="red-ui-tab-link-button"><i class="fa fa-medkit"></i></a>
+				<a class="red-ui-tab-link-button" onclick="ZWaveJS.RebuildNodeRoutes()"><i class="fa fa-medkit"></i></a>
 				<a class="red-ui-tab-link-button" onclick="ZWaveJS.RemoveFailedNode()"><i class="fa fa-trash-o"></i></a>
 			</div>
 			<div class="red-ui-sidebar-header zwjs-sb-menu-header" id="zwjs-endpoint-list">
@@ -209,7 +209,6 @@
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Stats',this,'NodeStats')">Statistics</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Associations',this,'NodeAssociationGroups')">Associations</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-HealthCheck',this)">Health Check</div>
-		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Stats',this)">Priority Routing</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Firmware',this)">Firmware Update</div>
 
 	</div>
@@ -270,11 +269,7 @@
 <script type="text/template" id="ZWJS_TPL_Tray-Controller-Map">
 	<fieldset class=zwjs-fieldset>
 		<div class="zwjs-hint">The map below is based on statistics for each ZWave Node, specifically the <strong>Last Working Route(s)</strong> to the Node, from the Controller</div>
-		<div class="zwjs-mermaid" id="zwjs-mermaid">
-			flowchart TD
-				{{map}}
-
-		</div>
+		<div class="zwjs-mermaid" id="zwjs-mermaid">{{map}}</div>
 	</fieldset>
 </script>
 
