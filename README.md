@@ -8,7 +8,7 @@
 [![DeepScan grade](https://deepscan.io/api/teams/17652/projects/21011/branches/591232/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=17652&pid=21011&bid=591232)
 ![GitHub issues](https://img.shields.io/github/issues-raw/zwave-js/node-red-contrib-zwave-js)
 ![GitHub closed issues](https://img.shields.io/github/issues-closed-raw/zwave-js/node-red-contrib-zwave-js)
-![Libraries.io dependency status for latest release](https://img.shields.io/librariesio/release/npm/node-red-contrib-zwave-js)
+![Libraries.io dependency status for latest release](https://img.shields.io/librariesio/github/zwave-js/node-red-contrib-zwave-js)
 
 The most powerful, high performing and highly polished Z-Wave node for Node-RED based on Z-Wave JS. If you want a fully featured Z-Wave framework in your Node-RED instance, you have found it.
 
@@ -25,11 +25,13 @@ The most powerful, high performing and highly polished Z-Wave node for Node-RED 
  - Full Z-Wave control inside Node-RED including:
    - Multi Stick/Network support
    - Device inclusion/exclusion wizard
+   - Long Range Support
+   - Secondry Controller Support
    - S0 and S2 security support
-   - Supports Security S2 Smart Start via a Mobile (and local) companion web application.
+   - Supports Security S2 Smart Start
    - Network health checks  
    - Network mesh graph
-   - Device Firmware updates
+   - Device (and controller) Firmware updates
    - Advanced RF configuration
    - NVM Backup/Restore
    - Associations management
@@ -45,7 +47,7 @@ Since `node-red-contrib-zwave-js` is based on [Z-Wave JS](https://zwave-js.githu
 
 ![Image](./GHImages/ZWUI.gif) 
 
-Included with the contrib is a [user interface](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/User-Interface) where Z-Wave network management is handled. The controller side of the UI is used to include/exclude devices, heal the network, update firmware, and view the network map for diagnosing problems. The device side of the UI is used to configure devices, manage associations, and provide setup help for the nodes which will be used in your flows.
+Included with this module is a user interfacew where Z-Wave network management is handled. Its deeply integrated into Node RED, fits right in.
 
 ## The Nodes
 
