@@ -662,6 +662,10 @@ module.exports = function (RED) {
 					false
 				);
 
+				const Event = {
+					Type: 'EVENT',
+					Event: { event: event_NodeAdded.redEventName, timestamp: Timestamp, eventBody: { nodeId: ThisNode.id, lowSecurity: Result.lowSecurity } }
+				};
 				const Status = {
 					Type: 'STATUS',
 					Status: {
@@ -674,6 +678,7 @@ module.exports = function (RED) {
 				updateLatestStatus(event_NodeAdded.statusNameWithNode(ThisNode));
 				ControllerNodeIDs.forEach((ID) => {
 					controllerNodes[ID](Status);
+					controllerNodes[ID](Event);
 				});
 				wireNodeEvents(ThisNode);
 			});
@@ -682,6 +687,10 @@ module.exports = function (RED) {
 			self.driverInstance?.controller.on(event_NodeRemoved.driverName, (ThisNode, Reason) => {
 				const ControllerNodeIDs = Object.keys(controllerNodes);
 				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/removed`, { nodeId: ThisNode.id, reason: Reason }, false);
+				const Event = {
+					Type: 'EVENT',
+					Event: { event: event_NodeRemoved.redEventName, timestamp: Timestamp, eventBody: { nodeId: ThisNode.id, reason: Reason } }
+				};
 				const Status = {
 					Type: 'STATUS',
 					Status: {
@@ -694,6 +703,7 @@ module.exports = function (RED) {
 				updateLatestStatus(event_NodeRemoved.statusNameWithNode(ThisNode));
 				ControllerNodeIDs.forEach((ID) => {
 					controllerNodes[ID](Status);
+					controllerNodes[ID](Event);
 				});
 			});
 

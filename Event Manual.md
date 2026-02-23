@@ -3,7 +3,7 @@
 
 ### Event Manual  
 The below table show the available events emitted by each node type.  
-all evenst are wrapped in ```msg.payload```
+all events are wrapped in ```msg.payload```
 
 The Controller Node
 --------
@@ -11,23 +11,35 @@ The Controller Node
 ```js
 {
     event: 'ALL_NODES_READY',
-    timestamp: 1234567890
+    timestamp: number
+}
+```
+```js
+{
+    event: 'NODE_(ADDED | REMOVED)',
+    timestamp: number,
+    eventBody:{
+        nodeId: number,
+        lowSecurity: boolean, /* NODE_ADDED only */
+        reason: Reason        /* NODE_REMOVED only */
+    }
 }
 ```
 ```js
 {
     event: '(INCLUSION | EXCLUSION)_(STARTED | STOPPED | FAILED)',
+    timestamp: number,
     eventBody: {
         inclusionStrategy: InclusionStrategy /* INCLUSION_STARTED only */
-    },
-    timestamp: 1234567890
+    }
 }
 ```
 ```js
 {
     event: 'REBUILD_ROUTES_(PROGRESS | DONE)',
-    eventBody: RebuildRoutesStatus,
-    timestamp: 1234567890
+    timestamp: number,
+    eventBody: RebuildRoutesStatus
+
 }
 ```
 
@@ -36,10 +48,10 @@ The Device Node
 ```js
 {
     event: 'READY | ALIVE | WAKE_UP | SLEEP | DEAD',
-    timestamp: 1234567890,
-    nodeId: 99,
-    nodeName: 'Foo',
-    nodeLocation: 'Bar',
+    timestamp: number,
+    nodeId: number,
+    nodeName: string,
+    nodeLocation: string,
     eventBody: {
         oldStatus: PreviousStatus /* Excludes READY */
     }
@@ -48,10 +60,10 @@ The Device Node
 ```js
 {
     event: 'VALUE_(NOTIFICATION | UPDATED | ADDED)',
-    timestamp: 1234567890,
-    nodeId: 99,
-    nodeName: 'Foo',
-    nodeLocation: 'Bar',
+    timestamp: number,
+    nodeId: number,
+    nodeName: string,
+    nodeLocation: string,
     eventBody: {
         valueId: ValueID,
         value: Any,     /* VALUE_NOTIFICATION only */
@@ -63,12 +75,12 @@ The Device Node
 ```js
 {
     event: 'NOTIFICATION',
-    timestamp: 1234567890,
-    nodeId: 99,
-    nodeName: 'Foo',
-    nodeLocation: 'Bar',
+    timestamp: number,
+    nodeId: number,
+    nodeName: string,
+    nodeLocation: string,
     eventBody: {
-        ccId: 0x00,
+        ccId: number,
         args: Any
     }
 }
