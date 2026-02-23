@@ -1,5 +1,47 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 11.0.0
+
+    **Breaking Changes**  
+
+    V11 represents a massive shift in how this set of nodes works. However, it is not considered an easy upgrade from versions <= v10.
+
+    I apologise for the interruption, but the set of libraries behind all of this has changed considerably, and over the years, I have polyfilled features and extended functionality, and in doing so, the project has become increasingly complex to maintain.
+
+    The aim with v11 was to take everything as it is now and rebuild it from the ground up.
+
+    - All nodes have been updated in their mechanisms and type names:
+      - Z-Wave Controller
+      - Device Node
+      - Event Filter (Now Event Splitter)
+      - CMD Factory
+    - The Controller and Device nodes are now powered by a central Configuration node
+    - The Controller Node, no longer receives device updates
+    - The command format has been changed (please see [HERE](./Command%20Manual.md))
+    - The incoming event format has also been changed
+
+    **Changes**
+    - A completely redesigned user interface
+    - Smart Start now uses the browser webcam (SSL required)
+    - The Mesh Map is now built into the UI (instead of opening in a secondary tab)
+
+    **New Features**
+    - Full support for Long Range (Z-Wave 800LR)
+    - Unlimited networks
+    - Now supports acting as a secondary controller
+    - Direct device interaction inside function nodes
+    - Controller firmware updates
+
+
+  - 10.0.0
+
+    **Breaking Changes**
+      - Min Node Version is now >=20
+
+    **Changes**  
+      - Bump ZWave JS from v14 to V15
+      - Bump various dependencies 
+
   - 9.1.3
 
     **Maintenance Release**
