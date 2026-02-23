@@ -41,29 +41,31 @@ The most powerful, high performing and highly polished Z-Wave node for Node-RED 
    - And much more..
 
 
-Since `node-red-contrib-zwave-js` is based on [Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/), we have the support and active maintenance from the amazing group of developers who have built the libraries, APIs, and config files which run this contrib.
+Since `node-red-contrib-zwave-js` is based on [Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/), we have the support and active maintenance from the amazing group of developers who have built the libraries, APIs, and config files which run this module.
 
 ## The User Interface
 
-![Image](./GHImages/ZWUI.gif) 
+Included with this module is a complete user inerface where Z-Wave network management is handled. Its deeply integrated into Node RED and fits right in.
 
-Included with this module is a user interfacew where Z-Wave network management is handled. Its deeply integrated into Node RED, fits right in.
+![Image](./GHImages/UI.png) 
+
 
 ## The Nodes
 
-![Image](./GHImages/Demo.png)
+![Image](./GHImages/Nodes.png)
 
-There are 4 node types included with this contrib ([click here](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/node-types) for full details about these nodes)
- - `ZWave Controller`: this node is used to set up a connection to your USB Z-Wave controller, set security keys, and manage various advanced controller options
- - `ZWave Device`: this node is used to send and receive messages to one or more of the Z-Wave devices on your network
- - `Event Filter`: this node is used to filter and sort messages from your Z-Wave devices
- - `CMD Factory`: this node simplifies creation of messages being sent to your Z-Wave devices
+In addition to the **Configuration** node, which runs the Z-Wave stack, this module includes four additional node types:
 
-## Getting Started Links
- - [Installing](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/getting-started): system requirements and install instructions
- - [Just Show Me How](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/First-Z-Wave-Flow-Setup): first day walkthrough
- - [Wiki](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/getting-started): just about everything
- - [Change Log](./CHANGELOG.md): whats changed?
+| Node | Used For |
+|------|----------|
+| **Z-Wave Controller** | Provides access to all available commands and receives system-level events. |
+| **Z-Wave Device** | Designed for controlling individual devices and listening for status changes from your devices. |
+| **Z-Wave Event Splitter** | Filters network traffic so that only the events you care about are passed through. |
+| **Z-Wave Command Factory** | Instead of writing commands manually, this node generates them automatically. |
+
+To understand the commands available: click [here](./Command%20Manual.md)  
+and of course the  [Change Log](./CHANGELOG.md)
+
 
 ## Awesome People - Thanks!
 
