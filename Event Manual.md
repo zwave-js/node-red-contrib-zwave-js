@@ -40,8 +40,8 @@ The Device Node
     nodeId: 99,
     nodeName: 'Foo',
     nodeLocation: 'Bar',
-    eventBody:{
-        oldStatus: PreviousStatus
+    eventBody: {
+        oldStatus: PreviousStatus /* Excludes READY */
     }
 }
 ```
@@ -52,7 +52,7 @@ The Device Node
     nodeId: 99,
     nodeName: 'Foo',
     nodeLocation: 'Bar',
-    eventBody:{
+    eventBody: {
         valueId: ValueID,
         value: Any,     /* VALUE_NOTIFICATION only */
         newValue: Any,  /* VALUE_UPDATED, VALUE_ADDED only */
@@ -67,7 +67,7 @@ The Device Node
     nodeId: 99,
     nodeName: 'Foo',
     nodeLocation: 'Bar',
-    eventBody:{
+    eventBody: {
         ccId: 0x00,
         args: Any
     }
