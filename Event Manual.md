@@ -3,7 +3,7 @@
 
 ### Event Manual  
 The below table show the available events emitted by each node type.  
-all events are wrapped in ```msg.payload```
+all events are wrapped in ```payload```
 
 The Controller Node
 --------
