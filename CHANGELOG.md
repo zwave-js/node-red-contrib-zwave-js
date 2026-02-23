@@ -8,7 +8,8 @@
 
     I apologise for the interruption, but the set of libraries behind all of this has changed considerably, and over the years, I have polyfilled features and extended functionality, and in doing so, the project has become increasingly complex to maintain.
 
-    The aim with v11 was to take everything as it is now and rebuild it from the ground up.
+    The aim with v11 was to take everything as it is now and rebuild it from the ground up.  
+    **NOTE**: Your network will not be affected and will survive the transition, its the flows that you will have to re-engineer.
 
     - All nodes have been updated in their mechanisms and type names:
       - Z-Wave Controller
