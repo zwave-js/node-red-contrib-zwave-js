@@ -1055,7 +1055,7 @@ module.exports = function (RED) {
 				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Event = {
 					Type: 'EVENT',
-					Event: { event: event_InterviewStarted.redEventName, timestamp: Timestamp }
+					Event: { event: event_InterviewStarted.redEventName, timestamp: Timestamp, eventBody: { nodeId: ThisNode.id } }
 				};
 				const Status = {
 					Type: 'STATUS',
@@ -1081,7 +1081,7 @@ module.exports = function (RED) {
 				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Event = {
 					Type: 'EVENT',
-					Event: { event: event_InterviewCompleted.redEventName, timestamp: Timestamp }
+					Event: { event: event_InterviewCompleted.redEventName, timestamp: Timestamp, eventBody: { nodeId: ThisNode.id } }
 				};
 				const Status = {
 					Type: 'STATUS',
@@ -1108,7 +1108,7 @@ module.exports = function (RED) {
 				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Event = {
 					Type: 'EVENT',
-					Event: { event: event_InterviewFailed.redEventName, timestamp: Timestamp, eventBody: Args }
+					Event: { event: event_InterviewFailed.redEventName, timestamp: Timestamp, eventBody: { nodeId: ThisNode.id, args: Args } }
 				};
 				const Status = {
 					Type: 'STATUS',

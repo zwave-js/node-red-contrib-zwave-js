@@ -27,6 +27,16 @@ The Controller Node
 ```
 ```js
 {
+    event: 'INTERVIEW_(STARTED | COMPLETED | FAILED)',
+    timestamp: number,
+    eventBody:{
+        nodeId: number,
+        args: InterviewFailedEventArgs /* INTERVIEW_FAILED only */
+    }
+}
+```
+```js
+{
     event: '(INCLUSION | EXCLUSION)_(STARTED | STOPPED | FAILED)',
     timestamp: number,
     eventBody: {
