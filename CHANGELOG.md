@@ -18,7 +18,7 @@
     - The Controller and Device nodes are now powered by a central Configuration node
     - The Controller Node, no longer receives device updates
     - The command format has been changed (please see [HERE](./Command%20Manual.md))
-    - The incoming event format has also been changed
+    - The incoming event format has also been changed (please see [HERE](./Event%20Manual.md))
 
     **Changes**
     - A completely redesigned user interface

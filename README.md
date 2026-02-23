@@ -64,6 +64,7 @@ In addition to the **Configuration** node, which runs the Z-Wave stack, this mod
 | **Z-Wave Command Factory** | Instead of writing commands manually, this node generates them automatically. |
 
 To understand the commands available: click [HERE](./Command%20Manual.md)  
+To understand the events available: click [HERE](./Event%20Manual.md)  
 and of course the  [CHANGE LOG](./CHANGELOG.md)
 
 
