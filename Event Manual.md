@@ -10,7 +10,7 @@ The Controller Node
 
 ```js
 {
-    event: 'ALL_NODES_READY'
+    event: 'ALL_NODES_READY',
     timestamp: 1234567890
 }
 ```
@@ -25,8 +25,8 @@ The Controller Node
 ```
 ```js
 {
-    event: 'REBUILD_ROUTES_(PROGRESS | DONE)'
-    eventBody: RebuildRoutesStatus
+    event: 'REBUILD_ROUTES_(PROGRESS | DONE)',
+    eventBody: RebuildRoutesStatus,
     timestamp: 1234567890
 }
 ```
