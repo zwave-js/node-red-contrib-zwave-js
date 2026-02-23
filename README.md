@@ -63,17 +63,17 @@ In addition to the **Configuration** node, which runs the Z-Wave stack, this mod
 | **Z-Wave Event Splitter** | Filters network traffic so that only the events you care about are passed through. |
 | **Z-Wave Command Factory** | Instead of writing commands manually, this node generates them automatically. |
 
-To understand the commands available: click [here](./Command%20Manual.md)  
-and of course the  [Change Log](./CHANGELOG.md)
+To understand the commands available: click [HERE](./Command%20Manual.md)  
+and of course the  [CHANGE LOG](./CHANGELOG.md)
 
 
 ## Awesome People - Thanks!
 
- - [marcus-j-davies](https://github.com/marcus-j-davies) our main developer who claims "*my software doesn't have bugs*"
- - [AlCalzone](https://github.com/AlCalzone) for creating [ZWave-JS](https://github.com/zwave-js/node-zwave-js) that makes this possible
- - [hufftheweevil](https://github.com/hufftheweevil) for creating the User Interface tab
- - [CRXPorter](https://github.com/crxporter) for creating all the help material/finding this project
- - [thk](https://github.com/thk-socal) for the relentless beta testing
+ - [marcus-j-davies](https://github.com/marcus-j-davies) our main developer who claims "*my software doesn't have bugs*".
+ - [AlCalzone](https://github.com/AlCalzone) for creating [ZWave-JS](https://github.com/zwave-js/node-zwave-js) that makes this all possible.
+ - [hufftheweevil](https://github.com/hufftheweevil) for developing the original UI, and allowing it to become what it is.
+ - [CRXPorter](https://github.com/crxporter) for creating all the help material/finding this project.
+ - [thk](https://github.com/thk-socal) for the relentless beta testing.
 
  ## License
  MIT License
