@@ -28,6 +28,7 @@
 
     **New Features**
     - Full support for Long Range (Z-Wave 800LR)
+    - Full support for the Firmware Update Service
     - Unlimited networks
     - Now supports acting as a secondary controller
     - Direct device interaction inside function nodes

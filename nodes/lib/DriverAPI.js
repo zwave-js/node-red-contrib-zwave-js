@@ -13,8 +13,6 @@ const process = async function (DriverInstance, Method, Args) {
 	/* Dynamic */
 	return invokeMethod(DriverInstance, Method, Args)
 
-	//installConfigUpdate
-
 };
 
 module.exports = { process };

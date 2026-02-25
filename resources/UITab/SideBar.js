@@ -148,10 +148,20 @@ const ZWaveJS = (function () {
 
 	// Install Config Update
 	const CFGUpdate = () => {
-		Runtime.Post('DRIVER', 'installConfigUpdate').then((data) => {
+		Runtime.Post('DRIVER', 'checkForConfigUpdates').then((data) => {
 			if (data.callSuccess) {
-				if (data.response) {
-					alert('An update to the configuration database has been installed.')
+				if (data.response !== undefined) {
+					const UD = confirm(`A configuration database update is available (${data.response}). Would you like to update?`)
+					if (UD) {
+						Runtime.Post('DRIVER', 'installConfigUpdate').then((res) => {
+							if (res.callSuccess && res.response) {
+								alert(`Update was installed.`)
+							}
+							else {
+								alert(`Update was not installed: ${res.response}.`)
+							}
+						})
+					}
 				}
 				else {
 					alert('No update available.')
@@ -1206,7 +1216,17 @@ const ZWaveJS = (function () {
 
 	// Render Advanded info (also used internally)
 	const RenderFunctions = {
+		PrepFUS: () => {
+			return new Promise((resolve) => {
 
+				const Key = RED.nodes.node(networkId).apiKeys_firmwareUpdateService
+				const Res = {};
+				if (!Key) {
+					Res.Message = '<strong>Non-Commercial</strong><br /><br />As no API key has been provided, you\'re confirming the environment is <strong>Non-Commercial</strong>.<br />An API Key for the Firmware Update Service is required for Commercial installs.'
+				}
+				resolve(Res);
+			});
+		},
 		GetRRCurrentProgress: () => {
 			Runtime.Get(undefined, undefined, `zwave-js/ui/${networkId}/rebuildroutesprogress`).then((data) => {
 				if (data.callSuccess) {
