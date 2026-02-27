@@ -494,8 +494,13 @@
 			<div class="zwjs-hint">{{{Message}}}</div>
 		{{/if}}
 		<div class="zwjs-hint">The Firmware Update Service, will query all interviewed Zwave Nodes in your network and check for updates provided by the manufacturer, allowing you to update them.</div>
+		{{#if Updates}}
+			{{#each Updates}}
+			   {{{this}}}
+			{{/each}}
+		{{/if}}
 		<div>
-			<button onclick="">Check For Firmware Updates</button>
+			<button onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Firmware-Service',undefined,'CheckFUS')">Check For Firmware Updates</button>
 		</div>
 	</fieldset>
 </script>

@@ -9,7 +9,7 @@ const process = async function (DriverInstance, Method, NodeID, VID, Value, Valu
 	}
 
 	if (!Node) {
-		return Promise.reject(new Error(`Node ${NodeID} does not exist`));
+		throw new Error(`Node ${NodeID} does not exist`);
 	}
 
 	const Args = Method === 'setValue' ? [VID, Value, ValueOptions] : [VID]

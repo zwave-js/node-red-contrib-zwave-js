@@ -1216,6 +1216,30 @@ const ZWaveJS = (function () {
 
 	// Render Advanded info (also used internally)
 	const RenderFunctions = {
+
+		CheckFUS: () => {
+			return new Promise((resolve, reject) => {
+
+				const Request = {
+					includePrereleases: true
+				}
+				Runtime.Post('CONTROLLER', 'getAllAvailableFirmwareUpdates', [Request]).then((data) => {
+					if (data.callSuccess) {
+						if (data.response.length > 0) {
+							resolve(data.response)
+						}
+						else {
+							reject('No updates available.')
+						}
+					}
+					else {
+						reject(data.response)
+					}
+				})
+
+			});
+		},
+
 		PrepFUS: () => {
 			return new Promise((resolve) => {
 
@@ -1258,10 +1282,10 @@ const ZWaveJS = (function () {
 			});
 		},
 		RenderMap: () => {
-			return new Promise(async (resolve) => {
+			return new Promise(async (resolve, reject) => {
 				Runtime.Get('CONTROLLER', 'getNodes').then((data) => {
 					if (!data.callSuccess) {
-						alert(data.Response);
+						reject(data.Response);
 						return;
 					}
 					const nodes = data.response;
@@ -1311,13 +1335,13 @@ const ZWaveJS = (function () {
 			});
 		},
 		PrepFailed: () => {
-			return new Promise(async (resolve) => {
+			return new Promise(async (resolve, reject) => {
 				Runtime.Get('CONTROLLER', 'getNodes').then((data) => {
 					if (data.callSuccess) {
 						const nodes = data.response.filter((N) => N.status === 'Dead');
 						resolve({ nodes });
 					} else {
-						alert(data.Response);
+						reject(data.Response);
 					}
 				});
 			});

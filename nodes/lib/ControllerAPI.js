@@ -4,11 +4,7 @@ const { invokeMethod } = require('./Invoker');
 
 const process = async function (DriverInstance, Method, Args) {
 	if (Method === 'getNodes') {
-		try {
-			return getNodes(DriverInstance);
-		} catch (Err) {
-			return Promise.reject(Err);
-		}
+		return getNodes(DriverInstance);
 	}
 
 	if (Method === 'proprietaryFunction') {
@@ -27,58 +23,43 @@ const process = async function (DriverInstance, Method, Args) {
 	}
 
 	if (Method === 'getAllAssociationGroups') {
-		try {
-			const Formated = {};
-			DriverInstance.controller.getAllAssociationGroups(...Args).forEach((M, I) => {
-				Formated[I] = Object.fromEntries(M);
-			});
-			return Formated;
-		} catch (Err) {
-			return Promise.reject(Err);
-		}
+		return Object.fromEntries(
+			[...DriverInstance.controller.getAllAssociationGroups(...Args)]
+				.map(([k, v]) => [k, Object.fromEntries(v)])
+		);
 	}
 
 	if (Method === 'getAssociationGroups') {
-		try {
-			return Object.fromEntries(DriverInstance.controller.getAssociationGroups(...Args));
-		} catch (Err) {
-			return Promise.reject(Err);
-		}
+		return Object.fromEntries(DriverInstance.controller.getAssociationGroups(...Args));
 	}
 
 	if (Method === 'getAssociations') {
-		try {
-			return Object.fromEntries(DriverInstance.controller.getAssociations(...Args));
-		} catch (Err) {
-			return Promise.reject(Err);
-		}
+		return Object.fromEntries(DriverInstance.controller.getAssociations(...Args));
 	}
 
 	if (Method === 'getAllAssociations') {
-		try {
-			const Formated = [];
-			DriverInstance.controller.getAllAssociations(...Args).forEach((M, AD) => {
-				Formated.push({
-					associationAddress: AD,
-					associations: Object.fromEntries(M)
-				});
-			});
-			return Formated;
-		} catch (Err) {
-			return Promise.reject(Err);
-		}
+		return Array.from(
+			DriverInstance.controller.getAllAssociations(...Args),
+			([associationAddress, associations]) => ({
+				associationAddress,
+				associations: Object.fromEntries(associations),
+			})
+		);
+	}
+
+	if (Method === 'getAllAvailableFirmwareUpdates') {
+		const updatesMap = await DriverInstance.controller.getAllAvailableFirmwareUpdates(...Args);
+		return Object.fromEntries(updatesMap);
 	}
 
 	if (Method === 'beginRebuildingRoutes' || Method === 'rebuildNodeRoutes') {
 		if (DriverInstance.controller.isRebuildingRoutes) {
-			return Promise.reject(new Error('The controller is already rebuilding one or more routes.'));
+			throw new Error('The controller is already rebuilding one or more routes.');
 		}
 	}
 
 	/* Dynamic */
 	return invokeMethod(DriverInstance.controller, Method, Args)
-
-
 };
 
 module.exports = { process };
