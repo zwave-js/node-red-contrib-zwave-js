@@ -48,7 +48,14 @@ const process = async function (DriverInstance, Method, Args) {
 	}
 
 	if (Method === 'getAllAvailableFirmwareUpdates') {
-		const updatesMap = await DriverInstance.controller.getAllAvailableFirmwareUpdates(...Args);
+		let updatesMap;
+		if (Args !== undefined) {
+			updatesMap = await DriverInstance.controller.getAllAvailableFirmwareUpdates(...Args);
+		}
+		else {
+			updatesMap = await DriverInstance.controller.getAllAvailableFirmwareUpdates();
+		}
+
 		return Object.fromEntries(updatesMap);
 	}
 
@@ -59,7 +66,7 @@ const process = async function (DriverInstance, Method, Args) {
 	}
 
 	/* Dynamic */
-	return invokeMethod(DriverInstance.controller, Method, Args)
+	return invokeMethod(DriverInstance.controller, Method, Args || [])
 };
 
 module.exports = { process };
