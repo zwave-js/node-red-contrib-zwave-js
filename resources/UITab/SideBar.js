@@ -1,5 +1,4 @@
 /* eslint no-undef: "warn"*/
-
 // eslint-disable-next-line no-unused-vars
 const ZWaveJS = (function () {
 	/*
@@ -1214,9 +1213,15 @@ const ZWaveJS = (function () {
 		});
 	};
 
+	const getFUSLicenseStatus = () => {
+		const Key = RED.nodes.node(networkId).apiKeys_firmwareUpdateService;
+		if (!Key) {
+			return '<strong>Non-Commercial</strong><br /><br />As no API key has been provided, you\'re confirming the environment is <strong>Non-Commercial</strong>.<br />An API Key for the Firmware Update Service is required for Commercial installs.'
+		}
+	}
+
 	// Render Advanded info (also used internally)
 	const RenderFunctions = {
-
 		CheckFUS: () => {
 			return new Promise((resolve, reject) => {
 
@@ -1226,7 +1231,7 @@ const ZWaveJS = (function () {
 				Runtime.Post('CONTROLLER', 'getAllAvailableFirmwareUpdates', [Request]).then((data) => {
 					if (data.callSuccess) {
 						if (Object.keys(data.response).length) {
-							resolve({ Updates: data.response })
+							resolve({ Updates: data.response, Message: getFUSLicenseStatus() })
 						}
 						else {
 							reject('No updates available.')
@@ -1239,15 +1244,11 @@ const ZWaveJS = (function () {
 
 			});
 		},
-
 		PrepFUS: () => {
 			return new Promise((resolve) => {
-
-				const Key = RED.nodes.node(networkId).apiKeys_firmwareUpdateService
-				const Res = {};
-				if (!Key) {
-					Res.Message = '<strong>Non-Commercial</strong><br /><br />As no API key has been provided, you\'re confirming the environment is <strong>Non-Commercial</strong>.<br />An API Key for the Firmware Update Service is required for Commercial installs.'
-				}
+				const Res = {
+					Message: getFUSLicenseStatus()
+				};
 				resolve(Res);
 			});
 		},
@@ -1580,10 +1581,14 @@ const ZWaveJS = (function () {
 	const UpdateCFirmwareFUS = (Update) => {
 		const FWI = DecodeObject(Update);
 		if (confirm(`Note: This will update the Controllers firmware to the update chosen (version: ${FWI.normalizedVersion}), do you wish to proceed?`)) {
-			
-			RenderAdvanced('ZWJS_TPL_Tray-Controller-Firmware');
 
-			
+			RenderAdvanced('ZWJS_TPL_Tray-Controller-Firmware')
+				.then(() => {
+					Runtime.Post('DRIVER', 'firmwareUpdateOTW', [FWI])
+						.catch((Error) => {
+							alert(Error.message);
+						});
+				})
 		}
 	}
 

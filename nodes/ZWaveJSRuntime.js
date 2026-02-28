@@ -416,10 +416,12 @@ module.exports = function (RED) {
 						case 'DRIVER':
 							args = request.body;
 							if (Method === 'firmwareUpdateOTW') {
-								const D = args[0].data;
-								const byteArray = Array.isArray(D) ? D : Object.values(D);
-								const uint8Array = new Uint8Array(byteArray);
-								args = [uint8Array];
+								if (args[0].data) {
+									const D = args[0].data;
+									const byteArray = Array.isArray(D) ? D : Object.values(D);
+									const uint8Array = new Uint8Array(byteArray);
+									args = [uint8Array];
+								}
 							}
 							self
 								.driverCommand(Method, args)
