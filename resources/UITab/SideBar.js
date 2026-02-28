@@ -1225,8 +1225,8 @@ const ZWaveJS = (function () {
 				}
 				Runtime.Post('CONTROLLER', 'getAllAvailableFirmwareUpdates', [Request]).then((data) => {
 					if (data.callSuccess) {
-						if (data.response.length > 0) {
-							resolve(data.response)
+						if (Object.keys(data.response).length) {
+							resolve({ Updates: data.response })
 						}
 						else {
 							reject('No updates available.')
@@ -1577,6 +1577,16 @@ const ZWaveJS = (function () {
 	};
 
 	// Update Controller Firmware
+	const UpdateCFirmwareFUS = (Update) => {
+		const FWI = DecodeObject(Update);
+		if (confirm(`Note: This will update the Controllers firmware to the update chosen (version: ${FWI.normalizedVersion}), do you wish to proceed?`)) {
+			
+			RenderAdvanced('ZWJS_TPL_Tray-Controller-Firmware');
+
+			
+		}
+	}
+
 	const UpdateCFirmware = (Button) => {
 		if (confirm('Note: This will update the Controllers firmware, do you wish to proceed?')) {
 			const promptFileUpload = () => {
@@ -2528,6 +2538,7 @@ const ZWaveJS = (function () {
 		UpdateNFirmware,
 		UpdateSplitter,
 		RebuildNodeRoutes,
-		CFGUpdate
+		CFGUpdate,
+		UpdateCFirmwareFUS
 	};
 })();

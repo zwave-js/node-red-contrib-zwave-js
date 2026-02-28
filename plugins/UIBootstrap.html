@@ -244,6 +244,7 @@
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Settings',this,'ControllerSettings')">Settings</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Rebuild',this,'GetRRCurrentProgress')">Rebuild Routes</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Firmware',this)">Firmware Update</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Firmware-Service',this,'PrepFUS')">Firmware Update Service</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Slave',this)">Secondary Controller Mode</div>
 
 		<div parent>Nodes</div>
@@ -479,7 +480,6 @@
 		</div>
 		<div>
 			<button onclick="ZWaveJS.UpdateCFirmware(this)">Update Firmware</button>
-			<button onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Firmware-Service',undefined,'PrepFUS')">Firmware Update Service</button>
 		</div>
 	</fieldset>
 	<div class="zwjs-progress-container" id="zwjs-prog-contain-cfirmware">
@@ -494,11 +494,46 @@
 			<div class="zwjs-hint">{{{Message}}}</div>
 		{{/if}}
 		<div class="zwjs-hint">The Firmware Update Service, will query all interviewed Zwave Nodes in your network and check for updates provided by the manufacturer, allowing you to update them.</div>
-		{{#if Updates}}
+		<table class="zwjs-table" id="zwjs-fus-updates" horizontal>
+			<tr>
+				<td style="text-align:center">Node</td>
+				<td style="text-align:center">Updates</td>
+			</tr>
+
 			{{#each Updates}}
-			   {{{this}}}
+				<tr>
+					<!-- Node -->
+					<td style="text-align:center; vertical-align: top;">
+						<span class="zwjs-node-id">{{#eq @key "1"}}CTR{{else}}{{@key}}{{/eq}}</span>
+					</td>
+
+					<!-- Inner Table -->
+					<td>
+						<table style="width:100%; border-collapse: collapse;" class="zwjs-table">
+							<tr>
+								<th>Channel</th>
+								<th>Version</th>
+								<th>Change Log</th>
+								<th>Action</th>
+							</tr>
+
+							{{#each this}}
+								<tr>
+									<td style="text-align:center;"><span class="zwjs-empises" style="display:block" {{#eq channel "beta"}}warn{{else}}positive{{/eq}}>{{channel}}</span></td>
+									<td style="text-align:center;">{{normalizedVersion}}</td>
+									<td style="text-align:center;">
+										<a href="#" onclick='alert({{{json changelog}}})'>View Change Log</a>
+									</td>
+									<td style="text-align:center;">
+										<div><button onclick="ZWaveJS.UpdateCFirmwareFUS('{{encode this}}')">Update</button></div>
+									</td>
+								</tr>
+							{{/each}}
+						</table>
+					</td>
+				</tr>
 			{{/each}}
-		{{/if}}
+		</table>
 		<div>
 			<button onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Firmware-Service',undefined,'CheckFUS')">Check For Firmware Updates</button>
 		</div>
@@ -620,6 +655,7 @@
 		</div>
 		<div>
 			<button onclick="ZWaveJS.UpdateNFirmware(this)">Update Firmware</button>
+			
 		</div>
 	</fieldset>
 	<div class="zwjs-progress-container" id="zwjs-prog-contain-nfirmware">

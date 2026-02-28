@@ -115,7 +115,7 @@
 				value: '',
 				required: false
 			}
-			
+
 		},
 		label: function () {
 			return this.name;
@@ -138,7 +138,7 @@
 				data.response.forEach((SP) => {
 					$('#node-config-input-serialPort').append(new Option(SP, SP));
 				});
-				if(this.serialPort){
+				if (this.serialPort) {
 					$('#node-config-input-serialPort').val(this.serialPort)
 				}
 			} else {
@@ -153,6 +153,18 @@
 		const hexKey = [...bytes].map((x) => x.toString(16).padStart(2, '0')).join('');
 		$(event.target).prev().val(hexKey);
 	}
+
+	function handleCustomSerial(el) {
+		const select = $(el);
+		if (select.val() !== 'Custom') return;
+		const port = prompt('Please provide serial port path or tcp:// string');
+		if (!port || !port.trim()) return;
+
+		const cleanPort = port.trim();
+		const option = new Option(cleanPort, cleanPort, true, true);
+
+		select.append(option);
+	}
 </script>
 
 <!-- prettier-ignore -->
@@ -165,7 +177,7 @@
 	</div>
 	<div class="form-row">
 	    <label for="node-config-input-serialPort"><i class="fa fa-terminal"></i> Serial Port</label>
-		<select id="node-config-input-serialPort">
+		<select id="node-config-input-serialPort" onchange="handleCustomSerial(this)">
 			<option value="">Select Port</option>
 			<option value="Custom">--Use Custom Path --</option>
 		</select>

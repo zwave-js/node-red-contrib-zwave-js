@@ -242,6 +242,11 @@ table.zwjs-table[vertical] td:nth-of-type(2) {
 	color: white;
 }
 
+.zwjs-empises[warn] {
+	background-color: orange;
+	color: white;
+}
+
 .zwjs-node-state-group {
 	font-size: 16px;
 	float: right;
