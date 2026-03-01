@@ -1905,20 +1905,19 @@ const ZWaveJS = (function () {
 	};
 
 	// Add runtime (used internally also)
-	const commsListOrAddNetworks = (search, network) => {
+	const commsListOrAddNetworks = (fetch, network) => {
 		const Networks = $('#zwjs-network');
-		if (search) {
-			setTimeout(() => {
-				RED.nodes.eachConfig((c) => {
-					if (c.type === 'zwavejs-runtime' && c.d !== true) {
-						const found = Networks.children().filter((n) => n.val === c.id);
-						if (found.length < 1) {
-							Networks.append(new Option(c.name, c.id));
-						}
-					}
-				});
-				SelectFirstNetwork();
-			}, 250);
+
+		if (fetch) {
+			Runtime.Get(undefined, undefined, 'zwave-js/ui/global/networks').then((data) => {
+				if (data.callSuccess) {
+					const IDs = Object.keys(data.response);
+					IDs.forEach((k, i, a) => {
+						Networks.append(new Option(data.response[k], k));
+					})
+					SelectFirstNetwork();
+				}
+			})
 		} else {
 			const found = Networks.children().filter((n) => n.val === network.id);
 			if (found.length < 1) {
@@ -1926,6 +1925,7 @@ const ZWaveJS = (function () {
 			}
 			SelectFirstNetwork();
 		}
+
 	};
 
 	/*

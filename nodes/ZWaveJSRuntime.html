@@ -133,13 +133,17 @@
 	}
 
 	function prepEditor() {
+		const node = this;
 		$.getJSON('zwave-js/ui/global/getports', (data) => {
 			if (data.callSuccess) {
 				data.response.forEach((SP) => {
 					$('#node-config-input-serialPort').append(new Option(SP, SP));
 				});
-				if (this.serialPort) {
-					$('#node-config-input-serialPort').val(this.serialPort)
+				if (node.serialPort) {
+					if (!data.response.includes(node.serialPort)) {
+						$('#node-config-input-serialPort').append(new Option(node.serialPort, node.serialPort));
+					}
+					$('#node-config-input-serialPort').val(node.serialPort);
 				}
 			} else {
 				alert(data.response);

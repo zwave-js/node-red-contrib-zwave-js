@@ -15,6 +15,8 @@ const APP_NAME = require('../package.json').name;
 const APP_VERSION = require('../package.json').version;
 const FWK = '127c49b6f2928a6579e82ecab64a83fc94a6436f03d5cb670b8ac44412687b75f0667843';
 
+const Networks = {};
+
 class SanitizedEventName {
 	constructor(event) {
 		this.driverName = event;
@@ -174,6 +176,7 @@ module.exports = function (RED) {
 				removeHTTPAPI();
 			}
 
+			Networks[self.id] = self.config.name;
 			RED.comms.publish('zwave-js/ui/global/addnetwork', { name: self.config.name, id: self.id }, false);
 
 			RED.httpAdmin.get(`/zwave-js/ui/${self.id}/status`, RED.auth.needsPermission('flows.write'), (_, response) => {
@@ -445,6 +448,7 @@ module.exports = function (RED) {
 				if (!Route.route.path.startsWith(`/zwave-js/ui/${self.id}`)) return true;
 				return false;
 			};
+			delete Networks[self.id];
 			RED.comms.publish('zwave-js/ui/global/removenetwork', { id: self.id }, false);
 			RED.httpAdmin._router.stack = RED.httpAdmin._router.stack.filter(Check);
 		};
@@ -1298,6 +1302,11 @@ module.exports = function (RED) {
 
 		Startup(false);
 	};
+
+	RED.httpAdmin.get('/zwave-js/ui/global/networks', RED.auth.needsPermission('flows.write'), (_, response) => {
+		response.json({ callSuccess: true, response: Networks });
+	})
+
 
 	RED.nodes.registerType('zwavejs-runtime', init);
 };
