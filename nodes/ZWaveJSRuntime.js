@@ -28,6 +28,7 @@ class SanitizedEventName {
 
 // Create event objects (creates easy to use event hooks)
 const event_DriverReady = new SanitizedEventName('driver ready');
+const event_DriverBootLoader = new SanitizedEventName('bootloader ready')
 const event_AllNodesReady = new SanitizedEventName('all nodes ready');
 const event_NodeAdded = new SanitizedEventName('node added');
 const event_NodeRemoved = new SanitizedEventName('node removed');
@@ -488,6 +489,7 @@ module.exports = function (RED) {
 			timeouts: {},
 			securityKeys: {},
 			securityKeysLongRange: {},
+			bootloaderMode: 'allow',
 			features: {
 				softReset: self.config.enableSoftReset
 			},
@@ -576,22 +578,49 @@ module.exports = function (RED) {
 
 		// Driver callback subscriptions
 		const wireDriverEvents = (resetHTTP) => {
+
+			createHTTPAPI(resetHTTP);
+
+			// Bootloader Mode REady
+			self.driverInstance?.once(event_DriverBootLoader.driverName, () => {
+
+				/* We do this to monitor recovery */
+				// Firmware Update Progress (Controller)
+				self.driverInstance?.on(event_FirmwareUpdateProgress.driverName, (progress) => {
+					RED.comms.publish(`zwave-js/ui/${self.id}/driver/firmwareupdate/progress`, { ...progress }, false);
+				});
+
+				updateLatestStatus(event_DriverBootLoader.nodeStatusName)
+				const ControllerNodeIDs = Object.keys(controllerNodes);
+				const Status = {
+					Type: 'STATUS',
+					Status: {
+						fill: 'red',
+						shape: 'dot',
+						text: event_DriverBootLoader.nodeStatusName
+					}
+				};
+				ControllerNodeIDs.forEach((ID) => {
+					controllerNodes[ID](Status);
+				});
+			})
+
 			// Driver ready
 			self.driverInstance?.once(event_DriverReady.driverName, () => {
 				exposeGlobalAPI();
-				createHTTPAPI(resetHTTP);
 				wireSubDriverEvents();
 
 				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Status = {
 					Type: 'STATUS',
 					Status: {
-						fill: 'yellow',
+						fill: 'green',
 						shape: 'dot',
-						text: 'Initializing network nodes...'
+						text: event_DriverReady.nodeStatusName,
+						clearTime: 5000
 					}
 				};
-				updateLatestStatus('Initializing network nodes...');
+				updateLatestStatus(event_DriverReady.nodeStatusName);
 				ControllerNodeIDs.forEach((ID) => {
 					controllerNodes[ID](Status);
 				});
@@ -617,6 +646,7 @@ module.exports = function (RED) {
 			});
 
 			// Firmware Update Progress (Controller)
+			self.driverInstance?.removeAllListeners(event_FirmwareUpdateProgress.driverName) // we may have subscribed during recovery
 			self.driverInstance?.on(event_FirmwareUpdateProgress.driverName, (progress) => {
 				RED.comms.publish(`zwave-js/ui/${self.id}/driver/firmwareupdate/progress`, { ...progress }, false);
 			});

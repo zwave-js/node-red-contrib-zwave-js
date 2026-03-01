@@ -29,11 +29,11 @@
     **New Features**
     - Full support for Long Range (Z-Wave 800LR)
     - Full support for the Firmware Update Service
+    - Controller firmware updates
+    - Bootloader recovery mode (allows to recover the controller from a failed Firmware Update)
     - Unlimited networks
     - Now supports acting as a secondary controller
     - Direct device interaction inside function nodes
-    - Controller firmware updates
-
 
   - 10.0.0
 

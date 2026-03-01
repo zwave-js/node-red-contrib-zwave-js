@@ -16,6 +16,7 @@ const ZWaveJS = (function () {
 	let QRS;
 	let TPL_SidePanel = undefined;
 	let TPL_ControllerManagement = undefined;
+	let TPL_ControllerManagementRecover = undefined;
 	let TPL_NodeManagement = undefined;
 	let TPL_ValueManagement = undefined;
 	let AssociationGroups;
@@ -23,6 +24,7 @@ const ZWaveJS = (function () {
 	let SelectedNodeVIDs = {};
 	let MiniEdtiorDialog;
 	let ViewingValueID = undefined;
+	let BootLoaderMode = false;
 
 	/*
 	 * Driver Communciation Methods
@@ -102,6 +104,7 @@ const ZWaveJS = (function () {
 		// Templates
 		TPL_SidePanel = Handlebars.compile($('#ZWJS_TPL_SidePanel').html());
 		TPL_ControllerManagement = Handlebars.compile($('#ZWJS_TPL_Tray-Controller').html());
+		TPL_ControllerManagementRecover = Handlebars.compile($('#ZWJS_TPL_Tray-Controller-Recover').html());
 		TPL_NodeManagement = Handlebars.compile($('#ZWJS_TPL_Tray-Node').html());
 		TPL_ValueManagement = Handlebars.compile($('#ZWJS_TPL_Tray-Node-Value').html());
 
@@ -418,25 +421,66 @@ const ZWaveJS = (function () {
 		}
 
 		networkId = $('#zwjs-network').val();
-
-		// get Nodes ansd Info
-		RefreshNodes('NetworkSelected');
-
-		Runtime.Get(undefined, undefined, `zwave-js/ui/${networkId}/status`)
-			.then((data) => {
-				if (data.callSuccess) {
-					$('#zwjs-controller-status').text(data.response);
-				} else {
-					alert(data.response);
-				}
-			})
-			.catch((Error) => {
-				alert(Error.message);
-			});
-
-		// subscribe
 		setSubscription(true);
+
+		const pollStatus = () => {
+			Runtime.Get(undefined, undefined, `zwave-js/ui/${networkId}/status`)
+				.then((data) => {
+
+					if (data.response === undefined) {
+						setTimeout(pollStatus, 500);
+						return;
+					}
+
+					$('#zwjs-controller-status').text(data.response);
+
+					if (data.response === 'Bootloader ready.') {
+						handleBootloader();
+					} else {
+						BootLoaderMode = false;
+						RefreshNodes('NetworkSelected');
+					}
+				})
+				.catch((error) => {
+					alert(error.message);
+				});
+		}
+
+		pollStatus();
+
+
 	};
+
+	// Show Recovery
+	const ShowRecovery = () => {
+		const Options = {
+			width: 900,
+			title: 'ZWave JS Controller Management (Recovery)',
+			buttons: [
+				{
+					id: 'zwjs-tray-close',
+					text: 'Close',
+					click: function () {
+						CloseTray();
+					}
+				}
+			],
+			open: function (tray) {
+				const trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
+				const State = {
+					Network: $('#zwjs-controller-info').text(),
+					Status: $('#zwjs-controller-status').text()
+				};
+				trayBody.append(TPL_ControllerManagementRecover(State));
+			}
+		};
+		RED.tray.show(Options);
+		setTimeout(() => {
+			const el = $('.zwjs-tray-menu > div[default]')[0];
+			el.onclick.call(el);
+		}, 250);
+	}
+
 
 	// Show Network Options
 	const ShowNetworkManagement = () => {
@@ -445,6 +489,11 @@ const ZWaveJS = (function () {
 		}
 
 		CloseTray();
+
+		if (BootLoaderMode) {
+			ShowRecovery();
+			return;
+		}
 
 		Runtime.Get('CONTROLLER', 'getNodes')
 			.then((data) => {
@@ -464,13 +513,6 @@ const ZWaveJS = (function () {
 						width: 900,
 						title: 'ZWave JS Controller Management',
 						buttons: [
-							{
-								id: 'zwjs-tray-about',
-								text: 'About Zwave JS',
-								click: function () {
-									CloseTray();
-								}
-							},
 							{
 								id: 'zwjs-tray-close',
 								text: 'Close',
@@ -521,13 +563,6 @@ const ZWaveJS = (function () {
 						width: 900,
 						title: 'ZWave JS Node Management',
 						buttons: [
-							{
-								id: 'zwjs-tray-about',
-								text: 'About Zwave JS',
-								click: function () {
-									CloseTray();
-								}
-							},
 							{
 								id: 'zwjs-tray-close',
 								text: 'Close',
@@ -1004,6 +1039,7 @@ const ZWaveJS = (function () {
 			case 'NetworkJoin':
 			case 'NetworkLeft':
 			case 'NetworkSelected':
+			case 'DriverReady':
 				ClearSelection();
 				CloseTray();
 				break;
@@ -1212,13 +1248,6 @@ const ZWaveJS = (function () {
 			}
 		});
 	};
-
-	const getFUSLicenseStatus = () => {
-		const Key = RED.nodes.node(networkId).apiKeys_firmwareUpdateService;
-		if (!Key) {
-			return '<strong>Non-Commercial</strong><br /><br />As no API key has been provided, you\'re confirming the environment is <strong>Non-Commercial</strong>.<br />An API Key for the Firmware Update Service is required for Commercial installs.'
-		}
-	}
 
 	// Render Advanded info (also used internally)
 	const RenderFunctions = {
@@ -1530,7 +1559,6 @@ const ZWaveJS = (function () {
 	};
 
 	// Update Node Firmware
-
 	const UpdateNFirmware = (Button) => {
 		if (confirm("Note: This will update the Nodes's firmware, do you wish to proceed?")) {
 			const promptFileUpload = () => {
@@ -1673,6 +1701,18 @@ const ZWaveJS = (function () {
 	const commsStatus = (topic, data) => {
 		$('#zwjs-controller-status').text(data.status);
 		$('#zwjs-controller-status-tray').text(data.status);
+
+		if (data.status === 'Bootloader ready.') {
+			handleBootloader();
+		}
+		else {
+			BootLoaderMode = false;
+			if (data.status === 'Driver ready.') {
+				RefreshNodes('DriverReady');
+			}
+		}
+
+
 	};
 
 	// Node Status
@@ -1864,7 +1904,7 @@ const ZWaveJS = (function () {
 					}
 				});
 				SelectFirstNetwork();
-			}, 5000);
+			}, 250);
 		} else {
 			const found = Networks.children().filter((n) => n.val === network.id);
 			if (found.length < 1) {
@@ -1878,6 +1918,21 @@ const ZWaveJS = (function () {
 	 * Helpers/Things
 	 * Methods/things used in all this vortex of chaos!
 	 */
+
+	// Get FUS License
+	const getFUSLicenseStatus = () => {
+		const Key = RED.nodes.node(networkId).apiKeys_firmwareUpdateService;
+		if (!Key) {
+			return '<strong>Non-Commercial</strong><br /><br />As no API key has been provided, you\'re confirming the environment is <strong>Non-Commercial</strong>.<br />An API Key for the Firmware Update Service is required for Commercial installs.'
+		}
+	}
+
+
+	// Bootloader TRouble
+	const handleBootloader = () => {
+		BootLoaderMode = true;
+		RED.notify('WARNING! Your ZWave controller failed to boot, and is currently in recovery mode, please upload new firmware from the side bar', { type: "error", timeout: 30000 })
+	}
 
 	// Get Node Group
 	const GetNodeGroup = (Group) => {
@@ -1994,6 +2049,7 @@ const ZWaveJS = (function () {
 			{ address: `zwave-js/ui/${networkId}/nodes/sleep`, method: commsNodeState },
 			{ address: `zwave-js/ui/${networkId}/nodes/awake`, method: commsNodeState },
 			{ address: `zwave-js/ui/${networkId}/nodes/dead`, method: commsNodeState },
+			{ address: `zwave-js/ui/${networkId}/nodes/alive`, method: commsNodeState },
 			{ address: `zwave-js/ui/${networkId}/controller/slave/dsk`, method: commsHandleSlaveOps },
 			{ address: `zwave-js/ui/${networkId}/controller/slave/joined`, method: commsHandleSlaveOps },
 			{ address: `zwave-js/ui/${networkId}/controller/slave/left`, method: commsHandleSlaveOps },
@@ -2066,7 +2122,7 @@ const ZWaveJS = (function () {
 				break;
 			case 'Unknown':
 				el_status.addClass(['fa', 'fa-question-circle', 'zwjs-state-red']);
-				RED.popover.tooltip(el_status, 'Dead/Not Responding');
+				RED.popover.tooltip(el_status, 'Unknown');
 				break;
 		}
 
@@ -2401,13 +2457,6 @@ const ZWaveJS = (function () {
 				width: 700,
 				title: 'Value Management',
 				buttons: [
-					{
-						id: 'zwjs-tray-about',
-						text: 'About Zwave JS',
-						click: function () {
-							CloseTray();
-						}
-					},
 					{
 						id: 'zwjs-tray-close',
 						text: 'Close',

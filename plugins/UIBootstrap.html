@@ -221,6 +221,30 @@
 </script>
 
 <!-- prettier-ignore -->
+ <script type="text/template" id="ZWJS_TPL_Tray-Controller-Recover">
+	<div class="zwjs-tray-header">
+		<table>
+			<tr>
+				<td rowspan="3"><i class="fa fa-rss zwjs-node-icon"></i></td>
+			</tr>
+			<tr>
+				<td style="padding-left: 10px">
+					<span id="zwjs-controller-info-tray">{{Network}}</span>
+					<br />
+					<span id="zwjs-controller-status-tray">{{Status}}</span>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div class="zwjs-tray-menu">
+		<div parent>Controller</div>
+		<div child default onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Firmware',this)">Firmware Update</div>
+	</div>
+	<div id="zwjs-advanced-content"></div>
+</script>
+
+
+<!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Controller">
 	<div class="zwjs-tray-header">
 		<table>
