@@ -1559,6 +1559,20 @@ const ZWaveJS = (function () {
 	};
 
 	// Update Node Firmware
+	const UpdateNFirmwareFUS = (Node, Update) => {
+		const FWI = DecodeObject(Update);
+		if (confirm(`Note: This will update the Node firmware to the update chosen (version: ${FWI.normalizedVersion}), do you wish to proceed?`)) {
+
+			RenderAdvanced('ZWJS_TPL_Tray-Node-Firmware')
+				.then(() => {
+					Runtime.Post('DRIVER', 'firmwareUpdateOTA', [Node, FWI])
+						.catch((Error) => {
+							alert(Error.message);
+						});
+				})
+		}
+	}
+
 	const UpdateNFirmware = (Button) => {
 		if (confirm("Note: This will update the Nodes's firmware, do you wish to proceed?")) {
 			const promptFileUpload = () => {
@@ -2593,6 +2607,7 @@ const ZWaveJS = (function () {
 		UpdateSplitter,
 		RebuildNodeRoutes,
 		CFGUpdate,
-		UpdateCFirmwareFUS
+		UpdateCFirmwareFUS,
+		UpdateNFirmwareFUS
 	};
 })();

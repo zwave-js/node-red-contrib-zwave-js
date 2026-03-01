@@ -225,22 +225,34 @@
 	<div class="zwjs-tray-header">
 		<table>
 			<tr>
-				<td rowspan="3"><i class="fa fa-rss zwjs-node-icon"></i></td>
+				<td rowspan="3"><i class="fa fa-exclamation-circle zwjs-node-icon" style="color:red"></i></td>
 			</tr>
 			<tr>
-				<td style="padding-left: 10px">
-					<span id="zwjs-controller-info-tray">{{Network}}</span>
-					<br />
-					<span id="zwjs-controller-status-tray">{{Status}}</span>
-				</td>
+				<td style="padding-left: 10px">Firmware / Bootloader Recovery</td>
 			</tr>
 		</table>
 	</div>
 	<div class="zwjs-tray-menu">
 		<div parent>Controller</div>
-		<div child default onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Firmware',this)">Firmware Update</div>
+		<div child default onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Firmware-Recovery',this)">Bootloader</div>
 	</div>
 	<div id="zwjs-advanced-content"></div>
+</script>
+
+<script type="text/template" id="ZWJS_TPL_Tray-Controller-Firmware-Recovery">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-hint">
+			<strong>Firmware / Bootloader Recovery</strong><br /><br />
+			Your ZWave Controller has been detected to be stuck in <strong>Bootloader</strong> Mode, its likely due to a recent Firmware update that had failed. 
+			The driver has been entered into Bootloader Recovery Mode. Please flash a clean Firmware to the controller.
+		</div>
+		<div>
+			<button onclick="ZWaveJS.UpdateCFirmware(this)">Restore Firmware</button>
+		</div>
+	</fieldset>
+	<div class="zwjs-progress-container" id="zwjs-prog-contain-cfirmware">
+  			<div class="zwjs-progress-bar" id="zwjs-prog-bar-cfirmware"></div>
+	</div>
 </script>
 
 
@@ -524,39 +536,48 @@
 				<td style="text-align:center">Updates</td>
 			</tr>
 
-			{{#each Updates}}
-				<tr>
-					<!-- Node -->
-					<td style="text-align:center; vertical-align: top;">
-						<span class="zwjs-node-id">{{#eq @key "1"}}CTR{{else}}{{@key}}{{/eq}}</span>
-					</td>
+			{{#each Updates as |items nodeKey|}}
+			<tr>
+				<!-- Node -->
+				<td style="text-align:center; vertical-align: top;">
+				<span class="zwjs-node-id">{{#eq nodeKey "1"}}CTR{{else}}{{nodeKey}}{{/eq}}</span>
+				</td>
 
-					<!-- Inner Table -->
-					<td>
-						<table style="width:100%; border-collapse: collapse;" class="zwjs-table">
-							<tr>
-								<th>Channel</th>
-								<th>Version</th>
-								<th>Change Log</th>
-								<th>Action</th>
-							</tr>
+				<!-- Inner Table -->
+				<td>
+				<table style="width:100%; border-collapse: collapse;" class="zwjs-table">
+					<tr>
+					<td style="font-weight:bold; text-align:center;">Channel</td>
+					<td style="font-weight:bold; text-align:center;">Version</td>
+					<td style="font-weight:bold; text-align:center;">Change Log</td>
+					<td style="font-weight:bold; text-align:center;">Action</td>
+					</tr>
 
-							{{#each this}}
-								<tr>
-									<td style="text-align:center;"><span class="zwjs-empises" style="display:block" {{#eq channel "beta"}}warn{{else}}positive{{/eq}}>{{channel}}</span></td>
-									<td style="text-align:center;">{{normalizedVersion}}</td>
-									<td style="text-align:center;">
-										<a href="#" onclick='alert({{{json changelog}}})'>View Change Log</a>
-									</td>
-									<td style="text-align:center;">
-										<div><button onclick="ZWaveJS.UpdateCFirmwareFUS('{{encode this}}')">Update</button></div>
-									</td>
-								</tr>
-							{{/each}}
-						</table>
-					</td>
-				</tr>
-			{{/each}}
+					{{#each items as |update|}}
+						<tr>
+							<td style="text-align:center;">
+								<span class="zwjs-empises" style="display:block" {{#eq update.channel "beta"}}warn{{else}}positive{{/eq}}>{{update.channel}}</span>
+							</td>
+							<td style="text-align:center;">{{update.normalizedVersion}}</td>
+							<td style="text-align:center;"><a href="#" onclick='alert({{{json update.changelog}}})'>View Change Log</a>
+							</td>
+							<td style="text-align:center;">
+							{{#eq nodeKey "1"}}
+								<div>
+									<button onclick="ZWaveJS.UpdateCFirmwareFUS('{{encode update}}')">Update</button>
+								</div>
+							{{else}}
+								<div>
+									<button onclick="ZWaveJS.UpdateNFirmwareFUS({{nodeKey}},'{{encode update}}')">Update</button>
+								</div>
+							{{/eq}}
+							</td>
+						</tr>
+					{{/each}}
+				</table>
+				</td>
+			</tr>
+			{{/each}}			
 		</table>
 		<div>
 			<button onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Firmware-Service',undefined,'CheckFUS')">Check For Firmware Updates</button>
