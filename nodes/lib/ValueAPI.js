@@ -12,9 +12,8 @@ const process = async function (DriverInstance, Method, NodeID, VID, Value, Valu
 		throw new Error(`Node ${NodeID} does not exist`);
 	}
 
-	const Args = Method === 'setValue' ? [VID, Value, ValueOptions] : [VID]
-	return invokeMethod(Node, Method, Args)
-
+	const Args = Method === 'setValue' ? [VID, Value, ValueOptions] : [VID];
+	return invokeMethod(Node, Method, Args);
 };
 
 module.exports = { process };

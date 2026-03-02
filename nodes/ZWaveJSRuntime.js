@@ -30,7 +30,7 @@ class SanitizedEventName {
 
 // Create event objects (creates easy to use event hooks)
 const event_DriverReady = new SanitizedEventName('driver ready');
-const event_DriverBootLoader = new SanitizedEventName('bootloader ready')
+const event_DriverBootLoader = new SanitizedEventName('bootloader ready');
 const event_AllNodesReady = new SanitizedEventName('all nodes ready');
 const event_NodeAdded = new SanitizedEventName('node added');
 const event_NodeRemoved = new SanitizedEventName('node removed');
@@ -183,22 +183,23 @@ module.exports = function (RED) {
 				response.json({ callSuccess: true, response: lastStatus });
 			});
 
-
-			RED.httpAdmin.get(`/zwave-js/ui/${self.id}/rebuildroutesprogress`, RED.auth.needsPermission('flows.write'), (_, response) => {
-				if (self.driverInstance.controller.isRebuildingRoutes) {
-					response.json({
-						callSuccess: true,
-						response: Object.fromEntries(self.driverInstance.controller.rebuildRoutesProgress)
-					});
+			RED.httpAdmin.get(
+				`/zwave-js/ui/${self.id}/rebuildroutesprogress`,
+				RED.auth.needsPermission('flows.write'),
+				(_, response) => {
+					if (self.driverInstance.controller.isRebuildingRoutes) {
+						response.json({
+							callSuccess: true,
+							response: Object.fromEntries(self.driverInstance.controller.rebuildRoutesProgress)
+						});
+					} else {
+						response.json({
+							callSuccess: true,
+							response: false
+						});
+					}
 				}
-				else {
-					response.json({
-						callSuccess: true,
-						response: false
-					});
-				}
-			});
-
+			);
 
 			RED.httpAdmin.get(`/zwave-js/ui/${self.id}/version`, RED.auth.needsPermission('flows.write'), (_, response) => {
 				response.json({
@@ -344,7 +345,7 @@ module.exports = function (RED) {
 
 					switch (TargetAPI) {
 						case 'NODE':
-							args = request.body.args
+							args = request.body.args;
 							if (Method === 'checkLifelineHealth') {
 								const CB = (round, totalRounds, lastRating, lastResult) => {
 									RED.comms.publish(
@@ -582,19 +583,17 @@ module.exports = function (RED) {
 
 		// Driver callback subscriptions
 		const wireDriverEvents = (resetHTTP) => {
-
 			createHTTPAPI(resetHTTP);
 
 			// Bootloader Mode REady
 			self.driverInstance?.once(event_DriverBootLoader.driverName, () => {
-
 				/* We do this to monitor recovery */
 				// Firmware Update Progress (Controller)
 				self.driverInstance?.on(event_FirmwareUpdateProgress.driverName, (progress) => {
 					RED.comms.publish(`zwave-js/ui/${self.id}/driver/firmwareupdate/progress`, { ...progress }, false);
 				});
 
-				updateLatestStatus(event_DriverBootLoader.nodeStatusName)
+				updateLatestStatus(event_DriverBootLoader.nodeStatusName);
 				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Status = {
 					Type: 'STATUS',
@@ -607,7 +606,7 @@ module.exports = function (RED) {
 				ControllerNodeIDs.forEach((ID) => {
 					controllerNodes[ID](Status);
 				});
-			})
+			});
 
 			// Driver ready
 			self.driverInstance?.once(event_DriverReady.driverName, () => {
@@ -650,7 +649,7 @@ module.exports = function (RED) {
 			});
 
 			// Firmware Update Progress (Controller)
-			self.driverInstance?.removeAllListeners(event_FirmwareUpdateProgress.driverName) // we may have subscribed during recovery
+			self.driverInstance?.removeAllListeners(event_FirmwareUpdateProgress.driverName); // we may have subscribed during recovery
 			self.driverInstance?.on(event_FirmwareUpdateProgress.driverName, (progress) => {
 				RED.comms.publish(`zwave-js/ui/${self.id}/driver/firmwareupdate/progress`, { ...progress }, false);
 			});
@@ -687,7 +686,7 @@ module.exports = function (RED) {
 			// Node Added
 			self.driverInstance?.controller.on(event_NodeAdded.driverName, (ThisNode, Result) => {
 				const ControllerNodeIDs = Object.keys(controllerNodes);
-
+				const Timestamp = new Date().getTime();
 				RED.comms.publish(
 					`zwave-js/ui/${this.id}/nodes/added`,
 					{
@@ -700,7 +699,11 @@ module.exports = function (RED) {
 
 				const Event = {
 					Type: 'EVENT',
-					Event: { event: event_NodeAdded.redEventName, timestamp: Timestamp, eventBody: { nodeId: ThisNode.id, lowSecurity: Result.lowSecurity } }
+					Event: {
+						event: event_NodeAdded.redEventName,
+						timestamp: Timestamp,
+						eventBody: { nodeId: ThisNode.id, lowSecurity: Result.lowSecurity }
+					}
 				};
 				const Status = {
 					Type: 'STATUS',
@@ -722,10 +725,15 @@ module.exports = function (RED) {
 			// Node Removed
 			self.driverInstance?.controller.on(event_NodeRemoved.driverName, (ThisNode, Reason) => {
 				const ControllerNodeIDs = Object.keys(controllerNodes);
+				const Timestamp = new Date().getTime();
 				RED.comms.publish(`zwave-js/ui/${this.id}/nodes/removed`, { nodeId: ThisNode.id, reason: Reason }, false);
 				const Event = {
 					Type: 'EVENT',
-					Event: { event: event_NodeRemoved.redEventName, timestamp: Timestamp, eventBody: { nodeId: ThisNode.id, reason: Reason } }
+					Event: {
+						event: event_NodeRemoved.redEventName,
+						timestamp: Timestamp,
+						eventBody: { nodeId: ThisNode.id, reason: Reason }
+					}
 				};
 				const Status = {
 					Type: 'STATUS',
@@ -1091,7 +1099,11 @@ module.exports = function (RED) {
 				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Event = {
 					Type: 'EVENT',
-					Event: { event: event_InterviewStarted.redEventName, timestamp: Timestamp, eventBody: { nodeId: ThisNode.id } }
+					Event: {
+						event: event_InterviewStarted.redEventName,
+						timestamp: Timestamp,
+						eventBody: { nodeId: ThisNode.id }
+					}
 				};
 				const Status = {
 					Type: 'STATUS',
@@ -1117,7 +1129,11 @@ module.exports = function (RED) {
 				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Event = {
 					Type: 'EVENT',
-					Event: { event: event_InterviewCompleted.redEventName, timestamp: Timestamp, eventBody: { nodeId: ThisNode.id } }
+					Event: {
+						event: event_InterviewCompleted.redEventName,
+						timestamp: Timestamp,
+						eventBody: { nodeId: ThisNode.id }
+					}
 				};
 				const Status = {
 					Type: 'STATUS',
@@ -1144,7 +1160,11 @@ module.exports = function (RED) {
 				const ControllerNodeIDs = Object.keys(controllerNodes);
 				const Event = {
 					Type: 'EVENT',
-					Event: { event: event_InterviewFailed.redEventName, timestamp: Timestamp, eventBody: { nodeId: ThisNode.id, args: Args } }
+					Event: {
+						event: event_InterviewFailed.redEventName,
+						timestamp: Timestamp,
+						eventBody: { nodeId: ThisNode.id, args: Args }
+					}
 				};
 				const Status = {
 					Type: 'STATUS',
@@ -1305,8 +1325,7 @@ module.exports = function (RED) {
 
 	RED.httpAdmin.get('/zwave-js/ui/global/networks', RED.auth.needsPermission('flows.write'), (_, response) => {
 		response.json({ callSuccess: true, response: Networks });
-	})
-
+	});
 
 	RED.nodes.registerType('zwavejs-runtime', init);
 };

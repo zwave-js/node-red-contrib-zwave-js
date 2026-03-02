@@ -24,8 +24,7 @@ const process = async function (DriverInstance, Method, Args) {
 
 	if (Method === 'getAllAssociationGroups') {
 		return Object.fromEntries(
-			[...DriverInstance.controller.getAllAssociationGroups(...Args)]
-				.map(([k, v]) => [k, Object.fromEntries(v)])
+			[...DriverInstance.controller.getAllAssociationGroups(...Args)].map(([k, v]) => [k, Object.fromEntries(v)])
 		);
 	}
 
@@ -38,21 +37,17 @@ const process = async function (DriverInstance, Method, Args) {
 	}
 
 	if (Method === 'getAllAssociations') {
-		return Array.from(
-			DriverInstance.controller.getAllAssociations(...Args),
-			([associationAddress, associations]) => ({
-				associationAddress,
-				associations: Object.fromEntries(associations),
-			})
-		);
+		return Array.from(DriverInstance.controller.getAllAssociations(...Args), ([associationAddress, associations]) => ({
+			associationAddress,
+			associations: Object.fromEntries(associations)
+		}));
 	}
 
 	if (Method === 'getAllAvailableFirmwareUpdates') {
 		let updatesMap;
 		if (Args !== undefined) {
 			updatesMap = await DriverInstance.controller.getAllAvailableFirmwareUpdates(...Args);
-		}
-		else {
+		} else {
 			updatesMap = await DriverInstance.controller.getAllAvailableFirmwareUpdates();
 		}
 
@@ -66,7 +61,7 @@ const process = async function (DriverInstance, Method, Args) {
 	}
 
 	/* Dynamic */
-	return invokeMethod(DriverInstance.controller, Method, Args || [])
+	return invokeMethod(DriverInstance.controller, Method, Args || []);
 };
 
 module.exports = { process };

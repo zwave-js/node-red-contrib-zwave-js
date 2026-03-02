@@ -1,5 +1,4 @@
 const process = async function (DriverInstance, Method, CommandClass, CCMethod, NodeID, Endpoint, Args) {
-
 	if (Array.isArray(NodeID)) {
 		throw new Error('This API does not support Multicast');
 	}

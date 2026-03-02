@@ -20,7 +20,6 @@ const process = async function (DriverInstance, Method, NodeID, Value, Args) {
 	}
 
 	if (Method === 'setLocation') {
-
 		Node.location = Value;
 		if (Node.supportsCC(CommandClasses['Node Naming and Location'])) {
 			Node.commandClasses['Node Naming and Location'].setLocation(Value);
@@ -30,9 +29,7 @@ const process = async function (DriverInstance, Method, NodeID, Value, Args) {
 
 	/* Dynamic */
 	const Params = Args || (Value !== undefined ? [Value] : []);
-	return invokeMethod(Node, Method, Params)
-
-
+	return invokeMethod(Node, Method, Params);
 };
 
 module.exports = { process };

@@ -19,7 +19,7 @@
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_SidePanel">
 	<!--Network Selector-->
-<div class="red-ui-sidebar-header" style="text-align: center; height: 20px">
+	<div class="red-ui-sidebar-header" style="text-align: center; height: 20px">
 	<i class="fa fa-cog" aria-hidden="true"></i>
 	Runtime :
 	<select id="zwjs-network" onchange="ZWaveJS.NetworkSelected()" style="height: 25px; vertical-align: baseline">
@@ -55,7 +55,16 @@
 			class="fa fa-bars zwjs-button-group "></i></a>
 	<a class="red-ui-tab-link-button" onclick="ZWaveJS.NodeCollapseToggle(3, this)"><i
 			class="fa fa-sort-numeric-asc zwjs-button-group"></i></a>
+	|
+	<a class="red-ui-tab-link-button" onclick="ZWaveJS.ZoomUI()"><i
+			class="fa fa-undo"></i></a>
+	<a class="red-ui-tab-link-button" onclick="ZWaveJS.ZoomUI(0.1)"><i
+			class="fa fa-search-plus"></i></a>
+	<a class="red-ui-tab-link-button" onclick="ZWaveJS.ZoomUI(-0.1)"><i
+			class="fa fa-search-minus"></i></a>
 
+
+			
 </div>
 
 <!--Stack-->

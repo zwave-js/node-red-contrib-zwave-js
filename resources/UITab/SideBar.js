@@ -114,8 +114,10 @@ const ZWaveJS = (function () {
 			height: '100%',
 			overflowY: 'hidden',
 			display: 'flex',
-			flexDirection: 'column'
+			flexDirection: 'column',
+			zoom: '1.0'
 		});
+		Content.attr('id', 'zwjs-sidebar');
 
 		Content.append(TPL_SidePanel({}));
 
@@ -148,32 +150,47 @@ const ZWaveJS = (function () {
 		RED.comms.subscribe('zwave-js/ui/global/removenetwork', (topic, network) => commsRemoveNetwork(network));
 	};
 
+	// Zoom
+	const ZoomUI = (value) => {
+		const sidebar = $('#zwjs-sidebar');
+		if (value === undefined) {
+			sidebar.css('zoom', '1.0');
+			return;
+		}
+
+		let current = parseFloat(sidebar.css('zoom'));
+		if (isNaN(current)) current = 1;
+		let newZoom = current + value;
+		newZoom = Math.min(Math.max(newZoom, 0.1), 2.0);
+		newZoom = parseFloat(newZoom.toFixed(2));
+		sidebar.css('zoom', newZoom);
+	};
+
 	// Install Config Update
 	const CFGUpdate = () => {
 		Runtime.Post('DRIVER', 'checkForConfigUpdates').then((data) => {
 			if (data.callSuccess) {
 				if (data.response !== undefined) {
-					const UD = confirm(`A configuration database update is available (${data.response}). Would you like to update?`)
+					const UD = confirm(
+						`A configuration database update is available (${data.response}). Would you like to update?`
+					);
 					if (UD) {
 						Runtime.Post('DRIVER', 'installConfigUpdate').then((res) => {
 							if (res.callSuccess && res.response) {
-								alert(`Update was installed.`)
+								alert('Update was installed.');
+							} else {
+								alert(`Update was not installed: ${res.response}.`);
 							}
-							else {
-								alert(`Update was not installed: ${res.response}.`)
-							}
-						})
+						});
 					}
-				}
-				else {
-					alert('No update available.')
+				} else {
+					alert('No update available.');
 				}
 			} else {
 				alert(data.response);
-
 			}
 		});
-	}
+	};
 
 	// Save Spliter
 	const UpdateSplitter = () => {
@@ -204,10 +221,9 @@ const ZWaveJS = (function () {
 	const RebuildNodeRoutes = () => {
 		Runtime.Post('CONTROLLER', 'rebuildNodeRoutes', [selectedNode.nodeId]).then((data) => {
 			if (data.callSuccess) {
-				alert('Rebuiliding Node routes completed successfully.')
+				alert('Rebuiliding Node routes completed successfully.');
 			} else {
 				alert(data.response);
-
 			}
 		});
 	};
@@ -323,7 +339,7 @@ const ZWaveJS = (function () {
 
 	// Remove Failed
 	const RemoveFailedNode = (NodeID, Row) => {
-		const ID = NodeID || selectedNode?.nodeId
+		const ID = NodeID || selectedNode?.nodeId;
 		if (ID) {
 			if (confirm('Are you sure you wish to remove this Node from your network?')) {
 				Runtime.Post('CONTROLLER', 'removeFailedNode', [ID]).then((data) => {
@@ -426,7 +442,6 @@ const ZWaveJS = (function () {
 		const pollStatus = () => {
 			Runtime.Get(undefined, undefined, `zwave-js/ui/${networkId}/status`)
 				.then((data) => {
-
 					if (data.response === undefined) {
 						setTimeout(pollStatus, 500);
 						return;
@@ -444,11 +459,9 @@ const ZWaveJS = (function () {
 				.catch((error) => {
 					alert(error.message);
 				});
-		}
+		};
 
 		pollStatus();
-
-
 	};
 
 	// Show Recovery
@@ -479,8 +492,7 @@ const ZWaveJS = (function () {
 			const el = $('.zwjs-tray-menu > div[default]')[0];
 			el.onclick.call(el);
 		}, 250);
-	}
-
+	};
 
 	// Show Network Options
 	const ShowNetworkManagement = () => {
@@ -1253,24 +1265,20 @@ const ZWaveJS = (function () {
 	const RenderFunctions = {
 		CheckFUS: () => {
 			return new Promise((resolve, reject) => {
-
 				const Request = {
 					includePrereleases: true
-				}
+				};
 				Runtime.Post('CONTROLLER', 'getAllAvailableFirmwareUpdates', [Request]).then((data) => {
 					if (data.callSuccess) {
 						if (Object.keys(data.response).length) {
-							resolve({ Updates: data.response, Message: getFUSLicenseStatus() })
+							resolve({ Updates: data.response, Message: getFUSLicenseStatus() });
+						} else {
+							reject('No updates available.');
 						}
-						else {
-							reject('No updates available.')
-						}
+					} else {
+						reject(data.response);
 					}
-					else {
-						reject(data.response)
-					}
-				})
-
+				});
 			});
 		},
 		PrepFUS: () => {
@@ -1286,11 +1294,10 @@ const ZWaveJS = (function () {
 				if (data.callSuccess) {
 					if (data.response !== false) {
 						// emulate the progress event
-						commsRebuildRoutesProgress(undefined, { Progress: data.response })
+						commsRebuildRoutesProgress(undefined, { Progress: data.response });
 					}
-
 				}
-			})
+			});
 		},
 		ListSplitters: () => {
 			return new Promise((resolve) => {
@@ -1323,8 +1330,8 @@ const ZWaveJS = (function () {
 					let nodeString = 'graph TD\r\n'; // TD = top-down
 					let routeString = '';
 
-					const Nodes = nodes.filter(n => !n.isControllerNode);
-					const Controller = nodes.find(n => n.isControllerNode);
+					const Nodes = nodes.filter((n) => !n.isControllerNode);
+					const Controller = nodes.find((n) => n.isControllerNode);
 
 					// Controller node at the top
 					nodeString += `N0(fa:fa-wifi<br />Controller<br /><span style="font-size:10px">${Controller.deviceConfig?.manufacturer} - ${Controller.deviceConfig?.label}</span>)\r\n`;
@@ -1332,7 +1339,7 @@ const ZWaveJS = (function () {
 					Nodes.forEach((v) => {
 						const name = v.nodeName || 'No Name';
 						const icon = v.powerSource.type === 'mains' ? 'fa-plug' : 'fa-battery-full';
-						const device = `${v.deviceConfig?.manufacturer} - ${v.deviceConfig?.label}`
+						const device = `${v.deviceConfig?.manufacturer} - ${v.deviceConfig?.label}`;
 
 						// Node definition
 						nodeString += `N${v.nodeId}(fa:${icon}<br />${v.nodeId} - ${name}<br /><span style="font-size:10px">${device}</span>)\r\n`;
@@ -1340,7 +1347,7 @@ const ZWaveJS = (function () {
 						// Bi-directional routes
 						const repeaters = v.statistics?.lwr?.repeaters || [];
 						if (repeaters.length > 0) {
-							repeaters.forEach(r => {
+							repeaters.forEach((r) => {
 								routeString += `N${v.nodeId} <---> N${r}\r\n`;
 							});
 						} else {
@@ -1561,17 +1568,18 @@ const ZWaveJS = (function () {
 	// Update Node Firmware
 	const UpdateNFirmwareFUS = (Node, Update) => {
 		const FWI = DecodeObject(Update);
-		if (confirm(`Note: This will update the Node firmware to the update chosen (version: ${FWI.normalizedVersion}), do you wish to proceed?`)) {
-
-			RenderAdvanced('ZWJS_TPL_Tray-Node-Firmware')
-				.then(() => {
-					Runtime.Post('DRIVER', 'firmwareUpdateOTA', [Node, FWI])
-						.catch((Error) => {
-							alert(Error.message);
-						});
-				})
+		if (
+			confirm(
+				`Note: This will update the Node firmware to the update chosen (version: ${FWI.normalizedVersion}), do you wish to proceed?`
+			)
+		) {
+			RenderAdvanced('ZWJS_TPL_Tray-Node-Firmware').then(() => {
+				Runtime.Post('DRIVER', 'firmwareUpdateOTA', [Node, FWI]).catch((Error) => {
+					alert(Error.message);
+				});
+			});
 		}
-	}
+	};
 
 	const UpdateNFirmware = (Button) => {
 		if (confirm("Note: This will update the Nodes's firmware, do you wish to proceed?")) {
@@ -1598,15 +1606,18 @@ const ZWaveJS = (function () {
 
 						const msg = {
 							nodeId: selectedNode.nodeId,
-							args: [[{
-								data: byteArray
-							}]]
-						}
+							args: [
+								[
+									{
+										data: byteArray
+									}
+								]
+							]
+						};
 
-						Runtime.Post('NODE', 'updateFirmware', msg)
-							.catch((Error) => {
-								alert(Error.message);
-							});
+						Runtime.Post('NODE', 'updateFirmware', msg).catch((Error) => {
+							alert(Error.message);
+						});
 					};
 					reader.readAsArrayBuffer(file);
 					document.body.removeChild(fileInput);
@@ -1622,17 +1633,18 @@ const ZWaveJS = (function () {
 	// Update Controller Firmware
 	const UpdateCFirmwareFUS = (Update) => {
 		const FWI = DecodeObject(Update);
-		if (confirm(`Note: This will update the Controllers firmware to the update chosen (version: ${FWI.normalizedVersion}), do you wish to proceed?`)) {
-
-			RenderAdvanced('ZWJS_TPL_Tray-Controller-Firmware')
-				.then(() => {
-					Runtime.Post('DRIVER', 'firmwareUpdateOTW', [FWI])
-						.catch((Error) => {
-							alert(Error.message);
-						});
-				})
+		if (
+			confirm(
+				`Note: This will update the Controllers firmware to the update chosen (version: ${FWI.normalizedVersion}), do you wish to proceed?`
+			)
+		) {
+			RenderAdvanced('ZWJS_TPL_Tray-Controller-Firmware').then(() => {
+				Runtime.Post('DRIVER', 'firmwareUpdateOTW', [FWI]).catch((Error) => {
+					alert(Error.message);
+				});
+			});
 		}
-	}
+	};
 
 	const UpdateCFirmware = (Button) => {
 		if (confirm('Note: This will update the Controllers firmware, do you wish to proceed?')) {
@@ -1656,10 +1668,9 @@ const ZWaveJS = (function () {
 						const arrayBuffer = e.target.result;
 						const byteArray = new Uint8Array(arrayBuffer);
 						// Handled in COMMS
-						Runtime.Post('DRIVER', 'firmwareUpdateOTW', [{ data: byteArray }])
-							.catch((Error) => {
-								alert(Error.message);
-							});
+						Runtime.Post('DRIVER', 'firmwareUpdateOTW', [{ data: byteArray }]).catch((Error) => {
+							alert(Error.message);
+						});
 					};
 					reader.readAsArrayBuffer(file);
 					document.body.removeChild(fileInput);
@@ -1718,15 +1729,12 @@ const ZWaveJS = (function () {
 
 		if (data.status === 'Bootloader ready.') {
 			handleBootloader();
-		}
-		else {
+		} else {
 			BootLoaderMode = false;
 			if (data.status === 'Driver ready.') {
 				RefreshNodes('DriverReady');
 			}
 		}
-
-
 	};
 
 	// Node Status
@@ -1734,7 +1742,12 @@ const ZWaveJS = (function () {
 		GetNodeGroup(data.nodeInfo.nodeLocation).children.find((N) => N.nodeData.nodeId === data.nodeInfo.nodeId).nodeData =
 			data.nodeInfo;
 
-		if (selectedNode && selectedNode.nodeId === data.nodeInfo.nodeId && !topic.endsWith('sleep') && !topic.endsWith('wakeup')) {
+		if (
+			selectedNode &&
+			selectedNode.nodeId === data.nodeInfo.nodeId &&
+			!topic.endsWith('sleep') &&
+			!topic.endsWith('wakeup')
+		) {
 			nodeSelected(undefined, { nodeData: data.nodeInfo });
 		}
 
@@ -1912,12 +1925,12 @@ const ZWaveJS = (function () {
 			Runtime.Get(undefined, undefined, 'zwave-js/ui/global/networks').then((data) => {
 				if (data.callSuccess) {
 					const IDs = Object.keys(data.response);
-					IDs.forEach((k, i, a) => {
+					IDs.forEach((k) => {
 						Networks.append(new Option(data.response[k], k));
-					})
+					});
 					SelectFirstNetwork();
 				}
-			})
+			});
 		} else {
 			const found = Networks.children().filter((n) => n.val === network.id);
 			if (found.length < 1) {
@@ -1925,7 +1938,6 @@ const ZWaveJS = (function () {
 			}
 			SelectFirstNetwork();
 		}
-
 	};
 
 	/*
@@ -1937,16 +1949,18 @@ const ZWaveJS = (function () {
 	const getFUSLicenseStatus = () => {
 		const Key = RED.nodes.node(networkId).apiKeys_firmwareUpdateService;
 		if (!Key) {
-			return '<strong>Non-Commercial</strong><br /><br />As no API key has been provided, you\'re confirming the environment is <strong>Non-Commercial</strong>.<br />An API Key for the Firmware Update Service is required for Commercial installs.'
+			return "<strong>Non-Commercial</strong><br /><br />As no API key has been provided, you're confirming the environment is <strong>Non-Commercial</strong>.<br />An API Key for the Firmware Update Service is required for Commercial installs.";
 		}
-	}
-
+	};
 
 	// Bootloader TRouble
 	const handleBootloader = () => {
 		BootLoaderMode = true;
-		RED.notify('WARNING! Your ZWave controller failed to boot, and is currently in recovery mode, please upload new firmware from the side bar', { type: "error", timeout: 30000 })
-	}
+		RED.notify(
+			'WARNING! Your ZWave controller failed to boot, and is currently in recovery mode, please upload new firmware from the side bar',
+			{ type: 'error', timeout: 30000 }
+		);
+	};
 
 	// Get Node Group
 	const GetNodeGroup = (Group) => {
@@ -2552,18 +2566,16 @@ const ZWaveJS = (function () {
 
 	// Attempst to select the only active network
 	const SelectFirstNetwork = () => {
-		const Networks = $('#zwjs-network');
-		if (Networks.children().length === 2) {
-			const Value = Networks.children().eq(1).val();
-			Networks.val(Value);
+		const select = $('#zwjs-network');
+		const options = select.children();
+		const count = options.length;
+
+		if (count === 2) {
+			select.val(options.eq(1).val());
 			NetworkSelected();
 		}
 
-		if (Networks.children().length < 3) {
-			Networks.parent().hide();
-		} else {
-			Networks.parent().show();
-		}
+		select.parent().toggle(count >= 3);
 	};
 
 	return {
@@ -2608,6 +2620,7 @@ const ZWaveJS = (function () {
 		RebuildNodeRoutes,
 		CFGUpdate,
 		UpdateCFirmwareFUS,
-		UpdateNFirmwareFUS
+		UpdateNFirmwareFUS,
+		ZoomUI
 	};
 })();
