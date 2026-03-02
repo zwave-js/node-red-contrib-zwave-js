@@ -115,7 +115,6 @@
 				value: '',
 				required: false
 			}
-
 		},
 		label: function () {
 			return this.name;
@@ -146,7 +145,10 @@
 					$('#node-config-input-serialPort').val(node.serialPort);
 				}
 			} else {
-				alert(data.response);
+				if (node.serialPort) {
+					$('#node-config-input-serialPort').append(new Option(node.serialPort, node.serialPort));
+					$('#node-config-input-serialPort').val(node.serialPort);
+				}
 			}
 		});
 	}

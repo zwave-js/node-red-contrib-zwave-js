@@ -56,13 +56,11 @@
 	<a class="red-ui-tab-link-button" onclick="ZWaveJS.NodeCollapseToggle(3, this)"><i
 			class="fa fa-sort-numeric-asc zwjs-button-group"></i></a>
 	|
-	<a class="red-ui-tab-link-button" onclick="ZWaveJS.ZoomUI()"><i
-			class="fa fa-undo"></i></a>
-	<a class="red-ui-tab-link-button" onclick="ZWaveJS.ZoomUI(0.1)"><i
-			class="fa fa-search-plus"></i></a>
-	<a class="red-ui-tab-link-button" onclick="ZWaveJS.ZoomUI(-0.1)"><i
-			class="fa fa-search-minus"></i></a>
-
+	<a class="red-ui-tab-link-button" onclick="ZWaveJS.ZoomUI(-0.1)"><i class="fa fa-search-minus"></i></a>
+	<a class="red-ui-tab-link-button" onclick="ZWaveJS.ZoomUI()"><i class="fa fa-undo"></i></a>
+	<a class="red-ui-tab-link-button" onclick="ZWaveJS.ZoomUI(0.1)"><i class="fa fa-search-plus"></i></a>
+			
+	
 
 			
 </div>
@@ -230,7 +228,7 @@
 </script>
 
 <!-- prettier-ignore -->
- <script type="text/template" id="ZWJS_TPL_Tray-Controller-Recover">
+<script type="text/template" id="ZWJS_TPL_Tray-Controller-Recover">
 	<div class="zwjs-tray-header">
 		<table>
 			<tr>
@@ -252,7 +250,7 @@
 	<fieldset class=zwjs-fieldset>
 		<div class="zwjs-hint">
 			<strong>Firmware / Bootloader Recovery</strong><br /><br />
-			Your ZWave Controller has been detected to be stuck in <strong>Bootloader</strong> Mode, its likely due to a recent Firmware update that had failed. 
+			Your ZWave Controller has been detected to be stuck in <strong>Bootloader</strong> Mode, its likely due to a recent Firmware update that had failed.
 			The driver has been entered into Bootloader Recovery Mode. Please flash a clean Firmware to the controller.
 		</div>
 		<div>
@@ -260,10 +258,9 @@
 		</div>
 	</fieldset>
 	<div class="zwjs-progress-container" id="zwjs-prog-contain-cfirmware">
-  			<div class="zwjs-progress-bar" id="zwjs-prog-bar-cfirmware"></div>
+	 			<div class="zwjs-progress-bar" id="zwjs-prog-bar-cfirmware"></div>
 	</div>
 </script>
-
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Controller">
