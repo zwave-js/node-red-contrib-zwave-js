@@ -85,8 +85,7 @@ module.exports = (RED) => {
 			}
 
 			if (self.config.nodeMode !== 'All' && Req.cmdProperties?.nodeId) {
-				const AllowedNodes = config.filteredNodeId.split(',').map((N) => parseInt(N));
-				if (!AllowedNodes.includes(Req.cmdProperties?.nodeId)) {
+				if (!Nodes.includes(Req.cmdProperties?.nodeId)) {
 					done(new Error('The target node(s) are not enabled on this Device Node instance'));
 					return;
 				}
@@ -222,6 +221,7 @@ module.exports = (RED) => {
 						done();
 						return;
 					}
+
 					TargetNodes = config.filteredNodeId.split(',').map((N) => parseInt(N));
 					switch (self.config.multiMode) {
 						case 'Multicast':

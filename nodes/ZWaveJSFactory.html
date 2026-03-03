@@ -3,6 +3,69 @@
 		category: 'ZWave JS',
 		color: 'rgb(46,145,205)',
 		defaults: {
+			valueSetOptionsType: {
+				value: 'json',
+				required: true
+			},
+			valueSetOptions: {
+				value: '{"transitionDuration": "5s"}',
+				required: false
+			},
+
+			valueType: {
+				value: 'msg',
+				required: true
+			},
+			value: {
+				value: 'payload',
+				required: false
+			},
+
+			valueIdType: {
+				value: 'json',
+				required: true
+			},
+			valueId: {
+				value: '{"commandClass": 37, "property": "targetValue", "endpoint": 0}',
+				required: false
+			},
+
+			argsType: {
+				value: 'json',
+				required: true
+			},
+			args: {
+				value: '[]',
+				required: false
+			},
+
+			endpointType: {
+				value: 'num',
+				required: true
+			},
+			endpoint: {
+				value: 0,
+				required: false
+			},
+
+			nodeIdType: {
+				value: 'num',
+				required: true
+			},
+			nodeId: {
+				value: 2,
+				required: true
+			},
+
+			trackingIdType: {
+				value: 'msg',
+				required: true
+			},
+			trackingId: {
+				value: 'id',
+				required: false
+			},
+
 			name: {
 				value: 'ZWave Command Factory',
 				required: true
@@ -17,34 +80,6 @@
 			},
 			commandClass: {
 				value: '',
-				required: false
-			},
-			valueId: {
-				value: 'valueId',
-				required: false
-			},
-			nodeId: {
-				value: 'topic',
-				required: true
-			},
-			endpoint: {
-				value: 'endpoint',
-				required: false
-			},
-			value: {
-				value: 'payload',
-				required: false
-			},
-			valueSetOptions: {
-				value: 'options',
-				required: false
-			},
-			args: {
-				value: 'payload',
-				required: false
-			},
-			trackingId: {
-				value: 'id',
 				required: false
 			}
 		},
@@ -63,11 +98,21 @@
 	let self = this;
 
 	function SortUI() {
+		$('input[data-typed-types]').each(function () {
+			const input = $(this);
 
-		$('input[jsonata]').typedInput({ types: ['jsonata'] });
-		$('input[jsonata]')
-			.next('.red-ui-typedInput-container')
-			.css({ width: 'calc(100% - 135px)' });
+			const typeConfig = `#${input.attr('id')}Type`;
+			const typesAttr = input.attr('data-typed-types');
+			if (!typesAttr) return;
+
+			const typesArray = typesAttr.split(',').map((t) => t.trim());
+
+			input.typedInput({
+				types: typesArray,
+				typeField: typeConfig
+			});
+		});
+		$('input[data-typed-types]').next('.red-ui-typedInput-container').css({ width: 'calc(100% - 135px)' });
 
 		self = this;
 		setTimeout(RealSort, 10);
@@ -144,6 +189,13 @@
 
 <!-- prettier-ignore -->
 <script type="text/x-red" data-template-name="zwavejs-factory">
+	<input type="hidden" id="node-input-trackingIdType">
+    <input type="hidden" id="node-input-nodeIdType">
+	<input type="hidden" id="node-input-endpointType">
+	<input type="hidden" id="node-input-argsType">
+	<input type="hidden" id="node-input-valueIdType">
+	<input type="hidden" id="node-input-valueType">
+	<input type="hidden" id="node-input-valueSetOptionsType">
 	<h3>Basic</h3>
 	<hr />
 	<div class="form-row">
@@ -172,37 +224,33 @@
 	</div>
 	<div class="form-row">
 	    <label for="node-input-trackingId"><i class="fa fa-id-card-o"></i> Tracking ID</label>
-	    <input type="text" id="node-input-trackingId" jsonata>
+	    <input type="text" id="node-input-trackingId" data-typed-types="msg,flow,global,str,num,json,jsonata,env">
 	</div>
 	<h3>Command Properties</h3>
 	<hr />
 	<div class="form-row">
 	    <label for="node-input-nodeId"><i class="fa fa-microchip"></i> Node ID</label>
-	    <input type="text" id="node-input-nodeId" jsonata>
+	    <input type="text" id="node-input-nodeId" data-typed-types="msg,flow,global,num,jsonata,env">
 	</div>
 	<div class="form-row" data-for-api="CC">
 	    <label for="node-input-endpoint"><i class="fa fa-sitemap"></i> Endpoint</label>
-	    <input type="text" id="node-input-endpoint" jsonata>
+	    <input type="text" id="node-input-endpoint" data-typed-types="msg,flow,global,num,jsonata,env">
 	</div>
 	<div class="form-row" data-for-api="CC">
 	    <label for="node-input-args"><i class="fa fa-keyboard-o"></i> Args</label>
-	    <input type="text" id="node-input-args" jsonata>
+	    <input type="text" id="node-input-args" data-typed-types="msg,flow,global,json,jsonata,env">
 	</div>
 	<div class="form-row" data-for-api="VALUE">
 	    <label for="node-input-valueId"><i class="fa fa-id-card-o""></i> Value ID</label>
-	    <input type="text" id="node-input-valueId" jsonata>
+	    <input type="text" id="node-input-valueId" data-typed-types="msg,flow,global,json,jsonata,env">
 	</div>
 	<div class="form-row" data-for-api="VALUE">
 	    <label for="node-input-value"><i class="fa fa-keyboard-o"></i> Value</label>
-	    <input type="text" id="node-input-value" jsonata>
+	    <input type="text" id="node-input-value" data-typed-types="msg,flow,global,num,json,jsonata,env">
 	</div>
 	<div class="form-row" data-for-api="VALUE">
 	    <label for="node-input-valueSetOptions"><i class="fa fa-cogs"></i> Options</label>
-	    <input type="text" id="node-input-valueSetOptions" jsonata>
-	</div>
-
-	<div class="form-tips" id="node-tip">
-		All JSONata expressions are based on the root path of <code>msg</code>, i.e specifying <code>payload</code> will yield the object stored at <code>msg.payload</code>.
+	    <input type="text" id="node-input-valueSetOptions" data-typed-types="msg,flow,global,json,jsonata,env">
 	</div>
 </script>
 

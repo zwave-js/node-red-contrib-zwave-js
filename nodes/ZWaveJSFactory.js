@@ -6,48 +6,42 @@ module.exports = (RED) => {
 		RED.nodes.createNode(self, config);
 		self.config = config;
 
-		const evalExpression = (exp, msg) => {
+		const evalExpression = (value, type, node, msg) => {
 			return new Promise((resolve, reject) => {
-				RED.util.evaluateJSONataExpression(exp, msg, (err, value) => {
+				RED.util.evaluateNodeProperty(value, type, node, msg, (err, value) => {
 					if (err) reject(err);
 					else resolve(value);
 				});
 			});
 		};
 
-		const ValueAPI = (msg, send, done) => {
-			let ValueID;
-			let Value;
-			let NodeID;
-			let Options;
-			let TrackingID;
+		const ValueAPI = async (msg, send, done) => {
+			try {
+				let TrackingID;
+				let ValueID;
+				let Value;
+				let NodeID;
+				let Options;
 
-			(async () => {
 				if (config.trackingId) {
-					const EXP = RED.util.prepareJSONataExpression(config.trackingId, self);
-					TrackingID = await evalExpression(EXP, msg);
+					TrackingID = await evalExpression(config.trackingId, config.trackingIdType, this, msg);
 				}
 
 				if (config.valueId) {
-					const EXP = RED.util.prepareJSONataExpression(config.valueId, self);
-					ValueID = await evalExpression(EXP, msg);
-				}
-
-				if (config.nodeId) {
-					const EXP = RED.util.prepareJSONataExpression(config.nodeId, self);
-					NodeID = await evalExpression(EXP, msg);
+					ValueID = await evalExpression(config.valueId, config.valueIdType, this, msg);
 				}
 
 				if (config.method === 'setValue') {
-					if (config.value) {
-						const EXP = RED.util.prepareJSONataExpression(config.value, self);
-						Value = await evalExpression(EXP, msg);
+					if (config.value !== undefined) {
+						Value = await evalExpression(config.value, config.valueType, this, msg);
 					}
-
 					if (config.valueSetOptions) {
-						const EXP = RED.util.prepareJSONataExpression(config.valueSetOptions, self);
-						Options = await evalExpression(EXP, msg);
+						Options = await evalExpression(config.valueSetOptions, config.valueSetOptionsType, this, msg);
 					}
+				}
+
+				if (config.nodeId) {
+					NodeID = await evalExpression(config.nodeId, config.nodeIdType, this, msg);
 				}
 
 				if (!ValueID) {
@@ -90,34 +84,32 @@ module.exports = (RED) => {
 
 				send({ payload: CMD });
 				done();
-			})();
+			} catch (error) {
+				done(error);
+			}
 		};
 
-		const CCAPI = (msg, send, done) => {
-			let NodeID;
-			let Endpoint;
-			let Args;
-			let TrackingID;
+		const CCAPI = async (msg, send, done) => {
+			try {
+				let TrackingID;
+				let NodeID;
+				let Endpoint;
+				let Args;
 
-			(async () => {
 				if (config.trackingId) {
-					const EXP = RED.util.prepareJSONataExpression(config.trackingId, self);
-					TrackingID = await evalExpression(EXP, msg);
+					TrackingID = await evalExpression(config.trackingId, config.trackingIdType, this, msg);
 				}
 
 				if (config.nodeId) {
-					const EXP = RED.util.prepareJSONataExpression(config.nodeId, self);
-					NodeID = await evalExpression(EXP, msg);
+					NodeID = await evalExpression(config.nodeId, config.nodeIdType, this, msg);
 				}
 
 				if (config.endpoint) {
-					const EXP = RED.util.prepareJSONataExpression(config.endpoint, self);
-					Endpoint = await evalExpression(EXP, msg);
+					Endpoint = await evalExpression(config.endpoint, config.endpointType, this, msg);
 				}
 
 				if (config.args) {
-					const EXP = RED.util.prepareJSONataExpression(config.args, self);
-					Args = await evalExpression(EXP, msg);
+					Args = await evalExpression(config.args, config.argsType, this, msg);
 				}
 
 				if (!NodeID) {
@@ -151,7 +143,7 @@ module.exports = (RED) => {
 					CMD.cmd.id = TrackingID;
 				}
 
-				if (Endpoint !== undefined) {
+				if (Endpoint) {
 					CMD.cmdProperties.endpoint = Endpoint;
 				}
 
@@ -161,7 +153,9 @@ module.exports = (RED) => {
 
 				send({ payload: CMD });
 				done();
-			})();
+			} catch (error) {
+				done(error);
+			}
 		};
 
 		self.on('input', (msg, send, done) => {

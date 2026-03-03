@@ -34,6 +34,7 @@
     - Unlimited networks
     - Now supports acting as a secondary controller
     - Direct device interaction inside function nodes
+    - Enhanced CMD Factory Node
 
   - 10.0.0
 

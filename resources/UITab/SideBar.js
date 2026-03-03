@@ -436,6 +436,10 @@ const ZWaveJS = (function () {
 			return;
 		}
 
+		ClearSelection(true);
+		$('#zwjs-controller-info').text('--');
+		$('#zwjs-controller-status').text('Waiting for Network Status Report...');
+
 		networkId = $('#zwjs-network').val();
 		setSubscription(true);
 
