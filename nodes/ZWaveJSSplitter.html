@@ -33,7 +33,7 @@
 				required: true
 			},
 			splits: { value: [] },
-			outputs: { value: 0 }
+			outputs: { value: 1 }
 		},
 		inputs: 1,
 		outputs: 1,
@@ -42,7 +42,7 @@
 			return this.name;
 		},
 		outputLabels: function (index) {
-			return this.splits[index].name;
+			return this.splits[index]?.name || 'Learned Notifications';
 		},
 		paletteLabel: 'Event Splitter',
 		oneditprepare: SortUI,
@@ -62,6 +62,10 @@
 	}
 
 	function DoSave() {
+
+		const I = Math.max(Object.keys(ZWJSIndexMap)) + 1;
+		ZWJSIndexMap[I] = I; 
+
 		$('#node-input-outputs').val(JSON.stringify(ZWJSIndexMap));
 
 		this.splits = [];
@@ -140,5 +144,5 @@
 
 <!-- prettier-ignore -->
 <script type="text/markdown" data-help-name="zwavejs-splitter">
-<p>A ZWave event splitter</p>
+	<p>A ZWave Event Splitter</p>
 </script>
