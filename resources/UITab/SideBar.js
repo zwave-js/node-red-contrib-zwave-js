@@ -155,6 +155,8 @@ const ZWaveJS = (function () {
 		DisableButton(Button);
 		Runtime.Get('CONTROLLER', 'getNodes').then((Data) => {
 			if (Data.callSuccess) {
+				const CD = $('#zwjs-controller-info').data('info');
+				const FileName = `zwave_names_locations_${CD.homeId}.json`;
 				const Map = [];
 				Data.response.forEach((N) => {
 					if (N.nodeName !== undefined || N.nodeLocation !== undefined) {
@@ -166,7 +168,7 @@ const ZWaveJS = (function () {
 				const url = URL.createObjectURL(blob);
 				const a = document.createElement('a');
 				a.href = url;
-				a.download = `NodeNameLocationBackup - ${networkId}.json`;
+				a.download = FileName;
 				document.body.appendChild(a);
 				a.click();
 				document.body.removeChild(a);
