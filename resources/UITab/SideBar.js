@@ -150,6 +150,36 @@ const ZWaveJS = (function () {
 		RED.comms.subscribe('zwave-js/ui/global/removenetwork', (topic, network) => commsRemoveNetwork(network));
 	};
 
+	// Backup Names
+	const BackupNames = (Button) => {
+		DisableButton(Button);
+		Runtime.Get('CONTROLLER', 'getNodes').then((Data) => {
+			if (Data.callSuccess) {
+				const Map = [];
+				Data.response.forEach((N) => {
+					if (N.nodeName !== undefined || N.nodeLocation !== undefined) {
+						Map.push({ nodeId: N.nodeId, name: N.nodeName, location: N.nodeLocation });
+					}
+				});
+				const Output = JSON.stringify(Map, null, 2);
+				const blob = new Blob([Output], { type: 'application/json' });
+				const url = URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = `NodeNameLocationBackup - ${networkId}.json`;
+				document.body.appendChild(a);
+				a.click();
+				document.body.removeChild(a);
+				URL.revokeObjectURL(url);
+			} else {
+				alert(Data.response);
+			}
+			EnableButton(Button);
+		});
+	};
+
+	const RestoreNames = (Button) => {};
+
 	// Zoom
 	const ZoomUI = (value) => {
 		const sidebar = $('#zwjs-sidebar');
@@ -2625,6 +2655,8 @@ const ZWaveJS = (function () {
 		CFGUpdate,
 		UpdateCFirmwareFUS,
 		UpdateNFirmwareFUS,
-		ZoomUI
+		ZoomUI,
+		BackupNames,
+		RestoreNames
 	};
 })();
