@@ -39,10 +39,11 @@
             {{/eq}}
 
             {{#eq type "any"}}
-                <textarea id="zwjs-cc-value-new"  style="width:100%; height: 180px;">{{json currentValue}}</textarea>
+                {{#editor "zwjs-cc-value-new"}}{{{json currentValue}}}{{/editor}}
             {{/eq}}
             <button onclick="ZWaveJS.UpdateValue(this,'{{encode valueId}}')">Send Update</button>
-        <div>
+            
+        </div>
 
         {{#if states}}
             <div>

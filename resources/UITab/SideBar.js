@@ -25,6 +25,7 @@ const ZWaveJS = (function () {
 	let MiniEdtiorDialog;
 	let ViewingValueID = undefined;
 	let BootLoaderMode = false;
+	let CodeEditor = undefined;
 
 	/*
 	 * Driver Communciation Methods
@@ -99,6 +100,19 @@ const ZWaveJS = (function () {
 
 		Handlebars.registerHelper('pretty', function (context) {
 			return JSONFormatter.json.prettyPrint(context);
+		});
+
+		Handlebars.registerHelper('editor', function (id, context) {
+			setTimeout(() => {
+				CodeEditor = RED.editor.createEditor({
+					id: id,
+					mode: 'ace/mode/json',
+					value: context.fn(this)
+				});
+			}, 175);
+			return new Handlebars.SafeString(
+				`<div style="height: 250px; min-height:150px;" class="node-text-editor" id="${id}"></div>`
+			);
 		});
 
 		// Templates
@@ -180,7 +194,36 @@ const ZWaveJS = (function () {
 		});
 	};
 
-	const RestoreNames = (Button) => {};
+	const RestoreNames = (Button) => {
+		DisableButton(Button);
+		const input = document.createElement('input');
+		input.type = 'file';
+
+		const OnLoad = async (e) => {
+			try {
+				const Nodes = JSON.parse(e.target.result);
+				for (let i = 0; i < Nodes.length; i++) {
+					const Node = Nodes[i];
+					await Runtime.Post('NODE', 'setLocation', { nodeId: Node.nodeId, value: Node.location || undefined });
+					await Runtime.Post('NODE', 'setName', { nodeId: Node.nodeId, value: Node.name || undefined });
+				}
+				EnableButton(Button);
+				RefreshNodes('Named');
+				alert('Restore Completed Successfully');
+			} catch (err) {
+				alert(err.message);
+			}
+		};
+
+		const OnChange = (e) => {
+			const reader = new FileReader();
+			reader.onload = OnLoad;
+			reader.readAsText(e.target.files[0]);
+		};
+
+		input.onchange = OnChange;
+		input.click();
+	};
 
 	// Zoom
 	const ZoomUI = (value) => {
@@ -231,10 +274,14 @@ const ZWaveJS = (function () {
 		const NextIndex = Node.splits.length ? Math.max(...Node.splits.map((x) => x.index)) + 1 : 0;
 
 		const entry = {
-			valueId: ViewingValueID,
+			valueId: JSON.parse(CodeEditor.getValue()),
 			index: NextIndex,
 			name: $('#zwjs-splitter-output-name').val()
 		};
+
+		if (entry.valueId.commandClass === undefined) {
+			entry.custom = true;
+		}
 
 		Node.splits.push(entry);
 
@@ -281,7 +328,9 @@ const ZWaveJS = (function () {
 
 		let Value;
 
-		if (Defined) {
+		if (CodeEditor) {
+			Value = JSON.parse(CodeEditor.getValue());
+		} else if (Defined) {
 			Value = parseInt($('#zwjs-cc-value-new-defined').val());
 			$('#zwjs-cc-value-new').val(Value);
 		} else {
@@ -1350,7 +1399,8 @@ const ZWaveJS = (function () {
 
 				resolve({
 					splitters: Splitters,
-					label: Label
+					label: Label,
+					shape: ViewingValueID
 				});
 			});
 		},
@@ -2146,6 +2196,12 @@ const ZWaveJS = (function () {
 		Runtime.Get('CONTROLLER', 'stopJoiningNetwork');
 		Runtime.Get('CONTROLLER', 'stopLeavingNetwork');
 
+		// Kill Code Editor
+		if (CodeEditor) {
+			CodeEditor.destroy();
+			CodeEditor = undefined;
+		}
+
 		// Finally Close Tray
 		RED.tray.close();
 	};
@@ -2482,6 +2538,12 @@ const ZWaveJS = (function () {
 			} else {
 				State.examples.nocmd.payload.cmd.method = 'getValue';
 			}
+
+			State.debug = {
+				currentValue: item.valueInfo.currentValue,
+				valueId: item.valueInfo.valueId,
+				metadata: item.valueInfo.metadata
+			};
 
 			// Mobile or Mini Editor
 			const Width = $(window).width() < 1024;

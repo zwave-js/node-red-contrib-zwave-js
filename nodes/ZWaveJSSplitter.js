@@ -5,8 +5,6 @@ module.exports = (RED) => {
 		self.config = config;
 
 		let clearTimer;
-		const PinsCount = self.config.splits.length;
-		const TotalPins = PinsCount + 1; // 1 exra for learned
 
 		const deepSubsetMatch = (Profile, Candidate) => {
 			if (Profile === Candidate) return true;
@@ -35,73 +33,18 @@ module.exports = (RED) => {
 		};
 
 		self.on('input', (msg, send, done) => {
-			if (msg.topic === 'ClearLearnedNotifications') {
-				self.context().set('LearnedNotifications', []);
-				callback({
-					Type: 'STATUS',
-					Status: {
-						fill: 'green',
-						shape: 'dot',
-						text: `Learned Notifications Cleared!`,
-						clearTime: 5000
-					}
-				});
-				done();
-				return;
-			}
-
-			if (msg.topic === 'GetLearnedNotifications') {
-				msg.payload = self.context().get('LearnedNotifications');
-				send(msg);
-				done();
-				return;
-			}
-
-			if (msg.topic === 'LearnNotifications') {
-				if (Array.isArray(msg.payload)) {
-					msg.payload.forEach((N) => {
-						const Event = N.event;
-						const Name = N.name;
-						if (!self.context().get('LearnedNotifications')) {
-							self.context().set('LearnedNotifications', []);
-						}
-						self.context().get('LearnedNotifications').push({
-							name: Name,
-							event: Event
-						});
-					});
-					callback({
-						Type: 'STATUS',
-						Status: {
-							fill: 'green',
-							shape: 'dot',
-							text: `Event(s) Learned!`,
-							clearTime: 5000
-						}
-					});
-				} else {
-					callback({
-						Type: 'STATUS',
-						Status: {
-							fill: 'red',
-							shape: 'dot',
-							text: `msg.payload is not an array`,
-							clearTime: 5000
-						}
-					});
-				}
-
-				done();
-				return;
-			}
-
 			if (msg.payload?.event) {
 				let Match;
+				let VID;
+				let Customised;
+				let Valid = false;
 				switch (msg.payload.event) {
 					case 'VALUE_UPDATED':
 					case 'VALUE_ADDED':
 					case 'VALUE_NOTIFICATION':
-						const VID = msg.payload?.eventBody?.valueId;
+					case 'NOTIFICATION':
+						Valid = true;
+						VID = msg.payload?.eventBody?.valueId;
 						if (VID) {
 							Match = self.config.splits.find(
 								(V) =>
@@ -111,19 +54,20 @@ module.exports = (RED) => {
 							);
 						}
 						break;
-					case 'NOTIFICATION':
-						if (self.context().get('LearnedNotifications')) {
-							const Learned = self.context().get('LearnedNotifications');
-							for (let i = 0; i < Learned.length; i++) {
-								const Current = Learned[i];
-								if (deepSubsetMatch(Current.event, msg.payload?.eventBody)) {
-									Match = { ...Current, index: PinsCount };
-								}
-							}
-						}
-						break;
 				}
-				if (Match) {
+
+				if (Valid && !Match) {
+					Customised = self.config.splits.filter((S) => S.custom);
+					for (let i = 0; i < Customised; i++) {
+						const Current = Customised[i];
+						if (deepSubsetMatch(Current.valueId, msg.payload?.eventBody)) {
+							Match = Current;
+							break;
+						}
+					}
+				}
+
+				if (Valid && Match) {
 					callback({
 						Type: 'STATUS',
 						Status: {
@@ -139,20 +83,22 @@ module.exports = (RED) => {
 						outputPin: PinIndex
 					};
 
-					const out = new Array(TotalPins);
+					const out = new Array(self.config.splits.length);
 					out[PinIndex] = msg;
 					send(out);
 					done();
 				} else {
-					callback({
-						Type: 'STATUS',
-						Status: {
-							fill: 'red',
-							shape: 'dot',
-							text: `No Match`,
-							clearTime: 5000
-						}
-					});
+					if (Valid) {
+						callback({
+							Type: 'STATUS',
+							Status: {
+								fill: 'red',
+								shape: 'dot',
+								text: 'No Match',
+								clearTime: 5000
+							}
+						});
+					}
 					done();
 				}
 			}

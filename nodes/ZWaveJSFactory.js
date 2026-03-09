@@ -82,7 +82,7 @@ module.exports = (RED) => {
 					CMD.cmdProperties.setValueOptions = Options;
 				}
 
-				send({ payload: CMD });
+				send({ ...msg, payload: CMD });
 				done();
 			} catch (error) {
 				done(error);
@@ -151,7 +151,7 @@ module.exports = (RED) => {
 					CMD.cmdProperties.args = Args;
 				}
 
-				send({ payload: CMD });
+				send({ ...msg, payload: CMD });
 				done();
 			} catch (error) {
 				done(error);

@@ -132,8 +132,19 @@
 		<div child default onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Value-Current',this, '{{encode editInfo}}')">Update Value</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Value-Example',this,'{{encode examples}}')">Example Usage</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Value-Filter',this,'ListSplitters')">Add To Splitter</div>
+		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Value-Debug',this,'{{encode debug}}')">Debug Information</div>
 	</div>
 	<div id="zwjs-advanced-content"></div>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/template" id="ZWJS_TPL_Tray-Node-Value-Debug">
+	<fieldset class=zwjs-fieldset>
+		<div class="zwjs-title">Value Debug Information</div>
+		<div>
+			<pre>{{{pretty .}}}</pre>
+		</div>
+	</fieldset>
 </script>
 
 <!-- prettier-ignore -->
@@ -142,7 +153,7 @@
 		<div class="zwjs-title">Select the Event Splitter Node you wish to append to.</div>
 		<div class="zwjs-hint">Note: The target Event Splitter Node will be modified and marked dirty, so a Deploy will be required, to commit the changes.</div>
 
-		<table>
+		<table style="width:100%">
 			<tr>
 				<td>Target Splitter Node</td>
 				<td>
@@ -157,6 +168,16 @@
 			<tr>
 				<td>Output Pin Name</td>
 				<td><input type="text" id="zwjs-splitter-output-name" value="{{label}}"></td>
+			</tr>
+			<tr>
+				<td colspan="2">Event Shape</td>
+			</tr>
+			<tr>
+
+				<td colspan="2">
+					<div class="zwjs-hint">The Event Shape denotes the matching <code>eventBody</code> in Zwave Value events.</div>
+					{{#editor "zwjs-splitter-shape"}}{{{json shape}}}{{/editor}}
+				</td>
 			</tr>
 			
 		</table>

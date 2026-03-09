@@ -4,18 +4,27 @@
 			<label><i class="fa fa-tag"></i> Name</label>
 			<input type="text" name="zwjz-s-name" value="{{name}}">
 		</div>
-		<div class="form-row" style="height:24px">
-			<label><i class="fa fa-search"></i> Class</label>
-			<input type="text" name="zwjz-c-name" value="{{valueId.commandClassName}}" readonly>
-		</div>
-		<div class="form-row" style="height:24px">
-			<label><i class="fa fa-info-circle"></i> Property</label>
-			<input type="text" name="zwjz-p-name" value="{{valueId.propertyName}}" readonly>
-		</div>
-		{{#if valueId.propertyKeyName}}
+		{{#if valueId.commandClass}}
 			<div class="form-row" style="height:24px">
-				<label><i class="fa fa-info-circle"></i> Key</label>
-				<input type="text" name="zwjz-k-name" value="{{valueId.propertyKeyName}}" readonly>
+				<label><i class="fa fa-search"></i> Class</label>
+				<input type="text" name="zwjz-c-name" value="{{valueId.commandClassName}}" readonly>
+			</div>
+			<div class="form-row" style="height:24px">
+				<label><i class="fa fa-info-circle"></i> Property</label>
+				<input type="text" name="zwjz-p-name" value="{{valueId.propertyName}}" readonly>
+			</div>
+			{{#if valueId.propertyKeyName}}
+				<div class="form-row" style="height:24px">
+					<label><i class="fa fa-info-circle"></i> Key</label>
+					<input type="text" name="zwjz-k-name" value="{{valueId.propertyKeyName}}" readonly>
+				</div>
+			{{/if}}
+		{{else}}
+			<div class="form-row" style="height:auto">
+				<label><i class="fa fa-info-circle"></i> Custom</label>
+				<div>
+					<pre>{{{pretty valueId}}}</pre>
+				</div>
 			</div>
 		{{/if}}
 	</div>
@@ -33,7 +42,7 @@
 				required: true
 			},
 			splits: { value: [] },
-			outputs: { value: 1 }
+			outputs: { value: 0 }
 		},
 		inputs: 1,
 		outputs: 1,
@@ -42,7 +51,7 @@
 			return this.name;
 		},
 		outputLabels: function (index) {
-			return this.splits[index]?.name || 'Learned Notifications';
+			return this.splits[index]?.name
 		},
 		paletteLabel: 'Event Splitter',
 		oneditprepare: SortUI,
@@ -63,8 +72,7 @@
 
 	function DoSave() {
 
-		const I = Math.max(Object.keys(ZWJSIndexMap)) + 1;
-		ZWJSIndexMap[I] = I; 
+		
 
 		$('#node-input-outputs').val(JSON.stringify(ZWJSIndexMap));
 
