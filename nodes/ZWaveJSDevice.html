@@ -16,14 +16,6 @@
 				value: 'All',
 				required: true
 			},
-			multiMode: {
-				value: 'Multicast',
-				required: true
-			},
-			fanRate: {
-				value: 250,
-				required: true
-			},
 			filteredNodeId: {
 				value: '',
 				required: false
@@ -71,9 +63,7 @@
 		const self = this;
 		$('#node-input-nodeMode').on('change', function () {
 			if ($(this).val() === 'All') {
-				$('#node-input-multiMode-div').fadeOut(150);
 				$('#node-input-filteredNodeId-div').fadeOut(150);
-				$('#node-input-fanRate-div').fadeOut(150);
 			} else {
 				const ID = self.runtimeId || $('#node-input-runtimeId').val()
 				$.getJSON(`zwave-js/ui/${ID}/CONTROLLER/getNodes`, (data) => {
@@ -99,18 +89,6 @@
 						alert(data.response);
 					}
 				});
-
-				$('#node-input-multiMode-div').fadeIn(150);
-				$('#node-input-filteredNodeId-div').fadeIn(150);
-				$('#node-input-multiMode').trigger('change')
-			}
-		});
-
-		$('#node-input-multiMode').on('change', function () {
-			if ($(this).val() === 'Multicast') {
-				$('#node-input-fanRate-div').fadeOut(150);
-			} else {
-				$('#node-input-fanRate-div').fadeIn(150);
 			}
 		});
 	}
@@ -130,29 +108,7 @@
 	</div>
 	<h3>Operating Mode</h3>
 	<hr />
-	<div class="form-row">
-	    <label for="node-input-nodeMode"><i class="fa fa-th-large"></i> Node Mode</label>
-	    <select id="node-input-nodeMode">
-			<option value="All">All Nodes</option>
-			<option value="Multiple">Selected Nodes</option>
-		</select>
-	</div>
-	<div class="form-row" id="node-input-multiMode-div">
-	    <label for="node-input-multiMode"><i class="fa fa-bullhorn"></i> Broadcast</label>
-	    <select id="node-input-multiMode">
-			<option value="Fan">Fan-Out</option>
-			<option value="Multicast">Multicast</option>
-		</select>
-	</div>
-	<div class="form-row" id="node-input-fanRate-div">
-	    <label for="node-input-fanRate"><i class="fa fa-clock-o"></i> Fan Rate</label>
-	    <input type="number" id="node-input-fanRate">
-	</div>
-	<div class="form-row" id="node-input-filteredNodeId-div">
-		<label for="node-input-filteredNodeId"><i class="fa fa-list-ol"></i> Nodes</label>
-		<input type="text" id="node-input-filteredNodeId">
-	</div>
-	<div class="form-row">
+		<div class="form-row">
 	    <label for="node-input-dataMode"><i class="fa fa-exchange"></i> Data Mode</label>
 		<select id="node-input-dataMode">
 			<option value="SR">Send/Receive</option>
@@ -160,11 +116,22 @@
 			<option value="R">Receive</option>
 		</select>
 	</div>
+	<div class="form-row">
+	    <label for="node-input-nodeMode"><i class="fa fa-th-large"></i> Receive For</label>
+	    <select id="node-input-nodeMode">
+			<option value="All">All Nodes</option>
+			<option value="Multiple">Selected Nodes</option>
+		</select>
+	</div>
+	
+	<div class="form-row" id="node-input-filteredNodeId-div">
+		<label for="node-input-filteredNodeId"><i class="fa fa-list-ol"></i> Nodes</label>
+		<input type="text" id="node-input-filteredNodeId">
+	</div>
+
 	<div class="form-tips" id="node-tip">
-		<strong>Note:</strong> Message broadcasting is only supported when <strong>Node Mode</strong> is set to <code>Selected Nodes</code>.<br />
-		<br />
-		<strong>All Nodes:</strong> <code>cmdProperties.nodeId</code> is <strong>REQUIRED</strong><br />
-		<strong>Selected Nodes:</strong> <code>cmdProperties.nodeId</code> is <strong>OPTIONAL</strong><br />
+		<strong>Note : </strong>To use Message Broadcasting set <code>nodeId</code> to an array of Nodes.<br />
+		<strong>Message Broadcasting</strong> is only supported for use with <code>setValue</code>.
 
 	</div>
 </script>
