@@ -58,7 +58,7 @@ module.exports = (RED) => {
 
 				if (Valid && !Match) {
 					Customised = self.config.splits.filter((S) => S.custom);
-					for (let i = 0; i < Customised; i++) {
+					for (let i = 0; i < Customised.length; i++) {
 						const Current = Customised[i];
 						if (deepSubsetMatch(Current.valueId, msg.payload?.eventBody)) {
 							Match = Current;
