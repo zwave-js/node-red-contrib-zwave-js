@@ -380,3 +380,8 @@ i.zwjs-state-green {
 	max-width: none !important;
 	width: 100% !important;
 }
+
+/* Node RED 5 Fix */
+#zwjs-sidebar .red-ui-sidebar-header {
+	display: block;
+}
