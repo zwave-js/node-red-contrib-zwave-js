@@ -2425,7 +2425,7 @@ const ZWaveJS = (function () {
 							Display = `${value} ${V.metadata.unit || ''}`;
 						}
 
-						return `<span class="zwjs-cc-value" id="zwjs-value-${getValueUpdateHash(V.valueId)}" style="padding:1px;float:right;color:rgb(46, 145, 205); min-width:80px">${Display}</span>`;
+						return `<span class="zwjs-cc-value" id="zwjs-value-${getValueUpdateHash(V.valueId)}">${Display}</span>`;
 					} else {
 						return '';
 					}
