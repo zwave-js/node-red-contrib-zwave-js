@@ -73,7 +73,7 @@ module.exports = (RED) => {
 						Status: {
 							fill: 'green',
 							shape: 'dot',
-							text: `Match: ${Match.name}, Pin: ${Match.index + 1}`,
+							text: `Match: ${Match.name}, Pin: ${Match.index}`,
 							clearTime: 5000
 						}
 					});

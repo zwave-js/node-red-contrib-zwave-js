@@ -62,28 +62,37 @@
 	function Prep() {
 		const self = this;
 
-		const ID = self.runtimeId || $('#node-input-runtimeId').val();
-		$.getJSON(`zwave-js/ui/${ID}/CONTROLLER/getNodes`, (data) => {
-			if (data.callSuccess) {
-				const Nodes = data.response
-					.filter((N) => !N.isControllerNode)
-					.map((N) => ({
-						value: `${N.nodeId}`,
-						label: `${N.nodeId} -  ${N.nodeLocation || 'No Location'} - ${N.nodeName || 'No Name'}`
-					}));
-				$('#node-input-filteredNodeId').typedInput({
-					type: 'nodes',
-					types: [
-						{
-							value: 'nodes',
-							multiple: true,
-							options: Nodes
-						}
-					]
-				});
-			} else {
-				alert(data.response);
-			}
+		const Get = (ID) => {
+			$.getJSON(`zwave-js/ui/${ID}/CONTROLLER/getNodes`, (data) => {
+				if (data.callSuccess) {
+					const Nodes = data.response
+						.filter((N) => !N.isControllerNode)
+						.map((N) => ({
+							value: `${N.nodeId}`,
+							label: `${N.nodeId} -  ${N.nodeLocation || 'No Location'} - ${N.nodeName || 'No Name'}`
+						}));
+					$('#node-input-filteredNodeId').typedInput({
+						type: 'nodes',
+						types: [
+							{
+								value: 'nodes',
+								multiple: true,
+								options: Nodes
+							}
+						]
+					});
+				} else {
+					alert(data.response);
+				}
+			});
+		};
+
+		if (self.runtimeId) {
+			Get(self.runtimeId);
+		}
+
+		$('#node-input-runtimeId').on('change', function () {
+			Get($(this).val());
 		});
 
 		$('#node-input-nodeMode').on('change', function () {
