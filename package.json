@@ -5,7 +5,7 @@
 	"type": "commonjs",
 	"description": "The most powerful, high performing and highly polished Z-Wave node for Node-RED based on Z-Wave JS. If you want a fully featured Z-Wave framework in your Node-RED instance, you have found it.",
 	"dependencies": {
-		"mermaid": "^11.12.3",
+		"mermaid": "^11.13.0",
 		"qr-scanner": "^1.4.2",
 		"zwave-js": "^15.21.1",
 		"svg-pan-zoom": "^3.6.2",
