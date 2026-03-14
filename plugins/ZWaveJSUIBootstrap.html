@@ -11,7 +11,9 @@
 </script>
 
 <script>
-	ZWaveJS.init();
+	RED.plugins.registerPlugin('zwavejs-uibootstrap', {
+		onadd: ZWaveJS.init()
+	});
 </script>
 
 <!-- Side Panel Template-->
