@@ -385,7 +385,10 @@ img.zwjs-ui-logo {
 	width: 36px;
 }
 
-/* Node RED 5 Fix */
+#zwjs-sidebar .red-ui-treeList-label {
+	padding: 3px 0;
+}
+
 #zwjs-sidebar .red-ui-sidebar-header {
 	display: block;
 }

@@ -4,10 +4,11 @@ const { CommandClasses } = require('@zwave-js/core');
 const getNodes = (DriverInstance) => {
 	const Collection = [];
 	DriverInstance.controller.nodes.forEach((N) => {
-		Collection.push({
+		const _N = {
 			nodeId: N.id,
 			nodeName: N.name,
 			nodeLocation: N.location,
+			lastSeen: N.lastSeen?.getTime(),
 			status: NodeStatus[N.status],
 			ready: N.ready,
 			interviewStage: InterviewStage[N.interviewStage],
@@ -43,14 +44,21 @@ const getNodes = (DriverInstance) => {
 					endpoint: 0,
 					property: 'level'
 				}),
-				isLow: N.getValue({
-					commandClass: 128,
-					endpoint: 0,
-					property: 'isLow'
-				})
+				rechargeOrReplace:
+					N.getValue({
+						commandClass: 128,
+						endpoint: 0,
+						property: 'rechargeOrReplace'
+					}) > 0
 			},
-			statistics: N.isControllerNode ? DriverInstance.controller.statistics : N.statistics
-		});
+			statistics: N.isControllerNode ? { ...DriverInstance.controller.statistics } : { ...N.statistics }
+		};
+
+		if (_N.statistics?.lastSeen) {
+			_N.statistics.lastSeen = _N.statistics.lastSeen.getTime();
+		}
+
+		Collection.push(_N);
 	});
 
 	return Collection;

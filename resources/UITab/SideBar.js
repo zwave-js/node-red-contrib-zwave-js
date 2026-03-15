@@ -1225,6 +1225,29 @@ const ZWaveJS = (function () {
 						});
 					});
 
+					$('#zwjs-node-list').on('mouseenter', '.red-ui-treeList-label', function () {
+						const label = $(this);
+						const stateGroup = label.find('.zwjs-node-state-group');
+						const nodeId = label.find('span[id^="zwjs-node-name-"]').attr('id').split('zwjs-node-name-')[1];
+						const nodeData = Nodes.find((n) => n.nodeId == nodeId);
+						if (nodeData && nodeData.lastSeen) {
+							if (!stateGroup.data('original-html')) {
+								stateGroup.data('original-html', stateGroup.html());
+							}
+							stateGroup.html(`<span style="font-size:12px">${formatDateTime(nodeData.lastSeen)}</span>`);
+						}
+					});
+
+					$('#zwjs-node-list').on('mouseleave', '.red-ui-treeList-label', function () {
+						const label = $(this);
+						const stateGroup = label.find('.zwjs-node-state-group');
+						const originalHtml = stateGroup.data('original-html');
+						if (originalHtml) {
+							stateGroup.html(originalHtml);
+							stateGroup.removeData('original-html');
+						}
+					});
+
 					$('#zwjs-node-list').treeList('data', TreeData);
 
 					TreeData.forEach((G) => {
@@ -1485,7 +1508,15 @@ const ZWaveJS = (function () {
 		ControllerStats: () => {
 			return new Promise(async (resolve) => {
 				const CD = $('#zwjs-controller-info').data('info');
-				resolve({ statistics: FormatObjectKeys(CD.statistics), backgroundRSSI: FormatObjectKeys(CD.backgroundRSSI) });
+
+				const Result = {
+					statistics: FormatObjectKeys(CD.statistics),
+					backgroundRSSI: FormatObjectKeys(CD.backgroundRSSI)
+				};
+
+				Result.backgroundRSSI.Timestamp = formatDateTime(Result.backgroundRSSI.Timestamp);
+
+				resolve(Result);
 			});
 		},
 		ControllerSettings: () => {
@@ -1524,7 +1555,11 @@ const ZWaveJS = (function () {
 				const ND = GetNodeGroup(selectedNode.nodeLocation).children.find(
 					(N) => N.nodeData.nodeId === selectedNode.nodeId
 				).nodeData;
-				resolve(FormatObjectKeys(ND.statistics));
+
+				const Result = FormatObjectKeys(ND.statistics);
+				Result['Last Seen'] = formatDateTime(Result['Last Seen']);
+
+				resolve(Result);
 			});
 		},
 		NodeAssociationGroups: () => {
@@ -2031,6 +2066,34 @@ const ZWaveJS = (function () {
 	 * Methods/things used in all this vortex of chaos!
 	 */
 
+	// Date
+	const formatDateTime = (ts) => {
+		const d = new Date(ts);
+		const parts = new Intl.DateTimeFormat(navigator.language || 'en-GB', {
+			day: '2-digit',
+			month: '2-digit',
+			year: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit',
+			second: '2-digit',
+			hour12: false
+		}).formatToParts(d);
+
+		const map = {};
+		parts.forEach((p) => {
+			if (p.type !== 'literal') map[p.type] = p.value;
+		});
+
+		const dateOrder = parts
+			.filter((p) => ['day', 'month', 'year'].includes(p.type))
+			.map((p) => map[p.type])
+			.join('.');
+
+		const time = `${map.hour}:${map.minute}:${map.second}`;
+
+		return `${dateOrder} ${time}`;
+	};
+
 	// Get FUS License
 	const getFUSLicenseStatus = () => {
 		const Key = RED.nodes.node(networkId).apiKeys_firmwareUpdateService;
@@ -2269,7 +2332,7 @@ const ZWaveJS = (function () {
 				el_power.addClass('fa-battery-full');
 			}
 
-			if (Node.powerSource.isLow) {
+			if (Node.powerSource.rechargeOrReplace) {
 				el_power.addClass('zwjs-state-red');
 			} else {
 				el_power.addClass('zwjs-state-green');
