@@ -1234,7 +1234,7 @@ const ZWaveJS = (function () {
 							if (!stateGroup.data('original-html')) {
 								stateGroup.data('original-html', stateGroup.html());
 							}
-							stateGroup.html(`<span style="font-size:12px">${formatDateTime(nodeData.lastSeen)}</span>`);
+							stateGroup.html(`<span class="zwjs-timestamp">${formatDateTime(nodeData.lastSeen)}</span>`);
 						}
 					});
 

@@ -387,6 +387,15 @@ img.zwjs-ui-logo {
 
 #zwjs-sidebar .red-ui-treeList-label {
 	padding: 3px 0;
+	font-size: 12px;
+}
+
+#zwjs-sidebar .zwjs-timestamp {
+	font-size: 10px;
+	background: var(--zwave-js-main-color);
+	color: white;
+	padding: 3px;
+	border-radius: 4px;
 }
 
 #zwjs-sidebar .red-ui-sidebar-header {
