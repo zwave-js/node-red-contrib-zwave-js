@@ -26,6 +26,7 @@ const ZWaveJS = (function () {
 	let ViewingValueID = undefined;
 	let BootLoaderMode = false;
 	let CodeEditor = undefined;
+	let Panels = undefined;
 
 	/*
 	 * Driver Communciation Methods
@@ -137,10 +138,10 @@ const ZWaveJS = (function () {
 		$('#zwjs-node-list').on('treelistselect', nodeSelected);
 		$('#zwjs-cc-list').treeList({ data: [] });
 
-		const panels = RED.panels.create({ container: $('#zwjs-panel-stack') });
-		panels.ratio(0.3);
+		Panels = RED.panels.create({ container: $('#zwjs-panel-stack') });
+		Panels.ratio(0.3);
 
-		const resizeStack = () => panels.resize($('#zwjs-sidebar').height());
+		const resizeStack = () => Panels.resize($('#zwjs-sidebar').height());
 		RED.events.on('sidebar:resize', resizeStack);
 		$(window).on('resize', resizeStack);
 		$(window).on('focus', resizeStack);
@@ -217,6 +218,7 @@ const ZWaveJS = (function () {
 		const sidebar = $('#zwjs-sidebar');
 		if (value === undefined) {
 			sidebar.css('zoom', '1.0');
+			Panels.resize($('#zwjs-sidebar').height());
 			return;
 		}
 
@@ -226,6 +228,8 @@ const ZWaveJS = (function () {
 		newZoom = Math.min(Math.max(newZoom, 0.1), 2.0);
 		newZoom = parseFloat(newZoom.toFixed(2));
 		sidebar.css('zoom', newZoom);
+
+		Panels.resize($('#zwjs-sidebar').height());
 	};
 
 	// Install Config Update
