@@ -2330,12 +2330,12 @@ const ZWaveJS = (function () {
 				RED.popover.tooltip(el_security, GetSecurityClassLabel(Node.highestSecurityClass));
 				break;
 			case 7:
-				el_security.addClass(['fa', 'fa-lock', 'zwjs-state-amber']);
+				el_security.addClass(['fa', 'fa-lock', 'zwjs-state-darkblue']);
 				RED.popover.tooltip(el_security, GetSecurityClassLabel(Node.highestSecurityClass));
 				break;
 
 			default:
-				el_security.addClass(['fa', 'fa-unlock-alt', 'zwjs-state-red']);
+				el_security.addClass(['fa', 'fa-unlock-alt', 'zwjs-state-darkgray']);
 				RED.popover.tooltip(el_security, GetSecurityClassLabel(Node.highestSecurityClass));
 				break;
 		}

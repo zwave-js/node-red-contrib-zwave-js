@@ -274,6 +274,12 @@ i.zwjs-state-red {
 i.zwjs-state-green {
 	color: green;
 }
+i.zwjs-state-darkgray {
+	color: darkgray;
+}
+i.zwjs-state-darkblue {
+	color: darkblue;
+}
 
 #zwjs-camera-view {
 	width: 300px;
