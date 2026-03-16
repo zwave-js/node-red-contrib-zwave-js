@@ -1212,29 +1212,6 @@ const ZWaveJS = (function () {
 						});
 					});
 
-					$('#zwjs-node-list').on('mouseenter', '.red-ui-treeList-label', function () {
-						const label = $(this);
-						const stateGroup = label.find('.zwjs-node-state-group');
-						const nodeId = label.find('span[id^="zwjs-node-name-"]').attr('id').split('zwjs-node-name-')[1];
-						const nodeData = Nodes.find((n) => n.nodeId == nodeId);
-						if (nodeData && nodeData.lastSeen) {
-							if (!stateGroup.data('original-html')) {
-								stateGroup.data('original-html', stateGroup.html());
-							}
-							stateGroup.html(`<span class="zwjs-timestamp">${formatDateTime(nodeData.lastSeen)}</span>`);
-						}
-					});
-
-					$('#zwjs-node-list').on('mouseleave', '.red-ui-treeList-label', function () {
-						const label = $(this);
-						const stateGroup = label.find('.zwjs-node-state-group');
-						const originalHtml = stateGroup.data('original-html');
-						if (originalHtml) {
-							stateGroup.html(originalHtml);
-							stateGroup.removeData('original-html');
-						}
-					});
-
 					$('#zwjs-node-list').treeList('data', TreeData);
 
 					TreeData.forEach((G) => {
@@ -2280,19 +2257,19 @@ const ZWaveJS = (function () {
 			case 'Alive':
 			case 'Awake':
 				el_status.addClass(['fa', 'fa-sun-o', 'zwjs-state-green']);
-				RED.popover.tooltip(el_status, 'Alive/Awake');
+				RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Alive/Awake`);
 				break;
 			case 'Asleep':
 				el_status.addClass(['fa', 'fa-moon-o', 'zwjs-state-amber']);
-				RED.popover.tooltip(el_status, 'Alseep');
+				RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Alseep`);
 				break;
 			case 'Dead':
 				el_status.addClass(['fa', 'fa-exclamation-triangle', 'zwjs-state-red']);
-				RED.popover.tooltip(el_status, 'Dead/Not Responding');
+				RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Dead/Not Responding`);
 				break;
 			case 'Unknown':
 				el_status.addClass(['fa', 'fa-question-circle', 'zwjs-state-red']);
-				RED.popover.tooltip(el_status, 'Unknown');
+				RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Unknown`);
 				break;
 		}
 

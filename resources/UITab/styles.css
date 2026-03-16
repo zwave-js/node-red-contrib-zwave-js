@@ -390,14 +390,6 @@ img.zwjs-ui-logo {
 	font-size: 12px;
 }
 
-#zwjs-sidebar .zwjs-timestamp {
-	font-size: 10px;
-	background: var(--zwave-js-main-color);
-	color: white;
-	padding: 3px;
-	border-radius: 4px;
-}
-
 #zwjs-sidebar .red-ui-sidebar-header {
 	display: block;
 }
