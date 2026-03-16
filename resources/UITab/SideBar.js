@@ -122,25 +122,12 @@ const ZWaveJS = (function () {
 		TPL_NodeManagement = Handlebars.compile($('#ZWJS_TPL_Tray-Node').html());
 		TPL_ValueManagement = Handlebars.compile($('#ZWJS_TPL_Tray-Node-Value').html());
 
-		// Container
-		const Content = $('<div>').addClass('red-ui-sidebar-info').css({
-			position: 'relative',
-			height: '100%',
-			overflowY: 'hidden',
-			display: 'flex',
-			flexDirection: 'column',
-			zoom: '1.0'
-		});
-		Content.attr('id', 'zwjs-sidebar');
-
-		Content.append(TPL_SidePanel({}));
-
 		// Add tab
 		RED.sidebar.addTab({
 			id: 'zwave-js',
 			label: ' ZWave JS',
 			name: 'Z-Wave JS',
-			content: Content,
+			content: TPL_SidePanel({}),
 			enableOnEdit: true,
 			iconClass: 'fa fa-wifi',
 			onchange: () => setTimeout(resizeStack, 0)
@@ -153,7 +140,7 @@ const ZWaveJS = (function () {
 		const panels = RED.panels.create({ container: $('#zwjs-panel-stack') });
 		panels.ratio(0.3);
 
-		const resizeStack = () => panels.resize(Content.height());
+		const resizeStack = () => panels.resize($('#zwjs-sidebar').height());
 		RED.events.on('sidebar:resize', resizeStack);
 		$(window).on('resize', resizeStack);
 		$(window).on('focus', resizeStack);
