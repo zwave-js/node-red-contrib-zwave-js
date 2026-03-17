@@ -2398,8 +2398,12 @@ const ZWaveJS = (function () {
 
 					if (EPIDs.length < 2) {
 						$('#zwjs-endpoint-list').hide();
+						$('#zwjs-cc-list').css({ height: 'calc(100% - 165px)' });
+						Panels.resize($('#zwjs-sidebar').height());
 					} else {
 						$('#zwjs-endpoint-list').show();
+						$('#zwjs-cc-list').css({ height: 'calc(100% - 200px)' });
+						Panels.resize($('#zwjs-sidebar').height());
 					}
 
 					EPIDs.forEach((E) => {
