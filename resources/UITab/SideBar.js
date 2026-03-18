@@ -2307,10 +2307,25 @@ const ZWaveJS = (function () {
 				el_power.addClass('fa-battery-full');
 			}
 
-			if (Node.powerSource.rechargeOrReplace) {
-				el_power.addClass('zwjs-state-red');
+			if (Node.powerSource.rechargeOrReplace !== undefined) {
+				switch (Node.powerSource.rechargeOrReplace) {
+					case 1:
+						el_power.addClass('zwjs-state-amber');
+						break;
+					case 2:
+						el_power.addClass('zwjs-state-red');
+						break;
+					default:
+						el_power.addClass('zwjs-state-green');
+				}
 			} else {
-				el_power.addClass('zwjs-state-green');
+				if (Node.powerSource.level <= 10) {
+					el_power.addClass('zwjs-state-red');
+				} else if (Node.powerSource.level <= 25) {
+					el_power.addClass('zwjs-state-amber');
+				} else {
+					el_power.addClass('zwjs-state-green');
+				}
 			}
 		}
 

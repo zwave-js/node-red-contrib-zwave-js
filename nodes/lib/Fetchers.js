@@ -44,12 +44,11 @@ const getNodes = (DriverInstance) => {
 					endpoint: 0,
 					property: 'level'
 				}),
-				rechargeOrReplace:
-					N.getValue({
-						commandClass: 128,
-						endpoint: 0,
-						property: 'rechargeOrReplace'
-					}) > 0
+				rechargeOrReplace: N.getValue({
+					commandClass: 128,
+					endpoint: 0,
+					property: 'rechargeOrReplace'
+				})
 			},
 			statistics: N.isControllerNode ? { ...DriverInstance.controller.statistics } : { ...N.statistics }
 		};
