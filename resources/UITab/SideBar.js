@@ -27,6 +27,7 @@ const ZWaveJS = (function () {
 	let BootLoaderMode = false;
 	let CodeEditor = undefined;
 	let Panels = undefined;
+	let isCurrentTray = false;
 
 	/*
 	 * Driver Communciation Methods
@@ -555,6 +556,7 @@ const ZWaveJS = (function () {
 				}
 			],
 			open: function (tray) {
+				isCurrentTray = true;
 				const trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
 				const State = {
 					Network: $('#zwjs-controller-info').text(),
@@ -610,6 +612,7 @@ const ZWaveJS = (function () {
 							}
 						],
 						open: function (tray) {
+							isCurrentTray = true;
 							const trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
 							const State = {
 								Network: $('#zwjs-controller-info').text(),
@@ -660,6 +663,7 @@ const ZWaveJS = (function () {
 							}
 						],
 						open: function (tray) {
+							isCurrentTray = true;
 							const trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
 							const State = {
 								NodeID: $('#zwjs-node-info-id').text(),
@@ -2215,26 +2219,29 @@ const ZWaveJS = (function () {
 
 	// Tray Close
 	const CloseTray = () => {
-		// Kill Scanner
-		if (QRS) {
-			QRS.destroy();
-			QRS = undefined;
+		if (isCurrentTray) {
+			// Kill Scanner
+			if (QRS) {
+				QRS.destroy();
+				QRS = undefined;
+			}
+
+			// Kill any outstanding network task (we dont really need to await these)
+			Runtime.Get('CONTROLLER', 'stopInclusion');
+			Runtime.Get('CONTROLLER', 'stopExclusion');
+			Runtime.Get('CONTROLLER', 'stopJoiningNetwork');
+			Runtime.Get('CONTROLLER', 'stopLeavingNetwork');
+
+			// Kill Code Editor
+			if (CodeEditor) {
+				CodeEditor.destroy();
+				CodeEditor = undefined;
+			}
+
+			// Finally Close Tray
+			RED.tray.close();
+			isCurrentTray = false;
 		}
-
-		// Kill any outstanding network task (we dont really need to await these)
-		Runtime.Get('CONTROLLER', 'stopInclusion');
-		Runtime.Get('CONTROLLER', 'stopExclusion');
-		Runtime.Get('CONTROLLER', 'stopJoiningNetwork');
-		Runtime.Get('CONTROLLER', 'stopLeavingNetwork');
-
-		// Kill Code Editor
-		if (CodeEditor) {
-			CodeEditor.destroy();
-			CodeEditor = undefined;
-		}
-
-		// Finally Close Tray
-		RED.tray.close();
 	};
 
 	// Render Node Icons (status and stuff)
@@ -2627,6 +2634,7 @@ const ZWaveJS = (function () {
 					}
 				],
 				open: function (tray) {
+					isCurrentTray = true;
 					const trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
 
 					trayBody.append(TPL_ValueManagement(State));
