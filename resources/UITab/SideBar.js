@@ -2272,7 +2272,6 @@ const ZWaveJS = (function () {
 					if (!device.element) continue;
 
 					const el = $(device.element);
-					console.log(el);
 					const allIcons = el.find(
 						'span.zwjs-node-state-group i[id^="zwjs-node-state-status"], span.zwjs-node-state-group i[id^="zwjs-node-state-power"]'
 					);
@@ -2290,9 +2289,6 @@ const ZWaveJS = (function () {
 				}
 
 				GroupStatusElement.hide().removeClass('zwjs-state-amber zwjs-state-red');
-
-				console.log(GroupStatusElement);
-				console.log(GroupStatus);
 
 				switch (GroupStatus) {
 					case 1:
