@@ -2329,7 +2329,12 @@ const ZWaveJS = (function () {
 
 		const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
 
-		if (Node.lastSeen !== undefined && Date.now() - Node.lastSeen > sevenDaysMs) {
+		if (
+			Node.status !== 'Dead' &&
+			Node.status !== 'Unknown' &&
+			Node.lastSeen !== undefined &&
+			Date.now() - Node.lastSeen > sevenDaysMs
+		) {
 			el_status.addClass(['fa', 'fa-question-circle', 'zwjs-state-amber']);
 			RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Seen +7 days ago`);
 		} else {
