@@ -8,7 +8,7 @@
 [![DeepScan grade](https://deepscan.io/api/teams/17652/projects/21011/branches/591232/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=17652&pid=21011&bid=591232)
 ![GitHub issues](https://img.shields.io/github/issues-raw/zwave-js/node-red-contrib-zwave-js)
 ![GitHub closed issues](https://img.shields.io/github/issues-closed-raw/zwave-js/node-red-contrib-zwave-js)
-![Libraries.io dependency status for latest release](https://img.shields.io/librariesio/release/npm/node-red-contrib-zwave-js)
+![Libraries.io dependency status for latest release](https://img.shields.io/librariesio/github/zwave-js/node-red-contrib-zwave-js)
 
 The most powerful, high performing and highly polished Z-Wave node for Node-RED based on Z-Wave JS. If you want a fully featured Z-Wave framework in your Node-RED instance, you have found it.
 
@@ -25,11 +25,13 @@ The most powerful, high performing and highly polished Z-Wave node for Node-RED 
  - Full Z-Wave control inside Node-RED including:
    - Multi Stick/Network support
    - Device inclusion/exclusion wizard
+   - Long Range Support
+   - Secondry Controller Support
    - S0 and S2 security support
-   - Supports Security S2 Smart Start via a Mobile (and local) companion web application.
+   - Supports Security S2 Smart Start
    - Network health checks  
    - Network mesh graph
-   - Device Firmware updates
+   - Device (and controller) Firmware updates
    - Advanced RF configuration
    - NVM Backup/Restore
    - Associations management
@@ -39,37 +41,40 @@ The most powerful, high performing and highly polished Z-Wave node for Node-RED 
    - And much more..
 
 
-Since `node-red-contrib-zwave-js` is based on [Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/), we have the support and active maintenance from the amazing group of developers who have built the libraries, APIs, and config files which run this contrib.
+Since `node-red-contrib-zwave-js` is based on [Z-Wave JS](https://zwave-js.github.io/node-zwave-js/#/), we have the support and active maintenance from the amazing group of developers who have built the libraries, APIs, and config files which run this module.
 
 ## The User Interface
 
-![Image](./GHImages/ZWUI.gif) 
+Included with this module is a complete user inerface where Z-Wave network management is handled. Its deeply integrated into Node RED and fits right in.
 
-Included with the contrib is a [user interface](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/User-Interface) where Z-Wave network management is handled. The controller side of the UI is used to include/exclude devices, heal the network, update firmware, and view the network map for diagnosing problems. The device side of the UI is used to configure devices, manage associations, and provide setup help for the nodes which will be used in your flows.
+![Image](./GHImages/UI.png) 
+
 
 ## The Nodes
 
-![Image](./GHImages/Demo.png)
+![Image](./GHImages/Nodes.png)
 
-There are 4 node types included with this contrib ([click here](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/node-types) for full details about these nodes)
- - `ZWave Controller`: this node is used to set up a connection to your USB Z-Wave controller, set security keys, and manage various advanced controller options
- - `ZWave Device`: this node is used to send and receive messages to one or more of the Z-Wave devices on your network
- - `Event Filter`: this node is used to filter and sort messages from your Z-Wave devices
- - `CMD Factory`: this node simplifies creation of messages being sent to your Z-Wave devices
+In addition to the **Configuration** node, which runs the Z-Wave stack, this module includes four additional node types:
 
-## Getting Started Links
- - [Installing](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/getting-started): system requirements and install instructions
- - [Just Show Me How](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/First-Z-Wave-Flow-Setup): first day walkthrough
- - [Wiki](https://github.com/zwave-js/node-red-contrib-zwave-js/wiki/getting-started): just about everything
- - [Change Log](./CHANGELOG.md): whats changed?
+| Node | Used For |
+|------|----------|
+| **Z-Wave Controller** | Provides access to all available commands and receives system-level events. |
+| **Z-Wave Device** | Designed for controlling individual devices and listening for status changes from your devices. |
+| **Z-Wave Event Splitter** | Filters network traffic so that only the events you care about are passed through. |
+| **Z-Wave Command Factory** | Instead of writing commands manually, this node generates them automatically. |
+
+To understand the commands available: click [HERE](./Command%20Manual.md)  
+To understand the events available: click [HERE](./Event%20Manual.md)  
+and of course the  [CHANGE LOG](./CHANGELOG.md)
+
 
 ## Awesome People - Thanks!
 
- - [marcus-j-davies](https://github.com/marcus-j-davies) our main developer who claims "*my software doesn't have bugs*"
- - [AlCalzone](https://github.com/AlCalzone) for creating [ZWave-JS](https://github.com/zwave-js/node-zwave-js) that makes this possible
- - [hufftheweevil](https://github.com/hufftheweevil) for creating the User Interface tab
- - [CRXPorter](https://github.com/crxporter) for creating all the help material/finding this project
- - [thk](https://github.com/thk-socal) for the relentless beta testing
+ - [marcus-j-davies](https://github.com/marcus-j-davies) our main developer who claims "*my software doesn't have bugs*".
+ - [AlCalzone](https://github.com/AlCalzone) for creating [ZWave-JS](https://github.com/zwave-js/node-zwave-js) that makes this all possible.
+ - [hufftheweevil](https://github.com/hufftheweevil) for developing the original UI, and allowing it to become what it is.
+ - [CRXPorter](https://github.com/crxporter) for creating all the help material/finding this project.
+ - [thk](https://github.com/thk-socal) for the relentless beta testing.
 
  ## License
  MIT License

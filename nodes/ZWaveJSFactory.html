@@ -1,0 +1,260 @@
+<script type="text/javascript">
+	const ZWJSFactoryNodeSettings = {
+		category: 'ZWave JS',
+		color: 'rgb(46,145,205)',
+		defaults: {
+			valueSetOptionsType: {
+				value: 'json',
+				required: true
+			},
+			valueSetOptions: {
+				value: '{"transitionDuration": "5s"}',
+				required: false
+			},
+
+			valueType: {
+				value: 'msg',
+				required: true
+			},
+			value: {
+				value: 'payload',
+				required: false
+			},
+
+			valueIdType: {
+				value: 'json',
+				required: true
+			},
+			valueId: {
+				value: '{"commandClass": 37, "property": "targetValue", "endpoint": 0}',
+				required: false
+			},
+
+			argsType: {
+				value: 'json',
+				required: true
+			},
+			args: {
+				value: '[]',
+				required: false
+			},
+
+			endpointType: {
+				value: 'num',
+				required: true
+			},
+			endpoint: {
+				value: 0,
+				required: false
+			},
+
+			nodeIdType: {
+				value: 'num',
+				required: true
+			},
+			nodeId: {
+				value: 2,
+				required: true
+			},
+
+			trackingIdType: {
+				value: 'msg',
+				required: true
+			},
+			trackingId: {
+				value: 'id',
+				required: false
+			},
+
+			name: {
+				value: 'ZWave Command Factory',
+				required: true
+			},
+			api: {
+				value: 'VALUE',
+				required: true
+			},
+			method: {
+				value: 'setValue',
+				required: true
+			},
+			commandClass: {
+				value: '',
+				required: false
+			}
+		},
+		inputs: 1,
+		outputs: 1,
+		icon: 'Factory.svg',
+		label: function () {
+			return this.name;
+		},
+		paletteLabel: 'CMD Factory',
+		oneditprepare: SortUI
+	};
+
+	RED.nodes.registerType('zwavejs-factory', ZWJSFactoryNodeSettings);
+
+	let self = this;
+
+	function SortUI() {
+		$('input[data-typed-types]').each(function () {
+			const input = $(this);
+
+			const typeConfig = `#${input.attr('id')}Type`;
+			const typesAttr = input.attr('data-typed-types');
+			if (!typesAttr) return;
+
+			const typesArray = typesAttr.split(',').map((t) => t.trim());
+
+			input.typedInput({
+				types: typesArray,
+				typeField: typeConfig
+			});
+		});
+		$('input[data-typed-types]').next('.red-ui-typedInput-container').css({ width: 'calc(100% - 135px)' });
+
+		self = this;
+		setTimeout(RealSort, 10);
+	}
+
+	function RealSort() {
+		$.getJSON('zwave-js/ui/global/getcclist', (data) => {
+			if (data.callSuccess) {
+				data.response.forEach((CC) => {
+					$('#node-input-commandClass').append(new Option(CC, CC));
+				});
+
+				if (self.commandClass) {
+					$('#node-input-commandClass').val(self.commandClass);
+				}
+
+				$('#node-input-api').on('change', APIChange);
+				$('#node-input-commandClass').on('change', GetMethods);
+
+				if (self.api) {
+					ShowHide(self.api);
+					switch (self.api) {
+						case 'CC':
+							$('#node-input-commandClass').trigger('change');
+							break;
+					}
+				} else {
+					ShowHide('VALUE');
+				}
+			}
+		});
+	}
+
+	function ShowHide(API) {
+		$('div[data-for-api]').hide(150);
+		$(`div[data-for-api='${API}']`).show(150);
+	}
+
+	function APIChange() {
+		const API = $(this).val();
+
+		ShowHide(API);
+
+		if (API === 'CC') {
+			$('#node-input-method').empty();
+			$('#node-input-method').append(new Option('Select CC Method', ''));
+		} else {
+			$('#node-input-method').empty();
+			$('#node-input-method').append(new Option('Set Value', 'setValue'));
+			$('#node-input-method').append(new Option('Get Value', 'getValue'));
+			$('#node-input-method').val('setValue');
+		}
+	}
+
+	function GetMethods() {
+		const CC = $(this).val();
+
+		if (CC) {
+			$('#node-input-method').empty();
+			$('#node-input-method').append(new Option('Select CC Method', ''));
+			$.getJSON(`zwave-js/ui/global/getccmethods/${CC}`, (data) => {
+				if (data.callSuccess) {
+					data.response.forEach((Method) => {
+						$('#node-input-method').append(new Option(Method, Method));
+					});
+					if (self.method !== 'setValue' && self.method !== 'getValue') {
+						$('#node-input-method').val(self.method);
+					}
+				}
+			});
+		}
+	}
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/x-red" data-template-name="zwavejs-factory">
+	<input type="hidden" id="node-input-trackingIdType">
+    <input type="hidden" id="node-input-nodeIdType">
+	<input type="hidden" id="node-input-endpointType">
+	<input type="hidden" id="node-input-argsType">
+	<input type="hidden" id="node-input-valueIdType">
+	<input type="hidden" id="node-input-valueType">
+	<input type="hidden" id="node-input-valueSetOptionsType">
+	<h3>Basic</h3>
+	<hr />
+	<div class="form-row">
+	    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+	    <input type="text" id="node-input-name">
+	</div>
+	<div class="form-row">
+	    <label for="node-input-api"><i class="fa fa-list-alt"></i> API</label>
+	    <select id="node-input-api">
+			<option value="VALUE">Value API</option>
+			<option value="CC">Command Class API</option>
+		</select>
+	</div>
+	<div class="form-row" data-for-api="CC">
+	    <label for="node-input-commandClass"><i class="fa fa-search"></i> Class</label>
+	    <select id="node-input-commandClass">
+			<option value="">Select Command Class</option>
+		</select>
+	</div>
+	<div class="form-row">
+	    <label for="node-input-method"><i class="fa fa-terminal"></i> Method</label>
+	    <select id="node-input-method">
+			<option value="setValue">Set Value</option>
+			<option value="getValue">Get Value</option>
+		</select>
+	</div>
+	<div class="form-row">
+	    <label for="node-input-trackingId"><i class="fa fa-id-card-o"></i> Tracking ID</label>
+	    <input type="text" id="node-input-trackingId" data-typed-types="msg,flow,global,str,num,json,jsonata,env">
+	</div>
+	<h3>Command Properties</h3>
+	<hr />
+	<div class="form-row">
+	    <label for="node-input-nodeId"><i class="fa fa-microchip"></i> Node ID</label>
+	    <input type="text" id="node-input-nodeId" data-typed-types="msg,flow,global,num,jsonata,env">
+	</div>
+	<div class="form-row" data-for-api="CC">
+	    <label for="node-input-endpoint"><i class="fa fa-sitemap"></i> Endpoint</label>
+	    <input type="text" id="node-input-endpoint" data-typed-types="msg,flow,global,num,jsonata,env">
+	</div>
+	<div class="form-row" data-for-api="CC">
+	    <label for="node-input-args"><i class="fa fa-keyboard-o"></i> Args</label>
+	    <input type="text" id="node-input-args" data-typed-types="msg,flow,global,json,jsonata,env">
+	</div>
+	<div class="form-row" data-for-api="VALUE">
+	    <label for="node-input-valueId"><i class="fa fa-id-card-o""></i> Value ID</label>
+	    <input type="text" id="node-input-valueId" data-typed-types="msg,flow,global,json,jsonata,env">
+	</div>
+	<div class="form-row" data-for-api="VALUE">
+	    <label for="node-input-value"><i class="fa fa-keyboard-o"></i> Value</label>
+	    <input type="text" id="node-input-value" data-typed-types="msg,flow,global,num,json,jsonata,env">
+	</div>
+	<div class="form-row" data-for-api="VALUE">
+	    <label for="node-input-valueSetOptions"><i class="fa fa-cogs"></i> Options</label>
+	    <input type="text" id="node-input-valueSetOptions" data-typed-types="msg,flow,global,json,jsonata,env">
+	</div>
+</script>
+
+<!-- prettier-ignore -->
+<script type="text/markdown" data-help-name="zwavejs-factory">
+	<p>A ZWave command generator node</p>
+</script>

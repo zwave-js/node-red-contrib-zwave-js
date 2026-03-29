@@ -2,7 +2,11 @@
 .vscode
 node_modules
 .github
-.eslintrc.json
-.prettierrc.json
-GFXSources
+.eslintrc.js
+.prettierrc.js
 GHImages
+resources/HB
+resources/QRS
+resources/SVGZ
+resources/Mermaid
+*.tgz
