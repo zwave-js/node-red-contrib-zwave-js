@@ -1183,7 +1183,9 @@ const ZWaveJS = (function () {
 					}, {});
 
 					Object.keys(groupedNodes).forEach((LK) => {
-						const GLabel = $(`<div><span class="zwjs-node-id">${getInitials(LK)}</span> ${LK}</div>`);
+						const GLabel = $(
+							`<div zwjs-node-group><span class="zwjs-node-id">${getInitials(LK)}</span> <i aria-hidden="true" class="zwjs-group-status fa fa-exclamation-triangle zwjs-state-amber" style="display:none"></i> ${LK} </div>`
+						);
 						const GIconSpan = $('<span group>').addClass('zwjs-node-state-group');
 						GLabel.append(GIconSpan);
 						GIconSpan.append('<i aria-hidden="true">Int</i>');
@@ -1236,6 +1238,8 @@ const ZWaveJS = (function () {
 			.catch((Error) => {
 				alert(Error.message);
 			});
+
+		RenderGroupIconState();
 	};
 
 	// Reset Controller
@@ -2244,6 +2248,64 @@ const ZWaveJS = (function () {
 		}
 	};
 
+	// Redner Group Icon Status
+	const RenderGroupIconState = () => {
+		setTimeout(() => {
+			// Tree List data
+			const Data = $('#zwjs-node-list').treeList('data');
+
+			// Parents
+			for (let i = 0; i < Data.length; i++) {
+				// Parent
+				const group = Data[i];
+				if (!group.children) continue;
+
+				// Group Status Icon
+				const GroupStatusElement = $(group.element).find('i.zwjs-group-status');
+				let GroupStatus = 0;
+
+				// Children
+				for (let j = 0; j < group.children.length; j++) {
+					// Child
+					const device = group.children[j];
+					if (!device.element) continue;
+
+					const el = $(device.element);
+					console.log(el);
+					const allIcons = el.find(
+						'span.zwjs-node-state-group i[id^="zwjs-node-state-status"], span.zwjs-node-state-group i[id^="zwjs-node-state-power"]'
+					);
+					for (let k = 0; k < allIcons.length; k++) {
+						const classes = allIcons[k].className;
+						if (classes.includes('zwjs-state-red')) {
+							GroupStatus = 2;
+							break;
+						}
+						if (classes.includes('zwjs-state-amber') && GroupStatus < 2) {
+							GroupStatus = 1;
+						}
+					}
+					if (GroupStatus === 2) break;
+				}
+
+				GroupStatusElement.hide().removeClass('zwjs-state-amber zwjs-state-red');
+
+				console.log(GroupStatusElement);
+				console.log(GroupStatus);
+
+				switch (GroupStatus) {
+					case 1:
+						GroupStatusElement.show().addClass('zwjs-state-amber');
+						break;
+
+					case 2:
+						GroupStatusElement.show().addClass('zwjs-state-red');
+						break;
+				}
+			}
+		}, 150);
+	};
+
 	// Render Node Icons (status and stuff)
 	const RenderNodeIconState = (Node) => {
 		const el_interview = $(`#zwjs-node-state-interview-${Node.nodeId}`);
@@ -2271,7 +2333,7 @@ const ZWaveJS = (function () {
 				RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Alive/Awake`);
 				break;
 			case 'Asleep':
-				el_status.addClass(['fa', 'fa-moon-o', 'zwjs-state-amber']);
+				el_status.addClass(['fa', 'fa-moon-o', 'zwjs-state-darkgray']);
 				RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Alseep`);
 				break;
 			case 'Dead':
@@ -2279,8 +2341,9 @@ const ZWaveJS = (function () {
 				RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Dead/Not Responding`);
 				break;
 			case 'Unknown':
-				el_status.addClass(['fa', 'fa-question-circle', 'zwjs-state-red']);
+				el_status.addClass(['fa', 'fa-question-circle', 'zwjs-state-amber']);
 				RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Unknown`);
+
 				break;
 		}
 
@@ -2311,9 +2374,11 @@ const ZWaveJS = (function () {
 				switch (Node.powerSource.rechargeOrReplace) {
 					case 1:
 						el_power.addClass('zwjs-state-amber');
+
 						break;
 					case 2:
 						el_power.addClass('zwjs-state-red');
+
 						break;
 					default:
 						el_power.addClass('zwjs-state-green');
