@@ -1849,6 +1849,7 @@ const ZWaveJS = (function () {
 		}
 
 		RenderNodeIconState(data.nodeInfo);
+		RenderGroupIconState();
 	};
 
 	// Node Added
@@ -2326,25 +2327,32 @@ const ZWaveJS = (function () {
 			RED.popover.tooltip(el_interview, 'Fully Interviewed');
 		}
 
-		switch (Node.status) {
-			case 'Alive':
-			case 'Awake':
-				el_status.addClass(['fa', 'fa-sun-o', 'zwjs-state-green']);
-				RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Alive/Awake`);
-				break;
-			case 'Asleep':
-				el_status.addClass(['fa', 'fa-moon-o', 'zwjs-state-darkgray']);
-				RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Alseep`);
-				break;
-			case 'Dead':
-				el_status.addClass(['fa', 'fa-exclamation-triangle', 'zwjs-state-red']);
-				RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Dead/Not Responding`);
-				break;
-			case 'Unknown':
-				el_status.addClass(['fa', 'fa-question-circle', 'zwjs-state-amber']);
-				RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Unknown`);
+		const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
 
-				break;
+		if (Node.lastSeen !== undefined && Date.now() - Node.lastSeen > sevenDaysMs) {
+			el_status.addClass(['fa', 'fa-question-circle', 'zwjs-state-amber']);
+			RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Seen +7 days ago`);
+		} else {
+			switch (Node.status) {
+				case 'Alive':
+				case 'Awake':
+					el_status.addClass(['fa', 'fa-sun-o', 'zwjs-state-green']);
+					RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Alive/Awake`);
+					break;
+				case 'Asleep':
+					el_status.addClass(['fa', 'fa-moon-o', 'zwjs-state-darkgray']);
+					RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Alseep`);
+					break;
+				case 'Dead':
+					el_status.addClass(['fa', 'fa-exclamation-triangle', 'zwjs-state-red']);
+					RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Dead/Not Responding`);
+					break;
+				case 'Unknown':
+					el_status.addClass(['fa', 'fa-question-circle', 'zwjs-state-amber']);
+					RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Unknown`);
+
+					break;
+			}
 		}
 
 		if (Node.powerSource.type === 'mains') {
