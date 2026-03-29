@@ -7,9 +7,9 @@
 	"dependencies": {
 		"mermaid": "^11.13.0",
 		"qr-scanner": "^1.4.2",
-		"zwave-js": "^15.21.1",
+		"zwave-js": "^15.22.4",
 		"svg-pan-zoom": "^3.6.2",
-		"handlebars": "^4.7.8"
+		"handlebars": "^4.7.9"
 	},
 	"devDependencies": {
 		"eslint": "^9.35.0",
