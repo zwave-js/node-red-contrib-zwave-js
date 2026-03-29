@@ -4,14 +4,16 @@
 
     **Breaking Changes**  
 
-    V11 represents a massive shift in how this set of nodes works. However, it is not considered an easy upgrade from versions <= v10.
+    V11 represents a massive shift in how this set of nodes work. However, it is not considered an easy upgrade from versions <= v10.
 
     I apologise for the interruption, but the set of libraries behind all of this has changed considerably, and over the years, I have polyfilled features and extended functionality, and in doing so, the project has become increasingly complex to maintain.
 
     The aim with v11 was to take everything as it is now and rebuild it from the ground up (and that I did).  
     **NOTE**: Your network will not be affected and will survive the transition, its the flows that you will have to re-engineer.
 
-    - All nodes have been updated in their mechanisms and type names/IDs:
+    **⚠️ BACK UP YOUR SO & S2 KEYS!!**
+
+    - All nodes have been updated in their mechanisms and type names/IDs, so you will need to re-add them:
       - Z-Wave Controller
       - Device Node
       - Event Filter (Now Event Splitter)
@@ -21,10 +23,13 @@
     - The command format has been changed (please see [HERE](./Command%20Manual.md))
     - The incoming event format has also been changed (please see [HERE](./Event%20Manual.md))
 
+    You can export the (now missing nodes), and use the JSON metadata to re-configure the new nodes. 
+
     **Changes**
     - A completely redesigned user interface
     - Smart Start now uses the browser webcam (SSL required)
     - The Mesh Map is now built into the UI (instead of opening in a secondary tab)
+    - Improved Multicast support
 
     **New Features**
     - Full support for Long Range (Z-Wave 800LR)
