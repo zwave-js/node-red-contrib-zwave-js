@@ -14,7 +14,7 @@ module.exports = (RED) => {
 		self.config = config;
 		self.runtime = RED.nodes.getNode(self.config.runtimeId);
 
-		let clearTimer;
+	
 
 		const callback = (Data) => {
 			switch (Data.Type) {
