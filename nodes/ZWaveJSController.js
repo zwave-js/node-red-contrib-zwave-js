@@ -40,7 +40,7 @@ module.exports = (RED) => {
 		const sendResponse = (msg, Req, Result, send, NodesCollection) => {
 			const Return = getProfile(Req.cmd.method, Result, NodesCollection, Req.cmd.id);
 			if (Return && Return.Type === 'RESPONSE') {
-				send({ ...msg, payload: Return.Event });
+				send({ ...msg, payload: Retrn.Event });
 			}
 		};
 
