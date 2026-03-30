@@ -7,7 +7,7 @@ const MethodChecks = {
 
 module.exports = (RED) => {
 	const init = function (config) {
-		const self = this;
+		
 		RED.nodes.createNode(self, config);
 		self.config = config;
 		self.runtime = RED.nodes.getNode(self.config.runtimeId);
