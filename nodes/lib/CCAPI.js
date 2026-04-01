@@ -3,7 +3,7 @@ const process = async function (DriverInstance, Method, CommandClass, CCMethod, 
 		throw new Error('This API does not support Multicast');
 	}
 
-	if (Method === 'invokeCCAPI') {
+	if (Method === 'invokeCCAPI) {
 		const Node = DriverInstance.controller.nodes.get(NodeID);
 		if (Node) {
 			return Node.getEndpoint(Endpoint || 0).invokeCCAPI(CommandClass, CCMethod, ...(Args || []));
