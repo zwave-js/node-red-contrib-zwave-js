@@ -2334,23 +2334,27 @@ const ZWaveJS = (function () {
 			el_status.addClass(['fa', 'fa-question-circle', 'zwjs-state-amber']);
 			RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Seen +7 days ago`);
 		} else {
+			let Time = '';
+			if(Node.lastSeen !== undefined){
+				Time = `${formatDateTime(Node.lastSeen)} : `
+			}
 			switch (Node.status) {
 				case 'Alive':
 				case 'Awake':
 					el_status.addClass(['fa', 'fa-sun-o', 'zwjs-state-green']);
-					RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Alive/Awake`);
+					RED.popover.tooltip(el_status, `${Time}Alive/Awake`);
 					break;
 				case 'Asleep':
 					el_status.addClass(['fa', 'fa-moon-o', 'zwjs-state-darkgray']);
-					RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Alseep`);
+					RED.popover.tooltip(el_status, `${Time}Alseep`);
 					break;
 				case 'Dead':
 					el_status.addClass(['fa', 'fa-exclamation-triangle', 'zwjs-state-red']);
-					RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Dead/Not Responding`);
+					RED.popover.tooltip(el_status, `${Time}Dead/Not Responding`);
 					break;
 				case 'Unknown':
 					el_status.addClass(['fa', 'fa-question-circle', 'zwjs-state-amber']);
-					RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Unknown`);
+					RED.popover.tooltip(el_status, `${Time}Unknown`);
 
 					break;
 			}
