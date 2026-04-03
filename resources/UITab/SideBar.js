@@ -2564,7 +2564,7 @@ const ZWaveJS = (function () {
 							if (V.metadata?.states && V.metadata.states[value]) {
 								Display = V.metadata.states[value];
 							} else {
-								Display = `${value} ${V.metadata.unit || ''}`;
+								Display = `${value} ${V.metadata?.unit || ''}`;
 							}
 						}
 
