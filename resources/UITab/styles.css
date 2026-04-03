@@ -65,7 +65,7 @@
 	padding: 1px;
 	float: right;
 	color: var(--zwave-js-main-color);
-	width: 80px;
+	width: 90px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
