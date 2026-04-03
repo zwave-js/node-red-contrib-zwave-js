@@ -10,6 +10,7 @@
     **Changes** 
 
     - Update ```README``` badges
+    - Reimplement npm pubhlish via ```OIDC``` 
 
 
   - 11.0.0
