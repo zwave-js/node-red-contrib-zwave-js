@@ -1876,6 +1876,10 @@ const ZWaveJS = (function () {
 				VI.currentValue = NewValue;
 				if (VI.metadata?.states && VI.metadata.states[NewValue]) {
 					NewValue = VI.metadata?.states[NewValue];
+				} else {
+					if (VI.metadata?.unit) {
+						NewValue = `${NewValue} (${VI.metadata.unit})`;
+					}
 				}
 			}
 
@@ -2564,7 +2568,11 @@ const ZWaveJS = (function () {
 							if (V.metadata?.states && V.metadata.states[value]) {
 								Display = V.metadata.states[value];
 							} else {
-								Display = `${value} ${V.metadata?.unit || ''}`;
+								if (V.metadata?.unit) {
+									Display = `${value} (${V.metadata.unit})`;
+								} else {
+									Display = value;
+								}
 							}
 						}
 
