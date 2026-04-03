@@ -1,5 +1,17 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 11.0.1
+
+    **Bug Fixes** 
+
+    - Ensure ``lastSeen`` is available before using it (Node List)
+    - Restore value lables in Side Bar (where  available) 
+
+    **Changes** 
+
+    - Update ```README``` badges
+
+
   - 11.0.0
 
     **Breaking Changes**  
