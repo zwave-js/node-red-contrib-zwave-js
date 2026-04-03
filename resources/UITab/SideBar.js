@@ -1868,11 +1868,15 @@ const ZWaveJS = (function () {
 	const commsHandleValueUpdate = (topic, data) => {
 		if (selectedNode) {
 			const ValueID = data.eventBody.valueId;
-			const NewValue = data.eventBody.newValue;
+			let NewValue = data.eventBody.newValue;
 			const Hash = getValueUpdateHash(ValueID);
 
-			if (SelectedNodeVIDs[Hash]) {
-				SelectedNodeVIDs[Hash].currentValue = NewValue;
+			const VI = SelectedNodeVIDs[Hash];
+			if (VI) {
+				VI.currentValue = NewValue;
+				if (VI.metadata?.states && VI.metadata.states[NewValue]) {
+					NewValue = VI.metadata?.states[NewValue];
+				}
 			}
 
 			const TargetElement = `#zwjs-value-${Hash}`;
@@ -2335,8 +2339,8 @@ const ZWaveJS = (function () {
 			RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Seen +7 days ago`);
 		} else {
 			let Time = '';
-			if(Node.lastSeen !== undefined){
-				Time = `${formatDateTime(Node.lastSeen)} : `
+			if (Node.lastSeen !== undefined) {
+				Time = `${formatDateTime(Node.lastSeen)} : `;
 			}
 			switch (Node.status) {
 				case 'Alive':
@@ -2557,7 +2561,11 @@ const ZWaveJS = (function () {
 						if (typeof value === 'object' && !Array.isArray(value)) {
 							Display = '(Complex)';
 						} else {
-							Display = `${value} ${V.metadata.unit || ''}`;
+							if (V.metadata?.states && V.metadata.states[value]) {
+								Display = V.metadata.states[value];
+							} else {
+								Display = `${value} ${V.metadata.unit || ''}`;
+							}
 						}
 
 						return `<span class="zwjs-cc-value" id="zwjs-value-${getValueUpdateHash(V.valueId)}">${Display}</span>`;
