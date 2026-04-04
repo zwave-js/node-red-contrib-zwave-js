@@ -65,7 +65,10 @@
 	padding: 1px;
 	float: right;
 	color: var(--zwave-js-main-color);
-	min-width: 80px;
+	width: 90px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 .zwjs-cc-value[edit] {
@@ -91,7 +94,7 @@
 	padding: 3px;
 }
 
-.zwjs-sb-menu-header a > i {
+.zwjs-sb-menu-header a>i {
 	cursor: pointer;
 	color: white;
 	background: var(--zwave-js-main-color);
@@ -101,11 +104,11 @@
 	min-width: 15px;
 }
 
-.zwjs-sb-menu-header a > i.zwjs-button-group {
+.zwjs-sb-menu-header a>i.zwjs-button-group {
 	filter: grayscale();
 }
 
-.zwjs-sb-menu-header a > i.zwjs-button-group[selected] {
+.zwjs-sb-menu-header a>i.zwjs-button-group[selected] {
 	filter: none;
 }
 
@@ -119,6 +122,7 @@
 	box-shadow: 0px 14px 13px -11px rgba(0, 0, 0, 0.5);
 	position: relative;
 }
+
 .zwjs-tray-menu {
 	width: 200px;
 	background-color: var(--red-ui-palette-header-background);
@@ -131,27 +135,27 @@
 	vertical-align: top;
 }
 
-.zwjs-tray-menu > div {
+.zwjs-tray-menu>div {
 	padding: 6px;
 	border-radius: 6px;
 	height: 20px;
 	margin-bottom: 5px;
 }
 
-.zwjs-tray-menu > div[parent] {
+.zwjs-tray-menu>div[parent] {
 	background-color: var(--zwave-js-main-color);
 	color: white;
 }
 
-.zwjs-tray-menu > div[child] {
+.zwjs-tray-menu>div[child] {
 	cursor: pointer;
 }
 
-.zwjs-tray-menu > div[child]:hover {
+.zwjs-tray-menu>div[child]:hover {
 	background-color: lightgray;
 }
 
-.zwjs-tray-menu > div[child][active] {
+.zwjs-tray-menu>div[child][active] {
 	background-color: rgb(135, 169, 128);
 	color: white;
 }
@@ -172,6 +176,7 @@ table.zwjs-table {
 	width: 100%;
 	border-radius: 4px;
 }
+
 table.zwjs-table td {
 	padding: 5px;
 }
@@ -189,6 +194,7 @@ table.zwjs-table[vertical] td:first-of-type {
 	background-color: lightgray;
 	width: 150px;
 }
+
 table.zwjs-table[vertical] td:nth-of-type(2) {
 	background-color: var(--red-ui-palette-header-background);
 }
@@ -210,7 +216,8 @@ table.zwjs-table[vertical] td:nth-of-type(2) {
 .zwjs-fieldset * label {
 	display: inline-block;
 }
-.zwjs-fieldset > div button {
+
+.zwjs-fieldset>div button {
 	min-width: 120px;
 	background-color: var(--zwave-js-main-color);
 	border-color: lightgray;
@@ -222,7 +229,7 @@ table.zwjs-table[vertical] td:nth-of-type(2) {
 	margin-top: 10px;
 }
 
-.zwjs-fieldset > div > button[disabled] {
+.zwjs-fieldset>div>button[disabled] {
 	background-color: gray;
 }
 
@@ -268,15 +275,19 @@ table.zwjs-table[vertical] td:nth-of-type(2) {
 i.zwjs-state-amber {
 	color: orange;
 }
+
 i.zwjs-state-red {
 	color: red;
 }
+
 i.zwjs-state-green {
 	color: green;
 }
+
 i.zwjs-state-darkgray {
 	color: darkgray;
 }
+
 i.zwjs-state-darkblue {
 	color: darkblue;
 }
@@ -292,12 +303,12 @@ i.zwjs-state-darkblue {
 	border-color: var(--zwave-js-main-color);
 }
 
-.scan-region-highlight > svg.scan-region-highlight-svg {
+.scan-region-highlight>svg.scan-region-highlight-svg {
 	stroke-width: 10 !important;
 	stroke: var(--zwave-js-main-color) !important;
 }
 
-.scan-region-highlight > svg.code-outline-highlight {
+.scan-region-highlight>svg.code-outline-highlight {
 	stroke: red !important;
 	stroke-width: 20 !important;
 }
@@ -377,6 +388,7 @@ i.zwjs-state-darkblue {
 	color: lightslategray;
 	padding: 5px;
 }
+
 .zwjs-title:first-of-type {
 	margin-top: 10px;
 }

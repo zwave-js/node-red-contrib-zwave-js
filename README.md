@@ -8,7 +8,8 @@
 [![DeepScan grade](https://deepscan.io/api/teams/17652/projects/21011/branches/591232/badge/grade.svg)](https://deepscan.io/dashboard#view=project&tid=17652&pid=21011&bid=591232)
 ![GitHub issues](https://img.shields.io/github/issues-raw/zwave-js/node-red-contrib-zwave-js)
 ![GitHub closed issues](https://img.shields.io/github/issues-closed-raw/zwave-js/node-red-contrib-zwave-js)
-![Libraries.io dependency status for latest release](https://img.shields.io/librariesio/github/zwave-js/node-red-contrib-zwave-js)
+[![CodeQL Advanced](https://github.com/zwave-js/node-red-contrib-zwave-js/actions/workflows/codeql.yml/badge.svg)](https://github.com/zwave-js/node-red-contrib-zwave-js/actions/workflows/codeql.yml)
+[![ESLint](https://github.com/zwave-js/node-red-contrib-zwave-js/actions/workflows/eslint.yml/badge.svg)](https://github.com/zwave-js/node-red-contrib-zwave-js/actions/workflows/eslint.yml)
 
 The most powerful, high performing and highly polished Z-Wave node for Node-RED based on Z-Wave JS. If you want a fully featured Z-Wave framework in your Node-RED instance, you have found it.
 
