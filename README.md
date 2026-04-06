@@ -64,6 +64,13 @@ In addition to the **Configuration** node, which runs the Z-Wave stack, this mod
 | **Z-Wave Event Splitter** | Filters network traffic so that only the events you care about are passed through. |
 | **Z-Wave Command Factory** | Instead of writing commands manually, this node generates them automatically. |
 
+**Note**: Before creating the Configuration Node, ensure the user running Node RED has access to the system's serial ports
+
+```
+# pi being the user
+sudo usermod -a -G dialout pi
+```
+
 To understand the commands available: click [HERE](./Command%20Manual.md)  
 To understand the events available: click [HERE](./Event%20Manual.md)  
 and of course the  [CHANGE LOG](./CHANGELOG.md)
@@ -76,6 +83,7 @@ and of course the  [CHANGE LOG](./CHANGELOG.md)
  - [hufftheweevil](https://github.com/hufftheweevil) for developing the original UI, and allowing it to become what it is.
  - [CRXPorter](https://github.com/crxporter) for creating all the help material/finding this project.
  - [thk](https://github.com/thk-socal) for the relentless beta testing.
+ - [E1cid](#) for the V11 beta testing.
 
  ## License
  MIT License
