@@ -1,5 +1,16 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 11.1.0
+
+    **New Features**
+
+    - Added some interactive tours to guide users who are new to the module.
+ 
+    **Changes** 
+
+    - Bump dependencies
+
+
   - 11.0.1
 
     **Bug Fixes** 

@@ -572,6 +572,37 @@ const ZWaveJS = (function () {
 		}, 250);
 	};
 
+	// DEMO Show Network Options
+	const ShowNetworkManagementDemo = () => {
+		const Options = {
+			width: 900,
+			title: 'ZWave JS Controller Management',
+			buttons: [
+				{
+					id: 'zwjs-tray-close',
+					text: 'Close',
+					click: function () {
+						CloseTray();
+					}
+				}
+			],
+			open: function (tray) {
+				isCurrentTray = true;
+				const trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
+				const State = {
+					Network: 'Cyberdyne Systems | Model 101 | v1997',
+					Status: 'Ready.'
+				};
+				trayBody.append(TPL_ControllerManagement(State));
+			}
+		};
+		RED.tray.show(Options);
+		setTimeout(() => {
+			const el = $('.zwjs-tray-menu > div[default]')[0];
+			el.onclick.call(el);
+		}, 250);
+	};
+
 	// Show Network Options
 	const ShowNetworkManagement = () => {
 		if (!networkId) {
@@ -2832,6 +2863,7 @@ const ZWaveJS = (function () {
 		init,
 		NetworkSelected,
 		ShowNetworkManagement,
+		ShowNetworkManagementDemo,
 		ShowNodeManagement,
 		InterviewCurrentNode,
 		RenderAdvanced,

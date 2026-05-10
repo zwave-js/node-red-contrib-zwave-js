@@ -23,6 +23,7 @@ The most powerful, high performing and highly polished Z-Wave node for Node-RED 
  - Does not require a build of any static library
  - Stable
  - A deep integrated UI within in node red
+ - Built in interactive tours to get you started
  - Full Z-Wave control inside Node-RED including:
    - Multi Stick/Network support
    - Device inclusion/exclusion wizard
