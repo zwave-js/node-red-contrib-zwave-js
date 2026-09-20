@@ -2072,7 +2072,7 @@ const ZWaveJS = (function () {
 	// Alert
 	const ZWJSAlert = (msg) => {
 		$('<div>')
-			.html(msg)
+			.text(msg)
 			.dialog({
 				modal: true,
 				title: 'Alert',
