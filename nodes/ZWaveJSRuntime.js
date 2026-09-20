@@ -341,6 +341,7 @@ module.exports = function (RED) {
 				(request, response) => {
 					const TargetAPI = request.params.api;
 					const Method = request.params.method;
+					// eslint-disable-next-line no-useless-assignment
 					let args = undefined;
 
 					switch (TargetAPI) {

@@ -94,7 +94,7 @@
 	padding: 3px;
 }
 
-.zwjs-sb-menu-header a>i {
+.zwjs-sb-menu-header a > i {
 	cursor: pointer;
 	color: white;
 	background: var(--zwave-js-main-color);
@@ -104,11 +104,11 @@
 	min-width: 15px;
 }
 
-.zwjs-sb-menu-header a>i.zwjs-button-group {
+.zwjs-sb-menu-header a > i.zwjs-button-group {
 	filter: grayscale();
 }
 
-.zwjs-sb-menu-header a>i.zwjs-button-group[selected] {
+.zwjs-sb-menu-header a > i.zwjs-button-group[selected] {
 	filter: none;
 }
 
@@ -135,27 +135,27 @@
 	vertical-align: top;
 }
 
-.zwjs-tray-menu>div {
+.zwjs-tray-menu > div {
 	padding: 6px;
 	border-radius: 6px;
 	height: 20px;
 	margin-bottom: 5px;
 }
 
-.zwjs-tray-menu>div[parent] {
+.zwjs-tray-menu > div[parent] {
 	background-color: var(--zwave-js-main-color);
 	color: white;
 }
 
-.zwjs-tray-menu>div[child] {
+.zwjs-tray-menu > div[child] {
 	cursor: pointer;
 }
 
-.zwjs-tray-menu>div[child]:hover {
+.zwjs-tray-menu > div[child]:hover {
 	background-color: lightgray;
 }
 
-.zwjs-tray-menu>div[child][active] {
+.zwjs-tray-menu > div[child][active] {
 	background-color: rgb(135, 169, 128);
 	color: white;
 }
@@ -217,7 +217,7 @@ table.zwjs-table[vertical] td:nth-of-type(2) {
 	display: inline-block;
 }
 
-.zwjs-fieldset>div button {
+.zwjs-fieldset > div button {
 	min-width: 120px;
 	background-color: var(--zwave-js-main-color);
 	border-color: lightgray;
@@ -229,7 +229,7 @@ table.zwjs-table[vertical] td:nth-of-type(2) {
 	margin-top: 10px;
 }
 
-.zwjs-fieldset>div>button[disabled] {
+.zwjs-fieldset > div > button[disabled] {
 	background-color: gray;
 }
 
@@ -303,12 +303,12 @@ i.zwjs-state-darkblue {
 	border-color: var(--zwave-js-main-color);
 }
 
-.scan-region-highlight>svg.scan-region-highlight-svg {
+.scan-region-highlight > svg.scan-region-highlight-svg {
 	stroke-width: 10 !important;
 	stroke: var(--zwave-js-main-color) !important;
 }
 
-.scan-region-highlight>svg.code-outline-highlight {
+.scan-region-highlight > svg.code-outline-highlight {
 	stroke: red !important;
 	stroke-width: 20 !important;
 }
@@ -410,4 +410,29 @@ img.zwjs-ui-logo {
 
 #zwjs-sidebar .red-ui-sidebar-header {
 	display: block;
+}
+
+a[value^='ZWJS-LOC:'] {
+	font-weight: bold;
+	pointer-events: none;
+	background-color: var(--red-ui-form-button-background);
+}
+
+a[value^='ZWJS-LOC:'] input[type='checkbox'] {
+	display: none;
+}
+
+fieldset.zwjs-fs {
+	border-style: solid;
+	border-color: lightgray;
+	border-width: 1px;
+	padding: 5px;
+	border-radius: 5px;
+	margin-bottom: 5px;
+}
+
+fieldset.zwjs-fs > legend {
+	all: revert;
+	font-size: 12px;
+	color: var(--zwave-js-main-color);
 }

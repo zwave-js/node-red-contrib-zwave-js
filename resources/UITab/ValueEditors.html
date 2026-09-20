@@ -35,9 +35,8 @@
             {{/eq}}
 
             {{#eq type "duration"}}
-                <input id="zwjs-cc-value-new"  type="color" value="{{currentValue}}">
+                {{#editor "zwjs-cc-value-new"}}{{{json currentValue}}}{{/editor}}
             {{/eq}}
-
             {{#eq type "any"}}
                 {{#editor "zwjs-cc-value-new"}}{{{json currentValue}}}{{/editor}}
             {{/eq}}

@@ -20,13 +20,15 @@ module.exports = (RED) => {
 		const callback = (Data) => {
 			switch (Data.Type) {
 				case 'STATUS':
-					self.status(Data.Status);
-					if (clearTimer) (clearTimeout(clearTimer), (clearTimer = undefined));
+					if (!config.hideStatus) {
+						self.status(Data.Status);
+						if (clearTimer) (clearTimeout(clearTimer), (clearTimer = undefined));
 
-					if (Data.Status.clearTime) {
-						clearTimer = setTimeout(() => {
-							self.status({});
-						}, Data.Status.clearTime);
+						if (Data.Status.clearTime) {
+							clearTimer = setTimeout(() => {
+								self.status({});
+							}, Data.Status.clearTime);
+						}
 					}
 					break;
 			}
@@ -50,7 +52,8 @@ module.exports = (RED) => {
 								(V) =>
 									V.valueId?.commandClass === VID.commandClass &&
 									V.valueId?.property === VID.property &&
-									V.valueId?.propertyKey === VID.propertyKey
+									V.valueId?.propertyKey === VID.propertyKey &&
+									(V.strict !== true || V.valueId?.endpoint === VID.endpoint)
 							);
 						}
 						break;

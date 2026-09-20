@@ -1,5 +1,28 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 11.1.0
+
+    **Bug Fixes**
+      - Restored tooltips on the sidebar.
+      - Ensure to capture complex objects in real time updates (UI).
+
+    **New Features**
+
+      - Added an option to hide the status on Flow nodes.
+      - Added the ability to restrict Splitter nodes to the endpoint.
+      - Added `nodeName` and `nodeLocation` when retrieving the Value DB.
+
+    **Changes**
+
+      - Bumped dependencies.
+      - Improved the Node List in the Device Node.
+      - Improved all node configuration editors.
+      - Re-engineered message validation.
+      - `CMD Factory` Node no longer validates messages, as validation is now handled by the target nodes.
+      - `CMD Factory` Default values now reflect the `Example Usage` pattern.
+      - Replace native `alert` and `confirm` methods with own embedded version.
+      - Successful value updates from the UI no longer clutter the browser with unnecessary alerts.
+
   - 11.0.1
 
     **Bug Fixes** 

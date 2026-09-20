@@ -1,4 +1,5 @@
 const { getProfile } = require('./lib/RequestResponseProfiles');
+const { Check } = require('./lib/MessageValidator');
 const MethodChecks = {
 	CC: require('./lib/AllowedUsersCommands').CC,
 	NODE: require('./lib/AllowedUsersCommands').Node,
@@ -17,13 +18,15 @@ module.exports = (RED) => {
 		const callback = (Data) => {
 			switch (Data.Type) {
 				case 'STATUS':
-					self.status(Data.Status);
-					if (clearTimer) (clearTimeout(clearTimer), (clearTimer = undefined));
+					if (!config.hideStatus) {
+						self.status(Data.Status);
+						if (clearTimer) (clearTimeout(clearTimer), (clearTimer = undefined));
 
-					if (Data.Status.clearTime) {
-						clearTimer = setTimeout(() => {
-							self.status({});
-						}, Data.Status.clearTime);
+						if (Data.Status.clearTime) {
+							clearTimer = setTimeout(() => {
+								self.status({});
+							}, Data.Status.clearTime);
+						}
 					}
 					break;
 
@@ -61,106 +64,91 @@ module.exports = (RED) => {
 		};
 
 		self.on('input', (msg, send, done) => {
-			const Req = msg.payload;
+			const CR = Check(msg);
+			if (CR !== true) {
+				if (CR === 'Missing payload.cmdProperties.nodeId' && config.defaultNode) {
+					msg.payload.cmdProperties.nodeId = config.defaultNode.includes(',')
+						? config.defaultNode.split(',').map((e) => parseInt(e.trim(), 10))
+						: parseInt(config.defaultNode, 10);
+				} else {
+					callback({
+						Type: 'STATUS',
+						Status: {
+							fill: 'red',
+							shape: 'dot',
+							text: 'Error',
+							clearTime: 3000
+						}
+					});
 
-			if (!Req.cmd) {
-				done(new Error('msg.payload is not a valid ZWave command.'));
-				return;
-			}
-
-			try {
-				if (!MethodChecks[Req.cmd.api].includes(Req.cmd.method)) {
-					done(new Error('Sorry! This API method is limited to the UI only, or is an invalid method.'));
+					done(new Error(CR));
 					return;
 				}
-				// eslint-disable-next-line no-unused-vars
-			} catch (err) {
-				done(new Error('Sorry! This API method is limited to the UI only, or is an invalid method.'));
+			}
+
+			const Req = msg.payload;
+
+			if (!MethodChecks[Req.cmd.api] || !MethodChecks[Req.cmd.api].includes(Req.cmd.method)) {
+				done(new Error('The requested API is not available, or the method is not permitted.'));
 				return;
 			}
 
 			switch (Req.cmd.api) {
 				case 'CC':
-					if (Req.cmdProperties.commandClass && Req.cmdProperties.method) {
-						self.runtime
-							.ccCommand(
-								Req.cmd.method,
-								Req.cmdProperties.commandClass,
-								Req.cmdProperties.method,
-								Req.cmdProperties.nodeId,
-								Req.cmdProperties.endpoint,
-								Req.cmdProperties.args
-							)
-							.then((Result) => {
-								sendResponse(msg, Req, Result, send, Req.cmdProperties.nodeId);
-							})
-							.catch((Error) => {
-								self.error(Error, msg);
-							});
-						const Status = {
-							Type: 'STATUS',
-							Status: {
-								fill: 'green',
-								shape: 'dot',
-								text: 'Sent',
-								clearTime: 3000
-							}
-						};
-						callback(Status);
-					} else {
-						self.error('cmdProperties is either missing or has fewer required properties.');
-						const Status = {
-							Type: 'STATUS',
-							Status: {
-								fill: 'red',
-								shape: 'dot',
-								text: 'Error',
-								clearTime: 3000
-							}
-						};
-						callback(Status);
-					}
+					self.runtime
+						.ccCommand(
+							Req.cmd.method,
+							Req.cmdProperties.commandClass,
+							Req.cmdProperties.method,
+							Req.cmdProperties.nodeId,
+							Req.cmdProperties.endpoint,
+							Req.cmdProperties.args
+						)
+						.then((Result) => {
+							sendResponse(msg, Req, Result, send, Req.cmdProperties.nodeId);
+						})
+						.catch((Error) => {
+							self.error(Error, msg);
+						});
+
+					callback({
+						Type: 'STATUS',
+						Status: {
+							fill: 'green',
+							shape: 'dot',
+							text: 'Sent',
+							clearTime: 3000
+						}
+					});
+
 					break;
 
 				case 'VALUE':
-					if (Req.cmdProperties.valueId) {
-						self.runtime
-							.valueCommand(
-								Req.cmd.method,
-								Req.cmdProperties.nodeId,
-								Req.cmdProperties.valueId,
-								Req.cmdProperties.value,
-								Req.cmdProperties.setValueOptions
-							)
-							.then((Result) => {
-								sendResponse(msg, Req, Result, send, Req.cmdProperties.nodeId);
-							})
-							.catch((Error) => {
-								self.error(Error, msg);
-							});
-						const Status = {
-							Type: 'STATUS',
-							Status: {
-								fill: 'green',
-								shape: 'dot',
-								text: 'Sent',
-								clearTime: 3000
-							}
-						};
-						callback(Status);
-					} else {
-						self.error('cmdProperties is either missing or has fewer required properties.');
-						const Status = {
-							Type: 'STATUS',
-							Status: {
-								fill: 'red',
-								shape: 'dot',
-								text: 'Error',
-								clearTime: 3000
-							}
-						};
-						callback(Status);
-					}
+					self.runtime
+						.valueCommand(
+							Req.cmd.method,
+							Req.cmdProperties.nodeId,
+							Req.cmdProperties.valueId,
+							Req.cmdProperties.value,
+							Req.cmdProperties.setValueOptions
+						)
+						.then((Result) => {
+							sendResponse(msg, Req, Result, send, Req.cmdProperties.nodeId);
+						})
+						.catch((Error) => {
+							self.error(Error, msg);
+						});
+
+					callback({
+						Type: 'STATUS',
+						Status: {
+							fill: 'green',
+							shape: 'dot',
+							text: 'Sent',
+							clearTime: 3000
+						}
+					});
+
 					break;
 
 				case 'NODE':
@@ -182,10 +170,6 @@ module.exports = (RED) => {
 							clearTime: 3000
 						}
 					});
-					break;
-
-				default:
-					done(new Error('Requested API is not valid'));
 					break;
 			}
 		});
