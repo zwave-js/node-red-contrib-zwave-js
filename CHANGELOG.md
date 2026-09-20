@@ -11,6 +11,7 @@
       - Added an option to hide the status on Flow nodes.
       - Added the ability to restrict Splitter nodes to the endpoint.
       - Added `nodeName` and `nodeLocation` when retrieving the Value DB.
+      - The `Device` node can now apply a default NodeID(s)
 
     **Changes**
 
