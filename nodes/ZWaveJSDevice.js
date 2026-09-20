@@ -64,26 +64,20 @@ module.exports = (RED) => {
 		};
 
 		self.on('input', (msg, send, done) => {
-			const CR = Check(msg);
+			const CR = Check(msg, self.config);
 			if (CR !== true) {
-				if (CR === 'Missing payload.cmdProperties.nodeId' && config.defaultNode) {
-					msg.payload.cmdProperties.nodeId = config.defaultNode.includes(',')
-						? config.defaultNode.split(',').map((e) => parseInt(e.trim(), 10))
-						: parseInt(config.defaultNode, 10);
-				} else {
-					callback({
-						Type: 'STATUS',
-						Status: {
-							fill: 'red',
-							shape: 'dot',
-							text: 'Error',
-							clearTime: 3000
-						}
-					});
+				callback({
+					Type: 'STATUS',
+					Status: {
+						fill: 'red',
+						shape: 'dot',
+						text: 'Error',
+						clearTime: 3000
+					}
+				});
 
-					done(new Error(CR));
-					return;
-				}
+				done(new Error(CR));
+				return;
 			}
 
 			const Req = msg.payload;

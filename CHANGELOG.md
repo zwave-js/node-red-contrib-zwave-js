@@ -1,8 +1,15 @@
   # node-red-contrib-zwave-js Change Log
 
+  - 11.1.1
+
+    **Bug Fixes**
+
+      - Fix condition that prevented default nodes from being applied.
+
   - 11.1.0
 
     **Bug Fixes**
+
       - Restored tooltips on the sidebar.
       - Ensure to capture complex objects in real time updates (UI).
 
