@@ -1,4 +1,5 @@
 const { getProfile } = require('./lib/RequestResponseProfiles');
+const { Check } = require('./lib/MessageValidator');
 const MethodChecks = {
 	CC: require('./lib/AllowedUsersCommands').CC,
 	NODE: require('./lib/AllowedUsersCommands').Node,
@@ -19,14 +20,17 @@ module.exports = (RED) => {
 		const callback = (Data) => {
 			switch (Data.Type) {
 				case 'STATUS':
-					self.status(Data.Status);
-					if (clearTimer) (clearTimeout(clearTimer), (clearTimer = undefined));
+					if (!config.hideStatus) {
+						self.status(Data.Status);
+						if (clearTimer) (clearTimeout(clearTimer), (clearTimer = undefined));
 
-					if (Data.Status.clearTime) {
-						clearTimer = setTimeout(() => {
-							self.status({});
-						}, Data.Status.clearTime);
+						if (Data.Status.clearTime) {
+							clearTimer = setTimeout(() => {
+								self.status({});
+							}, Data.Status.clearTime);
+						}
 					}
+
 					break;
 
 				case 'EVENT':
@@ -50,21 +54,26 @@ module.exports = (RED) => {
 		});
 
 		self.on('input', (msg, send, done) => {
-			const Req = msg.payload;
+			const CR = Check(msg);
+			if (CR !== true) {
+				callback({
+					Type: 'STATUS',
+					Status: {
+						fill: 'red',
+						shape: 'dot',
+						text: 'Error',
+						clearTime: 3000
+					}
+				});
 
-			if (!Req.cmd) {
-				done(new Error('msg.payload is not a valid ZWave command.'));
+				done(new Error(CR));
 				return;
 			}
 
-			try {
-				if (!MethodChecks[Req.cmd.api].includes(Req.cmd.method)) {
-					done(new Error('Sorry! This API method is limited to the UI only, or is an invalid method.'));
-					return;
-				}
-				// eslint-disable-next-line no-unused-vars
-			} catch (err) {
-				done(new Error('Sorry! This API method is limited to the UI only, or is an invalid method.'));
+			const Req = msg.payload;
+
+			if (!MethodChecks[Req.cmd.api] || !MethodChecks[Req.cmd.api].includes(Req.cmd.method)) {
+				done(new Error('The requested API is not available, or the method is not permitted.'));
 				return;
 			}
 
@@ -94,68 +103,55 @@ module.exports = (RED) => {
 					break;
 
 				case 'CC':
-					if (Req.cmdProperties?.commandClass && Req.cmdProperties?.method && Req.cmdProperties?.nodeId) {
-						self.runtime
-							.ccCommand(
-								Req.cmd.method,
-								Req.cmdProperties.commandClass,
-								Req.cmdProperties.method,
-								Req.cmdProperties.nodeId,
-								Req.cmdProperties.endpoint,
-								Req.cmdProperties.args
-							)
-							.then((Result) => {
-								sendResponse(msg, Req, Result, send, Req.cmdProperties?.nodeId);
-							})
-							.catch((Error) => {
-								self.error(Error, msg);
-							});
-						done();
-					} else {
-						done(new Error('cmdProperties is either missing or has fewer required properties.'));
-					}
+					self.runtime
+						.ccCommand(
+							Req.cmd.method,
+							Req.cmdProperties.commandClass,
+							Req.cmdProperties.method,
+							Req.cmdProperties.nodeId,
+							Req.cmdProperties.endpoint,
+							Req.cmdProperties.args
+						)
+						.then((Result) => {
+							sendResponse(msg, Req, Result, send, Req.cmdProperties?.nodeId);
+						})
+						.catch((Error) => {
+							self.error(Error, msg);
+						});
+					done();
+
 					break;
 
 				case 'VALUE':
-					if (Req.cmdProperties?.nodeId && Req.cmdProperties?.valueId) {
-						self.runtime
-							.valueCommand(
-								Req.cmd.method,
-								Req.cmdProperties.nodeId,
-								Req.cmdProperties.valueId,
-								Req.cmdProperties.value,
-								Req.cmdProperties.setValueOptions
-							)
-							.then((Result) => {
-								sendResponse(msg, Req, Result, send, Req.cmdProperties?.nodeId);
-							})
-							.catch((Error) => {
-								self.error(Error, msg);
-							});
-						done();
-					} else {
-						done(new Error('cmdProperties is either missing or has fewer required properties.'));
-					}
+					self.runtime
+						.valueCommand(
+							Req.cmd.method,
+							Req.cmdProperties.nodeId,
+							Req.cmdProperties.valueId,
+							Req.cmdProperties.value,
+							Req.cmdProperties.setValueOptions
+						)
+						.then((Result) => {
+							sendResponse(msg, Req, Result, send, Req.cmdProperties?.nodeId);
+						})
+						.catch((Error) => {
+							self.error(Error, msg);
+						});
+					done();
+
 					break;
 
 				case 'NODE':
-					if (Req.cmdProperties?.nodeId) {
-						self.runtime
-							.nodeCommand(Req.cmd.method, Req.cmdProperties.nodeId, Req.cmdProperties.value)
-							.then((Result) => {
-								sendResponse(msg, Req, Result, send, Req.cmdProperties?.nodeId);
-							})
-							.catch((Error) => {
-								self.error(Error, msg);
-							});
-						done();
-					} else {
-						done(new Error('Missing cmdProperties.nodeId property.'));
-					}
-					break;
+					self.runtime
+						.nodeCommand(Req.cmd.method, Req.cmdProperties.nodeId, Req.cmdProperties.value)
+						.then((Result) => {
+							sendResponse(msg, Req, Result, send, Req.cmdProperties?.nodeId);
+						})
+						.catch((Error) => {
+							self.error(Error, msg);
+						});
+					done();
 
-				default:
-					done(new Error('Requested API is not valid'));
 					break;
 			}
 		});

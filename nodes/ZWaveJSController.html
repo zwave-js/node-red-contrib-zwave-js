@@ -7,6 +7,10 @@
 				value: 'ZWave Controller',
 				required: true
 			},
+			hideStatus: {
+				value: false,
+				required: false
+			},
 			runtimeId: {
 				value: '',
 				required: true,
@@ -27,16 +31,21 @@
 
 <!-- prettier-ignore -->
 <script type="text/x-red" data-template-name="zwavejs-controller">
-	<h3>Basic</h3>
-	<hr />
-	<div class="form-row">
-	    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
-	    <input type="text" id="node-input-name">
-	</div>
-	<div class="form-row">
-	    <label for="node-input-runtimeId"><i class="fa fa-cog"></i> Runtime</label>
-	    <input type="text" id="node-input-runtimeId">
-	</div>
+	<fieldset class="zwjs-fs">
+		<legend>Basic</legend>
+		<div class="form-row">
+			<label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+			<input type="text" id="node-input-name">
+		</div>
+			<div class="form-row">
+			<label for="node-input-hideStatus"><i class="fa fa-bell"></i> Hide Status</label>
+			<input type="checkbox" id="node-input-hideStatus">
+		</div>
+		<div class="form-row">
+			<label for="node-input-runtimeId"><i class="fa fa-cog"></i> Runtime</label>
+			<input type="text" id="node-input-runtimeId">
+		</div>
+	</fieldset>
 </script>
 
 <!-- prettier-ignore -->

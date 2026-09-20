@@ -32,7 +32,7 @@ module.exports = (RED) => {
 				}
 
 				if (config.method === 'setValue') {
-					if (config.value !== undefined) {
+					if (config.value != null && config.value !== '') {
 						Value = await evalExpression(config.value, config.valueType, this, msg);
 					}
 					if (config.valueSetOptions) {
@@ -42,21 +42,6 @@ module.exports = (RED) => {
 
 				if (config.nodeId) {
 					NodeID = await evalExpression(config.nodeId, config.nodeIdType, this, msg);
-				}
-
-				if (!ValueID) {
-					done(new Error('Missing Value ID expression, or expression yields undefined.'));
-					return;
-				}
-
-				if (!NodeID) {
-					done(new Error('Missing Node ID expression, or expression yields undefined.'));
-					return;
-				}
-
-				if (config.method === 'setValue' && Value === undefined) {
-					done(new Error('Missing Value expression, or expression yields undefined.'));
-					return;
 				}
 
 				const CMD = {
@@ -110,21 +95,6 @@ module.exports = (RED) => {
 
 				if (config.args) {
 					Args = await evalExpression(config.args, config.argsType, this, msg);
-				}
-
-				if (!NodeID) {
-					done(new Error('Missing Node ID expression, or expression yields undefined.'));
-					return;
-				}
-
-				if (!config.commandClass) {
-					done(new Error('Missing Command Class.'));
-					return;
-				}
-
-				if (!config.method) {
-					done(new Error('Missing Command Class method.'));
-					return;
 				}
 
 				const CMD = {

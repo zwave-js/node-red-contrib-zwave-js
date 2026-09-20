@@ -19,6 +19,12 @@
 					<input type="text" name="zwjz-k-name" value="{{valueId.propertyKeyName}}" readonly>
 				</div>
 			{{/if}}
+			{{#if strict}}
+				<div class="form-row" style="height:24px">
+					<label><i class="fa fa-info-circle"></i> Endpoint</label>
+					<input type="text" name="zwjz-endpoint" value="{{valueId.endpoint}}" readonly>
+				</div>
+			{{/if}}
 		{{else}}
 			<div class="form-row" style="height:auto">
 				<label><i class="fa fa-info-circle"></i> Custom</label>
@@ -41,6 +47,10 @@
 				value: 'ZWave Event Splitter',
 				required: true
 			},
+			hideStatus: {
+				value: false,
+				required: false
+			},
 			splits: { value: [] },
 			outputs: { value: 0 }
 		},
@@ -51,7 +61,7 @@
 			return this.name;
 		},
 		outputLabels: function (index) {
-			return this.splits[index]?.name
+			return this.splits[index]?.name;
 		},
 		paletteLabel: 'Event Splitter',
 		oneditprepare: SortUI,
@@ -71,9 +81,6 @@
 	}
 
 	function DoSave() {
-
-		
-
 		$('#node-input-outputs').val(JSON.stringify(ZWJSIndexMap));
 
 		this.splits = [];
@@ -133,21 +140,27 @@
 <!-- prettier-ignore -->
 <script type="text/x-red" data-template-name="zwavejs-splitter">
 	<input type="hidden" id="node-input-outputs">
-	<h3>Basic</h3>
-	<hr />
-	<div class="form-row">
-	    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
-	    <input type="text" id="node-input-name">
-	</div>
-
-	<h3>Split Outputs</h3>
-	<hr />
-	<div>
-	      <ol id="splitters" style="min-height:350px;min-width:400px"> </ol>
-	</div>
-	<div class="form-tips" id="node-tip">
-		To add rows to this splitter, please review a Command Class Property from the Side bar, and choose this Event Splitter.
-	</div>
+	<fieldset class="zwjs-fs">
+		<legend>Basic</legend>
+		<div class="form-row">
+			<label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+			<input type="text" id="node-input-name">
+		</div>
+		<div class="form-row">
+			<label for="node-input-hideStatus"><i class="fa fa-bell"></i> Hide Status</label>
+			<input type="checkbox" id="node-input-hideStatus">
+		</div>
+	</fieldset>
+	<fieldset class="zwjs-fs">
+		<legend>Split Outputs</legend>
+		<div>
+			<ol id="splitters" style="min-height:350px;min-width:400px"> </ol>
+		</div>
+		<div class="form-tips" id="node-tip">
+			To add rows to this splitter, please review a Command Class Property from the Side bar, and choose this Event Splitter.
+		</div>
+	</fieldset>
+	
 </script>
 
 <!-- prettier-ignore -->

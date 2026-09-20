@@ -50,20 +50,20 @@
 
 		<!--Controller Menu-->
 		<div class="red-ui-sidebar-header zwjs-sb-menu-header">
-			<a class="red-ui-tab-link-button" onclick="ZWaveJS.ShowNetworkManagement()"><i class="fa fa-cogs"></i></a>
-			<a class="red-ui-tab-link-button" onclick="ZWaveJS.RefreshNodes('Refresh')"><i class="fa fa-refresh"></i></a>
-			<a class="red-ui-tab-link-button" onclick="ZWaveJS.RebuildRoutes(undefined, true)"><i class="fa fa-medkit"></i></a>
+			<a class="red-ui-tab-link-button" data-tip="Network wide menu" onclick="ZWaveJS.ShowNetworkManagement()"><i class="fa fa-cogs"></i></a>
+			<a class="red-ui-tab-link-button" data-tip="Refresh node list" onclick="ZWaveJS.RefreshNodes('Refresh')"><i class="fa fa-refresh"></i></a>
+			<a class="red-ui-tab-link-button" data-tip="Rebuild routes" onclick="ZWaveJS.RebuildRoutes(undefined, true)"><i class="fa fa-medkit"></i></a>
 			|
-			<a class="red-ui-tab-link-button" onclick="ZWaveJS.NodeCollapseToggle(1, this)"><i
+			<a class="red-ui-tab-link-button" data-tip="Expanded : Grouped" onclick="ZWaveJS.NodeCollapseToggle(1, this)"><i
 					class="fa fa-indent zwjs-button-group" selected></i></a>
-			<a class="red-ui-tab-link-button" onclick="ZWaveJS.NodeCollapseToggle(2, this)"><i
+			<a class="red-ui-tab-link-button" data-tip="Collapsed : Grouped" onclick="ZWaveJS.NodeCollapseToggle(2, this)"><i
 					class="fa fa-bars zwjs-button-group "></i></a>
-			<a class="red-ui-tab-link-button" onclick="ZWaveJS.NodeCollapseToggle(3, this)"><i
+			<a class="red-ui-tab-link-button" data-tip="Expanded : Ungrouped" onclick="ZWaveJS.NodeCollapseToggle(3, this)"><i
 					class="fa fa-sort-numeric-asc zwjs-button-group"></i></a>
 			|
-			<a class="red-ui-tab-link-button" onclick="ZWaveJS.ZoomUI(-0.1)"><i class="fa fa-search-minus"></i></a>
-			<a class="red-ui-tab-link-button" onclick="ZWaveJS.ZoomUI()"><i class="fa fa-undo"></i></a>
-			<a class="red-ui-tab-link-button" onclick="ZWaveJS.ZoomUI(0.1)"><i class="fa fa-search-plus"></i></a>		
+			<a class="red-ui-tab-link-button" data-tip="Zoom out" onclick="ZWaveJS.ZoomUI(-0.1)"><i class="fa fa-search-minus"></i></a>
+			<a class="red-ui-tab-link-button" data-tip="Reset zoom" onclick="ZWaveJS.ZoomUI()"><i class="fa fa-undo"></i></a>
+			<a class="red-ui-tab-link-button" data-tip="Zoom in" onclick="ZWaveJS.ZoomUI(0.1)"><i class="fa fa-search-plus"></i></a>		
 		</div>
 
 		<!--Stack-->
@@ -95,11 +95,11 @@
 				</div>
 
 				<div class="red-ui-sidebar-header zwjs-sb-menu-header">
-					<a class="red-ui-tab-link-button" onclick="ZWaveJS.ShowNodeManagement()"><i class="fa fa-cogs"></i></a>
-					<a class="red-ui-tab-link-button" onclick="ZWaveJS.InterviewCurrentNode()"><i
+					<a class="red-ui-tab-link-button" data-tip="Node menu" onclick="ZWaveJS.ShowNodeManagement()"><i class="fa fa-cogs"></i></a>
+					<a class="red-ui-tab-link-button" data-tip="Interview node" onclick="ZWaveJS.InterviewCurrentNode()"><i
 							class="fa fa-handshake-o"></i></a>
-					<a class="red-ui-tab-link-button" onclick="ZWaveJS.RebuildNodeRoutes()"><i class="fa fa-medkit"></i></a>
-					<a class="red-ui-tab-link-button" onclick="ZWaveJS.RemoveFailedNode()"><i class="fa fa-trash-o"></i></a>
+					<a class="red-ui-tab-link-button" data-tip="Rebuiuld node routes" onclick="ZWaveJS.RebuildNodeRoutes()"><i class="fa fa-medkit"></i></a>
+					<a class="red-ui-tab-link-button" data-tip="Remove node" onclick="ZWaveJS.RemoveFailedNode()"><i class="fa fa-trash-o"></i></a>
 				</div>
 				<div class="red-ui-sidebar-header zwjs-sb-menu-header" id="zwjs-endpoint-list"></div>
 				<div id="zwjs-cc-list" style="width: 100%; height: calc(100% - 165px)"></div>
@@ -173,13 +173,17 @@
 				<td>Output Pin Name</td>
 				<td><input type="text" id="zwjs-splitter-output-name" value="{{label}}"></td>
 			</tr>
+			<tr style="height:35px">
+				<td>Strict Endpoint Match</td>
+				<td><input type="checkbox" id="zwjs-splitter-output-endpoint" style="padding-top:10px;padding-bottom:10px"></td>
+			</tr>
 			<tr>
 				<td colspan="2">Event Shape</td>
 			</tr>
 			<tr>
 
 				<td colspan="2">
-					<div class="zwjs-hint">The Event Shape denotes the matching <code>eventBody</code> in Zwave Value events.</div>
+					<div class="zwjs-hint">The Event Shape denotes the matching <code>eventBody.valueId</code> in Zwave Value events.</div>
 					{{#editor "zwjs-splitter-shape"}}{{{json shape}}}{{/editor}}
 				</td>
 			</tr>
@@ -595,7 +599,7 @@
 								<span class="zwjs-empises" style="display:block" {{#eq update.channel "beta"}}warn{{else}}positive{{/eq}}>{{update.channel}}</span>
 							</td>
 							<td style="text-align:center;">{{update.normalizedVersion}}</td>
-							<td style="text-align:center;"><a href="#" onclick='alert({{{json update.changelog}}})'>View Change Log</a>
+							<td style="text-align:center;"><a href="#" onclick='ZWaveJS.ZWJSAlert({{{json update.changelog}}})'>View Change Log</a>
 							</td>
 							<td style="text-align:center;">
 							{{#eq nodeKey "1"}}

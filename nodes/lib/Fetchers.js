@@ -80,6 +80,8 @@ const getValueDB = (DriverInstance, Nodes) => {
 		if (ZWN) {
 			const NodeData = {
 				nodeId: ZWN.id,
+				nodeName: ZWN.name,
+				nodeLocation: ZWN.location,
 				values: []
 			};
 			const VIDs = ZWN.getDefinedValueIDs();

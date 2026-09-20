@@ -4,11 +4,11 @@
 		color: 'rgb(46,145,205)',
 		defaults: {
 			valueSetOptionsType: {
-				value: 'json',
+				value: 'msg',
 				required: true
 			},
 			valueSetOptions: {
-				value: '{"transitionDuration": "5s"}',
+				value: 'options',
 				required: false
 			},
 
@@ -22,11 +22,11 @@
 			},
 
 			valueIdType: {
-				value: 'json',
+				value: 'msg',
 				required: true
 			},
 			valueId: {
-				value: '{"commandClass": 37, "property": "targetValue", "endpoint": 0}',
+				value: 'valueId',
 				required: false
 			},
 
@@ -49,12 +49,12 @@
 			},
 
 			nodeIdType: {
-				value: 'num',
+				value: 'msg',
 				required: true
 			},
 			nodeId: {
-				value: 2,
-				required: true
+				value: 'topic',
+				required: false
 			},
 
 			trackingIdType: {
@@ -196,62 +196,64 @@
 	<input type="hidden" id="node-input-valueIdType">
 	<input type="hidden" id="node-input-valueType">
 	<input type="hidden" id="node-input-valueSetOptionsType">
-	<h3>Basic</h3>
-	<hr />
-	<div class="form-row">
-	    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
-	    <input type="text" id="node-input-name">
-	</div>
-	<div class="form-row">
-	    <label for="node-input-api"><i class="fa fa-list-alt"></i> API</label>
-	    <select id="node-input-api">
-			<option value="VALUE">Value API</option>
-			<option value="CC">Command Class API</option>
-		</select>
-	</div>
-	<div class="form-row" data-for-api="CC">
-	    <label for="node-input-commandClass"><i class="fa fa-search"></i> Class</label>
-	    <select id="node-input-commandClass">
-			<option value="">Select Command Class</option>
-		</select>
-	</div>
-	<div class="form-row">
-	    <label for="node-input-method"><i class="fa fa-terminal"></i> Method</label>
-	    <select id="node-input-method">
-			<option value="setValue">Set Value</option>
-			<option value="getValue">Get Value</option>
-		</select>
-	</div>
-	<div class="form-row">
-	    <label for="node-input-trackingId"><i class="fa fa-id-card-o"></i> Tracking ID</label>
-	    <input type="text" id="node-input-trackingId" data-typed-types="msg,flow,global,str,num,json,jsonata,env">
-	</div>
-	<h3>Command Properties</h3>
-	<hr />
-	<div class="form-row">
-	    <label for="node-input-nodeId"><i class="fa fa-microchip"></i> Node ID</label>
-	    <input type="text" id="node-input-nodeId" data-typed-types="msg,flow,global,num,jsonata,env">
-	</div>
-	<div class="form-row" data-for-api="CC">
-	    <label for="node-input-endpoint"><i class="fa fa-sitemap"></i> Endpoint</label>
-	    <input type="text" id="node-input-endpoint" data-typed-types="msg,flow,global,num,jsonata,env">
-	</div>
-	<div class="form-row" data-for-api="CC">
-	    <label for="node-input-args"><i class="fa fa-keyboard-o"></i> Args</label>
-	    <input type="text" id="node-input-args" data-typed-types="msg,flow,global,json,jsonata,env">
-	</div>
-	<div class="form-row" data-for-api="VALUE">
-	    <label for="node-input-valueId"><i class="fa fa-id-card-o""></i> Value ID</label>
-	    <input type="text" id="node-input-valueId" data-typed-types="msg,flow,global,json,jsonata,env">
-	</div>
-	<div class="form-row" data-for-api="VALUE">
-	    <label for="node-input-value"><i class="fa fa-keyboard-o"></i> Value</label>
-	    <input type="text" id="node-input-value" data-typed-types="msg,flow,global,num,json,jsonata,env">
-	</div>
-	<div class="form-row" data-for-api="VALUE">
-	    <label for="node-input-valueSetOptions"><i class="fa fa-cogs"></i> Options</label>
-	    <input type="text" id="node-input-valueSetOptions" data-typed-types="msg,flow,global,json,jsonata,env">
-	</div>
+	<fieldset class="zwjs-fs">
+		<legend>Basic</legend>
+		<div class="form-row">
+			<label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+			<input type="text" id="node-input-name">
+		</div>
+		<div class="form-row">
+			<label for="node-input-api"><i class="fa fa-list-alt"></i> API</label>
+			<select id="node-input-api">
+				<option value="VALUE">Value API</option>
+				<option value="CC">Command Class API</option>
+			</select>
+		</div>
+		<div class="form-row" data-for-api="CC">
+			<label for="node-input-commandClass"><i class="fa fa-search"></i> Class</label>
+			<select id="node-input-commandClass">
+				<option value="">Select Command Class</option>
+			</select>
+		</div>
+		<div class="form-row">
+			<label for="node-input-method"><i class="fa fa-terminal"></i> Method</label>
+			<select id="node-input-method">
+				<option value="setValue">Set Value</option>
+				<option value="getValue">Get Value</option>
+			</select>
+		</div>
+		<div class="form-row">
+			<label for="node-input-trackingId"><i class="fa fa-id-card-o"></i> Tracking ID</label>
+			<input type="text" id="node-input-trackingId" data-typed-types="msg,flow,global,str,num,json,jsonata,env">
+		</div>
+	</fieldset>
+	<fieldset class="zwjs-fs">
+		<legend>Command Properties</legend>
+		<div class="form-row">
+			<label for="node-input-nodeId"><i class="fa fa-microchip"></i> Node ID</label>
+			<input type="text" id="node-input-nodeId" data-typed-types="msg,flow,global,num,jsonata,env">
+		</div>
+		<div class="form-row" data-for-api="CC">
+			<label for="node-input-endpoint"><i class="fa fa-sitemap"></i> Endpoint</label>
+			<input type="text" id="node-input-endpoint" data-typed-types="msg,flow,global,num,jsonata,env">
+		</div>
+		<div class="form-row" data-for-api="CC">
+			<label for="node-input-args"><i class="fa fa-keyboard-o"></i> Args</label>
+			<input type="text" id="node-input-args" data-typed-types="msg,flow,global,json,jsonata,env">
+		</div>
+		<div class="form-row" data-for-api="VALUE">
+			<label for="node-input-valueId"><i class="fa fa-id-card-o""></i> Value ID</label>
+			<input type="text" id="node-input-valueId" data-typed-types="msg,flow,global,json,jsonata,env">
+		</div>
+		<div class="form-row" data-for-api="VALUE">
+			<label for="node-input-value"><i class="fa fa-keyboard-o"></i> Value</label>
+			<input type="text" id="node-input-value" data-typed-types="msg,flow,global,num,json,jsonata,env">
+		</div>
+		<div class="form-row" data-for-api="VALUE">
+			<label for="node-input-valueSetOptions"><i class="fa fa-cogs"></i> Options</label>
+			<input type="text" id="node-input-valueSetOptions" data-typed-types="msg,flow,global,json,jsonata,env">
+		</div>
+	</fieldset>
 </script>
 
 <!-- prettier-ignore -->

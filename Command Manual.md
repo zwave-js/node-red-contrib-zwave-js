@@ -19,8 +19,8 @@ To construct a command, you will send the following `payload`
 ```
 What is available to each Node in your flow, is listed below.
 
- - Where a property is shown in brackets, it is optional.
- - But some fields are required — for example, `args` is required for the `invokeCCAPI` method (e.g. when using `set`).
+ - Where a property is shown with a ?, it is optional.
+ - But some fields are required — for example, `args[]` is required for the `invokeCCAPI` method (e.g. when using `set` type commands).
 
 The Device Node
 --------
@@ -31,10 +31,10 @@ The Device Node
 | `NODE` | `refreshInfo` | `nodeId` |
 | `NODE` | `setName` | `nodeId`, `value` |
 | `NODE` | `setLocation` | `nodeId`, `value` |
-| `VALUE` | `setValue` | `nodeId`, `valueId`, `value`, `[setValueOptions]` |
+| `VALUE` | `setValue` | `nodeId`, `valueId`, `value`, `?setValueOptions` |
 | `VALUE` | `getValue` | `nodeId`, `valueId` |
 | `VALUE` | `pollValue` | `nodeId`, `valueId` |
-| `CC` | `invokeCCAPI` | `nodeId`, `commandClass`, `method`, `[endpoint]`, `[args[Any]]` |
+| `CC` | `invokeCCAPI` | `nodeId`, `commandClass`, `method`, `?endpoint`, `?args[]` |
 
 The Controller Node
 --------
@@ -44,8 +44,8 @@ The Controller Node
 | API | Method | CMD Properties | 
 |-----|--------| ---------------|
 | `CONTROLLER` | `getNodes` | |
-| `CONTROLLER` | `proprietaryFunction` | `args`|
-| `DRIVER` | `getValueDB` | `[args[NodeIDs]]`|
+| `CONTROLLER` | `proprietaryFunction` | `args[]`|
+| `DRIVER` | `getValueDB` | `?args[]`|
 
 The valueId object
 --------
