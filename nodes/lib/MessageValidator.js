@@ -1,4 +1,4 @@
-const Check = (msg) => {
+const Check = (msg, config) => {
 	const API = msg?.payload?.cmd?.api;
 	const Method = msg?.payload?.cmd?.method;
 	const Props = msg?.payload?.cmdProperties;
@@ -22,9 +22,18 @@ const Check = (msg) => {
 		if (!ValueID) return 'Missing payload.cmdProperties.valueId';
 		if (typeof ValueID !== 'object') return 'Type payload.cmdProperties.valueId must be object';
 
-		if (NodeID === undefined) return 'Missing payload.cmdProperties.nodeId';
-		if (typeof NodeID !== 'number' && !Array.isArray(NodeID)) {
-			return 'Type payload.cmdProperties.nodeId must be number or array of numbers';
+		if (NodeID === undefined) {
+			if (!config.defaultNode) {
+				return 'Missing payload.cmdProperties.nodeId';
+			} else {
+				msg.payload.cmdProperties.nodeId = config.defaultNode.includes(',')
+					? config.defaultNode.split(',').map((e) => parseInt(e.trim(), 10))
+					: parseInt(config.defaultNode, 10);
+			}
+		} else {
+			if (typeof NodeID !== 'number' && !Array.isArray(NodeID)) {
+				return 'Type payload.cmdProperties.nodeId must be number or array of numbers';
+			}
 		}
 
 		if (Method === 'setValue' && Value === undefined) return 'Missing payload.cmdProperties.value';
@@ -37,7 +46,19 @@ const Check = (msg) => {
 		if (!CCCommand) return 'Missing payload.cmdProperties.method';
 		if (typeof CCCommand !== 'string') return 'Type payload.cmdProperties.method must be string';
 
-		if (typeof NodeID !== 'number') return 'Type payload.cmdProperties.nodeId must be number';
+		if (NodeID === undefined) {
+			if (!config.defaultNode) {
+				return 'Missing payload.cmdProperties.nodeId';
+			} else {
+				msg.payload.cmdProperties.nodeId = config.defaultNode.includes(',')
+					? config.defaultNode.split(',').map((e) => parseInt(e.trim(), 10))
+					: parseInt(config.defaultNode, 10);
+			}
+		} else {
+			if (typeof NodeID !== 'number') {
+				return 'Type payload.cmdProperties.nodeId must be number';
+			}
+		}
 	}
 
 	if (API === 'NODE') {
