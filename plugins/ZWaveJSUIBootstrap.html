@@ -12,7 +12,7 @@
 
 <script>
 	RED.plugins.registerPlugin('zwavejs-uibootstrap', {
-		onadd: ZWaveJS.init()
+		onadd: ZWaveJS.init
 	});
 </script>
 
@@ -98,7 +98,7 @@
 					<a class="red-ui-tab-link-button" data-tip="Node menu" onclick="ZWaveJS.ShowNodeManagement()"><i class="fa fa-cogs"></i></a>
 					<a class="red-ui-tab-link-button" data-tip="Interview node" onclick="ZWaveJS.InterviewCurrentNode()"><i
 							class="fa fa-handshake-o"></i></a>
-					<a class="red-ui-tab-link-button" data-tip="Rebuiuld node routes" onclick="ZWaveJS.RebuildNodeRoutes()"><i class="fa fa-medkit"></i></a>
+					<a class="red-ui-tab-link-button" data-tip="Rebuild node routes" onclick="ZWaveJS.RebuildNodeRoutes()"><i class="fa fa-medkit"></i></a>
 					<a class="red-ui-tab-link-button" data-tip="Remove node" onclick="ZWaveJS.RemoveFailedNode()"><i class="fa fa-trash-o"></i></a>
 				</div>
 				<div class="red-ui-sidebar-header zwjs-sb-menu-header" id="zwjs-endpoint-list"></div>
@@ -143,7 +143,7 @@
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Node-Value-Debug">
-	<fieldset class=zwjs-fieldset>
+	<fieldset class="zwjs-fieldset">
 		<div class="zwjs-title">Value Debug Information</div>
 		<div>
 			<pre>{{{pretty .}}}</pre>
@@ -153,7 +153,7 @@
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Node-Value-Filter">
-	<fieldset class=zwjs-fieldset>
+	<fieldset class="zwjs-fieldset">
 		<div class="zwjs-title">Select the Event Splitter Node you wish to append to.</div>
 		<div class="zwjs-hint">Note: The target Event Splitter Node will be modified and marked dirty, so a Deploy will be required, to commit the changes.</div>
 
@@ -183,7 +183,7 @@
 			<tr>
 
 				<td colspan="2">
-					<div class="zwjs-hint">The Event Shape denotes the matching <code>eventBody.valueId</code> in Zwave Value events.</div>
+					<div class="zwjs-hint">The Event Shape denotes the matching <code>eventBody.valueId</code> in Z-Wave Value events.</div>
 					{{#editor "zwjs-splitter-shape"}}{{{json shape}}}{{/editor}}
 				</td>
 			</tr>
@@ -199,7 +199,7 @@
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Node-Value-Current">
-	<fieldset class=zwjs-fieldset>
+	<fieldset class="zwjs-fieldset">
 		<div class="zwjs-title">{{valueLabel}}:</div>
 		{{#if writeable}}
 			{{> ValueEditors}}
@@ -211,7 +211,7 @@
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Node-Value-Example">
-	<fieldset class=zwjs-fieldset>
+	<fieldset class="zwjs-fieldset">
 		<div class="zwjs-title">{{valueLabel}}:</div>
 		<div class="zwjs-hint">These <strong>msg</strong> examples, use the <strong>ValueAPI</strong>, which is the recommended API. The <strong>payload</strong> (or <strong>value</strong>) property is only required when setting values. - The values used here, are an example (but use the current value as it is now)</div>
 		<div class="zwjs-hint">Note: If there are Set Value Options available - these are optional and not required.</div>
@@ -276,11 +276,11 @@
 </script>
 
 <script type="text/template" id="ZWJS_TPL_Tray-Controller-Firmware-Recovery">
-	<fieldset class=zwjs-fieldset>
+	<fieldset class="zwjs-fieldset">
 		<div class="zwjs-hint">
 			<strong>Firmware / Bootloader Recovery</strong><br /><br />
-			Your ZWave Controller has been detected to be stuck in <strong>Bootloader</strong> Mode, its likely due to a recent Firmware update that had failed.
-			The driver has been entered into Bootloader Recovery Mode. Please flash a clean Firmware to the controller.
+			Your Z-Wave Controller has been detected in <strong>Bootloader Mode</strong>. This can occur when a firmware update is interrupted or fails to complete.
+			The driver has entered Bootloader Recovery Mode. Use <strong>Restore Firmware</strong> below to flash firmware to the controller.
 		</div>
 		<div>
 			<button onclick="ZWaveJS.UpdateCFirmware(this)">Restore Firmware</button>
@@ -329,7 +329,7 @@
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Controller-Rebuild">
-	<fieldset class=zwjs-fieldset>
+	<fieldset class="zwjs-fieldset">
 		<div class="zwjs-hint">Note: Rebuilding routes can take time, especially those on networks that contain a number of battery-powered devices.</div>
 		<table class="zwjs-table" id="zwjs-routes-progress" horizontal>
 			<tr style="text-align:center">
@@ -344,7 +344,7 @@
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Controller-Map">
-	<fieldset class=zwjs-fieldset>
+	<fieldset class="zwjs-fieldset">
 		<div class="zwjs-hint">The map below is based on statistics for each ZWave Node, specifically the <strong>Last Working Route(s)</strong> to the Node, from the Controller</div>
 		<div class="zwjs-mermaid" id="zwjs-mermaid">{{map}}</div>
 	</fieldset>
@@ -352,7 +352,7 @@
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Controller-Slave-JoinState">
-	<fieldset class=zwjs-fieldset>
+	<fieldset class="zwjs-fieldset">
 		<div class="zwjs-hint">{{message}}</div>
 		<div>
 			<button onclick="ZWaveJS.RestartDriver()">Restart Driver</button>
@@ -362,7 +362,7 @@
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_FailedNodes">
-	<fieldset class=zwjs-fieldset>
+	<fieldset class="zwjs-fieldset">
 		<div class="zwjs-hint">Below is a list of Failed Nodes, from here you can attempt to ping them (which will remove the Failed flag  - if they respond), else you can remove them.</div>
 		<table class="zwjs-table" id="zwjs-failed-nodes" horizontal>
 				<tr>
@@ -389,12 +389,12 @@
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Controller-Slave">
-	<fieldset class=zwjs-fieldset>
+	<fieldset class="zwjs-fieldset">
 		<div class="zwjs-hint">
 			<strong>Note!</strong> Before using this Runtime as a Secondary Controller, the transceiver it is managing, needs to be in a <strong>Reset</strong> state (this can be done in <strong>Settings</strong> to the left.)
 			<br />
 			<br />
-			<strong>Also Note!</strong> Before a node can be controlled, it must be manually interviewed. The <strong>LifeLine</strong> Assocoation may need to be updated also, if you wish for this runtime to handle updates (this depends on the Max LifeLines, a device may support)
+			<strong>Also Note!</strong> Before a node can be controlled, it must be manually interviewed. The <strong>LifeLine</strong> Association may need to be updated also, if you wish for this runtime to handle updates (this depends on the Max LifeLines, a device may support)
 			<br />
 			<br />
 			<strong>Lastly!</strong> Set your <strong>Primary</strong> Controller to <strong>Inclusion/Exclusion</strong> Mode, before joining or leaving a network.
@@ -407,15 +407,15 @@
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Controller-Slave-DSK">
-	<fieldset class=zwjs-fieldset>
+	<fieldset class="zwjs-fieldset">
 		<div class="zwjs-hint">Your <strong>Primary</strong> Controller is asking for the <strong>DSK</strong> (this is the 5 digits below) </div>
-		<div class="zwjs-dsk-show">{{slaveJoinDSK}}<div>
+		<div class="zwjs-dsk-show">{{slaveJoinDSK}}</div>
 	</fieldset>
 </script>
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Controller-Info">
-	<div class="zwjs-title">Harware Information</div>
+	<div class="zwjs-title">Hardware Information</div>
 	<table class="zwjs-table" vertical>
 		<tr>
 			<td>Configuration</td><td>{{configuration}}</td>
@@ -427,7 +427,7 @@
 			<td>Serial Port</td><td>{{serialPort}}</td>
 		</tr>
 		<tr>
-			<td>Manufacture</td><td>{{deviceConfig.manufacturer}}</td>
+			<td>Manufacturer</td><td>{{deviceConfig.manufacturer}}</td>
 		</tr>
 		<tr>
 			<td>Model</td><td>{{deviceConfig.label}}</td>
@@ -468,7 +468,7 @@
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Controller-Settings">
-	<fieldset class=zwjs-fieldset>
+	<fieldset class="zwjs-fieldset">
 		<div class="zwjs-hint"><strong>WARNING!</strong> Certain settings, such as Power Levels, must comply with the legal limits in your region. Refer to your local laws for guidance.</div>
 		<div class="zwjs-title">Reset Controller:</div>
 		<div>
@@ -476,7 +476,7 @@
 		</div>
 		<div class="zwjs-title">RF Region:</div>
 		<div>
-			<select id="zwjs-controller-setting-region" {{{RDisabled}}}">
+			<select id="zwjs-controller-setting-region" {{{RDisabled}}}>
 				{{#select Region}}
 				    <option>NOT SUPPORTED</option>
 					<option value="0x00">Europe</option>
@@ -547,12 +547,12 @@
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Controller-Firmware">
-	<fieldset class=zwjs-fieldset>
+	<fieldset class="zwjs-fieldset">
 		<div class="zwjs-hint">
 			This software is provided as-is.<br /><br />
 			The developer(s) of <strong>node-red-contrib-zwave-js</strong> or any libraries it uses,
 			are not responsible for any damage that may result from your attempt to upgrade the firmware.<br /><br />
-			You are performing this upgrade, soley at your own risk.
+			You are performing this upgrade, solely at your own risk.
 		</div>
 		<div>
 			<button onclick="ZWaveJS.UpdateCFirmware(this)">Update Firmware</button>
@@ -565,11 +565,11 @@
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Firmware-Service">
-	<fieldset class=zwjs-fieldset>
+	<fieldset class="zwjs-fieldset">
 		{{#if Message}}
 			<div class="zwjs-hint">{{{Message}}}</div>
 		{{/if}}
-		<div class="zwjs-hint">The Firmware Update Service, will query all interviewed Zwave Nodes in your network and check for updates provided by the manufacturer, allowing you to update them.</div>
+		<div class="zwjs-hint">The Firmware Update Service, will query all interviewed Z-Wave Nodes in your network and check for updates provided by the manufacturer, allowing you to update them.</div>
 		<table class="zwjs-table" id="zwjs-fus-updates" horizontal>
 			<tr>
 				<td style="text-align:center">Node</td>
@@ -627,21 +627,21 @@
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Firmware-Done">
-	<fieldset class=zwjs-fieldset>
+	<fieldset class="zwjs-fieldset">
 		<div class="zwjs-hint">{{Message}}</div>
 	</fieldset>
 </script>
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Node-Info">
-	<fieldset class=zwjs-fieldset>
+	<fieldset class="zwjs-fieldset">
 		<div class="zwjs-title">Hardware Information:</div>
 		<table class="zwjs-table" vertical>
 			<tr>
 				<td>Node ID</td><td>{{nodeId}}</td>
 			</tr>
 			<tr>
-				<td>Manufacture</td><td>{{deviceConfig.manufacturer}}</td>
+				<td>Manufacturer</td><td>{{deviceConfig.manufacturer}}</td>
 			</tr>
 			<tr>
 				<td>Model</td><td>{{deviceConfig.label}}</td>
@@ -661,7 +661,7 @@
 		</table>
 	</fieldset>
 
-	<fieldset class=zwjs-fieldset>
+	<fieldset class="zwjs-fieldset">
 		<div class="zwjs-title">Update the Name & Location:</div>
 		<div class="zwjs-hint">If the device supports the 'Node Name & Location' CC - it will also get updated, meaning the values here will persist across networks.</div>
 		<table class="zwjs-table" vertical>
@@ -680,7 +680,7 @@
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Node-Associations">
-	<fieldset class=zwjs-fieldset>
+	<fieldset class="zwjs-fieldset">
 		<div class="zwjs-hint">Choose the Endpoint, and the supported association group to see and edit the mappings. You can also completely wipe all associations on the device, to start over. </div>
 
 		<select id="zwjs-asso-endpoints" style="width:140px" onchange="ZWaveJS.processAssociationEPSelect()">
@@ -709,7 +709,7 @@
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Node-HealthCheck">
-	<fieldset class=zwjs-fieldset>
+	<fieldset class="zwjs-fieldset">
 		<div class="zwjs-hint">This should <strong>NOT</strong> be done while there is a lot of traffic on the network because it will negatively impact the test results</div>
 			<table class="zwjs-table" id="zwjs-node-health-check" horizontal>
 				<tr>
@@ -731,12 +731,12 @@
 
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_Tray-Node-Firmware">
-	<fieldset class=zwjs-fieldset>
+	<fieldset class="zwjs-fieldset">
 		<div class="zwjs-hint">
 			This software is provided as-is.<br /><br />
 			The developer(s) of <strong>node-red-contrib-zwave-js</strong> or any libraries it uses,
 			are not responsible for any damage that may result from your attempt to upgrade the firmware.<br /><br />
-			You are performing this upgrade, soley at your own risk.
+			You are performing this upgrade, solely at your own risk.
 		</div>
 		<div>
 			<button onclick="ZWaveJS.UpdateNFirmware(this)">Update Firmware</button>
@@ -769,7 +769,7 @@
 	  
 		<div>
 		  <input type="radio" id="0" name="ZWJS_IS" value="0" checked />
-		  <label for="0"><span class="zwjs-empises" positive>Recommended</span>S2 When Supported, S0 if absolutely necessary, esle no encryption.</label>
+		  <label for="0"><span class="zwjs-empises" positive>Recommended</span>S2 When Supported, S0 if absolutely necessary, else no encryption.</label>
 		</div>
 	  
 		<div>
@@ -815,7 +815,7 @@
 	</fieldset>
 	<table class="zwjs-table" style="margin-top:10px" horizontal>
 	  <tr>
-		  <td>Manufacture</td>
+		  <td>Manufacturer</td>
 		  <td>Label</td>
 		  <td style="text-align:center">DSK</td>
 		  <td style="text-align:center">Associated Node ID</td>
@@ -829,7 +829,7 @@
 			<td style="text-align:center">{{shortDSK}}</td>
 			<td style="text-align:center"><span class="zwjs-node-id">{{nodeId}}</span></td>
 			<td style="text-align:center"><input type="checkbox" onchange="ZWaveJS.SetPEActive(this,'{{encode .}}')" {{checked}}/></td>
-			<td style="text-align:center"><i class="fa fa-trash" aria-hidden="true" style="font-size: 18px;color: red;" onclick="ZWaveJS.DeletePE(this,'{{encode .}}')""></i></td>
+			<td style="text-align:center"><i class="fa fa-trash" aria-hidden="true" style="font-size: 18px;color: red;" onclick="ZWaveJS.DeletePE(this,'{{encode .}}')"></i></td>
 		</tr>
 	  {{/each}}
    </table>
@@ -847,11 +847,11 @@
 <script type="text/template" id="ZWJS_TPL_SecurityGrant">
 	<fieldset class="zwjs-fieldset">
 		<div class="zwjs-title">Choose the security classes below you wish to Grant:</div>
-	    <div class="zwjs-hint">The below security classes are reqeusted by the Node</div>
+	    <div class="zwjs-hint">The below security classes are requested by the Node</div>
 		{{#each classes}}
 			<div>
-				<input type="checkbox" name="ZWJS_SCLASS" value="{{classId}}" checked />
-				<label for="0">{{className}}</label>
+				<input type="checkbox" id="zwjs-security-class-{{classId}}" name="ZWJS_SCLASS" value="{{classId}}" checked />
+				<label for="zwjs-security-class-{{classId}}">{{className}}</label>
 			</div>
 	  	{{/each}}
 		<div>
@@ -864,7 +864,7 @@
 <script type="text/template" id="ZWJS_TPL_DSK">
 	<fieldset class="zwjs-fieldset">
 		<div class="zwjs-title">Authenticate the Node:</div>
-	    <div class="zwjs-hint">Validate the Node by providng the DSK (Device Specific Key)</div>
+	    <div class="zwjs-hint">Validate the Node by providing the DSK (Device Specific Key)</div>
 		<div>
 			<input type="text" id="zwjs-dsk" style="width: 60px;text-align: center;height: 30px;vertical-align: baseline;"> {{dsk}}
 		</div>
@@ -936,8 +936,8 @@
 				<td>
 					{{#each classes}}
 					<div>
-						<input type="checkbox" name="ZWJS_SCLASS" value="{{classId}}" checked />
-						<label for="0">{{className}}</label>
+						<input type="checkbox" id="zwjs-provision-security-class-{{classId}}" name="ZWJS_SCLASS" value="{{classId}}" checked />
+						<label for="zwjs-provision-security-class-{{classId}}">{{className}}</label>
 					</div>
 					{{/each}}
 
@@ -953,7 +953,7 @@
 <!-- prettier-ignore -->
 <script type="text/template" id="ZWJS_TPL_SSDone">
 	<fieldset class="zwjs-fieldset">
-		<div class="zwjs-title">Entry sucessfully Added:</div>
+		<div class="zwjs-title">Entry Successfully Added:</div>
 	    <i class="fa fa-check" aria-hidden="true" style="font-size: 20px;color: green;vertical-align: middle;"></i> The Smart Start device has been successfully added. When it is next powered on, and requests inclusion, it will be automatically added.
 	</fieldset>
 </script>

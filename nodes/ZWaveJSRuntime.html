@@ -163,7 +163,7 @@
 	function handleCustomSerial(el) {
 		const select = $(el);
 		if (select.val() !== 'Custom') return;
-		const port = prompt('Please provide serial port path or tcp:// string');
+		const port = prompt('Please provide a serial port path or tcp:// address');
 		if (!port || !port.trim()) return;
 
 		const cleanPort = port.trim();
@@ -185,7 +185,7 @@
 			<label for="node-config-input-serialPort"><i class="fa fa-terminal"></i> Serial Port</label>
 			<select id="node-config-input-serialPort" onchange="handleCustomSerial(this)">
 				<option value="">Select Port</option>
-				<option value="Custom">--Use Custom Path --</option>
+				<option value="Custom">-- Use Custom Path --</option>
 			</select>
 		</div>
 		<div class="form-row">
@@ -281,7 +281,7 @@
 			<input type="text" id="node-config-input-storage_deviceConfigExternalDir" placeholder="Use Default">
 		</div>
 		<div class="form-row">
-			<label for="node-config-input-storage_deviceConfigPriorityDir"><i class="fa fa-folder"></i> Pri'y CFG Dir</label>
+			<label for="node-config-input-storage_deviceConfigPriorityDir"><i class="fa fa-folder"></i> Priority CFG Dir</label>
 			<input type="text" id="node-config-input-storage_deviceConfigPriorityDir">
 		</div>
 		<div class="form-row">
@@ -323,7 +323,7 @@
 	<fieldset class="zwjs-fs">
 		<legend>Global API Access</legend>
 		<div class="form-tips" id="node-tip">
-			Enabling this option, will expose an untethered instance of the Zwave Device collection in Global Context, that can be used in <code>Function</code> nodes. Care should be taken here, and a read up on the zwave-js documentation is highly encouraged before accessing any methods. Misuse can result in a crashed Driver Instance.
+			Enabling this option will expose an untethered instance of the Z-Wave device collection in the global context, which can be used in <code>Function</code> nodes. Care should be taken, and reviewing the zwave-js documentation is highly recommended before accessing any methods. Misuse can cause the driver instance to crash.
 		</div>
 		<br />
 		<div class="form-row">
@@ -331,7 +331,7 @@
 			<input type="checkbox" id="node-config-input-enableGlobalAPI">
 		</div>
 		<div class="form-row">
-			<label for="node-config-input-globalAPIName"><i class="fa fa-tag"></i> Identifiyer</label>
+			<label for="node-config-input-globalAPIName"><i class="fa fa-tag"></i> Identifier</label>
 			<input type="text" id="node-config-input-globalAPIName">
 		</div>
 	</fieldset>
@@ -339,5 +339,5 @@
 
 <!-- prettier-ignore -->
 <script type="text/markdown" data-help-name="zwavejs-runtime">
-	<p>A ZWave JS Driver Runtime Instance</p>
+	<p>A Z-Wave JS driver runtime instance.</p>
 </script>

@@ -104,6 +104,8 @@ module.exports = (RED) => {
 					}
 					done();
 				}
+			} else {
+				done();
 			}
 		});
 

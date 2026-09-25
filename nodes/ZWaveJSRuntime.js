@@ -314,11 +314,14 @@ module.exports = function (RED) {
 
 						case 'DRIVER':
 							if (Method === 'Restart') {
-								Shutdown().then(() => {
-									RED.comms.publish('zwave-js/ui/global/removenetwork', { id: self.id }, false);
-									response.json({ callSuccess: true });
-									Startup(true);
-								});
+								Shutdown()
+									.then(() => {
+										response.json({ callSuccess: true });
+										Startup(true);
+									})
+									.catch((Error) => {
+										response.json({ callSuccess: false, response: Error.message });
+									});
 								break;
 							}
 
@@ -461,9 +464,13 @@ module.exports = function (RED) {
 			removeHTTPAPI();
 			controllerNodes = {};
 			deviceNodes = {};
-			Shutdown().then(() => {
-				done();
-			});
+			Shutdown()
+				.then(() => {
+					done();
+				})
+				.catch((Error) => {
+					done(Error);
+				});
 		});
 
 		// S2 Callbacks
@@ -1271,6 +1278,7 @@ module.exports = function (RED) {
 						event: event_Notification.redEventName,
 						timestamp: Timestamp,
 						nodeId: Endpoint.nodeId,
+						endpoint: Endpoint.index,
 						nodeName: Node.name,
 						nodeLocation: Node.location,
 						eventBody: { ccId: CC, args: Args }

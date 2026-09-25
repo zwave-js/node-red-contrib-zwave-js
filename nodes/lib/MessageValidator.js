@@ -40,6 +40,9 @@ const Check = (msg, config) => {
 	}
 
 	if (API === 'CC') {
+		if (!Props) return 'Missing payload.cmdProperties';
+		if (typeof Props !== 'object') return 'Type payload.cmdProperties must be object';
+
 		if (!CCClass) return 'Missing payload.cmdProperties.commandClass';
 		if (typeof CCClass !== 'number') return 'Type payload.cmdProperties.commandClass must be number';
 

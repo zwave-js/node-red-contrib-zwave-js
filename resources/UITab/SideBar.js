@@ -2,15 +2,14 @@
 // eslint-disable-next-line no-unused-vars
 const ZWaveJS = (function () {
 	/*
-	 * Just Stuff
-	 * Yeah... just stuff - pretty darn important as well!!
+	 * MODULE STATE
 	 */
 	const AdvancedPanels = [];
 	const SetValueOptionExamples = {
 		transitionDuration: '30s, 1m, 1m10s',
 		volume: 45
 	};
-	const GroupMode = [true, true]; // Grouped, Expanded
+	const GroupMode = [true, true];
 	let networkId = undefined;
 	let selectedNode = undefined;
 	let QRS;
@@ -30,48 +29,154 @@ const ZWaveJS = (function () {
 	let isCurrentTray = false;
 
 	/*
-	 * Driver Communciation Methods
-	 * These methods are used to send messages to the API's of the module itself
-	 * Runtime.Get, Runtime.Post - sends messages to the runtime of the Driver/Module
+	 * RUNTIME TRANSPORT
 	 */
 
+	const requestRuntime = (type, API, Method, Data, URL) =>
+		new Promise((resolve, reject) => {
+			const options = {
+				type,
+				timeout: 0,
+				url: URL || `zwave-js/ui/${networkId}/${API}/${Method}`,
+				success: resolve,
+				error: (jqXHR, textStatus, errorThrown) => reject(new Error(`${textStatus}: ${errorThrown}`)),
+				dataType: 'json'
+			};
+
+			if (type === 'POST') {
+				options.data = JSON.stringify(Data);
+				options.contentType = 'application/json';
+			}
+
+			$.ajax(options);
+		});
+
 	const Runtime = {
-		Get: async function (API, Method, URL) {
-			return new Promise((resolve, reject) => {
-				$.ajax({
-					type: 'GET',
-					timeout: 0,
-					url: URL || `zwave-js/ui/${networkId}/${API}/${Method}`,
-					success: (data) => resolve(data),
-					error: (jqXHR, textStatus, errorThrown) =>
-						reject(new Error(`${textStatus}: ${errorThrown}`)) /* Transport error */,
-					dataType: 'json'
-				});
-			});
-		},
-		Post: async function (API, Method, Data, URL) {
-			return new Promise((resolve, reject) => {
-				$.ajax({
-					type: 'POST',
-					timeout: 0,
-					data: JSON.stringify(Data),
-					url: URL || `zwave-js/ui/${networkId}/${API}/${Method}`,
-					success: (data) => resolve(data),
-					error: (jqXHR, textStatus, errorThrown) =>
-						reject(new Error(`${textStatus}: ${errorThrown}`)) /* Transport error */,
-					dataType: 'json',
-					contentType: 'application/json'
-				});
-			});
+		Get: (API, Method, URL) => requestRuntime('GET', API, Method, undefined, URL),
+		Post: (API, Method, Data, URL) => requestRuntime('POST', API, Method, Data, URL)
+	};
+
+	const downloadBlob = (blob, fileName) => {
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement('a');
+		link.href = url;
+		link.download = fileName;
+		link.style.display = 'none';
+		document.body.appendChild(link);
+		link.click();
+		link.remove();
+		setTimeout(() => URL.revokeObjectURL(url), 0);
+	};
+
+	const selectFile = (onSelected) =>
+		new Promise((resolve, reject) => {
+			const fileInput = document.createElement('input');
+			fileInput.type = 'file';
+			fileInput.style.display = 'none';
+			document.body.appendChild(fileInput);
+
+			let settled = false;
+			const cleanup = () => fileInput.remove();
+			const finish = (callback, value) => {
+				if (settled) return;
+				settled = true;
+				cleanup();
+				callback(value);
+			};
+
+			fileInput.addEventListener(
+				'change',
+				async () => {
+					const file = fileInput.files?.[0];
+					if (!file) return finish(resolve, false);
+					try {
+						await onSelected(file);
+						finish(resolve, true);
+					} catch (error) {
+						finish(reject, error);
+					}
+				},
+				{ once: true }
+			);
+
+			window.addEventListener(
+				'focus',
+				() => {
+					setTimeout(() => {
+						if (!settled && !fileInput.files?.length) finish(resolve, false);
+					}, 0);
+				},
+				{ once: true }
+			);
+
+			fileInput.click();
+		});
+
+	const readFileAsUint8Array = (file) =>
+		new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onload = (event) => resolve(new Uint8Array(event.target.result));
+			reader.onerror = () => reject(reader.error || new Error('Unable to read the selected file'));
+			reader.readAsArrayBuffer(file);
+		});
+
+	const toError = (error, fallback = 'Unknown Z-Wave JS error') => {
+		if (error instanceof Error) return error;
+		if (typeof error === 'string' && error) return new Error(error);
+		try {
+			return new Error(error == null ? fallback : JSON.stringify(error));
+		} catch {
+			return new Error(fallback);
 		}
 	};
 
+	const requireSuccessfulCall = (result) => {
+		if (!result || result.callSuccess !== true) {
+			throw toError(result?.response, 'The Z-Wave JS runtime call failed');
+		}
+		return result.response;
+	};
+
+	const requireSelectedNode = () => {
+		if (!selectedNode) throw new Error('No Z-Wave node is currently selected');
+		return selectedNode;
+	};
+
+	const getSelectedNodeData = () => {
+		const currentNode = requireSelectedNode();
+		const group = GetNodeGroup(currentNode.nodeLocation);
+		const treeNode = group?.children?.find((node) => node.nodeData?.nodeId === currentNode.nodeId);
+		if (!treeNode?.nodeData) throw new Error(`Node ${currentNode.nodeId} is no longer present in the sidebar`);
+		return treeNode.nodeData;
+	};
+
+	const showManagementTray = (title, template, state) => {
+		RED.tray.show({
+			width: 900,
+			title,
+			buttons: [
+				{
+					id: 'zwjs-tray-close',
+					text: 'Close',
+					click: CloseTray
+				}
+			],
+			open: (tray) => {
+				isCurrentTray = true;
+				tray.find('.red-ui-tray-body, .editor-tray-body').append(template(state));
+			}
+		});
+
+		setTimeout(() => {
+			const defaultMenuItem = $('.zwjs-tray-menu > div[default]')[0];
+			if (defaultMenuItem?.onclick) defaultMenuItem.onclick.call(defaultMenuItem);
+		}, 250);
+	};
+
 	/*
-	 * Public UI Methods
-	 * These methods are seen by the editor (UA) - and need to be.
+	 * INITIALISATION
 	 */
 
-	// Init UI
 	const init = () => {
 		$.get('resources/node-red-contrib-zwave-js/UITab/ValueEditors.html', function (html) {
 			Handlebars.registerPartial('ValueEditors', html);
@@ -117,14 +222,12 @@ const ZWaveJS = (function () {
 			);
 		});
 
-		// Templates
 		TPL_SidePanel = Handlebars.compile($('#ZWJS_TPL_SidePanel').html());
 		TPL_ControllerManagement = Handlebars.compile($('#ZWJS_TPL_Tray-Controller').html());
 		TPL_ControllerManagementRecover = Handlebars.compile($('#ZWJS_TPL_Tray-Controller-Recover').html());
 		TPL_NodeManagement = Handlebars.compile($('#ZWJS_TPL_Tray-Node').html());
 		TPL_ValueManagement = Handlebars.compile($('#ZWJS_TPL_Tray-Node-Value').html());
 
-		// Add tab
 		RED.sidebar.addTab({
 			id: 'zwave-js',
 			label: ' ZWave JS',
@@ -157,1919 +260,10 @@ const ZWaveJS = (function () {
 		});
 	};
 
-	// Backup Names
-	const BackupNames = (Button) => {
-		DisableButton(Button);
-		Runtime.Get('CONTROLLER', 'getNodes').then((Data) => {
-			if (Data.callSuccess) {
-				const CD = $('#zwjs-controller-info').data('info');
-				const FileName = `zwave_names_locations_${CD.homeId}.json`;
-				const Map = [];
-				Data.response.forEach((N) => {
-					if (N.nodeName !== undefined || N.nodeLocation !== undefined) {
-						Map.push({ nodeId: N.nodeId, name: N.nodeName, location: N.nodeLocation });
-					}
-				});
-				const Output = JSON.stringify(Map, null, 2);
-				const blob = new Blob([Output], { type: 'application/json' });
-				const url = URL.createObjectURL(blob);
-				const a = document.createElement('a');
-				a.href = url;
-				a.download = FileName;
-				document.body.appendChild(a);
-				a.click();
-				document.body.removeChild(a);
-				URL.revokeObjectURL(url);
-			} else {
-				ZWJSAlert(Data.response);
-			}
-			EnableButton(Button);
-		});
-	};
-
-	const RestoreNames = (Button) => {
-		DisableButton(Button);
-		const input = document.createElement('input');
-		input.type = 'file';
-
-		const OnLoad = async (e) => {
-			try {
-				const Nodes = JSON.parse(e.target.result);
-				for (let i = 0; i < Nodes.length; i++) {
-					const Node = Nodes[i];
-					await Runtime.Post('NODE', 'setLocation', { nodeId: Node.nodeId, value: Node.location || undefined });
-					await Runtime.Post('NODE', 'setName', { nodeId: Node.nodeId, value: Node.name || undefined });
-				}
-				EnableButton(Button);
-				RefreshNodes('Named');
-				ZWJSAlert('Restore Completed Successfully');
-			} catch (err) {
-				ZWJSAlert(err.message);
-			}
-		};
-
-		const OnChange = (e) => {
-			const reader = new FileReader();
-			reader.onload = OnLoad;
-			reader.readAsText(e.target.files[0]);
-		};
-
-		input.onchange = OnChange;
-		input.click();
-	};
-
-	// Zoom
-	const ZoomUI = (value) => {
-		const sidebar = $('#zwjs-sidebar');
-		if (value === undefined) {
-			sidebar.css('zoom', '1.0');
-			Panels.resize($('#zwjs-sidebar').height());
-			return;
-		}
-
-		let current = parseFloat(sidebar.css('zoom'));
-		if (isNaN(current)) current = 1;
-		let newZoom = current + value;
-		newZoom = Math.min(Math.max(newZoom, 0.1), 2.0);
-		newZoom = parseFloat(newZoom.toFixed(2));
-		sidebar.css('zoom', newZoom);
-
-		Panels.resize($('#zwjs-sidebar').height());
-	};
-
-	// Install Config Update
-	const CFGUpdate = () => {
-		Runtime.Post('DRIVER', 'checkForConfigUpdates').then(async (data) => {
-			if (data.callSuccess) {
-				if (data.response !== undefined) {
-					const UD = await ZWJSConfirm(
-						`A configuration database update is available (${data.response}). Would you like to update?`
-					);
-					if (UD) {
-						Runtime.Post('DRIVER', 'installConfigUpdate').then((res) => {
-							if (res.callSuccess && res.response) {
-								ZWJSAlert('Update was installed.');
-							} else {
-								ZWJSAlert(`Update was not installed: ${res.response}.`);
-							}
-						});
-					}
-				} else {
-					ZWJSAlert('No update available.');
-				}
-			} else {
-				ZWJSAlert(data.response);
-			}
-		});
-	};
-
-	// Save Spliter
-	const UpdateSplitter = () => {
-		const Node = RED.nodes.node($('#zwjs-splitters').val());
-
-		const NextIndex = Node.splits.length ? Math.max(...Node.splits.map((x) => x.index)) + 1 : 0;
-
-		const entry = {
-			valueId: JSON.parse(CodeEditor.getValue()),
-			index: NextIndex,
-			name: $('#zwjs-splitter-output-name').val(),
-			strict: $('#zwjs-splitter-output-endpoint').prop('checked')
-		};
-
-		if (entry.valueId.commandClass === undefined) {
-			entry.custom = true;
-		}
-
-		Node.splits.push(entry);
-
-		Node.outputs++;
-		Node.dirty = true;
-		Node.changed = true;
-		Node.resize = true;
-
-		RED.view.redraw(true);
-		RED.nodes.dirty(true);
-
-		CloseTray();
-	};
-
-	// Rebuid Routes (Nodes)
-	const RebuildNodeRoutes = () => {
-		Runtime.Post('CONTROLLER', 'rebuildNodeRoutes', [selectedNode.nodeId]).then((data) => {
-			if (data.callSuccess) {
-				ZWJSAlert('Rebuiliding Node routes completed successfully.');
-			} else {
-				ZWJSAlert(data.response);
-			}
-		});
-	};
-
-	// Rebuid Routes
-	const RebuildRoutes = (button, battery) => {
-		button && DisableButton(button);
-		const Battery = battery || $('#zwjs-routes-battery').prop('checked');
-		Runtime.Post('CONTROLLER', 'beginRebuildingRoutes', [{ includeSleeping: Battery }]).then((data) => {
-			if (data.callSuccess) {
-				button && EnableButton(button);
-			} else {
-				ZWJSAlert(data.response);
-				button && EnableButton(button);
-			}
-		});
-	};
-
-	// Update Value
-	const UpdateValue = (Button, VID, Defined) => {
-		DisableButton(Button);
-		VID = DecodeObject(VID);
-
-		let Value;
-
-		if (CodeEditor) {
-			Value = JSON.parse(CodeEditor.getValue());
-		} else if (Defined) {
-			Value = parseInt($('#zwjs-cc-value-new-defined').val());
-			$('#zwjs-cc-value-new').val(Value);
-		} else {
-			const el = $('#zwjs-cc-value-new');
-			if (el.is('input')) {
-				switch (el.attr('type')) {
-					case 'number':
-						Value = parseInt(el.val());
-						break;
-
-					case 'checkbox':
-						Value = el.prop('checked');
-						break;
-
-					case 'color':
-						Value = el.val().substring(1);
-						break;
-				}
-			}
-			if (el.is('select')) {
-				Value = parseInt(el.val());
-			}
-		}
-
-		Runtime.Post('VALUE', 'setValue', { nodeId: selectedNode.nodeId, valueId: VID, value: Value }).then((data) => {
-			if (data.callSuccess) {
-				switch (data.response.status) {
-					case 0:
-						ZWJSAlert('The Node does not support the command');
-						break;
-					case 1:
-						ZWJSAlert('The Node is working on the requested change');
-						break;
-					case 2:
-						ZWJSAlert('The Node rejected the change');
-						break;
-					case 3:
-						ZWJSAlert('The target Endpoint was not found on the Node');
-						break;
-					case 4:
-						ZWJSAlert('The set command has not been implemented for this CC');
-						break;
-					case 5:
-						ZWJSAlert('The provided value was not valid');
-						break;
-
-					default:
-						$(Button).css({ backgroundColor: 'green' });
-						setTimeout(() => {
-							$(Button).css({ backgroundColor: '' });
-						}, 1500);
-						if (MiniEdtiorDialog) {
-							MiniEdtiorDialog.dialog('destroy');
-							MiniEdtiorDialog = undefined;
-						}
-						break;
-				}
-
-				EnableButton(Button);
-			} else {
-				ZWJSAlert(data.response);
-				EnableButton(Button);
-			}
-		});
-	};
-
-	// Collapse LIst
-	const NodeCollapseToggle = (Mode, A) => {
-		$('i.zwjs-button-group').removeAttr('selected');
-		$(A).find('i.zwjs-button-group').attr('selected', '');
-
-		switch (Mode) {
-			case 1:
-				GroupMode[0] = true;
-				GroupMode[1] = true;
-				RefreshNodes('Sorted');
-				break;
-			case 2:
-				GroupMode[0] = true;
-				GroupMode[1] = false;
-				RefreshNodes('Sorted');
-				break;
-			case 3:
-				GroupMode[0] = false;
-				GroupMode[1] = true;
-				RefreshNodes('Sorted');
-				break;
-		}
-	};
-
-	// Remove Failed
-	const RemoveFailedNode = async (NodeID, Row) => {
-		const ID = NodeID || selectedNode?.nodeId;
-		if (ID) {
-			if (await ZWJSConfirm('Are you sure you wish to remove this Node from your network?')) {
-				Runtime.Post('CONTROLLER', 'removeFailedNode', [ID]).then((data) => {
-					if (data.callSuccess) {
-						if (Row) {
-							$(Row).closest('tr').remove();
-						}
-					} else {
-						ZWJSAlert(data.response);
-					}
-				});
-			}
-		}
-	};
-
-	// Ping Node
-	const PingNode = (NodeID) => {
-		Runtime.Post('NODE', 'ping', { nodeId: NodeID }).then((data) => {
-			if (data.callSuccess) {
-				data.response ? ZWJSAlert('Ping was successful') : ZWJSAlert('Ping failed');
-			} else {
-				ZWJSAlert(data.response);
-			}
-		});
-	};
-
-	// Set Class PowerLevel
-	const SetClassicPowerLevel = (Button) => {
-		DisableButton(Button);
-		const PL = parseInt($('#zwjs-controller-setting-power-classic').val());
-		const Calibration = 0;
-		Runtime.Post('CONTROLLER', 'setPowerlevel', [PL, Calibration])
-			.then((data) => {
-				if (data.callSuccess) {
-					ZWJSAlert('Power Level Set Succcessfully');
-					EnableButton(Button);
-				} else {
-					ZWJSAlert(data.response);
-					EnableButton(Button);
-				}
-			})
-			.catch((Error) => {
-				ZWJSAlert(Error.message);
-			});
-	};
-
-	// Set LR PowerLevel
-	const SetLWPowerLevel = (Button) => {
-		DisableButton(Button);
-		const PL = parseInt($('#zwjs-controller-setting-power-lr').val());
-		Runtime.Post('CONTROLLER', 'setMaxLongRangePowerlevel', [PL])
-			.then((data) => {
-				if (data.callSuccess) {
-					ZWJSAlert('Power Level Set Succcessfully');
-					EnableButton(Button);
-				} else {
-					ZWJSAlert(data.response);
-					EnableButton(Button);
-				}
-			})
-			.catch((Error) => {
-				ZWJSAlert(Error.message);
-			});
-	};
-
-	// Set Region
-	const SetRegion = (Button) => {
-		DisableButton(Button);
-		const R = parseInt($('#zwjs-controller-setting-region option:selected').val());
-		Runtime.Post('CONTROLLER', 'setRFRegion', [R])
-			.then((data) => {
-				if (data.callSuccess) {
-					ZWJSAlert('Region Set Succcessfully');
-					EnableButton(Button);
-				} else {
-					ZWJSAlert(data.response);
-					EnableButton(Button);
-				}
-			})
-			.catch((Error) => {
-				ZWJSAlert(Error.message);
-			});
-	};
-
-	// Network Selecetd
-	const NetworkSelected = function () {
-		if (networkId) {
-			// unsubscribe
-			setSubscription(false);
-		}
-
-		if ($('#zwjs-network').val() === 'NONE') {
-			ClearSelection(true);
-			return;
-		}
-
-		ClearSelection(true);
-		$('#zwjs-controller-info').text('--');
-		$('#zwjs-controller-status').text('Waiting for Network Status Report...');
-
-		networkId = $('#zwjs-network').val();
-		setSubscription(true);
-
-		const pollStatus = () => {
-			Runtime.Get(undefined, undefined, `zwave-js/ui/${networkId}/status`)
-				.then((data) => {
-					if (data.response === undefined) {
-						setTimeout(pollStatus, 500);
-						return;
-					}
-
-					$('#zwjs-controller-status').text(data.response);
-
-					if (data.response === 'Bootloader ready.') {
-						handleBootloader();
-					} else {
-						BootLoaderMode = false;
-						RefreshNodes('NetworkSelected');
-					}
-				})
-				.catch((error) => {
-					ZWJSAlert(error.message);
-				});
-		};
-
-		pollStatus();
-	};
-
-	// Show Recovery
-	const ShowRecovery = () => {
-		const Options = {
-			width: 900,
-			title: 'ZWave JS Controller Management (Recovery)',
-			buttons: [
-				{
-					id: 'zwjs-tray-close',
-					text: 'Close',
-					click: function () {
-						CloseTray();
-					}
-				}
-			],
-			open: function (tray) {
-				isCurrentTray = true;
-				const trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
-				const State = {
-					Network: $('#zwjs-controller-info').text(),
-					Status: $('#zwjs-controller-status').text()
-				};
-				trayBody.append(TPL_ControllerManagementRecover(State));
-			}
-		};
-		RED.tray.show(Options);
-		setTimeout(() => {
-			const el = $('.zwjs-tray-menu > div[default]')[0];
-			el.onclick.call(el);
-		}, 250);
-	};
-
-	// Show Network Options
-	const ShowNetworkManagement = () => {
-		if (!networkId) {
-			return;
-		}
-
-		CloseTray();
-
-		if (BootLoaderMode) {
-			ShowRecovery();
-			return;
-		}
-
-		Runtime.Get('CONTROLLER', 'getNodes')
-			.then((data) => {
-				if (data.callSuccess) {
-					const RCD = data.response.find((N) => N.isControllerNode);
-					if (RCD.statistics.backgroundRSSI) {
-						RCD.backgroundRSSI = FlattenChannelAverages(RCD.statistics.backgroundRSSI);
-					} else {
-						RCD.backgroundRSSI = {};
-					}
-
-					delete RCD.statistics.backgroundRSSI;
-
-					$('#zwjs-controller-info').data('info', RCD);
-
-					const Options = {
-						width: 900,
-						title: 'ZWave JS Controller Management',
-						buttons: [
-							{
-								id: 'zwjs-tray-close',
-								text: 'Close',
-								click: function () {
-									CloseTray();
-								}
-							}
-						],
-						open: function (tray) {
-							isCurrentTray = true;
-							const trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
-							const State = {
-								Network: $('#zwjs-controller-info').text(),
-								Status: $('#zwjs-controller-status').text()
-							};
-							trayBody.append(TPL_ControllerManagement(State));
-						}
-					};
-					RED.tray.show(Options);
-					setTimeout(() => {
-						const el = $('.zwjs-tray-menu > div[default]')[0];
-						el.onclick.call(el);
-					}, 250);
-				} else {
-					ZWJSAlert(data.response);
-				}
-			})
-			.catch((Error) => {
-				ZWJSAlert(Error.message);
-			});
-	};
-
-	// Show Node Options
-	const ShowNodeManagement = () => {
-		if (!selectedNode) {
-			return;
-		}
-
-		CloseTray();
-
-		Runtime.Get('CONTROLLER', 'getNodes')
-			.then((data) => {
-				if (data.callSuccess) {
-					const RND = data.response.find((N) => N.nodeId === selectedNode.nodeId);
-					delete RND.statistics.lwr;
-					GetNodeGroup(selectedNode.nodeLocation).children.find((N) => N.nodeData.nodeId === RND.nodeId).nodeData = RND;
-
-					const Options = {
-						width: 900,
-						title: 'ZWave JS Node Management',
-						buttons: [
-							{
-								id: 'zwjs-tray-close',
-								text: 'Close',
-								click: function () {
-									CloseTray();
-								}
-							}
-						],
-						open: function (tray) {
-							isCurrentTray = true;
-							const trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
-							const State = {
-								NodeID: $('#zwjs-node-info-id').text(),
-								Status: $('#zwjs-node-status').text(),
-								NodeInfo: $('#zwjs-node-info').text()
-							};
-							trayBody.append(TPL_NodeManagement(State));
-						}
-					};
-					RED.tray.show(Options);
-					setTimeout(() => {
-						const el = $('.zwjs-tray-menu > div[default]')[0];
-						el.onclick.call(el);
-					}, 250);
-				} else {
-					ZWJSAlert(data.response);
-				}
-			})
-			.catch((Error) => {
-				ZWJSAlert(Error.message);
-			});
-	};
-
-	// Interview Current Node
-	const InterviewCurrentNode = async () => {
-		if (!selectedNode) {
-			return;
-		}
-		if (await ZWJSConfirm('Are you sure you wish to re-interview this Node?')) {
-			Runtime.Post('NODE', 'refreshInfo', { nodeId: selectedNode.nodeId })
-				.then((data) => {
-					if (!data.callSuccess) {
-						ZWJSAlert(data.response);
-					}
-				})
-				.catch((Error) => {
-					ZWJSAlert(Error.message);
-				});
-		}
-	};
-
-	// Render Advanced Panel Content
-	const RenderAdvanced = async (TemplateID, Target, FunctionIDORObject, WriteTarget) => {
-		if (!AdvancedPanels.find((P) => P.id === TemplateID)) {
-			const TPL = Handlebars.compile($(`#${TemplateID}`).html());
-			AdvancedPanels.push({ id: TemplateID, compiled: TPL });
-		}
-
-		let Data = {};
-		if (FunctionIDORObject && RenderFunctions[FunctionIDORObject]) {
-			try {
-				Data = await RenderFunctions[FunctionIDORObject]();
-			} catch (Response) {
-				ZWJSAlert(Response);
-				return;
-			}
-		} else if (FunctionIDORObject && typeof FunctionIDORObject === 'object') {
-			Data = FunctionIDORObject;
-		} else if (FunctionIDORObject && typeof FunctionIDORObject === 'string') {
-			Data = DecodeObject(FunctionIDORObject);
-		}
-
-		const Output = AdvancedPanels.find((P) => P.id === TemplateID).compiled(Data);
-		$(WriteTarget || '#zwjs-advanced-content').empty();
-		$(WriteTarget || '#zwjs-advanced-content').append(Output);
-
-		if (Target) {
-			$('.zwjs-tray-menu div').removeAttr('active');
-			$(Target).attr('active', '');
-		}
-	};
-
-	// Exclusion
-	const StartExclusion = () => {
-		Runtime.Get('CONTROLLER', 'beginExclusion').then((R) => {
-			if (R.callSuccess) {
-				RenderAdvanced('ZWJS_TPL_NIFWait', undefined, { mode: 'Exclusion' });
-			} else {
-				ZWJSAlert(R.response);
-			}
-		});
-	};
-
-	// Inclusion
-	const StartInclusion = () => {
-		const IS = $('input[type="radio"][name="ZWJS_IS"]:checked').val();
-
-		if (IS !== 'SS') {
-			const ISO = {
-				strategy: parseInt(IS),
-				forceSecurity: false
-			};
-			Runtime.Post('CONTROLLER', 'beginInclusion', [ISO]).then((R) => {
-				if (R.callSuccess) {
-					RenderAdvanced('ZWJS_TPL_NIFWait', undefined, { mode: 'Inclusion' });
-				} else {
-					ZWJSAlert(R.response);
-				}
-			});
-		} else {
-			RenderAdvanced('ZWJS_TPL_QRRead', undefined, 'StartCamera');
-		}
-	};
-
-	// Grant Secuity Classes
-	const GrantClasses = (Button) => {
-		const Granted = {
-			clientSideAuth: clientSideAuth,
-			securityClasses: []
-		};
-
-		$('input[type="checkbox"][name="ZWJS_SCLASS"]:checked').each((i, e) => {
-			Granted.securityClasses.push(parseInt($(e).val()));
-		});
-
-		Runtime.Post(undefined, undefined, [Granted], `zwave-js/ui/${networkId}/s2/grant`).then((R) => {
-			if (R.callSuccess) {
-				DisableButton(Button);
-			} else {
-				ZWJSAlert(R.response);
-			}
-		});
-	};
-
-	// Submit DSK
-	const SubmitDSK = (Button) => {
-		Runtime.Post(undefined, undefined, [$('#zwjs-dsk').val()], `zwave-js/ui/${networkId}/s2/dsk`).then((R) => {
-			if (R.callSuccess) {
-				DisableButton(Button);
-			} else {
-				ZWJSAlert(R.response);
-			}
-		});
-	};
-
-	// Submit Provisioning Entry
-	const SubmitProvisioningEntry = (Button) => {
-		DisableButton(Button);
-
-		const Entry = JSON.parse(atob($('#zwjs-qrdata').attr('data-entry')));
-		Entry.securityClasses = [];
-		Entry.status = 0;
-
-		$('input[type="checkbox"][name="ZWJS_SCLASS"]:checked').each((i, e) => {
-			Entry.securityClasses.push(parseInt($(e).val()));
-		});
-
-		Runtime.Post('CONTROLLER', 'provisionSmartStartNode', [Entry]).then((R) => {
-			if (R.callSuccess) {
-				RenderAdvanced('ZWJS_TPL_SSDone');
-			} else {
-				ZWJSAlert(R.response);
-			}
-		});
-	};
-
-	// Set Provisioning Entry Status
-	const SetPEActive = (El, Entry) => {
-		Entry = DecodeObject(Entry);
-		delete Entry.checked;
-		delete Entry.shortDSK;
-		Entry.status = $(El).prop('checked') ? 0 : 1;
-
-		Runtime.Post('CONTROLLER', 'provisionSmartStartNode', [Entry]).then((R) => {
-			if (!R.callSuccess) {
-				ZWJSAlert(R.response);
-			}
-		});
-	};
-
-	// Delete Provisioning Entry
-	const DeletePE = async (El, Entry) => {
-		if (
-			await ZWJSConfirm(
-				'Are you sure you wish to delete this Provisioning Entry? Note: it will not exclude the device.'
-			)
-		) {
-			Entry = DecodeObject(Entry);
-			delete Entry.checked;
-			delete Entry.shortDSK;
-			Runtime.Post('CONTROLLER', 'unprovisionSmartStartNode', [Entry.dsk]).then((R) => {
-				if (R.callSuccess) {
-					$(El).parent().parent().remove();
-				} else {
-					ZWJSAlert(R.response);
-				}
-			});
-		}
-	};
-
-	// Set Name & Location
-	const SetNameLocation = (Button) => {
-		DisableButton(Button);
-		Runtime.Post('NODE', 'setName', {
-			nodeId: selectedNode.nodeId,
-			value: $('#zwjs-node-edit-name').val() || undefined
-		})
-			.then((data) => {
-				if (!data.callSuccess) {
-					ZWJSAlert(data.response);
-					EnableButton(Button);
-				} else {
-					Runtime.Post('NODE', 'setLocation', {
-						nodeId: selectedNode.nodeId,
-						value: $('#zwjs-node-edit-location').val() || undefined
-					})
-						.then((data) => {
-							if (!data.callSuccess) {
-								ZWJSAlert(data.response);
-								EnableButton(Button);
-							} else {
-								RefreshNodes('Named');
-
-								ZWJSAlert('Name & Location Set Successfully!');
-								EnableButton(Button);
-							}
-						})
-						.catch((Error) => {
-							EnableButton(Button);
-							ZWJSAlert(Error.message);
-						});
-				}
-			})
-			.catch((Error) => {
-				ZWJSAlert(Error.message);
-			});
-	};
-
-	// Asso EP Select Callback
-	const processAssociationEPSelect = () => {
-		const EP = $('#zwjs-asso-endpoints').val();
-		const GPs = AssociationGroups[EP];
-
-		$('#zwjs-asso-groups').empty();
-		$('#zwjs-asso-groups').append(new Option('Select Association Group'));
-
-		for (const [ID, GP] of Object.entries(GPs)) {
-			$('#zwjs-asso-groups').append(new Option(`${GP.label} (Max: ${GP.maxNodes})`, ID));
-		}
-	};
-
-	// Asso GP Select Callback
-	const processAssociationGPSelect = () => {
-		const Group = parseInt($('#zwjs-asso-groups').val());
-		const Address = {
-			nodeId: selectedNode.nodeId,
-			endpoint: parseInt($('#zwjs-asso-endpoints').val())
-		};
-		Runtime.Post('CONTROLLER', 'getAssociations', [Address]).then((data) => {
-			const Mapped = data.response[Group];
-
-			$('#zwjs-asso-mappings').empty();
-			$('#zwjs-asso-mappings').append(
-				'<tr><td style="text-align:center">Target Node</td><td style="text-align:center">Target Endpoint</td><td style="text-align:center">Delete</td></tr>'
-			);
-			Mapped.forEach((v) => {
-				let EP;
-				switch (v.endpoint) {
-					case undefined:
-						EP = '<span class="zwjs-asso-ep">NODE</span>';
-						break;
-
-					case 0:
-						EP = '<span class="zwjs-asso-ep">ROOT</span>';
-						break;
-
-					default:
-						EP = `<span class="zwjs-asso-ep">EP${v.endpoint}</span>`;
-						break;
-				}
-
-				$('#zwjs-asso-mappings').append(
-					`<tr><td style="text-align:center"><span class="zwjs-node-id">${v.nodeId}</span></td><td style="text-align:center">${EP}</td><td style="text-align:center"><i class="fa fa-trash" aria-hidden="true" style="font-size: 18px;color: red; cursor:pointer" onclick="ZWaveJS.MarkAssoDelete(this)"></i></td></tr>`
-				);
-			});
-		});
-	};
-
-	// Add new Asso element
-	const PreppNewAssociation = () => {
-		$('#zwjs-asso-mappings').append(
-			'<tr data-role="zwjs-new-association"><td style="text-align:center"><input type="number" data-role="zwjs-node" value="1" min="1"></td><td style="text-align:center"><input type="number" data-role="zwjs-endpoint" min="0" placeholder="<Empty: Node-Association>"></td><td>&nbsp;</td></tr>'
-		);
-	};
-
-	// Send Associations
-	const CommitAssociations = (Button) => {
-		DisableButton(Button);
-		const Addresses = [];
-		$("[data-role='zwjs-remove-association']").each(function () {
-			const Node = parseInt($(this).find('td').first().text());
-			let Endpoint = parseInt($(this).find('td').first().next().text());
-			if (isNaN(Endpoint)) {
-				Endpoint = undefined;
-			}
-			Addresses.push({ nodeId: Node, endpoint: Endpoint });
-		});
-
-		if (Addresses.length > 0) {
-			const Params = [
-				{ nodeId: selectedNode.nodeId, endpoint: parseInt($('#zwjs-asso-endpoints').val()) },
-				parseInt($('#zwjs-asso-groups').val()),
-				Addresses
-			];
-			Runtime.Post('CONTROLLER', 'removeAssociations', Params)
-				.then((response) => {
-					if (response.callSuccess) {
-						CommitAssociationsAdd(Button);
-					} else {
-						EnableButton(Button);
-						ZWJSAlert(response.response);
-					}
-				})
-				.catch((Error) => {
-					ZWJSAlert(Error.message);
-					EnableButton(Button);
-				});
-		} else {
-			CommitAssociationsAdd(Button);
-		}
-	};
-
-	// Clear All Associations
-	const ResetAllAssociations = async (Button) => {
-		if (
-			await ZWJSConfirm(
-				'Are you sure you wish to wipe all Associations? this includes the LifeLine associations, you will need to re-create them after.'
-			)
-		) {
-			DisableButton(Button);
-			Runtime.Post('CONTROLLER', 'getAllAssociations', [selectedNode.nodeId])
-				.then((response) => {
-					if (response.callSuccess) {
-						response.response.forEach(function (E) {
-							Object.keys(E.associations).forEach(async function (G) {
-								if (E.associations[G].length > 0) {
-									const Params = [];
-									Params.push(E.associationAddress);
-									Params.push(parseInt(G));
-									Params.push(E.associations[G]);
-									try {
-										await Runtime.Post('CONTROLLER', 'removeAssociations', Params);
-									} catch (Error) {
-										ZWJSAlert(Error.message);
-										EnableButton(Button);
-									}
-								}
-							});
-						});
-						ZWJSAlert('All associations successfully removed!');
-						EnableButton(Button);
-						processAssociationGPSelect();
-					} else {
-						ZWJSAlert(response.response);
-						EnableButton(Button);
-					}
-				})
-				.catch((Error) => {
-					EnableButton(Button);
-					ZWJSAlert(Error.message);
-				});
-		}
-	};
-
-	// Mark Asso for removal
-	const MarkAssoDelete = (El) => {
-		$(El).closest('tr').attr('data-role', 'zwjs-remove-association');
-		$(El).closest('tr').css({ filter: 'grayscale()' });
-	};
-
-	// Check Node Helath
-	const CheckNodeHealth = (Button) => {
-		DisableButton(Button);
-		$('#zwjs-node-health-check').find('tr:gt(0)').remove();
-		const AddTesting = () => {
-			$('#zwjs-node-health-check').append(
-				'<tr><td style="text-align:center"><div class="zwjs-rating" wait>Testing...</div></td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td></tr>'
-			);
-		};
-
-		const RemoveTesting = () => {
-			$('#zwjs-node-health-check tr:last').remove();
-		};
-
-		const FeedBack = (topic, data) => {
-			RemoveTesting();
-			const Rating = () => {
-				if (data.check.lastResult.rating > 5) {
-					return `<div class="zwjs-rating" good>${data.check.lastResult.rating}/10</div>`;
-				}
-				if (data.check.lastResult.rating > 3) {
-					return `<div class="zwjs-rating" warn>${data.check.lastResult.rating}/10</div>`;
-				}
-				return `<div class="zwjs-rating" bad>${data.check.lastResult.rating}/10</div>`;
-			};
-
-			$('#zwjs-node-health-check').append(
-				`<tr><td style="text-align:center">${Rating()}</td><td style="text-align:center">${data.check.lastResult.failedPingsNode}</td><td style="text-align:center">${data.check.lastResult.failedPingsController ?? 0}</td><td style="text-align:center">${data.check.lastResult.routeChanges}</td><td style="text-align:center">${data.check.lastResult.latency} ms</td><td style="text-align:center">${data.check.lastResult.numNeighbors}</td><td style="text-align:center">${data.check.lastResult.minPowerlevel} dBm</td><td style="text-align:center">${data.check.lastResult.snrMargin} dBm</td></tr>`
-			);
-			AddTesting();
-		};
-
-		RED.comms.subscribe(`zwave-js/ui/${networkId}/nodes/healthcheck`, FeedBack);
-		AddTesting();
-		Runtime.Post('NODE', 'checkLifelineHealth', { nodeId: selectedNode.nodeId })
-			.then((data) => {
-				if (data.callSuccess) {
-					setTimeout(() => {
-						EnableButton(Button);
-						RemoveTesting();
-						RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/healthcheck`, FeedBack);
-					}, 250);
-				} else {
-					ZWJSAlert(data.response);
-				}
-			})
-			.catch((Error) => {
-				EnableButton(Button);
-				RED.comms.unsubscribe(`zwave-js/ui/${networkId}/nodes/healthcheck`, FeedBack);
-				ZWJSAlert(Error.message);
-			});
-	};
-
-	// Become Secondary
-	const JoinAsSlave = (Button) => {
-		Runtime.Get('CONTROLLER', 'beginJoiningNetwork').then((R) => {
-			if (!R.callSuccess) {
-				EnableButton(Button);
-				ZWJSAlert(R.response);
-			} else {
-				const Result = R.response;
-				switch (Result) {
-					case 0:
-						DisableButton(Button);
-						break;
-					case 1:
-						ZWJSAlert('The Controller is currently too busy to perform the join.');
-						break;
-					case 2:
-						ZWJSAlert("The Controller's role does not permit joining as a secondary controller - try resetting it!");
-						break;
-					case 3:
-						ZWJSAlert('An unknown error occured.');
-						break;
-				}
-			}
-		});
-	};
-
-	// Give up Secondary Role
-	const LeaveAsSlave = (Button) => {
-		DisableButton(Button);
-		Runtime.Get('CONTROLLER', 'beginLeavingNetwork').then((R) => {
-			if (!R.callSuccess) {
-				EnableButton(Button);
-				ZWJSAlert(R.response);
-			}
-		});
-	};
-
-	// List Nodes
-	const RefreshNodes = (Reason, NodeID) => {
-		if (!networkId) {
-			return;
-		}
-
-		switch (Reason) {
-			case 'Refresh':
-			case 'NetworkJoin':
-			case 'NetworkLeft':
-			case 'NetworkSelected':
-			case 'DriverReady':
-				ClearSelection();
-				CloseTray();
-				break;
-
-			case 'NodeAdded':
-			case 'Named':
-			case 'Sorted':
-				break;
-
-			case 'NodeRemoved':
-				if (selectedNode && selectedNode.nodeId === NodeID) {
-					ClearSelection();
-				}
-				break;
-		}
-
-		Runtime.Get('CONTROLLER', 'getNodes')
-			.then((data) => {
-				if (data.callSuccess) {
-					data = data.response;
-
-					const Controller = data.find((N) => N.isControllerNode);
-
-					const Nodes = data.filter(
-						(N) => !N.isControllerNode && (N.zwavePlusRoleType > 3 || N.zwavePlusRoleType === undefined)
-					);
-
-					const Info = `${Controller.deviceConfig.manufacturer} | ${Controller.deviceConfig.label} | v${Controller.firmwareVersion}`;
-					$('#zwjs-controller-info').text(Info);
-					$('#zwjs-controller-info').data('info', Controller);
-
-					// Render List
-					const TreeData = [];
-					const getInitials = (name) => {
-						if (!name) return '';
-						return name
-							.split(/\s+/)
-							.map((word) => word[0] || '')
-							.join('')
-							.toUpperCase();
-					};
-					const groupedNodes = Nodes.reduce((acc, node) => {
-						const location = GroupMode[0] ? node.nodeLocation || 'No Location' : 'All Nodes';
-						if (!acc[location]) {
-							acc[location] = [];
-						}
-						acc[location].push(node);
-						return acc;
-					}, {});
-
-					Object.keys(groupedNodes).forEach((LK) => {
-						const GLabel = $(
-							`<div zwjs-node-group><span class="zwjs-node-id">${getInitials(LK)}</span> <i aria-hidden="true" class="zwjs-group-status fa fa-exclamation-triangle zwjs-state-amber" style="display:none"></i> ${LK} </div>`
-						);
-						const GIconSpan = $('<span group>').addClass('zwjs-node-state-group');
-						GLabel.append(GIconSpan);
-						GIconSpan.append('<i aria-hidden="true">Int</i>');
-						GIconSpan.append('<i aria-hidden="true">Sta</i>');
-						GIconSpan.append('<i aria-hidden="true">Pow</i>');
-						GIconSpan.append('<i aria-hidden="true">Sec</i>');
-
-						const Group = {
-							id: `zwjs-node-list-entry-location-${LK.replace(/ /g, '-')}`,
-							element: GLabel,
-							children: [],
-							expanded: (GroupMode[0] && GroupMode[1]) || !GroupMode[0]
-						};
-
-						TreeData.push(Group);
-
-						groupedNodes[LK].forEach((N) => {
-							const Label = $('<div>');
-							Label.append(`<span class="zwjs-node-id">${N.nodeId}</span>`);
-							Label.append(`<span id="zwjs-node-name-${N.nodeId}">${N.nodeName || 'No Name'}</span>`);
-							const IconSpan = $('<span>').addClass('zwjs-node-state-group');
-							Label.append(IconSpan);
-
-							IconSpan.append(`<i id="zwjs-node-state-interview-${N.nodeId}" aria-hidden="true"></i>`);
-							IconSpan.append(`<i id="zwjs-node-state-status-${N.nodeId}" aria-hidden="true"></i>`);
-							IconSpan.append(`<i id="zwjs-node-state-power-${N.nodeId}" aria-hidden="true"></i>`);
-							IconSpan.append(`<i id="zwjs-node-state-security-${N.nodeId}" aria-hidden="true"></i>`);
-
-							Group.children.push({
-								id: `zwjs-node-list-entry-${N.nodeId}`,
-								element: Label,
-								nodeData: N
-							});
-						});
-					});
-
-					$('#zwjs-node-list').treeList('data', TreeData);
-
-					TreeData.forEach((G) => {
-						G.children.forEach((N) => {
-							if (N.nodeData) {
-								RenderNodeIconState(N.nodeData);
-							}
-						});
-					});
-				} else {
-					ZWJSAlert(data.response);
-				}
-			})
-			.catch((Error) => {
-				ZWJSAlert(Error.message);
-			});
-
-		RenderGroupIconState();
-	};
-
-	// Reset Controller
-	const ResetController = async (Button) => {
-		if (
-			await ZWJSConfirm(
-				'Are you sure you wish to continue? This will reset the controller back to Factory Standard, and if operating as the Primary Controller - will clear the Network of all Nodes.'
-			)
-		) {
-			DisableButton(Button);
-			Runtime.Get('DRIVER', 'hardReset').then((R) => {
-				if (!R.callSuccess) {
-					EnableButton(Button);
-					ZWJSAlert(R.response);
-				} else {
-					EnableButton(Button);
-					ZWJSAlert('The Controller has been Reset - It will now be refreshed in the UI');
-					CloseTray();
-					NetworkSelected();
-				}
-			});
-		}
-	};
-
-	// Restore Controller
-	const RestoreController = async (Button) => {
-		if (
-			await ZWJSConfirm(
-				'Note: This will alter the Controllers NVM, and will be configured according to the backup file you will restore to - Do you wish to comntinue?'
-			)
-		) {
-			const promptFileUpload = () => {
-				const fileInput = document.createElement('input');
-				fileInput.type = 'file';
-				fileInput.style.display = 'none';
-				document.body.appendChild(fileInput);
-
-				fileInput.addEventListener('change', async () => {
-					const file = fileInput.files[0];
-					if (!file) {
-						ZWJSAlert('No file selected');
-						document.body.removeChild(fileInput);
-						return;
-					}
-
-					const reader = new FileReader();
-					reader.onload = function (e) {
-						const arrayBuffer = e.target.result;
-						const byteArray = new Uint8Array(arrayBuffer);
-						Runtime.Post('CONTROLLER', 'restoreNVM', [{ nvmData: byteArray }]).then((R) => {
-							if (!R.callSuccess) {
-								EnableButton(Button);
-								ZWJSAlert(R.response);
-							} else {
-								EnableButton(Button);
-								ZWJSAlert('The restore has been completed! - Please allow a few minutes for the controller to reboot.');
-							}
-						});
-					};
-					reader.readAsArrayBuffer(file);
-					document.body.removeChild(fileInput);
-				});
-
-				fileInput.click();
-			};
-			DisableButton(Button);
-			promptFileUpload();
-		}
-	};
-
-	// Backup Controller
-	const BackupController = (Button) => {
-		DisableButton(Button);
-		Runtime.Get('CONTROLLER', 'backupNVMRaw').then((R) => {
-			if (!R.callSuccess) {
-				EnableButton(Button);
-				ZWJSAlert(R.response);
-			} else {
-				const CD = $('#zwjs-controller-info').data('info');
-				const FileName = `zwave_nvm_${CD.homeId}.bin`;
-
-				const byteArray = Object.values(R.response);
-				const uint8Array = new Uint8Array(byteArray);
-				const blob = new Blob([uint8Array], { type: 'application/octet-stream' });
-				const url = URL.createObjectURL(blob);
-
-				const a = document.createElement('a');
-				a.href = url;
-				a.download = FileName;
-				document.body.appendChild(a);
-				ZWJSAlert(`Controller Backup is now completed, your browser will now downlaod the file: ${FileName}`);
-				a.click();
-
-				document.body.removeChild(a);
-				URL.revokeObjectURL(url);
-
-				setTimeout(() => {
-					$('#zwjs-prog-contain-nvm').css({ display: 'none' });
-				}, 100);
-
-				EnableButton(Button);
-			}
-		});
-	};
-
-	// Render Advanded info (also used internally)
-	const RenderFunctions = {
-		CheckFUS: () => {
-			return new Promise((resolve, reject) => {
-				const Request = {
-					includePrereleases: true
-				};
-				Runtime.Post('CONTROLLER', 'getAllAvailableFirmwareUpdates', [Request]).then((data) => {
-					if (data.callSuccess) {
-						if (Object.keys(data.response).length) {
-							resolve({ Updates: data.response, Message: getFUSLicenseStatus() });
-						} else {
-							reject('No updates available.');
-						}
-					} else {
-						reject(data.response);
-					}
-				});
-			});
-		},
-		PrepFUS: () => {
-			return new Promise((resolve) => {
-				const Res = {
-					Message: getFUSLicenseStatus()
-				};
-				resolve(Res);
-			});
-		},
-		GetRRCurrentProgress: () => {
-			Runtime.Get(undefined, undefined, `zwave-js/ui/${networkId}/rebuildroutesprogress`).then((data) => {
-				if (data.callSuccess) {
-					if (data.response !== false) {
-						// emulate the progress event
-						commsRebuildRoutesProgress(undefined, { Progress: data.response });
-					}
-				}
-			});
-		},
-		ListSplitters: () => {
-			return new Promise((resolve) => {
-				const Splitters = [];
-				RED.nodes.filterNodes({ type: 'zwavejs-splitter' }).forEach((F) => {
-					Splitters.push({ name: F.name, id: F.id });
-				});
-
-				let Label = `${ViewingValueID.commandClassName.replace(/ /g, '_').toUpperCase()}.${ViewingValueID.propertyName.replace(/ /g, '_').toUpperCase()}`;
-
-				if (ViewingValueID.propertyKeyName) {
-					Label += `.${ViewingValueID.propertyKeyName.replace(/ /g, '_').toUpperCase()}`;
-				}
-
-				resolve({
-					splitters: Splitters,
-					label: Label,
-					shape: ViewingValueID
-				});
-			});
-		},
-		RenderMap: () => {
-			return new Promise(async (resolve, reject) => {
-				Runtime.Get('CONTROLLER', 'getNodes').then((data) => {
-					if (!data.callSuccess) {
-						reject(data.Response);
-						return;
-					}
-					const nodes = data.response;
-
-					let nodeString = 'graph TD\r\n'; // TD = top-down
-					let routeString = '';
-
-					const Nodes = nodes.filter((n) => !n.isControllerNode);
-					const Controller = nodes.find((n) => n.isControllerNode);
-
-					// Controller node at the top
-					nodeString += `N0(fa:fa-wifi<br />Controller<br /><span style="font-size:10px">${Controller.deviceConfig?.manufacturer} - ${Controller.deviceConfig?.label}</span>)\r\n`;
-
-					Nodes.forEach((v) => {
-						const name = v.nodeName || 'No Name';
-						const icon = v.powerSource.type === 'mains' ? 'fa-plug' : 'fa-battery-full';
-						const device = `${v.deviceConfig?.manufacturer} - ${v.deviceConfig?.label}`;
-
-						// Node definition
-						nodeString += `N${v.nodeId}(fa:${icon}<br />${v.nodeId} - ${name}<br /><span style="font-size:10px">${device}</span>)\r\n`;
-
-						// Bi-directional routes
-						const repeaters = v.statistics?.lwr?.repeaters || [];
-						if (repeaters.length > 0) {
-							repeaters.forEach((r) => {
-								routeString += `N${v.nodeId} <---> N${r}\r\n`;
-							});
-						} else {
-							routeString += `N0 <===> N${v.nodeId}\r\n`; // Direct to controller
-						}
-					});
-
-					const result = `${nodeString}${routeString}`;
-					resolve({ map: result });
-
-					// Render Mermaid + enable zoom/pan
-					setTimeout(async () => {
-						ZWJSMermaid.initialize({ startOnLoad: false, securityLevel: 'loose', flowchart: { htmlLabels: true } });
-						await ZWJSMermaid.run({ querySelector: '.zwjs-mermaid' });
-						svgPanZoom('.zwjs-mermaid svg', {
-							zoomEnabled: true,
-							controlIconsEnabled: true,
-							panEnabled: true
-						});
-					}, 50);
-				});
-			});
-		},
-		PrepFailed: () => {
-			return new Promise(async (resolve, reject) => {
-				Runtime.Get('CONTROLLER', 'getNodes').then((data) => {
-					if (data.callSuccess) {
-						const nodes = data.response.filter((N) => N.status === 'Dead');
-						resolve({ nodes });
-					} else {
-						reject(data.Response);
-					}
-				});
-			});
-		},
-		ControllerInfo: () => {
-			return new Promise(async (resolve) => {
-				const CD = $('#zwjs-controller-info').data('info');
-				const versions = await Runtime.Get(undefined, undefined, `zwave-js/ui/${networkId}/version`);
-				const Response = {
-					configuration: $('#zwjs-network option:selected').text(),
-					serialPort: RED.nodes.node(networkId).serialPort,
-					...versions.response,
-					...CD
-				};
-				resolve(Response);
-			});
-		},
-		ControllerStats: () => {
-			return new Promise(async (resolve) => {
-				const CD = $('#zwjs-controller-info').data('info');
-
-				const Result = {
-					statistics: FormatObjectKeys(CD.statistics),
-					backgroundRSSI: FormatObjectKeys(CD.backgroundRSSI)
-				};
-
-				Result.backgroundRSSI.Timestamp = formatDateTime(Result.backgroundRSSI.Timestamp);
-
-				resolve(Result);
-			});
-		},
-		ControllerSettings: () => {
-			return new Promise(async (resolve) => {
-				let Region = await Runtime.Get('CONTROLLER', 'getRFRegion');
-				let RDisabled = '';
-				if (Region.callSuccess) {
-					Region = `0x${Region.response.toString(16).padStart(2, '0')}`;
-				} else {
-					RDisabled = 'disabled="disabled"';
-				}
-
-				let Power = await Runtime.Get('CONTROLLER', 'getPowerlevel');
-				if (Power.callSuccess) {
-					Power = Power.response.powerlevel;
-				}
-
-				let LRPower = await Runtime.Get('CONTROLLER', 'getMaxLongRangePowerlevel');
-				if (LRPower.callSuccess) {
-					LRPower = LRPower.response;
-				}
-
-				resolve({ Region, RDisabled, Power, LRPower });
-			});
-		},
-		NodeInfo: () => {
-			return new Promise(async (resolve) => {
-				const ND = GetNodeGroup(selectedNode.nodeLocation).children.find(
-					(N) => N.nodeData.nodeId === selectedNode.nodeId
-				).nodeData;
-				resolve(ND);
-			});
-		},
-		NodeStats: () => {
-			return new Promise(async (resolve) => {
-				const ND = GetNodeGroup(selectedNode.nodeLocation).children.find(
-					(N) => N.nodeData.nodeId === selectedNode.nodeId
-				).nodeData;
-
-				const Result = FormatObjectKeys(ND.statistics);
-				Result['Last Seen'] = formatDateTime(Result['Last Seen']);
-
-				resolve(Result);
-			});
-		},
-		NodeAssociationGroups: () => {
-			return new Promise(async (resolve, reject) => {
-				const Response = await Runtime.Post('CONTROLLER', 'getAllAssociationGroups', [selectedNode.nodeId]);
-				if (Response.callSuccess) {
-					AssociationGroups = Response.response;
-					resolve(AssociationGroups);
-				} else {
-					reject(Response.response);
-				}
-			});
-		},
-		SetInclusionOptions: () => {
-			return new Promise(async (resolve) => {
-				setTimeout(() => {
-					const S0K = RED.nodes.node(networkId).securityKeys_S0_Legacy;
-					const S2ACK = RED.nodes.node(networkId).securityKeys_S2_AccessControl;
-					const S2AK = RED.nodes.node(networkId).securityKeys_S2_Authenticated;
-					const S2UK = RED.nodes.node(networkId).securityKeys_S2_Unauthenticated;
-
-					if (S2ACK.length < 32 || S2AK.length < 32 || S2UK.length < 32) {
-						[
-							'input[type="radio"][name="ZWJS_IS"][value="0"]',
-							'input[type="radio"][name="ZWJS_IS"][value="4"]',
-							'input[type="radio"][name="ZWJS_IS"][value="SS"]'
-						].forEach((EL) => {
-							$(EL).attr('disabled', 'disabled');
-							$(EL).parent().css({ opacity: 0.4 });
-						});
-						$('input[type="radio"][name="ZWJS_IS"][value="2"]').prop('checked', true);
-					}
-
-					if (S0K.length < 32) {
-						['input[type="radio"][name="ZWJS_IS"][value="3"]'].forEach((EL) => {
-							$(EL).attr('disabled', 'disabled');
-							$(EL).parent().css({ opacity: 0.4 });
-						});
-
-						if (S2ACK.length < 32 || S2AK.length < 32 || S2UK.length < 32) {
-							$('input[type="radio"][name="IS"][value="2"]').prop('checked', true);
-						}
-					}
-				}, 10);
-
-				resolve({});
-			});
-		},
-		StartCamera: () => {
-			setTimeout(() => {
-				const Options = {
-					highlightCodeOutline: true,
-					highlightScanRegion: true,
-					calculateScanRegion: () => {
-						const ve = $('#zwjs-camera-view')[0];
-						const sd = Math.min(ve.videoWidth, ve.videoHeight);
-						const srz = Math.round(0.5 * sd);
-
-						const region = {
-							x: Math.round((ve.videoWidth - srz) / 2),
-							y: Math.round((ve.videoHeight - srz) / 2),
-							width: srz,
-							height: srz
-						};
-						return region;
-					}
-				};
-
-				const EL = $('#zwjs-camera-view')[0];
-				const Handler = (result) => {
-					QRS.stop();
-					Runtime.Post(undefined, undefined, [result.data], `zwave-js/ui/${networkId}/s2/parseqr`).then((R) => {
-						if (R.callSuccess) {
-							if (R.response.isDSK) {
-								ZWJSAlert(
-									'The QR Code you have scanned, is a DSK (Device Specific Key), it is not a Smart Start QR Code'
-								);
-								QRS.start();
-							} else {
-								const Classes = [];
-								R.response.qrProvisioningInformation.requestedSecurityClasses.forEach((SC) => {
-									Classes.push({
-										classId: SC,
-										className: SClassMap[SC]
-									});
-								});
-
-								R.response.qrProvisioningInformation.manufacturer = R.response.deviceConfig.manufacturer;
-								R.response.qrProvisioningInformation.label = R.response.deviceConfig.label;
-
-								RenderAdvanced('ZWJS_TPL_PrePro', undefined, {
-									QRProvisioningInformation: btoa(JSON.stringify(R.response.qrProvisioningInformation)),
-									DSK: R.response.qrProvisioningInformation.dsk,
-									DeviceConfig: R.response.deviceConfig,
-									classes: Classes
-								});
-							}
-						} else {
-							ZWJSAlert(R.response);
-							QRS.start();
-						}
-					});
-				};
-
-				QRS = new QrScanner(EL, Handler, Options);
-				QRS.start();
-			}, 50);
-		},
-
-		PrepSSList: () => {
-			return new Promise((resolve, reject) => {
-				Runtime.Get(undefined, undefined, `zwave-js/ui/${networkId}/s2/provisioningentries`).then((R) => {
-					if (R.callSuccess) {
-						R.response.forEach((E) => {
-							E.shortDSK = E.dsk.split('-')[0];
-							if (E.status === 0) {
-								E.checked = 'checked';
-							}
-						});
-						resolve({ entries: R.response });
-					} else {
-						reject(R.response);
-					}
-				});
-			});
-		}
-	};
-
-	// Update Node Firmware
-	const UpdateNFirmwareFUS = async (Node, Update) => {
-		const FWI = DecodeObject(Update);
-		if (
-			await ZWJSConfirm(
-				`Note: This will update the Node firmware to the update chosen (version: ${FWI.normalizedVersion}), do you wish to proceed?`
-			)
-		) {
-			RenderAdvanced('ZWJS_TPL_Tray-Node-Firmware').then(() => {
-				Runtime.Post('DRIVER', 'firmwareUpdateOTA', [Node, FWI]).catch((Error) => {
-					ZWJSAlert(Error.message);
-				});
-			});
-		}
-	};
-
-	const UpdateNFirmware = async (Button) => {
-		if (await ZWJSConfirm("Note: This will update the Nodes's firmware, do you wish to proceed?")) {
-			const promptFileUpload = () => {
-				const fileInput = document.createElement('input');
-				fileInput.type = 'file';
-				fileInput.style.display = 'none';
-				document.body.appendChild(fileInput);
-
-				fileInput.addEventListener('change', async () => {
-					const file = fileInput.files[0];
-					if (!file) {
-						ZWJSAlert('No file selected');
-						document.body.removeChild(fileInput);
-						return;
-					}
-
-					DisableButton(Button);
-					const reader = new FileReader();
-					reader.onload = function (e) {
-						const arrayBuffer = e.target.result;
-						const byteArray = new Uint8Array(arrayBuffer);
-						// Handled in COMMS
-
-						const msg = {
-							nodeId: selectedNode.nodeId,
-							args: [
-								[
-									{
-										data: byteArray
-									}
-								]
-							]
-						};
-
-						Runtime.Post('NODE', 'updateFirmware', msg).catch((Error) => {
-							ZWJSAlert(Error.message);
-						});
-					};
-					reader.readAsArrayBuffer(file);
-					document.body.removeChild(fileInput);
-				});
-
-				fileInput.click();
-			};
-
-			promptFileUpload();
-		}
-	};
-
-	// Update Controller Firmware
-	const UpdateCFirmwareFUS = async (Update) => {
-		const FWI = DecodeObject(Update);
-		if (
-			await ZWJSConfirm(
-				`Note: This will update the Controllers firmware to the update chosen (version: ${FWI.normalizedVersion}), do you wish to proceed?`
-			)
-		) {
-			RenderAdvanced('ZWJS_TPL_Tray-Controller-Firmware').then(() => {
-				Runtime.Post('DRIVER', 'firmwareUpdateOTW', [FWI]).catch((Error) => {
-					ZWJSAlert(Error.message);
-				});
-			});
-		}
-	};
-
-	const UpdateCFirmware = async (Button) => {
-		if (await ZWJSConfirm('Note: This will update the Controllers firmware, do you wish to proceed?')) {
-			const promptFileUpload = () => {
-				const fileInput = document.createElement('input');
-				fileInput.type = 'file';
-				fileInput.style.display = 'none';
-				document.body.appendChild(fileInput);
-
-				fileInput.addEventListener('change', async () => {
-					const file = fileInput.files[0];
-					if (!file) {
-						ZWJSAlert('No file selected');
-						document.body.removeChild(fileInput);
-						return;
-					}
-
-					DisableButton(Button);
-					const reader = new FileReader();
-					reader.onload = function (e) {
-						const arrayBuffer = e.target.result;
-						const byteArray = new Uint8Array(arrayBuffer);
-						// Handled in COMMS
-						Runtime.Post('DRIVER', 'firmwareUpdateOTW', [{ data: byteArray }]).catch((Error) => {
-							ZWJSAlert(Error.message);
-						});
-					};
-					reader.readAsArrayBuffer(file);
-					document.body.removeChild(fileInput);
-				});
-
-				fileInput.click();
-			};
-
-			promptFileUpload();
-		}
-	};
-
 	/*
-	 * Driver COMMS Callbacks
-	 * Methods here are those used in the subscriptions to the COMMS api
+	 * COMMON UI
 	 */
 
-	// Rebuild Routes Progress
-	const commsRebuildRoutesProgress = (topic, data) => {
-		const nodes = {};
-		const table = $('#zwjs-routes-progress')?.[0];
-		if (table) {
-			for (const [node, status] of Object.entries(data.Progress)) {
-				nodes[node] = status;
-			}
-			const groups = {
-				pending: [],
-				done: [],
-				failed: [],
-				skipped: []
-			};
-			for (const [node, status] of Object.entries(nodes)) {
-				groups[status].push(node);
-			}
-			const maxRows = Math.max(groups.pending.length, groups.done.length, groups.failed.length, groups.skipped.length);
-			while (table.rows.length > 1) {
-				table.deleteRow(1);
-			}
-			for (let i = 0; i < maxRows; i++) {
-				const row = table.insertRow();
-				['pending', 'done', 'failed', 'skipped'].forEach((col) => {
-					const cell = row.insertCell();
-					cell.style.textAlign = 'center';
-					if (groups[col][i] !== undefined) {
-						cell.innerHTML = `<span class="zwjs-node-id">${groups[col][i]}</span>`;
-					}
-				});
-			}
-		}
-	};
-
-	// Controller, Driver Status
-	const commsStatus = (topic, data) => {
-		$('#zwjs-controller-status').text(data.status);
-		$('#zwjs-controller-status-tray').text(data.status);
-
-		if (data.status === 'Bootloader ready.') {
-			handleBootloader();
-		} else {
-			BootLoaderMode = false;
-			if (data.status === 'Driver ready.') {
-				RefreshNodes('DriverReady');
-			}
-		}
-	};
-
-	// Node Status
-	const commsNodeState = (topic, data) => {
-		GetNodeGroup(data.nodeInfo.nodeLocation).children.find((N) => N.nodeData.nodeId === data.nodeInfo.nodeId).nodeData =
-			data.nodeInfo;
-
-		if (
-			selectedNode &&
-			selectedNode.nodeId === data.nodeInfo.nodeId &&
-			!topic.endsWith('sleep') &&
-			!topic.endsWith('wakeup')
-		) {
-			nodeSelected(undefined, { nodeData: data.nodeInfo });
-		}
-
-		RenderNodeIconState(data.nodeInfo);
-		RenderGroupIconState();
-	};
-
-	// Node Added
-	const commsNodeAdded = (topic, data) => {
-		RefreshNodes('NewAdded', data.nodeId);
-		RenderAdvanced('ZWJS_TPL_NAdded', undefined, data);
-	};
-
-	// Node Removed
-	const commsNodeRemoved = (topic, data) => {
-		RefreshNodes('NodeRemoved', data.nodeId);
-		RenderAdvanced('ZWJS_TPL_NRemoved', undefined, data);
-	};
-
-	// Value Update
-	const commsHandleValueUpdate = (topic, data) => {
-		if (selectedNode) {
-			const ValueID = data.eventBody.valueId;
-			let NewValue = data.eventBody.newValue;
-			const Hash = getValueUpdateHash(ValueID);
-
-			if (typeof NewValue === 'object' && !Array.isArray(NewValue)) {
-				NewValue = '(Complex)';
-			} else {
-				const VI = SelectedNodeVIDs[Hash];
-				if (VI) {
-					VI.currentValue = NewValue;
-					if (VI.metadata?.states && VI.metadata.states[NewValue]) {
-						NewValue = VI.metadata?.states[NewValue];
-					} else {
-						if (VI.metadata?.unit) {
-							NewValue = `${NewValue} (${VI.metadata.unit})`;
-						}
-					}
-				}
-			}
-
-			const TargetElement = `#zwjs-value-${Hash}`;
-			if ($(TargetElement).length > 0) {
-				$(TargetElement).text(NewValue);
-			}
-		}
-	};
-
-	// Slave Join/Leave Evenst
-	const commsHandleSlaveOps = (topic, data) => {
-		if (topic.endsWith('dsk')) {
-			data.slaveJoinDSK = data.slaveJoinDSK.toString().substring(0, 5);
-
-			RenderAdvanced('ZWJS_TPL_Tray-Controller-Slave-DSK', undefined, data);
-		}
-
-		if (topic.endsWith('joined')) {
-			CloseTray();
-			RefreshNodes('NetworkJoin');
-		}
-
-		if (topic.endsWith('left')) {
-			CloseTray();
-			RefreshNodes('NetworkLeft');
-		}
-	};
-
-	// Promot Sec Classes
-	const commsGrant = (topic, data) => {
-		clientSideAuth = data.clientSideAuth;
-
-		const Classes = [];
-		data.securityClasses.forEach((SC) => {
-			Classes.push({
-				classId: SC,
-				className: SClassMap[SC]
-			});
-		});
-		RenderAdvanced('ZWJS_TPL_SecurityGrant', undefined, { classes: Classes });
-	};
-
-	// Promot DSk entering
-	const commsDSK = (topic, data) => {
-		RenderAdvanced('ZWJS_TPL_DSK', undefined, data);
-	};
-
-	// NVM Restore Progress
-	const commsNVMRestoreProgressReport = (topic, data) => {
-		$('#zwjs-prog-contain-nvm').css({ display: 'block' });
-		const Done = data.done;
-		const Total = data.total;
-		const Percentage = (Done / Total) * 100;
-		$('#zwjs-prog-bar-nvm').css({ width: `${Percentage}%` });
-		$('#zwjs-prog-bar-nvm').text(`${data.label} ${Math.round(Percentage)}%`);
-	};
-
-	// NVM Backup Progress
-	const commsNVMBackupProgressReport = (topic, data) => {
-		$('#zwjs-prog-contain-nvm').css({ display: 'block' });
-		const Read = data.bytesRead;
-		const Total = data.total;
-		const Percentage = (Read / Total) * 100;
-		$('#zwjs-prog-bar-nvm').css({ width: `${Percentage}%` });
-		$('#zwjs-prog-bar-nvm').text(`${data.label} ${Math.round(Percentage)}%`);
-	};
-
-	// Node Firmware Update Callbacks
-	const commsNFirmwareReport = (topic, data) => {
-		if (topic.endsWith('progress')) {
-			$('#zwjs-prog-contain-nfirmware').css({ display: 'block' });
-			const Percentage = data.progress.progress;
-			$('#zwjs-prog-bar-nfirmware').css({ width: `${Percentage}%` });
-			$('#zwjs-prog-bar-nfirmware').text(`Flashing Chip... ${Math.round(Percentage)}%`);
-		}
-
-		if (topic.endsWith('finished')) {
-			let Message;
-			switch (data.result.status) {
-				case 0:
-					Message = 'A timeout occured';
-					break;
-				case 1:
-					Message = 'The maximum number of retry attempts for a firmware fragments were reached';
-					break;
-				case 2:
-					Message = 'The update was aborted by the bootloader';
-					break;
-				case 3:
-					Message = 'This controller does not support firmware updates';
-					break;
-
-				default:
-					Message = 'The update was successfull, please wait a few minutes for the Node to reinitialize';
-			}
-			RenderAdvanced('ZWJS_TPL_Tray-Firmware-Done', undefined, { Message });
-		}
-	};
-
-	// Controller Firmware Update Callbacks
-	const commsCFirmwareReport = (topic, data) => {
-		if (topic.endsWith('progress')) {
-			$('#zwjs-prog-contain-cfirmware').css({ display: 'block' });
-			const Percentage = data.progress;
-			$('#zwjs-prog-bar-cfirmware').css({ width: `${Percentage}%` });
-			$('#zwjs-prog-bar-cfirmware').text(`Flashing Chip... ${Math.round(Percentage)}%`);
-		}
-
-		if (topic.endsWith('finished')) {
-			let Message;
-			switch (data.status) {
-				case 0:
-					Message = 'A timeout occured';
-					break;
-				case 1:
-					Message = 'The maximum number of retry attempts for a firmware fragments were reached';
-					break;
-				case 2:
-					Message = 'The update was aborted by the bootloader';
-					break;
-				case 3:
-					Message = 'This controller does not support firmware updates';
-					break;
-
-				default:
-					Message = 'The update was successfull, please a few minutes for the Controller to reinitialize';
-			}
-			RenderAdvanced('ZWJS_TPL_Tray-Firmware-Done', undefined, { Message });
-		}
-	};
-
-	// Remove Shutdown Runtime
-	const commsRemoveNetwork = (network) => {
-		const Networks = $('#zwjs-network');
-		if (Networks.val() === network.id) {
-			ClearSelection(true);
-		}
-
-		Networks.children(`option[value="${network.id}"]`).remove();
-		SelectFirstNetwork();
-	};
-
-	// Add runtime (used internally also)
-	const commsListOrAddNetworks = (fetch, network) => {
-		const Networks = $('#zwjs-network');
-
-		if (fetch) {
-			Runtime.Get(undefined, undefined, 'zwave-js/ui/global/networks').then((data) => {
-				if (data.callSuccess) {
-					const IDs = Object.keys(data.response);
-					IDs.forEach((k) => {
-						Networks.append(new Option(data.response[k], k));
-					});
-					SelectFirstNetwork();
-				}
-			});
-		} else {
-			const found = Networks.children().filter((n) => n.val === network.id);
-			if (found.length < 1) {
-				Networks.append(new Option(network.name, network.id));
-			}
-			SelectFirstNetwork();
-		}
-	};
-
-	/*
-	 * Helpers/Things
-	 * Methods/things used in all this vortex of chaos!
-	 */
-
-	// Alert
 	const ZWJSAlert = (msg) => {
 		$('<div>')
 			.text(msg)
@@ -2122,128 +316,74 @@ const ZWaveJS = (function () {
 		});
 	};
 
-	// Date
-	const formatDateTime = (ts) => {
-		const d = new Date(ts);
-		const parts = new Intl.DateTimeFormat(navigator.language || 'en-GB', {
-			day: '2-digit',
-			month: '2-digit',
-			year: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit',
-			second: '2-digit',
-			hour12: false
-		}).formatToParts(d);
-
-		const map = {};
-		parts.forEach((p) => {
-			if (p.type !== 'literal') map[p.type] = p.value;
-		});
-
-		const dateOrder = parts
-			.filter((p) => ['day', 'month', 'year'].includes(p.type))
-			.map((p) => map[p.type])
-			.join('.');
-
-		const time = `${map.hour}:${map.minute}:${map.second}`;
-
-		return `${dateOrder} ${time}`;
-	};
-
-	// Get FUS License
-	const getFUSLicenseStatus = () => {
-		const Key = RED.nodes.node(networkId).apiKeys_firmwareUpdateService;
-		if (!Key) {
-			return "<strong>Non-Commercial</strong><br /><br />As no API key has been provided, you're confirming the environment is <strong>Non-Commercial</strong>.<br />An API Key for the Firmware Update Service is required for Commercial installs.";
-		}
-	};
-
-	// Bootloader TRouble
-	const handleBootloader = () => {
-		BootLoaderMode = true;
-		RED.notify(
-			'WARNING! Your ZWave controller failed to boot, and is currently in recovery mode, please upload new firmware from the side bar',
-			{ type: 'error', timeout: 30000 }
-		);
-	};
-
-	// Get Node Group
-	const GetNodeGroup = (Group) => {
-		let safeGroup;
-		if (!GroupMode[0]) {
-			safeGroup = 'All Nodes';
-		} else {
-			safeGroup = Group && Group.trim() !== '' ? Group : 'No Location';
-		}
-
-		const G = `zwjs-node-list-entry-location-${safeGroup.replace(/ /g, '-')}`;
-		return $('#zwjs-node-list')
-			.treeList('data')
-			.find((N) => N.id === G);
-	};
-
-	// Fomat Object
-	const FormatObjectKeys = (obj) => {
-		const formatted = {};
-
-		for (const key in obj) {
-			const title = key
-				.replace(/([a-z])([A-Z])/g, '$1 $2') // lowercase followed by uppercase
-				.replace(/([a-zA-Z])([0-9]+)/g, '$1 $2') // letters followed by numbers
-				.replace(/([0-9]+)([a-zA-Z])/g, '$1 $2') // numbers followed by letters
-				.replace(/^./, (str) => str.toUpperCase()); // capitalize first letter
-
-			formatted[title] = obj[key];
-		}
-
-		return formatted;
-	};
-
-	// Flatten RSSI
-	const FlattenChannelAverages = (backgroundRSSI) => {
-		const flattenedRSSI = {};
-		for (const key in backgroundRSSI) {
-			if (key.startsWith('channel')) {
-				flattenedRSSI[`${key}average`] = backgroundRSSI[key].average;
-			} else {
-				flattenedRSSI[key] = backgroundRSSI[key];
-			}
-		}
-
-		return flattenedRSSI;
-	};
-
-	// Hashes the ValueID - so we can  identify it with a simple hash
-	const getValueUpdateHash = (Obj) => {
-		Obj = JSON.stringify(Obj);
-		Obj = `${selectedNode.nodeId}${Obj}`;
-		let hash = 5381;
-		for (let i = 0; i < Obj.length; i++) {
-			hash = (hash << 5) + hash + Obj.charCodeAt(i);
-		}
-		return (hash >>> 0).toString(16);
-	};
-
-	// Renders the button disabled
 	const DisableButton = (Button) => {
 		$(Button).data('original_text', $(Button).text());
 		$(Button).text('Please wait...');
 		$(Button).prop('disabled', true);
 	};
 
-	// Renders the button enabled
 	const EnableButton = (Button) => {
 		$(Button).text($(Button).data('original_text'));
 		$(Button).prop('disabled', false);
 	};
 
-	// Decodes an object that has been converted to Base64 (serialised via a HB function (json) - found in the init method)
+	const runButtonAction = async (button, action) => {
+		DisableButton(button);
+		try {
+			return await action();
+		} catch (error) {
+			ZWJSAlert(toError(error).message);
+			return undefined;
+		} finally {
+			EnableButton(button);
+		}
+	};
+
+	const ZoomUI = (value) => {
+		const sidebar = $('#zwjs-sidebar');
+		if (value === undefined) {
+			sidebar.css('zoom', '1.0');
+			Panels.resize($('#zwjs-sidebar').height());
+			return;
+		}
+
+		let current = parseFloat(sidebar.css('zoom'));
+		if (isNaN(current)) current = 1;
+		let newZoom = current + value;
+		newZoom = Math.min(Math.max(newZoom, 0.1), 2.0);
+		newZoom = parseFloat(newZoom.toFixed(2));
+		sidebar.css('zoom', newZoom);
+
+		Panels.resize($('#zwjs-sidebar').height());
+	};
+
+	const CloseTray = () => {
+		if (isCurrentTray) {
+			if (QRS) {
+				QRS.destroy();
+				QRS = undefined;
+			}
+
+			Runtime.Get('CONTROLLER', 'stopInclusion');
+			Runtime.Get('CONTROLLER', 'stopExclusion');
+			Runtime.Get('CONTROLLER', 'stopJoiningNetwork');
+			Runtime.Get('CONTROLLER', 'stopLeavingNetwork');
+
+			if (CodeEditor) {
+				CodeEditor.destroy();
+				CodeEditor = undefined;
+			}
+
+			RED.tray.close();
+			isCurrentTray = false;
+		}
+	};
+
 	const DecodeObject = (Item) => {
 		const decoded = new TextDecoder().decode(Uint8Array.from(atob(Item), (c) => c.charCodeAt(0)));
 		return JSON.parse(decoded);
 	};
 
-	// The JSON formatter, used to present sexy json (root created at top of this file)
 	const JSONFormatter = {
 		json: {
 			replacer: function (match, pIndent, pKey, pVal, pEnd) {
@@ -2267,86 +407,284 @@ const ZWaveJS = (function () {
 		}
 	};
 
-	// The COMMS Sub/Unsub method
-	const setSubscription = (subscribe) => {
-		const Hooks = [
-			{ address: `zwave-js/ui/${networkId}/status`, method: commsStatus },
-			{ address: `zwave-js/ui/${networkId}/s2/grant`, method: commsGrant },
-			{ address: `zwave-js/ui/${networkId}/s2/dsk`, method: commsDSK },
-			{ address: `zwave-js/ui/${networkId}/nodes/added`, method: commsNodeAdded },
-			{ address: `zwave-js/ui/${networkId}/nodes/removed`, method: commsNodeRemoved },
-			{ address: `zwave-js/ui/${networkId}/nodes/interviewstarted`, method: commsNodeState },
-			{ address: `zwave-js/ui/${networkId}/nodes/interviewfailed`, method: commsNodeState },
-			{ address: `zwave-js/ui/${networkId}/nodes/interviewed`, method: commsNodeState },
-			{ address: `zwave-js/ui/${networkId}/nodes/ready`, method: commsNodeState },
-			{ address: `zwave-js/ui/${networkId}/nodes/sleep`, method: commsNodeState },
-			{ address: `zwave-js/ui/${networkId}/nodes/awake`, method: commsNodeState },
-			{ address: `zwave-js/ui/${networkId}/nodes/dead`, method: commsNodeState },
-			{ address: `zwave-js/ui/${networkId}/nodes/alive`, method: commsNodeState },
-			{ address: `zwave-js/ui/${networkId}/controller/slave/dsk`, method: commsHandleSlaveOps },
-			{ address: `zwave-js/ui/${networkId}/controller/slave/joined`, method: commsHandleSlaveOps },
-			{ address: `zwave-js/ui/${networkId}/controller/slave/left`, method: commsHandleSlaveOps },
-			{ address: `zwave-js/ui/${networkId}/nodes/valueadded`, method: commsHandleValueUpdate },
-			{ address: `zwave-js/ui/${networkId}/nodes/valueupdate`, method: commsHandleValueUpdate },
-			{ address: `zwave-js/ui/${networkId}/controller/nvm/backupprogress`, method: commsNVMBackupProgressReport },
-			{ address: `zwave-js/ui/${networkId}/controller/nvm/restoreprogress`, method: commsNVMRestoreProgressReport },
-			{ address: `zwave-js/ui/${networkId}/driver/firmwareupdate/progress`, method: commsCFirmwareReport },
-			{ address: `zwave-js/ui/${networkId}/driver/firmwareupdate/finished`, method: commsCFirmwareReport },
-			{ address: `zwave-js/ui/${networkId}/nodes/firmwareupdate/progress`, method: commsNFirmwareReport },
-			{ address: `zwave-js/ui/${networkId}/nodes/firmwareupdate/finished`, method: commsNFirmwareReport },
-			{ address: `zwave-js/ui/${networkId}/rebuildroutes/progress`, method: commsRebuildRoutesProgress }
-		];
+	const formatDateTime = (ts) => {
+		const d = new Date(ts);
+		if (Number.isNaN(d.getTime())) return 'Not Available';
 
-		const op = RED.comms[subscribe ? 'subscribe' : 'unsubscribe'];
-		Hooks.forEach((H) => op(H.address, H.method));
+		const parts = new Intl.DateTimeFormat(navigator.language || 'en-GB', {
+			day: '2-digit',
+			month: '2-digit',
+			year: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit',
+			second: '2-digit',
+			hour12: false
+		}).formatToParts(d);
+
+		const map = {};
+		parts.forEach((p) => {
+			if (p.type !== 'literal') map[p.type] = p.value;
+		});
+
+		const dateOrder = parts
+			.filter((p) => ['day', 'month', 'year'].includes(p.type))
+			.map((p) => map[p.type])
+			.join('.');
+
+		const time = `${map.hour}:${map.minute}:${map.second}`;
+		return `${dateOrder} ${time}`;
 	};
 
-	// Tray Close
-	const CloseTray = () => {
-		if (isCurrentTray) {
-			// Kill Scanner
-			if (QRS) {
-				QRS.destroy();
-				QRS = undefined;
+	const FormatObjectKeys = (obj) => {
+		const formatted = {};
+
+		for (const key in obj) {
+			const title = key
+				.replace(/([a-z])([A-Z])/g, '$1 $2') // lowercase followed by uppercase
+				.replace(/([a-zA-Z])([0-9]+)/g, '$1 $2') // letters followed by numbers
+				.replace(/([0-9]+)([a-zA-Z])/g, '$1 $2') // numbers followed by letters
+				.replace(/^./, (str) => str.toUpperCase()); // capitalize first letter
+
+			formatted[title] = obj[key];
+		}
+
+		return formatted;
+	};
+
+	const FlattenChannelAverages = (backgroundRSSI) => {
+		const flattenedRSSI = {};
+		for (const key in backgroundRSSI) {
+			if (key.startsWith('channel')) {
+				flattenedRSSI[`${key}average`] = backgroundRSSI[key].average;
+			} else {
+				flattenedRSSI[key] = backgroundRSSI[key];
 			}
+		}
 
-			// Kill any outstanding network task (we dont really need to await these)
-			Runtime.Get('CONTROLLER', 'stopInclusion');
-			Runtime.Get('CONTROLLER', 'stopExclusion');
-			Runtime.Get('CONTROLLER', 'stopJoiningNetwork');
-			Runtime.Get('CONTROLLER', 'stopLeavingNetwork');
+		return flattenedRSSI;
+	};
 
-			// Kill Code Editor
-			if (CodeEditor) {
-				CodeEditor.destroy();
-				CodeEditor = undefined;
-			}
+	/*
+	 * NETWORK SELECTION
+	 */
 
-			// Finally Close Tray
-			RED.tray.close();
-			isCurrentTray = false;
+	const waitForNetworkStatus = async (targetNetworkId) => {
+		while (networkId === targetNetworkId) {
+			const result = await Runtime.Get(undefined, undefined, `zwave-js/ui/${targetNetworkId}/status`);
+			if (result?.response !== undefined) return result.response;
+			await new Promise((resolve) => setTimeout(resolve, 500));
+		}
+		return undefined;
+	};
+
+	const applyNetworkStatus = (status) => {
+		$('#zwjs-controller-status').text(status);
+		if (status === 'Bootloader ready.') {
+			handleBootloader();
+			return;
+		}
+		BootLoaderMode = false;
+		RefreshNodes('NetworkSelected');
+	};
+
+	const NetworkSelected = async () => {
+		const previousNetworkId = networkId;
+		if (previousNetworkId) setSubscription(false, previousNetworkId);
+		const selectedNetwork = $('#zwjs-network').val();
+		ClearSelection(true);
+		if (selectedNetwork === 'NONE') {
+			networkId = undefined;
+			return;
+		}
+
+		$('#zwjs-controller-info').text('--');
+		$('#zwjs-controller-status').text('Waiting for Network Status Report...');
+		networkId = selectedNetwork;
+		setSubscription(true);
+
+		try {
+			const status = await waitForNetworkStatus(selectedNetwork);
+			if (networkId === selectedNetwork && status !== undefined) applyNetworkStatus(status);
+		} catch (error) {
+			ZWJSAlert(error.message || error);
 		}
 	};
 
-	// Redner Group Icon Status
+	const SelectFirstNetwork = () => {
+		const select = $('#zwjs-network');
+		const options = select.children();
+		const count = options.length;
+
+		if (count === 2) {
+			select.val(options.eq(1).val());
+			NetworkSelected();
+		}
+
+		select.parent().toggle(count >= 3);
+	};
+
+	const ShowRecovery = () => {
+		showManagementTray('ZWave JS Controller Management (Recovery)', TPL_ControllerManagementRecover, {
+			Network: $('#zwjs-controller-info').text(),
+			Status: $('#zwjs-controller-status').text()
+		});
+	};
+
+	/*
+	 * NODE LIST
+	 */
+
+	const shouldResetNodeContext = (reason) =>
+		['Refresh', 'NetworkJoin', 'NetworkLeft', 'NetworkSelected', 'DriverReady'].includes(reason);
+
+	const prepareNodeContextForRefresh = (reason, nodeId) => {
+		if (shouldResetNodeContext(reason)) {
+			ClearSelection();
+			CloseTray();
+			return;
+		}
+
+		if (reason === 'NodeRemoved' && selectedNode?.nodeId === nodeId) {
+			ClearSelection();
+		}
+	};
+
+	const getLocationInitials = (location) =>
+		(location || '')
+			.split(/\s+/)
+			.map((word) => word[0] || '')
+			.join('')
+			.toUpperCase();
+
+	const groupNodesByLocation = (nodes) =>
+		nodes.reduce((groups, node) => {
+			const location = GroupMode[0] ? node.nodeLocation || 'No Location' : 'All Nodes';
+			(groups[location] ||= []).push(node);
+			return groups;
+		}, {});
+
+	const createNodeGroupLabel = (location) => {
+		const label = $(
+			`<div zwjs-node-group><span class="zwjs-node-id">${getLocationInitials(location)}</span> <i aria-hidden="true" class="zwjs-group-status fa fa-exclamation-triangle zwjs-state-amber" style="display:none"></i> ${location} </div>`
+		);
+		const stateIcons = $('<span group>').addClass('zwjs-node-state-group');
+		stateIcons.append('<i aria-hidden="true">Int</i>');
+		stateIcons.append('<i aria-hidden="true">Sta</i>');
+		stateIcons.append('<i aria-hidden="true">Pow</i>');
+		stateIcons.append('<i aria-hidden="true">Sec</i>');
+		label.append(stateIcons);
+		return label;
+	};
+
+	const createNodeTreeItem = (node) => {
+		const label = $('<div>');
+		label.append(`<span class="zwjs-node-id">${node.nodeId}</span>`);
+		label.append(`<span id="zwjs-node-name-${node.nodeId}">${node.nodeName || 'No Name'}</span>`);
+
+		const stateIcons = $('<span>').addClass('zwjs-node-state-group');
+		stateIcons.append(`<i id="zwjs-node-state-interview-${node.nodeId}" aria-hidden="true"></i>`);
+		stateIcons.append(`<i id="zwjs-node-state-status-${node.nodeId}" aria-hidden="true"></i>`);
+		stateIcons.append(`<i id="zwjs-node-state-power-${node.nodeId}" aria-hidden="true"></i>`);
+		stateIcons.append(`<i id="zwjs-node-state-security-${node.nodeId}" aria-hidden="true"></i>`);
+		label.append(stateIcons);
+
+		return { id: `zwjs-node-list-entry-${node.nodeId}`, element: label, nodeData: node };
+	};
+
+	const buildNodeTree = (nodes) =>
+		Object.entries(groupNodesByLocation(nodes)).map(([location, locationNodes]) => ({
+			id: `zwjs-node-list-entry-location-${location.replace(/ /g, '-')}`,
+			element: createNodeGroupLabel(location),
+			children: locationNodes.map(createNodeTreeItem),
+			expanded: (GroupMode[0] && GroupMode[1]) || !GroupMode[0]
+		}));
+
+	const updateControllerSummary = (controller) => {
+		const manufacturer = controller.deviceConfig.manufacturer;
+		const label = controller.deviceConfig.label;
+		$('#zwjs-controller-info').text(`${manufacturer} | ${label} | v${controller.firmwareVersion}`);
+		$('#zwjs-controller-info').data('info', controller);
+	};
+
+	const renderNodeTree = (nodes) => {
+		const treeData = buildNodeTree(nodes);
+		$('#zwjs-node-list').treeList('data', treeData);
+		treeData.forEach((group) => group.children.forEach((item) => RenderNodeIconState(item.nodeData)));
+	};
+
+	const splitControllerFromNodes = (allNodes) => ({
+		controller: allNodes.find((node) => node.isControllerNode),
+		nodes: allNodes.filter(
+			(node) => !node.isControllerNode && (node.zwavePlusRoleType > 3 || node.zwavePlusRoleType === undefined)
+		)
+	});
+
+	const RefreshNodes = async (reason, nodeId) => {
+		if (!networkId) return;
+
+		prepareNodeContextForRefresh(reason, nodeId);
+
+		try {
+			const allNodes = requireSuccessfulCall(await Runtime.Get('CONTROLLER', 'getNodes'));
+			const { controller, nodes } = splitControllerFromNodes(allNodes);
+			updateControllerSummary(controller);
+			renderNodeTree(nodes);
+		} catch (error) {
+			ZWJSAlert(error.message || error);
+		} finally {
+			RenderGroupIconState();
+		}
+	};
+
+	const NodeCollapseToggle = (Mode, A) => {
+		$('i.zwjs-button-group').removeAttr('selected');
+		$(A).find('i.zwjs-button-group').attr('selected', '');
+
+		switch (Mode) {
+			case 1:
+				GroupMode[0] = true;
+				GroupMode[1] = true;
+				RefreshNodes('Sorted');
+				break;
+			case 2:
+				GroupMode[0] = true;
+				GroupMode[1] = false;
+				RefreshNodes('Sorted');
+				break;
+			case 3:
+				GroupMode[0] = false;
+				GroupMode[1] = true;
+				RefreshNodes('Sorted');
+				break;
+		}
+	};
+
+	const GetNodeGroup = (Group) => {
+		let safeGroup;
+		if (!GroupMode[0]) {
+			safeGroup = 'All Nodes';
+		} else {
+			safeGroup = Group && Group.trim() !== '' ? Group : 'No Location';
+		}
+
+		const G = `zwjs-node-list-entry-location-${safeGroup.replace(/ /g, '-')}`;
+		return $('#zwjs-node-list')
+			.treeList('data')
+			.find((N) => N.id === G);
+	};
+
 	const RenderGroupIconState = () => {
 		setTimeout(() => {
-			// Tree List data
 			const Data = $('#zwjs-node-list').treeList('data');
 
-			// Parents
 			for (let i = 0; i < Data.length; i++) {
-				// Parent
 				const group = Data[i];
 				if (!group.children) continue;
 
-				// Group Status Icon
 				const GroupStatusElement = $(group.element).find('i.zwjs-group-status');
 				let GroupStatus = 0;
 
-				// Children
 				for (let j = 0; j < group.children.length; j++) {
-					// Child
 					const device = group.children[j];
 					if (!device.element) continue;
 
@@ -2382,149 +720,115 @@ const ZWaveJS = (function () {
 		}, 150);
 	};
 
-	// Render Node Icons (status and stuff)
-	const RenderNodeIconState = (Node) => {
-		const el_interview = $(`#zwjs-node-state-interview-${Node.nodeId}`);
-		const el_status = $(`#zwjs-node-state-status-${Node.nodeId}`);
-		const el_power = $(`#zwjs-node-state-power-${Node.nodeId}`);
-		const el_security = $(`#zwjs-node-state-security-${Node.nodeId}`);
+	/*
+	 * NODE SELECTION
+	 */
 
-		el_interview.removeClass();
-		el_status.removeClass();
-		el_power.removeClass();
-		el_security.removeClass();
+	const resetNodeStateIcons = (icons) => Object.values(icons).forEach((icon) => icon.removeClass());
 
-		if (Node.interviewStage !== 'Complete') {
-			el_interview.addClass(['fa', 'fa-handshake-o', 'zwjs-state-amber']);
-			RED.popover.tooltip(el_interview, 'Pending Interview');
-		} else {
-			el_interview.addClass(['fa', 'fa-check', 'zwjs-state-green']);
-			RED.popover.tooltip(el_interview, 'Fully Interviewed');
-		}
-
-		const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
-
-		if (
-			Node.status !== 'Dead' &&
-			Node.status !== 'Unknown' &&
-			Node.lastSeen !== undefined &&
-			Date.now() - Node.lastSeen > sevenDaysMs
-		) {
-			el_status.addClass(['fa', 'fa-question-circle', 'zwjs-state-amber']);
-			RED.popover.tooltip(el_status, `${formatDateTime(Node.lastSeen)} : Seen +7 days ago`);
-		} else {
-			let Time = '';
-			if (Node.lastSeen !== undefined) {
-				Time = `${formatDateTime(Node.lastSeen)} : `;
-			}
-			switch (Node.status) {
-				case 'Alive':
-				case 'Awake':
-					el_status.addClass(['fa', 'fa-sun-o', 'zwjs-state-green']);
-					RED.popover.tooltip(el_status, `${Time}Alive/Awake`);
-					break;
-				case 'Asleep':
-					el_status.addClass(['fa', 'fa-moon-o', 'zwjs-state-darkgray']);
-					RED.popover.tooltip(el_status, `${Time}Alseep`);
-					break;
-				case 'Dead':
-					el_status.addClass(['fa', 'fa-exclamation-triangle', 'zwjs-state-red']);
-					RED.popover.tooltip(el_status, `${Time}Dead/Not Responding`);
-					break;
-				case 'Unknown':
-					el_status.addClass(['fa', 'fa-question-circle', 'zwjs-state-amber']);
-					RED.popover.tooltip(el_status, `${Time}Unknown`);
-
-					break;
-			}
-		}
-
-		if (Node.powerSource.type === 'mains') {
-			el_power.addClass(['fa', 'fa-plug', 'zwjs-state-green']);
-			RED.popover.tooltip(el_power, 'Mains Powered');
-		} else {
-			el_power.removeClass(
-				'fa-battery-empty fa-battery-quarter fa-battery-half fa-battery-three-quarters fa-battery-full'
-			);
-			RED.popover.tooltip(el_power, `Battery Powered: (${Node.powerSource.level}%)`);
-
-			el_power.addClass('fa');
-
-			if (Node.powerSource.level <= 10) {
-				el_power.addClass('fa-battery-empty');
-			} else if (Node.powerSource.level <= 25) {
-				el_power.addClass('fa-battery-quarter');
-			} else if (Node.powerSource.level <= 75) {
-				el_power.addClass('fa-battery-half');
-			} else if (Node.powerSource.level <= 85) {
-				el_power.addClass('fa-battery-three-quarters');
-			} else {
-				el_power.addClass('fa-battery-full');
-			}
-
-			if (Node.powerSource.rechargeOrReplace !== undefined) {
-				switch (Node.powerSource.rechargeOrReplace) {
-					case 1:
-						el_power.addClass('zwjs-state-amber');
-
-						break;
-					case 2:
-						el_power.addClass('zwjs-state-red');
-
-						break;
-					default:
-						el_power.addClass('zwjs-state-green');
-				}
-			} else {
-				if (Node.powerSource.level <= 10) {
-					el_power.addClass('zwjs-state-red');
-				} else if (Node.powerSource.level <= 25) {
-					el_power.addClass('zwjs-state-amber');
-				} else {
-					el_power.addClass('zwjs-state-green');
-				}
-			}
-		}
-
-		const GetSecurityClassLabel = (SC) => {
-			switch (SC) {
-				case 0:
-					return 'S2 | Unauthenticated';
-
-				case 1:
-					return 'S2 | Authenticated';
-
-				case 2:
-					return 'S2 | Access Control';
-
-				case 7:
-					return 'S0 | Legacy';
-
-				default:
-					return 'No Security';
-			}
-		};
-
-		switch (Node.highestSecurityClass) {
-			case 0:
-			case 1:
-			case 2:
-				el_security.addClass(['fa', 'fa-lock', 'zwjs-state-green']);
-				RED.popover.tooltip(el_security, GetSecurityClassLabel(Node.highestSecurityClass));
-				break;
-			case 7:
-				el_security.addClass(['fa', 'fa-lock', 'zwjs-state-darkblue']);
-				RED.popover.tooltip(el_security, GetSecurityClassLabel(Node.highestSecurityClass));
-				break;
-
-			default:
-				el_security.addClass(['fa', 'fa-unlock-alt', 'zwjs-state-darkgray']);
-				RED.popover.tooltip(el_security, GetSecurityClassLabel(Node.highestSecurityClass));
-				break;
-		}
+	const renderInterviewIcon = (node, icon) => {
+		const complete = node.interviewStage === 'Complete';
+		icon.addClass(['fa', complete ? 'fa-check' : 'fa-handshake-o', complete ? 'zwjs-state-green' : 'zwjs-state-amber']);
+		RED.popover.tooltip(icon, complete ? 'Fully Interviewed' : 'Pending Interview');
 	};
 
-	// Just a map of Sec classes to names
+	const renderAvailabilityIcon = (node, icon) => {
+		const lastSeen = node.lastSeen === undefined ? '' : `${formatDateTime(node.lastSeen)} : `;
+		const stale =
+			node.status !== 'Dead' &&
+			node.status !== 'Unknown' &&
+			node.lastSeen !== undefined &&
+			Date.now() - node.lastSeen > 7 * 24 * 60 * 60 * 1000;
+		if (stale) {
+			icon.addClass(['fa', 'fa-question-circle', 'zwjs-state-amber']);
+			RED.popover.tooltip(icon, `${formatDateTime(node.lastSeen)} : Seen +7 days ago`);
+			return;
+		}
+
+		const states = {
+			Alive: ['fa-sun-o', 'zwjs-state-green', 'Alive/Awake'],
+			Awake: ['fa-sun-o', 'zwjs-state-green', 'Alive/Awake'],
+			Asleep: ['fa-moon-o', 'zwjs-state-darkgray', 'Alseep'],
+			Dead: ['fa-exclamation-triangle', 'zwjs-state-red', 'Dead/Not Responding'],
+			Unknown: ['fa-question-circle', 'zwjs-state-amber', 'Unknown']
+		};
+		const state = states[node.status];
+		if (!state) return;
+		icon.addClass(['fa', state[0], state[1]]);
+		RED.popover.tooltip(icon, `${lastSeen}${state[2]}`);
+	};
+
+	const renderPowerIcon = (node, icon) => {
+		if (node.powerSource.type === 'mains') {
+			icon.addClass(['fa', 'fa-plug', 'zwjs-state-green']);
+			RED.popover.tooltip(icon, 'Mains Powered');
+			return;
+		}
+
+		const level = node.powerSource.level;
+		const batteryIcon =
+			level <= 10
+				? 'fa-battery-empty'
+				: level <= 25
+					? 'fa-battery-quarter'
+					: level <= 75
+						? 'fa-battery-half'
+						: level <= 85
+							? 'fa-battery-three-quarters'
+							: 'fa-battery-full';
+		icon.addClass(['fa', batteryIcon]);
+		RED.popover.tooltip(icon, `Battery Powered: (${level}%)`);
+
+		const replacementState = node.powerSource.rechargeOrReplace;
+		const colour =
+			replacementState === 1
+				? 'zwjs-state-amber'
+				: replacementState === 2
+					? 'zwjs-state-red'
+					: replacementState !== undefined
+						? 'zwjs-state-green'
+						: level <= 10
+							? 'zwjs-state-red'
+							: level <= 25
+								? 'zwjs-state-amber'
+								: 'zwjs-state-green';
+		icon.addClass(colour);
+	};
+
+	const getSecurityClassLabel = (securityClass) =>
+		({
+			0: 'S2 | Unauthenticated',
+			1: 'S2 | Authenticated',
+			2: 'S2 | Access Control',
+			7: 'S0 | Legacy'
+		})[securityClass] || 'No Security';
+
+	const renderSecurityIcon = (node, icon) => {
+		const securityClass = node.highestSecurityClass;
+		const isS2 = [0, 1, 2].includes(securityClass);
+		const isS0 = securityClass === 7;
+		icon.addClass([
+			'fa',
+			isS2 || isS0 ? 'fa-lock' : 'fa-unlock-alt',
+			isS2 ? 'zwjs-state-green' : isS0 ? 'zwjs-state-darkblue' : 'zwjs-state-darkgray'
+		]);
+		RED.popover.tooltip(icon, getSecurityClassLabel(securityClass));
+	};
+
+	const RenderNodeIconState = (node) => {
+		const icons = {
+			interview: $(`#zwjs-node-state-interview-${node.nodeId}`),
+			status: $(`#zwjs-node-state-status-${node.nodeId}`),
+			power: $(`#zwjs-node-state-power-${node.nodeId}`),
+			security: $(`#zwjs-node-state-security-${node.nodeId}`)
+		};
+		resetNodeStateIcons(icons);
+		renderInterviewIcon(node, icons.interview);
+		renderAvailabilityIcon(node, icons.status);
+		renderPowerIcon(node, icons.power);
+		renderSecurityIcon(node, icons.security);
+	};
+
 	const SClassMap = {
 		0: 'S2 Unauthenticated',
 		1: 'S2 Authenticated',
@@ -2532,304 +836,84 @@ const ZWaveJS = (function () {
 		7: 'S0 Legacy'
 	};
 
-	/*
-	 * Internal events/methods
-	 * Such as a Node/CC being being selected, or something that needs exra work
-	 */
+	const groupValuesByEndpoint = (values) =>
+		values.reduce((groups, value) => {
+			const endpoint = value.valueId.endpoint;
+			(groups[endpoint] = groups[endpoint] || []).push(value);
+			return groups;
+		}, {});
 
-	// Node Selected
-	const nodeSelected = (event, item) => {
-		if (!item.nodeData) {
+	const resizeForEndpointCount = (endpointCount) => {
+		const hasMultipleEndpoints = endpointCount >= 2;
+		$('#zwjs-endpoint-list').toggle(hasMultipleEndpoints);
+		$('#zwjs-cc-list').css({ height: hasMultipleEndpoints ? 'calc(100% - 200px)' : 'calc(100% - 165px)' });
+		Panels.resize($('#zwjs-sidebar').height());
+	};
+
+	const selectEndpoint = (endpoint, endpointGroups) => {
+		listCCs(endpointGroups[endpoint]);
+		$('#zwjs-endpoint-list > div').removeAttr('selected');
+		$(`#zwjs-endpoint-list > div[data-endpoint="${endpoint}"]`).attr('selected', 'selected');
+	};
+
+	const renderEndpointButtons = (endpointGroups) => {
+		const endpointIds = Object.keys(endpointGroups);
+		resizeForEndpointCount(endpointIds.length);
+
+		if (!endpointIds.length) return;
+
+		endpointIds.forEach((endpoint) => {
+			const label = endpoint === '0' ? 'Root' : `EP${endpoint}`;
+			$(`<div data-endpoint="${endpoint}">${label}</div>`)
+				.on('click', () => selectEndpoint(endpoint, endpointGroups))
+				.appendTo('#zwjs-endpoint-list');
+		});
+
+		selectEndpoint('0', endpointGroups);
+	};
+
+	const ensureDeviceConfig = (node) => {
+		node.deviceConfig ||= {};
+		node.deviceConfig.manufacturer ??= 'NO CONFIG';
+		node.deviceConfig.label ??= 'FOUND IN DB';
+		return node;
+	};
+
+	const renderSelectedNodeSummary = (node) => {
+		$('#zwjs-node-status').text(node.status);
+		$('#zwjs-node-info-id').text(node.nodeId);
+		if (node.interviewStage !== 'Complete') {
+			$('#zwjs-node-info').text(`Node Interview Stage : ${node.interviewStage}`);
 			return;
 		}
+		$('#zwjs-node-info').text(
+			`${node.deviceConfig.manufacturer} | ${node.deviceConfig.label} | v${node.firmwareVersion}`
+		);
+	};
 
-		selectedNode = item.nodeData;
+	const loadSelectedNodeValues = async (node) => {
+		const result = await Runtime.Post('DRIVER', 'getValueDB', [node.nodeId]);
+		return requireSuccessfulCall(result)[0].values || [];
+	};
+
+	const nodeSelected = async (event, item) => {
+		if (!item.nodeData) return;
+
+		selectedNode = ensureDeviceConfig(item.nodeData);
 		SelectedNodeVIDs = {};
-
 		$('#zwjs-endpoint-list').empty();
 		$('#zwjs-cc-list').treeList('empty');
-		$('#zwjs-node-status').text(selectedNode.status);
-		$('#zwjs-node-info-id').text(selectedNode.nodeId);
 		CloseTray();
+		renderSelectedNodeSummary(selectedNode);
 
-		if (selectedNode.interviewStage !== 'Complete') {
-			$('#zwjs-node-info').text(`Node Interview Stage : ${selectedNode.interviewStage}`);
-			//	return;
+		try {
+			const values = await loadSelectedNodeValues(selectedNode);
+			renderEndpointButtons(groupValuesByEndpoint(values));
+		} catch (error) {
+			ZWJSAlert(error.message || error);
 		}
-
-		const Info = `${selectedNode.deviceConfig.manufacturer} | ${selectedNode.deviceConfig.label} | v${selectedNode.firmwareVersion}`;
-		$('#zwjs-node-info').text(Info);
-
-		Runtime.Post('DRIVER', 'getValueDB', [selectedNode.nodeId])
-			.then((data) => {
-				if (data.callSuccess) {
-					data = data.response[0];
-
-					const groupByEP = function (xs) {
-						return xs.reduce(function (rv, x) {
-							(rv[x.valueId.endpoint] = rv[x.valueId.endpoint] || []).push(x);
-							return rv;
-						}, {});
-					};
-
-					const EPGroups = groupByEP(data.values);
-					const EPIDs = Object.keys(EPGroups);
-
-					if (EPIDs.length < 2) {
-						$('#zwjs-endpoint-list').hide();
-						$('#zwjs-cc-list').css({ height: 'calc(100% - 165px)' });
-						Panels.resize($('#zwjs-sidebar').height());
-					} else {
-						$('#zwjs-endpoint-list').show();
-						$('#zwjs-cc-list').css({ height: 'calc(100% - 200px)' });
-						Panels.resize($('#zwjs-sidebar').height());
-					}
-
-					EPIDs.forEach((E) => {
-						const EP = E === '0' ? 'Root' : `EP${E}`;
-						const Button = $(`<div data-endpoint="${E}">${EP}</div>`);
-						Button.click(() => {
-							listCCs(EPGroups[E]);
-							$('#zwjs-endpoint-list > div').removeAttr('selected');
-							$(`#zwjs-endpoint-list > div[data-endpoint="${E}"]`).attr('selected', 'selected');
-						});
-						$('#zwjs-endpoint-list').append(Button);
-					});
-
-					listCCs(EPGroups['0']);
-					$('#zwjs-endpoint-list > div[data-endpoint="0"]').attr('selected', 'selected');
-				} else {
-					ZWJSAlert(data.response);
-				}
-			})
-			.catch((Error) => {
-				ZWJSAlert(Error.message);
-			});
 	};
 
-	// EP Selected
-	const listCCs = (Collection) => {
-		const groupByCC = function (xs) {
-			return xs.reduce(function (rv, x) {
-				(rv[x.valueId.commandClass] = rv[x.valueId.commandClass] || []).push(x);
-				return rv;
-			}, {});
-		};
-
-		const CCGroups = groupByCC(Collection);
-		const CCGroupIDs = Object.keys(CCGroups);
-
-		const Items = [];
-
-		CCGroupIDs.forEach((CCID) => {
-			const Name = CCGroups[CCID][0].valueId.commandClassName;
-			const Item = {
-				element: `<div><span class="zwjs-cc-id">0x${parseInt(CCID).toString(16).padStart(2, '0').toUpperCase()}</span> - ${Name}</div>`,
-				children: [],
-				parent: true
-			};
-
-			CCGroups[CCID].forEach((V) => {
-				const getCurrentValue = (value) => {
-					let Display;
-					if (value !== undefined) {
-						if (typeof value === 'object' && !Array.isArray(value)) {
-							Display = '(Complex)';
-						} else {
-							if (V.metadata?.states && V.metadata.states[value]) {
-								Display = V.metadata.states[value];
-							} else {
-								if (V.metadata?.unit) {
-									Display = `${value} (${V.metadata.unit})`;
-								} else {
-									Display = value;
-								}
-							}
-						}
-
-						return `<span class="zwjs-cc-value" id="zwjs-value-${getValueUpdateHash(V.valueId)}">${Display}</span>`;
-					} else {
-						return '';
-					}
-				};
-
-				SelectedNodeVIDs[getValueUpdateHash(V.valueId)] = {
-					metadata: V.metadata,
-					valueId: V.valueId,
-					currentValue: V.currentValue
-				};
-
-				const sItem = {
-					element: `<div style="width:100%; margin-right:30px">${V.metadata.label || V.valueId.property} ${getCurrentValue(V.currentValue)}</div>`,
-					icon: V.metadata.writeable ? 'fa fa-pencil' : '',
-					parent: false,
-					valueInfo: SelectedNodeVIDs[getValueUpdateHash(V.valueId)]
-				};
-
-				Item.children.push(sItem);
-			});
-
-			Items.push(Item);
-		});
-
-		$('#zwjs-cc-list').treeList('empty');
-		$('#zwjs-cc-list').treeList('data', Items);
-		$('#zwjs-cc-list').off('treelistselect');
-		$('#zwjs-cc-list').on('treelistselect', function (event, item) {
-			if (Object.keys(item).length < 1 || item.parent === true) {
-				return;
-			}
-
-			ViewingValueID = item.valueInfo.valueId;
-
-			let Property;
-			if (typeof item.valueInfo.valueId.property === 'number') {
-				Property = `0x${parseInt(item.valueInfo.valueId.property).toString(16).padStart(2, '0').toUpperCase()}`;
-			} else {
-				Property = item.valueInfo.valueId.property;
-			}
-
-			if (item.valueInfo.valueId.propertyKey) {
-				if (typeof item.valueInfo.valueId.propertyKey === 'number') {
-					Property += ` / 0x${parseInt(item.valueInfo.valueId.propertyKey).toString(16).padStart(2, '0').toUpperCase()}`;
-				} else {
-					Property += ` / ${item.valueInfo.valueId.propertyKey}`;
-				}
-			}
-
-			const State = {
-				ccId: `0x${parseInt(item.valueInfo.valueId.commandClass).toString(16).padStart(2, '0').toUpperCase()}`,
-				ccName: item.valueInfo.valueId.commandClassName,
-				valueLabel: item.valueInfo.metadata.label,
-				nodeId: selectedNode.nodeId,
-				property: Property,
-				editInfo: {
-					valueLabel: item.valueInfo.metadata.label,
-					valueId: item.valueInfo.valueId,
-					writeable: item.valueInfo.metadata.writeable,
-					currentValue: item.valueInfo.currentValue,
-					type: item.valueInfo.metadata.type,
-					states: item.valueInfo.metadata.states,
-					allowManualEntry:
-						item.valueInfo.metadata.allowManualEntry !== undefined
-							? item.valueInfo.metadata.allowManualEntry
-							: item.valueInfo.metadata.writeable
-				}
-			};
-
-			State.examples = {
-				valueLabel: item.valueInfo.metadata.label,
-				nocmd: {
-					payload: {
-						cmd: {
-							api: 'VALUE'
-						},
-						cmdProperties: {
-							nodeId: selectedNode.nodeId,
-							valueId: { ...item.valueInfo.valueId }
-						}
-					}
-				},
-				cmd: {
-					topic: selectedNode.nodeId,
-					valueId: { ...item.valueInfo.valueId }
-				}
-			};
-
-			if (item.valueInfo.metadata.valueChangeOptions) {
-				State.examples.cmd.options = {};
-				State.examples.nocmd.payload.cmdProperties.setValueOptions = {};
-
-				item.valueInfo.metadata.valueChangeOptions.forEach((OP) => {
-					State.examples.cmd.options[OP] = SetValueOptionExamples[OP];
-					State.examples.nocmd.payload.cmdProperties.setValueOptions[OP] = SetValueOptionExamples[OP];
-				});
-			}
-
-			delete State.examples.cmd.valueId.commandClassName;
-			delete State.examples.cmd.valueId.propertyName;
-			delete State.examples.cmd.valueId.propertyKeyName;
-			delete State.examples.nocmd.payload.cmdProperties.valueId.commandClassName;
-			delete State.examples.nocmd.payload.cmdProperties.valueId.propertyName;
-			delete State.examples.nocmd.payload.cmdProperties.valueId.propertyKeyName;
-
-			if (item.valueInfo.metadata.writeable) {
-				State.examples.nocmd.payload.cmd.method = 'setValue | getValue';
-				State.examples.nocmd.payload.cmdProperties.value = item.valueInfo.currentValue;
-				State.examples.cmd.payload = item.valueInfo.currentValue;
-			} else {
-				State.examples.nocmd.payload.cmd.method = 'getValue';
-			}
-
-			State.debug = {
-				currentValue: item.valueInfo.currentValue,
-				valueId: item.valueInfo.valueId,
-				metadata: item.valueInfo.metadata
-			};
-
-			// Mobile or Mini Editor
-			const Width = $(window).width() < 1024;
-			const Mini = $(event.originalEvent?.target).closest('.zwjs-cc-value').length;
-			if (Width || Mini) {
-				const Options = {
-					draggable: false,
-					modal: true,
-					resizable: false,
-					width: Width ? '90%' : '20%',
-					position: { my: 'center', at: 'center', of: window },
-					title: 'Mini Value Editor',
-					minHeight: 160,
-					buttons: {},
-					close: function () {
-						document.activeElement.blur();
-						$(this).dialog('destroy');
-						MiniEdtiorDialog = undefined;
-					},
-					open: function () {
-						CloseTray();
-						ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Value-Current', undefined, State.editInfo, '#zwjs-mini-content');
-					}
-				};
-				const D = $('<div>').css({
-					padding: 10,
-					wordWrap: 'break-word'
-				});
-
-				D.append('<div id="zwjs-mini-content"></div>');
-				MiniEdtiorDialog = D.dialog(Options);
-				return;
-			}
-
-			CloseTray();
-			const Options = {
-				width: 700,
-				title: 'Value Management',
-				buttons: [
-					{
-						id: 'zwjs-tray-close',
-						text: 'Close',
-						click: function () {
-							CloseTray();
-						}
-					}
-				],
-				open: function (tray) {
-					isCurrentTray = true;
-					const trayBody = tray.find('.red-ui-tray-body, .editor-tray-body');
-
-					trayBody.append(TPL_ValueManagement(State));
-
-					setTimeout(() => {
-						const el = $('.zwjs-tray-menu > div[default]')[0];
-						el.onclick.call(el);
-					}, 250);
-				}
-			};
-			RED.tray.show(Options);
-		});
-	};
-
-	// Clear context of Network, Node and others
 	const ClearSelection = (Controller) => {
 		$('#zwjs-node-info-id').text('--');
 		$('#zwjs-node-info').text('No Node Selected');
@@ -2846,57 +930,1577 @@ const ZWaveJS = (function () {
 		}
 	};
 
-	// Do the Asso adding (after removal)
-	const CommitAssociationsAdd = (Button) => {
-		const Addresses = [];
-		$("[data-role='zwjs-new-association']").each(function () {
-			const Node = parseInt($(this).find("[data-role='zwjs-node']").first().val());
-			let Endpoint = parseInt($(this).find("[data-role='zwjs-endpoint']").first().val());
-			if (isNaN(Endpoint)) {
-				Endpoint = undefined;
-			}
-			Addresses.push({ nodeId: Node, endpoint: Endpoint });
-		});
+	/*
+	 * COMMAND CLASSES AND VALUES
+	 */
 
-		if (Addresses.length > 0) {
-			const Params = [
-				{ nodeId: selectedNode.nodeId, endpoint: parseInt($('#zwjs-asso-endpoints').val()) },
-				parseInt($('#zwjs-asso-groups').val()),
-				Addresses
-			];
-			Runtime.Post('CONTROLLER', 'addAssociations', Params)
-				.then((response) => {
-					if (response.callSuccess) {
-						ZWJSAlert('Associations have been successfully updated!');
-						EnableButton(Button);
-						processAssociationGPSelect();
-					} else {
-						EnableButton(Button);
-						ZWJSAlert(response.response);
+	const getValueUpdateHash = (Obj) => {
+		Obj = JSON.stringify(Obj);
+		Obj = `${selectedNode.nodeId}${Obj}`;
+		let hash = 5381;
+		for (let i = 0; i < Obj.length; i++) {
+			hash = (hash << 5) + hash + Obj.charCodeAt(i);
+		}
+		return (hash >>> 0).toString(16);
+	};
+
+	const formatHex = (value, width = 2) => `0x${parseInt(value).toString(16).padStart(width, '0').toUpperCase()}`;
+
+	const formatCurrentValue = (valueInfo) => {
+		const value = valueInfo.currentValue;
+		if (value === undefined) return '';
+
+		let displayValue = value;
+		if (typeof value === 'object' && !Array.isArray(value)) {
+			displayValue = '(Complex)';
+		} else if (valueInfo.metadata?.states?.[value]) {
+			displayValue = valueInfo.metadata.states[value];
+		} else if (valueInfo.metadata?.unit) {
+			displayValue = `${value} (${valueInfo.metadata.unit})`;
+		}
+
+		return `<span class="zwjs-cc-value" id="zwjs-value-${getValueUpdateHash(valueInfo.valueId)}">${displayValue}</span>`;
+	};
+
+	const formatValueProperty = (valueId) => {
+		const formatPart = (part) => (typeof part === 'number' ? formatHex(part) : part);
+		let property = formatPart(valueId.property);
+		if (valueId.propertyKey !== undefined && valueId.propertyKey !== null) {
+			property += ` / ${formatPart(valueId.propertyKey)}`;
+		}
+		return property;
+	};
+
+	const sanitiseExampleValueId = (valueId) => {
+		const cleanValueId = { ...valueId };
+		delete cleanValueId.commandClassName;
+		delete cleanValueId.propertyName;
+		delete cleanValueId.propertyKeyName;
+		return cleanValueId;
+	};
+
+	const buildValueExamples = (valueInfo) => {
+		const cleanValueId = sanitiseExampleValueId(valueInfo.valueId);
+		const examples = {
+			valueLabel: valueInfo.metadata.label,
+			nocmd: {
+				payload: {
+					cmd: { api: 'VALUE', method: valueInfo.metadata.writeable ? 'setValue | getValue' : 'getValue' },
+					cmdProperties: { nodeId: selectedNode.nodeId, valueId: { ...cleanValueId } }
+				}
+			},
+			cmd: { topic: selectedNode.nodeId, valueId: { ...cleanValueId } }
+		};
+
+		if (valueInfo.metadata.writeable) {
+			examples.nocmd.payload.cmdProperties.value = valueInfo.currentValue;
+			examples.cmd.payload = valueInfo.currentValue;
+		}
+
+		if (valueInfo.metadata.valueChangeOptions) {
+			examples.cmd.options = {};
+			examples.nocmd.payload.cmdProperties.setValueOptions = {};
+			valueInfo.metadata.valueChangeOptions.forEach((option) => {
+				examples.cmd.options[option] = SetValueOptionExamples[option];
+				examples.nocmd.payload.cmdProperties.setValueOptions[option] = SetValueOptionExamples[option];
+			});
+		}
+		return examples;
+	};
+
+	const buildValueManagementState = (valueInfo) => ({
+		ccId: formatHex(valueInfo.valueId.commandClass),
+		ccName: valueInfo.valueId.commandClassName,
+		valueLabel: valueInfo.metadata.label,
+		nodeId: selectedNode.nodeId,
+		property: formatValueProperty(valueInfo.valueId),
+		editInfo: {
+			valueLabel: valueInfo.metadata.label,
+			valueId: valueInfo.valueId,
+			writeable: valueInfo.metadata.writeable,
+			currentValue: valueInfo.currentValue,
+			type: valueInfo.metadata.type,
+			states: valueInfo.metadata.states,
+			allowManualEntry: valueInfo.metadata.allowManualEntry ?? valueInfo.metadata.writeable
+		},
+		examples: buildValueExamples(valueInfo),
+		debug: { currentValue: valueInfo.currentValue, valueId: valueInfo.valueId, metadata: valueInfo.metadata }
+	});
+
+	const showMiniValueEditor = (state, useMobileWidth) => {
+		const dialog = $('<div>').css({ padding: 10, wordWrap: 'break-word' });
+		dialog.append('<div id="zwjs-mini-content"></div>');
+		MiniEdtiorDialog = dialog.dialog({
+			draggable: false,
+			modal: true,
+			resizable: false,
+			width: useMobileWidth ? '90%' : '20%',
+			position: { my: 'center', at: 'center', of: window },
+			title: 'Mini Value Editor',
+			minHeight: 160,
+			buttons: {},
+			close() {
+				document.activeElement.blur();
+				$(this).dialog('destroy');
+				MiniEdtiorDialog = undefined;
+			},
+			open() {
+				CloseTray();
+				ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Node-Value-Current', undefined, state.editInfo, '#zwjs-mini-content');
+			}
+		});
+	};
+
+	const showValueManagementTray = (state) => {
+		CloseTray();
+		RED.tray.show({
+			width: 700,
+			title: 'Value Management',
+			buttons: [{ id: 'zwjs-tray-close', text: 'Close', click: CloseTray }],
+			open(tray) {
+				isCurrentTray = true;
+				tray.find('.red-ui-tray-body, .editor-tray-body').append(TPL_ValueManagement(state));
+				setTimeout(() => {
+					const defaultMenuItem = $('.zwjs-tray-menu > div[default]')[0];
+					defaultMenuItem.onclick.call(defaultMenuItem);
+				}, 250);
+			}
+		});
+	};
+
+	const openValueManagement = (event, valueInfo) => {
+		ViewingValueID = valueInfo.valueId;
+		const state = buildValueManagementState(valueInfo);
+		const useMobileWidth = $(window).width() < 1024;
+		const clickedCurrentValue = $(event.originalEvent?.target).closest('.zwjs-cc-value').length > 0;
+
+		if (useMobileWidth || clickedCurrentValue) {
+			showMiniValueEditor(state, useMobileWidth);
+			return;
+		}
+		showValueManagementTray(state);
+	};
+
+	const buildCommandClassTree = (collection) => {
+		const groups = collection.reduce((byCommandClass, value) => {
+			(byCommandClass[value.valueId.commandClass] ||= []).push(value);
+			return byCommandClass;
+		}, {});
+
+		return Object.entries(groups).map(([commandClassId, values]) => ({
+			element: `<div><span class="zwjs-cc-id">${formatHex(commandClassId)}</span> - ${values[0].valueId.commandClassName}</div>`,
+			parent: true,
+			children: values.map((value) => {
+				const hash = getValueUpdateHash(value.valueId);
+				SelectedNodeVIDs[hash] = { metadata: value.metadata, valueId: value.valueId, currentValue: value.currentValue };
+				return {
+					element: `<div style="width:100%; margin-right:30px">${value.metadata.label || value.valueId.property} ${formatCurrentValue(value)}</div>`,
+					icon: value.metadata.writeable ? 'fa fa-pencil' : '',
+					parent: false,
+					valueInfo: SelectedNodeVIDs[hash]
+				};
+			})
+		}));
+	};
+
+	const listCCs = (collection) => {
+		const commandClassTree = buildCommandClassTree(collection);
+		const tree = $('#zwjs-cc-list');
+		tree.treeList('empty');
+		tree.treeList('data', commandClassTree);
+		tree.off('treelistselect');
+		tree.on('treelistselect', (event, item) => {
+			if (!item || Object.keys(item).length < 1 || item.parent === true) return;
+			openValueManagement(event, item.valueInfo);
+		});
+	};
+
+	const readEditedValue = (definedValue) => {
+		if (CodeEditor) return JSON.parse(CodeEditor.getValue());
+
+		const editor = $('#zwjs-cc-value-new');
+		if (definedValue) {
+			const value = parseInt($('#zwjs-cc-value-new-defined').val());
+			editor.val(value);
+			return value;
+		}
+
+		if (editor.is('select')) return parseInt(editor.val());
+		if (!editor.is('input')) return undefined;
+
+		switch (editor.attr('type')) {
+			case 'number':
+				return parseInt(editor.val());
+			case 'checkbox':
+				return editor.prop('checked');
+			case 'color':
+				return editor.val().substring(1);
+			default:
+				return undefined;
+		}
+	};
+
+	const describeSetValueFailure = (status) =>
+		({
+			0: 'The Node does not support the command',
+			1: 'The Node is working on the requested change',
+			2: 'The Node rejected the change',
+			3: 'The target Endpoint was not found on the Node',
+			4: 'The set command has not been implemented for this CC',
+			5: 'The provided value was not valid'
+		})[status];
+
+	const showValueUpdateSuccess = (button) => {
+		$(button).css({ backgroundColor: 'green' });
+		setTimeout(() => $(button).css({ backgroundColor: '' }), 1500);
+
+		if (MiniEdtiorDialog) {
+			MiniEdtiorDialog.dialog('destroy');
+			MiniEdtiorDialog = undefined;
+		}
+	};
+
+	const UpdateValue = async (button, encodedValueId, definedValue) => {
+		DisableButton(button);
+		try {
+			const valueId = DecodeObject(encodedValueId);
+			const value = readEditedValue(definedValue);
+			const result = await Runtime.Post('VALUE', 'setValue', { nodeId: selectedNode.nodeId, valueId, value });
+
+			if (!result.callSuccess) {
+				ZWJSAlert(result.response);
+				return;
+			}
+
+			const failure = describeSetValueFailure(result.response.status);
+			failure ? ZWJSAlert(failure) : showValueUpdateSuccess(button);
+		} catch (error) {
+			ZWJSAlert(error.message || error);
+		} finally {
+			EnableButton(button);
+		}
+	};
+
+	/*
+	 * MANAGEMENT TRAYS
+	 */
+
+	const fetchNodes = async () => requireSuccessfulCall(await Runtime.Get('CONTROLLER', 'getNodes'));
+
+	const prepareControllerManagementData = (controller) => {
+		controller.backgroundRSSI = controller.statistics.backgroundRSSI
+			? FlattenChannelAverages(controller.statistics.backgroundRSSI)
+			: {};
+		delete controller.statistics.backgroundRSSI;
+		$('#zwjs-controller-info').data('info', controller);
+	};
+
+	const ShowNetworkManagement = async () => {
+		if (!networkId) return;
+		CloseTray();
+		if (BootLoaderMode) return ShowRecovery();
+
+		try {
+			const controller = (await fetchNodes()).find((node) => node.isControllerNode);
+			prepareControllerManagementData(controller);
+			showManagementTray('ZWave JS Controller Management', TPL_ControllerManagement, {
+				Network: $('#zwjs-controller-info').text(),
+				Status: $('#zwjs-controller-status').text()
+			});
+		} catch (error) {
+			ZWJSAlert(error.message || error);
+		}
+	};
+
+	const refreshSelectedNodeData = async () => {
+		const node = (await fetchNodes()).find((candidate) => candidate.nodeId === selectedNode.nodeId);
+		delete node.statistics.lwr;
+		const group = GetNodeGroup(selectedNode.nodeLocation);
+		group.children.find((item) => item.nodeData.nodeId === node.nodeId).nodeData = node;
+		return node;
+	};
+
+	const ShowNodeManagement = async () => {
+		if (!selectedNode) return;
+		CloseTray();
+		try {
+			await refreshSelectedNodeData();
+			showManagementTray('ZWave JS Node Management', TPL_NodeManagement, {
+				NodeID: $('#zwjs-node-info-id').text(),
+				Status: $('#zwjs-node-status').text(),
+				NodeInfo: $('#zwjs-node-info').text()
+			});
+		} catch (error) {
+			ZWJSAlert(error.message || error);
+		}
+	};
+
+	const InterviewCurrentNode = async () => {
+		if (!selectedNode) {
+			return;
+		}
+		if (await ZWJSConfirm('Are you sure you wish to re-interview this Node?')) {
+			Runtime.Post('NODE', 'refreshInfo', { nodeId: selectedNode.nodeId })
+				.then((data) => {
+					if (!data.callSuccess) {
+						ZWJSAlert(data.response);
 					}
 				})
 				.catch((Error) => {
 					ZWJSAlert(Error.message);
 				});
-		} else {
-			ZWJSAlert('Associations have been successfully updated!');
-			EnableButton(Button);
-			processAssociationGPSelect();
 		}
 	};
 
-	// Attempst to select the only active network
-	const SelectFirstNetwork = () => {
-		const select = $('#zwjs-network');
-		const options = select.children();
-		const count = options.length;
+	const getAdvancedTemplate = (templateId) => {
+		let template = AdvancedPanels.find((panel) => panel.id === templateId);
+		if (!template) {
+			template = { id: templateId, compiled: Handlebars.compile($(`#${templateId}`).html()) };
+			AdvancedPanels.push(template);
+		}
+		return template.compiled;
+	};
 
-		if (count === 2) {
-			select.val(options.eq(1).val());
-			NetworkSelected();
+	const resolveAdvancedPanelData = async (source) => {
+		if (!source) return {};
+		if (RenderFunctions[source]) return RenderFunctions[source]();
+		if (typeof source === 'object') return source;
+		if (typeof source === 'string') return DecodeObject(source);
+		return {};
+	};
+
+	const RenderAdvanced = async (templateId, target, dataSource, writeTarget) => {
+		try {
+			const render = getAdvancedTemplate(templateId);
+			const data = await resolveAdvancedPanelData(dataSource);
+			const container = $(writeTarget || '#zwjs-advanced-content');
+			container.empty().append(render(data));
+
+			if (target) {
+				$('.zwjs-tray-menu div').removeAttr('active');
+				$(target).attr('active', '');
+			}
+		} catch (error) {
+			ZWJSAlert(error.message || error);
+		}
+	};
+
+	const RenderFunctions = {
+		async CheckFUS() {
+			const updates = requireSuccessfulCall(
+				await Runtime.Post('CONTROLLER', 'getAllAvailableFirmwareUpdates', [{ includePrereleases: true }])
+			);
+			if (!Object.keys(updates).length) {
+				throw 'No updates available.';
+			}
+			return { Updates: updates, Message: getFUSLicenseStatus() };
+		},
+
+		async PrepFUS() {
+			return { Message: getFUSLicenseStatus() };
+		},
+
+		async GetRRCurrentProgress() {
+			const result = await Runtime.Get(undefined, undefined, `zwave-js/ui/${networkId}/rebuildroutesprogress`);
+			if (result.callSuccess && result.response !== false) {
+				commsRebuildRoutesProgress(undefined, { Progress: result.response });
+			}
+		},
+
+		async ListSplitters() {
+			const splitters = RED.nodes
+				.filterNodes({ type: 'zwavejs-splitter' })
+				.map((node) => ({ name: node.name, id: node.id }));
+
+			const labelParts = [ViewingValueID.commandClassName, ViewingValueID.propertyName];
+			if (ViewingValueID.propertyKeyName) labelParts.push(ViewingValueID.propertyKeyName);
+
+			return {
+				splitters,
+				label: labelParts.map((part) => part.replace(/ /g, '_').toUpperCase()).join('.'),
+				shape: ViewingValueID
+			};
+		},
+
+		async RenderMap() {
+			const nodes = requireSuccessfulCall(await Runtime.Get('CONTROLLER', 'getNodes'));
+			const controller = nodes.find((node) => node.isControllerNode);
+			const devices = nodes.filter((node) => !node.isControllerNode);
+
+			const nodeLines = [
+				'graph TD',
+				`N0(fa:fa-wifi<br />Controller<br /><span style="font-size:10px">${controller.deviceConfig?.manufacturer} - ${controller.deviceConfig?.label}</span>)`
+			];
+			const routeLines = [];
+
+			devices.forEach((node) => {
+				const name = node.nodeName || 'No Name';
+				const icon = node.powerSource.type === 'mains' ? 'fa-plug' : 'fa-battery-full';
+				const device = `${node.deviceConfig?.manufacturer} - ${node.deviceConfig?.label}`;
+				nodeLines.push(
+					`N${node.nodeId}(fa:${icon}<br />${node.nodeId} - ${name}<br /><span style="font-size:10px">${device}</span>)`
+				);
+
+				const repeaters = node.statistics?.lwr?.repeaters || [];
+				if (repeaters.length) {
+					repeaters.forEach((repeater) => routeLines.push(`N${node.nodeId} <---> N${repeater}`));
+				} else {
+					routeLines.push(`N0 <===> N${node.nodeId}`);
+				}
+			});
+
+			setTimeout(async () => {
+				ZWJSMermaid.initialize({ startOnLoad: false, securityLevel: 'loose', flowchart: { htmlLabels: true } });
+				await ZWJSMermaid.run({ querySelector: '.zwjs-mermaid' });
+				svgPanZoom('.zwjs-mermaid svg', { zoomEnabled: true, controlIconsEnabled: true, panEnabled: true });
+			}, 50);
+
+			return { map: [...nodeLines, ...routeLines].join('\r\n') + '\r\n' };
+		},
+
+		async PrepFailed() {
+			const nodes = requireSuccessfulCall(await Runtime.Get('CONTROLLER', 'getNodes'));
+			return { nodes: nodes.filter((node) => node.status === 'Dead') };
+		},
+
+		async ControllerInfo() {
+			const controllerData = $('#zwjs-controller-info').data('info');
+			const versions = await Runtime.Get(undefined, undefined, `zwave-js/ui/${networkId}/version`);
+			return {
+				configuration: $('#zwjs-network option:selected').text(),
+				serialPort: RED.nodes.node(networkId).serialPort,
+				...versions.response,
+				...controllerData
+			};
+		},
+
+		async ControllerStats() {
+			const controllerData = $('#zwjs-controller-info').data('info');
+			const result = {
+				statistics: FormatObjectKeys(controllerData.statistics),
+				backgroundRSSI: FormatObjectKeys(controllerData.backgroundRSSI)
+			};
+			result.backgroundRSSI.Timestamp = formatDateTime(result.backgroundRSSI.Timestamp);
+			return result;
+		},
+
+		async ControllerSettings() {
+			const regionResult = await Runtime.Get('CONTROLLER', 'getRFRegion');
+			const powerResult = await Runtime.Get('CONTROLLER', 'getPowerlevel');
+			const longRangePowerResult = await Runtime.Get('CONTROLLER', 'getMaxLongRangePowerlevel');
+
+			return {
+				Region: regionResult.callSuccess ? `0x${regionResult.response.toString(16).padStart(2, '0')}` : regionResult,
+				RDisabled: regionResult.callSuccess ? '' : 'disabled="disabled"',
+				Power: powerResult.callSuccess ? powerResult.response.powerlevel : powerResult,
+				LRPower: longRangePowerResult.callSuccess ? longRangePowerResult.response : longRangePowerResult
+			};
+		},
+
+		async NodeInfo() {
+			return getSelectedNodeData();
+		},
+
+		async NodeStats() {
+			const result = FormatObjectKeys(getSelectedNodeData().statistics);
+			result['Last Seen'] = formatDateTime(result['Last Seen']);
+			return result;
+		},
+
+		async NodeAssociationGroups() {
+			AssociationGroups = requireSuccessfulCall(
+				await Runtime.Post('CONTROLLER', 'getAllAssociationGroups', [selectedNode.nodeId])
+			);
+			return AssociationGroups;
+		},
+
+		async SetInclusionOptions() {
+			setTimeout(() => {
+				const config = RED.nodes.node(networkId);
+				const hasS0 = config.securityKeys_S0_Legacy.length >= 32;
+				const hasAllS2 = [
+					config.securityKeys_S2_AccessControl,
+					config.securityKeys_S2_Authenticated,
+					config.securityKeys_S2_Unauthenticated
+				].every((key) => key.length >= 32);
+
+				const disableInclusionModes = (values) => {
+					values.forEach((value) => {
+						const input = $(`input[type="radio"][name="ZWJS_IS"][value="${value}"]`);
+						input.attr('disabled', 'disabled');
+						input.parent().css({ opacity: 0.4 });
+					});
+				};
+
+				if (!hasAllS2) {
+					disableInclusionModes(['0', '4', 'SS']);
+					$('input[type="radio"][name="ZWJS_IS"][value="2"]').prop('checked', true);
+				}
+				if (!hasS0) {
+					disableInclusionModes(['3']);
+					if (!hasAllS2) $('input[type="radio"][name="IS"][value="2"]').prop('checked', true);
+				}
+			}, 10);
+			return {};
+		},
+
+		async StartCamera() {
+			setTimeout(() => {
+				const videoElement = $('#zwjs-camera-view')[0];
+				const options = {
+					highlightCodeOutline: true,
+					highlightScanRegion: true,
+					calculateScanRegion: () => {
+						const shortestDimension = Math.min(videoElement.videoWidth, videoElement.videoHeight);
+						const size = Math.round(0.5 * shortestDimension);
+						return {
+							x: Math.round((videoElement.videoWidth - size) / 2),
+							y: Math.round((videoElement.videoHeight - size) / 2),
+							width: size,
+							height: size
+						};
+					}
+				};
+
+				const handleScan = async (result) => {
+					QRS.stop();
+					const response = await Runtime.Post(
+						undefined,
+						undefined,
+						[result.data],
+						`zwave-js/ui/${networkId}/s2/parseqr`
+					);
+					if (!response.callSuccess) {
+						ZWJSAlert(response.response);
+						QRS.start();
+						return;
+					}
+					if (response.response.isDSK) {
+						ZWJSAlert('The QR Code you have scanned, is a DSK (Device Specific Key), it is not a Smart Start QR Code');
+						QRS.start();
+						return;
+					}
+
+					const provisioning = response.response.qrProvisioningInformation;
+					const classes = provisioning.requestedSecurityClasses.map((classId) => ({
+						classId,
+						className: SClassMap[classId]
+					}));
+					provisioning.manufacturer = response.response.deviceConfig.manufacturer;
+					provisioning.label = response.response.deviceConfig.label;
+
+					RenderAdvanced('ZWJS_TPL_PrePro', undefined, {
+						QRProvisioningInformation: btoa(JSON.stringify(provisioning)),
+						DSK: provisioning.dsk,
+						DeviceConfig: response.response.deviceConfig,
+						classes
+					});
+				};
+
+				QRS = new QrScanner(videoElement, handleScan, options);
+				QRS.start();
+			}, 50);
+		},
+
+		async PrepSSList() {
+			const entries = requireSuccessfulCall(
+				await Runtime.Get(undefined, undefined, `zwave-js/ui/${networkId}/s2/provisioningentries`)
+			);
+			entries.forEach((entry) => {
+				entry.shortDSK = entry.dsk.split('-')[0];
+				if (entry.status === 0) entry.checked = 'checked';
+			});
+			return { entries };
+		}
+	};
+
+	/*
+	 * NODE ACTIONS
+	 */
+
+	const RemoveFailedNode = async (NodeID, Row) => {
+		const ID = NodeID || selectedNode?.nodeId;
+		if (ID) {
+			if (await ZWJSConfirm('Are you sure you wish to remove this Node from your network?')) {
+				Runtime.Post('CONTROLLER', 'removeFailedNode', [ID]).then((data) => {
+					if (data.callSuccess) {
+						if (Row) {
+							$(Row).closest('tr').remove();
+						}
+					} else {
+						ZWJSAlert(data.response);
+					}
+				});
+			}
+		}
+	};
+
+	const PingNode = (NodeID) => {
+		Runtime.Post('NODE', 'ping', { nodeId: NodeID }).then((data) => {
+			if (data.callSuccess) {
+				data.response ? ZWJSAlert('Ping was successful') : ZWJSAlert('Ping failed');
+			} else {
+				ZWJSAlert(data.response);
+			}
+		});
+	};
+
+	const SetNameLocation = async (button) => {
+		DisableButton(button);
+		try {
+			const node = requireSelectedNode();
+			requireSuccessfulCall(
+				await Runtime.Post('NODE', 'setName', {
+					nodeId: node.nodeId,
+					value: $('#zwjs-node-edit-name').val() || undefined
+				})
+			);
+			requireSuccessfulCall(
+				await Runtime.Post('NODE', 'setLocation', {
+					nodeId: node.nodeId,
+					value: $('#zwjs-node-edit-location').val() || undefined
+				})
+			);
+
+			await RefreshNodes('Named');
+			ZWJSAlert('Name & Location Set Successfully!');
+		} catch (error) {
+			ZWJSAlert(toError(error).message);
+		} finally {
+			EnableButton(button);
+		}
+	};
+
+	const healthCheckTopic = () => `zwave-js/ui/${networkId}/nodes/healthcheck`;
+
+	const renderHealthRating = (rating) => {
+		const state = rating > 5 ? 'good' : rating > 3 ? 'warn' : 'bad';
+		return `<div class="zwjs-rating" ${state}>${rating}/10</div>`;
+	};
+
+	const addHealthTestingRow = () => {
+		$('#zwjs-node-health-check').append(
+			'<tr><td style="text-align:center"><div class="zwjs-rating" wait>Testing...</div></td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td><td style="text-align:center">---</td></tr>'
+		);
+	};
+
+	const renderHealthCheckResult = (result) => {
+		$('#zwjs-node-health-check tr:last').remove();
+		$('#zwjs-node-health-check').append(
+			`<tr><td style="text-align:center">${renderHealthRating(result.rating)}</td><td style="text-align:center">${result.failedPingsNode}</td><td style="text-align:center">${result.failedPingsController ?? 0}</td><td style="text-align:center">${result.routeChanges}</td><td style="text-align:center">${result.latency} ms</td><td style="text-align:center">${result.numNeighbors}</td><td style="text-align:center">${result.minPowerlevel} dBm</td><td style="text-align:center">${result.snrMargin} dBm</td></tr>`
+		);
+		addHealthTestingRow();
+	};
+
+	const CheckNodeHealth = async (button) => {
+		DisableButton(button);
+		const node = requireSelectedNode();
+		const topic = healthCheckTopic(); // Snapshot before an async operation can change networks.
+		const feedback = (unusedTopic, data) => {
+			const lastResult = data?.check?.lastResult;
+			if (lastResult) renderHealthCheckResult(lastResult);
+		};
+
+		$('#zwjs-node-health-check').find('tr:gt(0)').remove();
+		RED.comms.subscribe(topic, feedback);
+		addHealthTestingRow();
+
+		try {
+			requireSuccessfulCall(await Runtime.Post('NODE', 'checkLifelineHealth', { nodeId: node.nodeId }));
+			await new Promise((resolve) => setTimeout(resolve, 250));
+		} catch (error) {
+			ZWJSAlert(toError(error).message);
+		} finally {
+			EnableButton(button);
+			$('#zwjs-node-health-check tr:last').remove();
+			RED.comms.unsubscribe(topic, feedback);
+		}
+	};
+
+	/*
+	 * ASSOCIATIONS
+	 */
+
+	const processAssociationEPSelect = () => {
+		const EP = $('#zwjs-asso-endpoints').val();
+		const GPs = AssociationGroups[EP];
+
+		$('#zwjs-asso-groups').empty();
+		$('#zwjs-asso-groups').append(new Option('Select Association Group'));
+
+		for (const [ID, GP] of Object.entries(GPs)) {
+			$('#zwjs-asso-groups').append(new Option(`${GP.label} (Max: ${GP.maxNodes})`, ID));
+		}
+	};
+
+	const processAssociationGPSelect = () => {
+		const Group = parseInt($('#zwjs-asso-groups').val());
+		const Address = {
+			nodeId: selectedNode.nodeId,
+			endpoint: parseInt($('#zwjs-asso-endpoints').val())
+		};
+		Runtime.Post('CONTROLLER', 'getAssociations', [Address]).then((data) => {
+			const Mapped = data.response[Group];
+
+			$('#zwjs-asso-mappings').empty();
+			$('#zwjs-asso-mappings').append(
+				'<tr><td style="text-align:center">Target Node</td><td style="text-align:center">Target Endpoint</td><td style="text-align:center">Delete</td></tr>'
+			);
+			Mapped.forEach((v) => {
+				let EP;
+				switch (v.endpoint) {
+					case undefined:
+						EP = '<span class="zwjs-asso-ep">NODE</span>';
+						break;
+
+					case 0:
+						EP = '<span class="zwjs-asso-ep">ROOT</span>';
+						break;
+
+					default:
+						EP = `<span class="zwjs-asso-ep">EP${v.endpoint}</span>`;
+						break;
+				}
+
+				$('#zwjs-asso-mappings').append(
+					`<tr><td style="text-align:center"><span class="zwjs-node-id">${v.nodeId}</span></td><td style="text-align:center">${EP}</td><td style="text-align:center"><i class="fa fa-trash" aria-hidden="true" style="font-size: 18px;color: red; cursor:pointer" onclick="ZWaveJS.MarkAssoDelete(this)"></i></td></tr>`
+				);
+			});
+		});
+	};
+
+	const PreppNewAssociation = () => {
+		$('#zwjs-asso-mappings').append(
+			'<tr data-role="zwjs-new-association"><td style="text-align:center"><input type="number" data-role="zwjs-node" value="1" min="1"></td><td style="text-align:center"><input type="number" data-role="zwjs-endpoint" min="0" placeholder="<Empty: Node-Association>"></td><td>&nbsp;</td></tr>'
+		);
+	};
+
+	const readAssociationAddresses = (rowSelector, nodeSelector, endpointSelector) => {
+		const addresses = [];
+		$(rowSelector).each(function () {
+			const row = $(this);
+			const isTableRow = nodeSelector === 'td';
+			const nodeValue = isTableRow ? row.find('td').first().text() : row.find(nodeSelector).first().val();
+			const endpointValue = isTableRow
+				? row.find('td').first().next().text()
+				: row.find(endpointSelector).first().val();
+			const endpoint = parseInt(endpointValue);
+			addresses.push({ nodeId: parseInt(nodeValue), endpoint: isNaN(endpoint) ? undefined : endpoint });
+		});
+		return addresses;
+	};
+
+	const getSelectedAssociationGroup = () => [
+		{ nodeId: selectedNode.nodeId, endpoint: parseInt($('#zwjs-asso-endpoints').val()) },
+		parseInt($('#zwjs-asso-groups').val())
+	];
+
+	const CommitAssociations = async (button) => {
+		DisableButton(button);
+		try {
+			const addresses = readAssociationAddresses("[data-role='zwjs-remove-association']", 'td', 'td');
+			if (addresses.length) {
+				const result = await Runtime.Post('CONTROLLER', 'removeAssociations', [
+					...getSelectedAssociationGroup(),
+					addresses
+				]);
+				if (!result.callSuccess) throw new Error(result.response);
+			}
+			await CommitAssociationsAdd(button);
+		} catch (error) {
+			EnableButton(button);
+			ZWJSAlert(error.message || error);
+		}
+	};
+
+	const ResetAllAssociations = async (button) => {
+		const confirmed = await ZWJSConfirm(
+			'Are you sure you wish to wipe all Associations? this includes the LifeLine associations, you will need to re-create them after.'
+		);
+		if (!confirmed) return;
+
+		DisableButton(button);
+		try {
+			const endpoints = requireSuccessfulCall(
+				await Runtime.Post('CONTROLLER', 'getAllAssociations', [selectedNode.nodeId])
+			);
+			const removals = [];
+			endpoints.forEach((endpoint) => {
+				Object.entries(endpoint.associations).forEach(([group, addresses]) => {
+					if (addresses.length) {
+						removals.push(
+							Runtime.Post('CONTROLLER', 'removeAssociations', [
+								endpoint.associationAddress,
+								parseInt(group),
+								addresses
+							])
+						);
+					}
+				});
+			});
+			await Promise.all(removals);
+			ZWJSAlert('All associations successfully removed!');
+			processAssociationGPSelect();
+		} catch (error) {
+			ZWJSAlert(error.message || error);
+		} finally {
+			EnableButton(button);
+		}
+	};
+
+	const MarkAssoDelete = (El) => {
+		$(El).closest('tr').attr('data-role', 'zwjs-remove-association');
+		$(El).closest('tr').css({ filter: 'grayscale()' });
+	};
+
+	const finishAssociationUpdate = (button) => {
+		ZWJSAlert('Associations have been successfully updated!');
+		EnableButton(button);
+		processAssociationGPSelect();
+	};
+
+	const CommitAssociationsAdd = async (button) => {
+		try {
+			const addresses = readAssociationAddresses(
+				"[data-role='zwjs-new-association']",
+				"[data-role='zwjs-node']",
+				"[data-role='zwjs-endpoint']"
+			);
+			if (addresses.length) {
+				const result = await Runtime.Post('CONTROLLER', 'addAssociations', [
+					...getSelectedAssociationGroup(),
+					addresses
+				]);
+				if (!result.callSuccess) throw new Error(result.response);
+			}
+			finishAssociationUpdate(button);
+		} catch (error) {
+			EnableButton(button);
+			ZWJSAlert(error.message || error);
+		}
+	};
+
+	/*
+	 * INCLUSION AND EXCLUSION
+	 */
+
+	const StartExclusion = () => {
+		Runtime.Get('CONTROLLER', 'beginExclusion').then((R) => {
+			if (R.callSuccess) {
+				RenderAdvanced('ZWJS_TPL_NIFWait', undefined, { mode: 'Exclusion' });
+			} else {
+				ZWJSAlert(R.response);
+			}
+		});
+	};
+
+	const StartInclusion = () => {
+		const IS = $('input[type="radio"][name="ZWJS_IS"]:checked').val();
+
+		if (IS !== 'SS') {
+			const ISO = {
+				strategy: parseInt(IS),
+				forceSecurity: false
+			};
+			Runtime.Post('CONTROLLER', 'beginInclusion', [ISO]).then((R) => {
+				if (R.callSuccess) {
+					RenderAdvanced('ZWJS_TPL_NIFWait', undefined, { mode: 'Inclusion' });
+				} else {
+					ZWJSAlert(R.response);
+				}
+			});
+		} else {
+			RenderAdvanced('ZWJS_TPL_QRRead', undefined, 'StartCamera');
+		}
+	};
+
+	const GrantClasses = (Button) => {
+		const Granted = {
+			clientSideAuth: clientSideAuth,
+			securityClasses: []
+		};
+
+		$('input[type="checkbox"][name="ZWJS_SCLASS"]:checked').each((i, e) => {
+			Granted.securityClasses.push(parseInt($(e).val()));
+		});
+
+		Runtime.Post(undefined, undefined, [Granted], `zwave-js/ui/${networkId}/s2/grant`).then((R) => {
+			if (R.callSuccess) {
+				DisableButton(Button);
+			} else {
+				ZWJSAlert(R.response);
+			}
+		});
+	};
+
+	const SubmitDSK = (Button) => {
+		Runtime.Post(undefined, undefined, [$('#zwjs-dsk').val()], `zwave-js/ui/${networkId}/s2/dsk`).then((R) => {
+			if (R.callSuccess) {
+				DisableButton(Button);
+			} else {
+				ZWJSAlert(R.response);
+			}
+		});
+	};
+
+	const SubmitProvisioningEntry = (Button) => {
+		DisableButton(Button);
+
+		const Entry = JSON.parse(atob($('#zwjs-qrdata').attr('data-entry')));
+		Entry.securityClasses = [];
+		Entry.status = 0;
+
+		$('input[type="checkbox"][name="ZWJS_SCLASS"]:checked').each((i, e) => {
+			Entry.securityClasses.push(parseInt($(e).val()));
+		});
+
+		Runtime.Post('CONTROLLER', 'provisionSmartStartNode', [Entry]).then((R) => {
+			if (R.callSuccess) {
+				RenderAdvanced('ZWJS_TPL_SSDone');
+			} else {
+				ZWJSAlert(R.response);
+			}
+		});
+	};
+
+	const SetPEActive = (El, Entry) => {
+		Entry = DecodeObject(Entry);
+		delete Entry.checked;
+		delete Entry.shortDSK;
+		Entry.status = $(El).prop('checked') ? 0 : 1;
+
+		Runtime.Post('CONTROLLER', 'provisionSmartStartNode', [Entry]).then((R) => {
+			if (!R.callSuccess) {
+				ZWJSAlert(R.response);
+			}
+		});
+	};
+
+	const DeletePE = async (El, Entry) => {
+		if (
+			await ZWJSConfirm(
+				'Are you sure you wish to delete this Provisioning Entry? Note: it will not exclude the device.'
+			)
+		) {
+			Entry = DecodeObject(Entry);
+			delete Entry.checked;
+			delete Entry.shortDSK;
+			Runtime.Post('CONTROLLER', 'unprovisionSmartStartNode', [Entry.dsk]).then((R) => {
+				if (R.callSuccess) {
+					$(El).parent().parent().remove();
+				} else {
+					ZWJSAlert(R.response);
+				}
+			});
+		}
+	};
+
+	const JoinAsSlave = (Button) => {
+		Runtime.Get('CONTROLLER', 'beginJoiningNetwork').then((R) => {
+			if (!R.callSuccess) {
+				EnableButton(Button);
+				ZWJSAlert(R.response);
+			} else {
+				const Result = R.response;
+				switch (Result) {
+					case 0:
+						DisableButton(Button);
+						break;
+					case 1:
+						ZWJSAlert('The Controller is currently too busy to perform the join.');
+						break;
+					case 2:
+						ZWJSAlert("The Controller's role does not permit joining as a secondary controller - try resetting it!");
+						break;
+					case 3:
+						ZWJSAlert('An unknown error occured.');
+						break;
+				}
+			}
+		});
+	};
+
+	const LeaveAsSlave = (Button) => {
+		DisableButton(Button);
+		Runtime.Get('CONTROLLER', 'beginLeavingNetwork').then((R) => {
+			if (!R.callSuccess) {
+				EnableButton(Button);
+				ZWJSAlert(R.response);
+			}
+		});
+	};
+
+	/*
+	 * CONTROLLER ACTIONS
+	 */
+
+	const BackupNames = async (button) => {
+		DisableButton(button);
+		try {
+			const nodes = requireSuccessfulCall(await Runtime.Get('CONTROLLER', 'getNodes'));
+			const controllerInfo = $('#zwjs-controller-info').data('info');
+			if (!controllerInfo?.homeId) throw new Error('Controller information is not available');
+
+			const namesAndLocations = nodes
+				.filter((node) => node.nodeName !== undefined || node.nodeLocation !== undefined)
+				.map((node) => ({ nodeId: node.nodeId, name: node.nodeName, location: node.nodeLocation }));
+
+			downloadBlob(
+				new Blob([JSON.stringify(namesAndLocations, null, 2)], { type: 'application/json' }),
+				`zwave_names_locations_${controllerInfo.homeId}.json`
+			);
+		} catch (error) {
+			ZWJSAlert(toError(error).message);
+		} finally {
+			EnableButton(button);
+		}
+	};
+
+	const RestoreNames = async (button) => {
+		DisableButton(button);
+		try {
+			const selected = await selectFile(async (file) => {
+				const text = await file.text();
+				const nodes = JSON.parse(text);
+				if (!Array.isArray(nodes)) throw new Error('The selected backup does not contain a node list');
+
+				for (const node of nodes) {
+					if (!Number.isInteger(node?.nodeId)) throw new Error('The selected backup contains an invalid node entry');
+					requireSuccessfulCall(
+						await Runtime.Post('NODE', 'setLocation', { nodeId: node.nodeId, value: node.location || undefined })
+					);
+					requireSuccessfulCall(
+						await Runtime.Post('NODE', 'setName', { nodeId: node.nodeId, value: node.name || undefined })
+					);
+				}
+			});
+
+			if (!selected) return;
+			await RefreshNodes('Named');
+			ZWJSAlert('Restore Completed Successfully');
+		} catch (error) {
+			ZWJSAlert(toError(error).message);
+		} finally {
+			EnableButton(button);
+		}
+	};
+
+	const CFGUpdate = () => {
+		Runtime.Post('DRIVER', 'checkForConfigUpdates').then(async (data) => {
+			if (data.callSuccess) {
+				if (data.response !== undefined) {
+					const UD = await ZWJSConfirm(
+						`A configuration database update is available (${data.response}). Would you like to update?`
+					);
+					if (UD) {
+						Runtime.Post('DRIVER', 'installConfigUpdate').then((res) => {
+							if (res.callSuccess && res.response) {
+								ZWJSAlert('Update was installed.');
+							} else {
+								ZWJSAlert(`Update was not installed: ${res.response}.`);
+							}
+						});
+					}
+				} else {
+					ZWJSAlert('No update available.');
+				}
+			} else {
+				ZWJSAlert(data.response);
+			}
+		});
+	};
+
+	const UpdateSplitter = () => {
+		const Node = RED.nodes.node($('#zwjs-splitters').val());
+
+		const NextIndex = Node.splits.length ? Math.max(...Node.splits.map((x) => x.index)) + 1 : 0;
+
+		const entry = {
+			valueId: JSON.parse(CodeEditor.getValue()),
+			index: NextIndex,
+			name: $('#zwjs-splitter-output-name').val(),
+			strict: $('#zwjs-splitter-output-endpoint').prop('checked')
+		};
+
+		if (entry.valueId.commandClass === undefined) {
+			entry.custom = true;
 		}
 
-		select.parent().toggle(count >= 3);
+		Node.splits.push(entry);
+
+		Node.outputs++;
+		Node.dirty = true;
+		Node.changed = true;
+		Node.resize = true;
+
+		RED.view.redraw(true);
+		RED.nodes.dirty(true);
+
+		CloseTray();
+	};
+
+	const RebuildNodeRoutes = () => {
+		Runtime.Post('CONTROLLER', 'rebuildNodeRoutes', [selectedNode.nodeId]).then((data) => {
+			if (data.callSuccess) {
+				ZWJSAlert('Rebuiliding Node routes completed successfully.');
+			} else {
+				ZWJSAlert(data.response);
+			}
+		});
+	};
+
+	const RebuildRoutes = (button, battery) => {
+		button && DisableButton(button);
+		const Battery = battery || $('#zwjs-routes-battery').prop('checked');
+		Runtime.Post('CONTROLLER', 'beginRebuildingRoutes', [{ includeSleeping: Battery }]).then((data) => {
+			if (data.callSuccess) {
+				button && EnableButton(button);
+			} else {
+				ZWJSAlert(data.response);
+				button && EnableButton(button);
+			}
+		});
+	};
+
+	const SetClassicPowerLevel = (button) =>
+		runButtonAction(button, async () => {
+			const powerLevel = Number.parseInt($('#zwjs-controller-setting-power-classic').val(), 10);
+			if (!Number.isFinite(powerLevel)) throw new Error('Select a valid classic power level');
+			requireSuccessfulCall(await Runtime.Post('CONTROLLER', 'setPowerlevel', [powerLevel, 0]));
+			ZWJSAlert('Power Level Set Succcessfully');
+		});
+
+	const SetLWPowerLevel = (button) =>
+		runButtonAction(button, async () => {
+			const powerLevel = Number.parseInt($('#zwjs-controller-setting-power-lr').val(), 10);
+			if (!Number.isFinite(powerLevel)) throw new Error('Select a valid Long Range power level');
+			requireSuccessfulCall(await Runtime.Post('CONTROLLER', 'setMaxLongRangePowerlevel', [powerLevel]));
+			ZWJSAlert('Power Level Set Succcessfully');
+		});
+
+	const SetRegion = (button) =>
+		runButtonAction(button, async () => {
+			const region = Number.parseInt($('#zwjs-controller-setting-region option:selected').val(), 10);
+			if (!Number.isFinite(region)) throw new Error('Select a valid RF region');
+			requireSuccessfulCall(await Runtime.Post('CONTROLLER', 'setRFRegion', [region]));
+			ZWJSAlert('Region Set Succcessfully');
+		});
+
+	const ResetController = async (Button) => {
+		if (
+			await ZWJSConfirm(
+				'Are you sure you wish to continue? This will reset the controller back to Factory Standard, and if operating as the Primary Controller - will clear the Network of all Nodes.'
+			)
+		) {
+			DisableButton(Button);
+			Runtime.Get('DRIVER', 'hardReset').then((R) => {
+				if (!R.callSuccess) {
+					EnableButton(Button);
+					ZWJSAlert(R.response);
+				} else {
+					EnableButton(Button);
+					ZWJSAlert('The Controller has been Reset - It will now be refreshed in the UI');
+					CloseTray();
+					NetworkSelected();
+				}
+			});
+		}
+	};
+
+	const RestoreController = async (button) => {
+		if (
+			!(await ZWJSConfirm(
+				'Note: This will alter the Controllers NVM, and will be configured according to the backup file you will restore to - Do you wish to comntinue?'
+			))
+		)
+			return;
+
+		DisableButton(button);
+		try {
+			const selected = await selectFile(async (file) => {
+				const byteArray = await readFileAsUint8Array(file);
+				requireSuccessfulCall(await Runtime.Post('CONTROLLER', 'restoreNVM', [{ nvmData: byteArray }]));
+			});
+			if (selected)
+				ZWJSAlert('The restore has been completed! - Please allow a few minutes for the controller to reboot.');
+		} catch (error) {
+			ZWJSAlert(toError(error).message);
+		} finally {
+			EnableButton(button);
+		}
+	};
+
+	const BackupController = (button) =>
+		runButtonAction(button, async () => {
+			const nvm = requireSuccessfulCall(await Runtime.Get('CONTROLLER', 'backupNVMRaw'));
+			const controllerInfo = $('#zwjs-controller-info').data('info');
+			if (!controllerInfo?.homeId) throw new Error('Controller information is not available');
+
+			const fileName = `zwave_nvm_${controllerInfo.homeId}.bin`;
+			const blob = new Blob([new Uint8Array(Object.values(nvm))], { type: 'application/octet-stream' });
+			ZWJSAlert(`Controller Backup is now completed, your browser will now downlaod the file: ${fileName}`);
+			downloadBlob(blob, fileName);
+			setTimeout(() => $('#zwjs-prog-contain-nvm').css({ display: 'none' }), 100);
+		});
+
+	/*
+	 * FIRMWARE
+	 */
+
+	const getFUSLicenseStatus = () => {
+		const Key = RED.nodes.node(networkId).apiKeys_firmwareUpdateService;
+		if (!Key) {
+			return "<strong>Non-Commercial</strong><br /><br />As no API key has been provided, you're confirming the environment is <strong>Non-Commercial</strong>.<br />An API Key for the Firmware Update Service is required for Commercial installs.";
+		}
+	};
+
+	const handleBootloader = () => {
+		BootLoaderMode = true;
+		RED.notify(
+			'WARNING! Your ZWave controller failed to boot, and is currently in recovery mode, please upload new firmware from the side bar',
+			{ type: 'error', timeout: 30000 }
+		);
+	};
+
+	const UpdateNFirmwareFUS = async (Node, Update) => {
+		const FWI = DecodeObject(Update);
+		if (
+			await ZWJSConfirm(
+				`Note: This will update the Node firmware to the update chosen (version: ${FWI.normalizedVersion}), do you wish to proceed?`
+			)
+		) {
+			RenderAdvanced('ZWJS_TPL_Tray-Node-Firmware').then(() => {
+				Runtime.Post('DRIVER', 'firmwareUpdateOTA', [Node, FWI]).catch((Error) => {
+					ZWJSAlert(Error.message);
+				});
+			});
+		}
+	};
+
+	const UpdateNFirmware = async (Button) => {
+		if (await ZWJSConfirm("Note: This will update the Nodes's firmware, do you wish to proceed?")) {
+			selectFile(async (file) => {
+				DisableButton(Button);
+				const byteArray = await readFileAsUint8Array(file);
+				const msg = { nodeId: selectedNode.nodeId, args: [[{ data: byteArray }]] };
+				Runtime.Post('NODE', 'updateFirmware', msg).catch((error) => ZWJSAlert(error.message));
+			});
+		}
+	};
+
+	const UpdateCFirmwareFUS = async (Update) => {
+		const FWI = DecodeObject(Update);
+		if (
+			await ZWJSConfirm(
+				`Note: This will update the Controllers firmware to the update chosen (version: ${FWI.normalizedVersion}), do you wish to proceed?`
+			)
+		) {
+			RenderAdvanced('ZWJS_TPL_Tray-Controller-Firmware').then(() => {
+				Runtime.Post('DRIVER', 'firmwareUpdateOTW', [FWI]).catch((Error) => {
+					ZWJSAlert(Error.message);
+				});
+			});
+		}
+	};
+
+	const UpdateCFirmware = async (Button) => {
+		if (await ZWJSConfirm('Note: This will update the Controllers firmware, do you wish to proceed?')) {
+			selectFile(async (file) => {
+				DisableButton(Button);
+				const byteArray = await readFileAsUint8Array(file);
+				Runtime.Post('DRIVER', 'firmwareUpdateOTW', [{ data: byteArray }]).catch((error) => ZWJSAlert(error.message));
+			});
+		}
+	};
+
+	/*
+	 * RUNTIME EVENTS
+	 */
+
+	const commsRebuildRoutesProgress = (topic, data) => {
+		const nodes = {};
+		const table = $('#zwjs-routes-progress')?.[0];
+		if (table) {
+			for (const [node, status] of Object.entries(data.Progress)) {
+				nodes[node] = status;
+			}
+			const groups = {
+				pending: [],
+				done: [],
+				failed: [],
+				skipped: []
+			};
+			for (const [node, status] of Object.entries(nodes)) {
+				groups[status].push(node);
+			}
+			const maxRows = Math.max(groups.pending.length, groups.done.length, groups.failed.length, groups.skipped.length);
+			while (table.rows.length > 1) {
+				table.deleteRow(1);
+			}
+			for (let i = 0; i < maxRows; i++) {
+				const row = table.insertRow();
+				['pending', 'done', 'failed', 'skipped'].forEach((col) => {
+					const cell = row.insertCell();
+					cell.style.textAlign = 'center';
+					if (groups[col][i] !== undefined) {
+						cell.innerHTML = `<span class="zwjs-node-id">${groups[col][i]}</span>`;
+					}
+				});
+			}
+		}
+	};
+
+	const commsStatus = (topic, data) => {
+		$('#zwjs-controller-status').text(data.status);
+		$('#zwjs-controller-status-tray').text(data.status);
+
+		if (data.status === 'Bootloader ready.') {
+			handleBootloader();
+		} else {
+			BootLoaderMode = false;
+			if (data.status === 'Driver ready.') {
+				RefreshNodes('DriverReady');
+			}
+		}
+	};
+
+	const commsNodeState = (topic, data) => {
+		GetNodeGroup(data.nodeInfo.nodeLocation).children.find((N) => N.nodeData.nodeId === data.nodeInfo.nodeId).nodeData =
+			data.nodeInfo;
+
+		if (
+			selectedNode &&
+			selectedNode.nodeId === data.nodeInfo.nodeId &&
+			!topic.endsWith('sleep') &&
+			!topic.endsWith('wakeup')
+		) {
+			nodeSelected(undefined, { nodeData: data.nodeInfo });
+		}
+
+		RenderNodeIconState(data.nodeInfo);
+		RenderGroupIconState();
+	};
+
+	const commsNodeAdded = (topic, data) => {
+		RefreshNodes('NewAdded', data.nodeId);
+		RenderAdvanced('ZWJS_TPL_NAdded', undefined, data);
+	};
+
+	const commsNodeRemoved = (topic, data) => {
+		RefreshNodes('NodeRemoved', data.nodeId);
+		RenderAdvanced('ZWJS_TPL_NRemoved', undefined, data);
+	};
+
+	const commsHandleValueUpdate = (topic, data) => {
+		if (selectedNode && selectedNode.nodeId === data.nodeId) {
+			const ValueID = data.eventBody.valueId;
+			let NewValue = data.eventBody.newValue;
+			const Hash = getValueUpdateHash(ValueID);
+
+			if (typeof NewValue === 'object' && !Array.isArray(NewValue)) {
+				NewValue = '(Complex)';
+			} else {
+				const VI = SelectedNodeVIDs[Hash];
+				if (VI) {
+					VI.currentValue = NewValue;
+					if (VI.metadata?.states && VI.metadata.states[NewValue]) {
+						NewValue = VI.metadata?.states[NewValue];
+					} else {
+						if (VI.metadata?.unit) {
+							NewValue = `${NewValue} (${VI.metadata.unit})`;
+						}
+					}
+				}
+			}
+
+			const TargetElement = `#zwjs-value-${Hash}`;
+			if ($(TargetElement).length > 0) {
+				$(TargetElement).text(NewValue);
+			}
+		}
+	};
+
+	const commsHandleSlaveOps = (topic, data) => {
+		if (topic.endsWith('dsk')) {
+			data.slaveJoinDSK = data.slaveJoinDSK.toString().substring(0, 5);
+
+			RenderAdvanced('ZWJS_TPL_Tray-Controller-Slave-DSK', undefined, data);
+		}
+
+		if (topic.endsWith('joined')) {
+			CloseTray();
+			RefreshNodes('NetworkJoin');
+		}
+
+		if (topic.endsWith('left')) {
+			CloseTray();
+			RefreshNodes('NetworkLeft');
+		}
+	};
+
+	const commsGrant = (topic, data) => {
+		clientSideAuth = data.clientSideAuth;
+
+		const Classes = [];
+		data.securityClasses.forEach((SC) => {
+			Classes.push({
+				classId: SC,
+				className: SClassMap[SC]
+			});
+		});
+		RenderAdvanced('ZWJS_TPL_SecurityGrant', undefined, { classes: Classes });
+	};
+
+	const commsDSK = (topic, data) => {
+		RenderAdvanced('ZWJS_TPL_DSK', undefined, data);
+	};
+
+	const commsNVMRestoreProgressReport = (topic, data) => {
+		$('#zwjs-prog-contain-nvm').css({ display: 'block' });
+		const Done = data.done;
+		const Total = data.total;
+		const Percentage = (Done / Total) * 100;
+		$('#zwjs-prog-bar-nvm').css({ width: `${Percentage}%` });
+		$('#zwjs-prog-bar-nvm').text(`${data.label} ${Math.round(Percentage)}%`);
+	};
+
+	const commsNVMBackupProgressReport = (topic, data) => {
+		$('#zwjs-prog-contain-nvm').css({ display: 'block' });
+		const Read = data.bytesRead;
+		const Total = data.total;
+		const Percentage = (Read / Total) * 100;
+		$('#zwjs-prog-bar-nvm').css({ width: `${Percentage}%` });
+		$('#zwjs-prog-bar-nvm').text(`${data.label} ${Math.round(Percentage)}%`);
+	};
+
+	const commsNFirmwareReport = (topic, data) => {
+		if (topic.endsWith('progress')) {
+			$('#zwjs-prog-contain-nfirmware').css({ display: 'block' });
+			const Percentage = data.progress.progress;
+			$('#zwjs-prog-bar-nfirmware').css({ width: `${Percentage}%` });
+			$('#zwjs-prog-bar-nfirmware').text(`Flashing Chip... ${Math.round(Percentage)}%`);
+		}
+
+		if (topic.endsWith('finished')) {
+			let Message;
+			switch (data.result.status) {
+				case 0:
+					Message = 'A timeout occured';
+					break;
+				case 1:
+					Message = 'The maximum number of retry attempts for a firmware fragments were reached';
+					break;
+				case 2:
+					Message = 'The update was aborted by the bootloader';
+					break;
+				case 3:
+					Message = 'This device does not support firmware updates';
+					break;
+
+				default:
+					Message = 'The update was successfull, please wait a few minutes for the Node to reinitialize';
+			}
+			RenderAdvanced('ZWJS_TPL_Tray-Firmware-Done', undefined, { Message });
+		}
+	};
+
+	const commsCFirmwareReport = (topic, data) => {
+		if (topic.endsWith('progress')) {
+			$('#zwjs-prog-contain-cfirmware').css({ display: 'block' });
+			const Percentage = data.progress;
+			$('#zwjs-prog-bar-cfirmware').css({ width: `${Percentage}%` });
+			$('#zwjs-prog-bar-cfirmware').text(`Flashing Chip... ${Math.round(Percentage)}%`);
+		}
+
+		if (topic.endsWith('finished')) {
+			let Message;
+			switch (data.status) {
+				case 0:
+					Message = 'A timeout occured';
+					break;
+				case 1:
+					Message = 'The maximum number of retry attempts for a firmware fragments were reached';
+					break;
+				case 2:
+					Message = 'The update was aborted by the bootloader';
+					break;
+				case 3:
+					Message = 'This controller does not support firmware updates';
+					break;
+
+				default:
+					Message = 'The update was successfull, please a few minutes for the Controller to reinitialize';
+			}
+			RenderAdvanced('ZWJS_TPL_Tray-Firmware-Done', undefined, { Message });
+		}
+	};
+
+	const commsRemoveNetwork = (network) => {
+		const Networks = $('#zwjs-network');
+		if (Networks.val() === network.id) {
+			ClearSelection(true);
+		}
+
+		Networks.children(`option[value="${network.id}"]`).remove();
+		SelectFirstNetwork();
+	};
+
+	const commsListOrAddNetworks = (fetch, network) => {
+		const Networks = $('#zwjs-network');
+
+		if (fetch) {
+			Runtime.Get(undefined, undefined, 'zwave-js/ui/global/networks').then((data) => {
+				if (data.callSuccess) {
+					const IDs = Object.keys(data.response);
+					IDs.forEach((k) => {
+						Networks.append(new Option(data.response[k], k));
+					});
+					SelectFirstNetwork();
+				}
+			});
+		} else {
+			const found = Networks.children().filter((n) => n.val === network.id);
+			if (found.length < 1) {
+				Networks.append(new Option(network.name, network.id));
+			}
+			SelectFirstNetwork();
+		}
+	};
+
+	const COMMS_HOOKS = [
+		['status', commsStatus],
+		['s2/grant', commsGrant],
+		['s2/dsk', commsDSK],
+		['nodes/added', commsNodeAdded],
+		['nodes/removed', commsNodeRemoved],
+		['nodes/interviewstarted', commsNodeState],
+		['nodes/interviewfailed', commsNodeState],
+		['nodes/interviewed', commsNodeState],
+		['nodes/ready', commsNodeState],
+		['nodes/sleep', commsNodeState],
+		['nodes/wakeup', commsNodeState],
+		['nodes/dead', commsNodeState],
+		['nodes/alive', commsNodeState],
+		['controller/slave/dsk', commsHandleSlaveOps],
+		['controller/slave/joined', commsHandleSlaveOps],
+		['controller/slave/left', commsHandleSlaveOps],
+		['nodes/valueadded', commsHandleValueUpdate],
+		['nodes/valueupdate', commsHandleValueUpdate],
+		['controller/nvm/backupprogress', commsNVMBackupProgressReport],
+		['controller/nvm/restoreprogress', commsNVMRestoreProgressReport],
+		['driver/firmwareupdate/progress', commsCFirmwareReport],
+		['driver/firmwareupdate/finished', commsCFirmwareReport],
+		['nodes/firmwareupdate/progress', commsNFirmwareReport],
+		['nodes/firmwareupdate/finished', commsNFirmwareReport],
+		['rebuildroutes/progress', commsRebuildRoutesProgress]
+	];
+
+	const setSubscription = (subscribe, targetNetworkId = networkId) => {
+		if (!targetNetworkId) return;
+		const operation = RED.comms[subscribe ? 'subscribe' : 'unsubscribe'];
+		COMMS_HOOKS.forEach(([topic, handler]) => {
+			operation(`zwave-js/ui/${targetNetworkId}/${topic}`, handler);
+		});
 	};
 
 	return {

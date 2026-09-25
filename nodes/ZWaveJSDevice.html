@@ -110,7 +110,7 @@
 					});
 
 					const input = $('#node-input-filteredNodeId');
-					const output =  $('#node-input-defaultNode');
+					const output = $('#node-input-defaultNode');
 
 					output.typedInput({
 						type: 'nodes',
@@ -176,7 +176,7 @@
 	</fieldset>
 	<fieldset class="zwjs-fs">
 		<legend>Operating Mode</legend>
-			<div class="form-row">
+		<div class="form-row">
 			<label for="node-input-dataMode"><i class="fa fa-exchange"></i> Data Mode</label>
 			<select id="node-input-dataMode">
 				<option value="SR">Send/Receive</option>
@@ -207,14 +207,14 @@
 		</div>
 	</fieldset>
 	<div class="form-tips" id="node-tip">
-		<strong>Note : </strong>To use Message Broadcasting set <code>nodeId</code> to an array of Nodes [2,3,4,5].<br />
-		<strong>Message Broadcasting</strong> is only supported for use with <code>setValue</code>.<br /><br />
-		If Default Nodes for outgoing messages is multiple, Broadcasting will be used for the message.
+		<strong>Note:</strong> To use message broadcasting, set <code>nodeId</code> to an array of nodes [2, 3, 4, 5].<br />
+		<strong>Message broadcasting</strong> is only supported for use with <code>setValue</code>.<br /><br />
+		If multiple default nodes are selected for outgoing messages, broadcasting will be used.
 	</div>
 	
 </script>
 
 <!-- prettier-ignore -->
 <script type="text/markdown" data-help-name="zwavejs-device">
-	<p>A ZWave JS device allowing control of one or many devices</p>
+	<p>A Z-Wave JS device for controlling one or more devices.</p>
 </script>
