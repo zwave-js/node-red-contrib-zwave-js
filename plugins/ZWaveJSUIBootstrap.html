@@ -3,11 +3,10 @@
 <script type="text/javascript" src="resources/node-red-contrib-zwave-js/UITab/SideBar.js"></script>
 <script type="text/javascript" src="resources/node-red-contrib-zwave-js/QRS/qr-scanner.umd.min.js"></script>
 <script type="text/javascript" src="resources/node-red-contrib-zwave-js/HB/dist/handlebars.min.js"></script>
-<script type="text/javascript" src="resources/node-red-contrib-zwave-js/SVGZ/dist/svg-pan-zoom.min.js"></script>
 
 <script type="module">
-	import ZWJSMermaid from '/resources/node-red-contrib-zwave-js/Mermaid/dist/mermaid.esm.min.mjs';
-	window.ZWJSMermaid = ZWJSMermaid;
+	import * as ZWJSD3 from '/resources/node-red-contrib-zwave-js/D3/d3.js';
+	window.ZWJSD3 = ZWJSD3;
 </script>
 
 <script>
@@ -311,7 +310,7 @@
 		<div parent>Controller</div>
 		<div child default onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Info',this, 'ControllerInfo')">Information</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Stats',this, 'ControllerStats')">Statistics</div>
-		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Map',this, 'RenderMap')">Topology Map</div>
+		<div child onclick="ZWaveJS.RenderMapDialog()">Topology &amp; Routing</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Settings',this,'ControllerSettings')">Settings</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Rebuild',this,'GetRRCurrentProgress')">Rebuild Routes</div>
 		<div child onclick="ZWaveJS.RenderAdvanced('ZWJS_TPL_Tray-Controller-Firmware',this)">Firmware Update</div>
@@ -339,14 +338,6 @@
 		<div>
 			Include Battery Operated Device: <input type="checkbox" id="zwjs-routes-battery" checked> <button onclick="ZWaveJS.RebuildRoutes(this)">Begin Rebuild</button>
 		</div>
-	</fieldset>
-</script>
-
-<!-- prettier-ignore -->
-<script type="text/template" id="ZWJS_TPL_Tray-Controller-Map">
-	<fieldset class="zwjs-fieldset">
-		<div class="zwjs-hint">The map below is based on statistics for each ZWave Node, specifically the <strong>Last Working Route(s)</strong> to the Node, from the Controller</div>
-		<div class="zwjs-mermaid" id="zwjs-mermaid">{{map}}</div>
 	</fieldset>
 </script>
 

@@ -1,5 +1,6 @@
 const { CommandClasses, isApplicationCC } = require('@zwave-js/core');
 const { Driver, getAPI, getCCValues } = require('zwave-js');
+const esbuild = require('esbuild');
 const fs = require('fs');
 const path = require('path');
 
@@ -22,16 +23,31 @@ const copyDep = (depName, targetFolder) => {
 	fs.cpSync(src, targetFolder, { recursive: true });
 };
 
+const buildD3 = () => {
+	const src = resolveDep('d3');
+	if (!src) {
+		return;
+	}
+	const outfile = path.join(__dirname, '../resources/D3/d3.js');
+	fs.mkdirSync(path.dirname(outfile), { recursive: true });
+	esbuild.buildSync({
+		entryPoints: [path.join(src, 'src/index.js')],
+		bundle: true,
+		format: 'esm',
+		minify: true,
+		outfile
+	});
+};
+
 module.exports = function (RED) {
 	const init = () => {
 		const dependencies = [
-			{ name: 'mermaid', target: path.join(__dirname, '../resources/Mermaid') },
 			{ name: 'qr-scanner', target: path.join(__dirname, '../resources/QRS') },
-			{ name: 'svg-pan-zoom', target: path.join(__dirname, '../resources/SVGZ') },
 			{ name: 'handlebars', target: path.join(__dirname, '../resources/HB') }
 		];
 
 		dependencies.forEach((dep) => copyDep(dep.name, dep.target));
+		buildD3();
 
 		const CCList = {};
 		const CCProps = [];

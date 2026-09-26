@@ -1285,6 +1285,296 @@ const ZWaveJS = (function () {
 		}
 	};
 
+	/*
+	 * MAP ACTIONS
+	 */
+
+	const RenderD3Map = (selector, nodes, links) => {
+		const container = ZWJSD3.select(selector);
+		if (container.empty()) return;
+
+		container.selectAll('*').remove();
+		container.style('position', 'relative');
+
+		const element = container.node();
+		const width = element.clientWidth || 800;
+		const height = Math.max(element.clientHeight, 500);
+		const routeColour = ZWJSD3.scaleOrdinal(ZWJSD3.schemeTableau10);
+
+		const details = container
+			.append('div')
+			.style('display', 'none')
+			.style('position', 'absolute')
+			.style('z-index', 10)
+			.style('top', '10px')
+			.style('right', '10px')
+			.style('min-width', '220px')
+			.style('padding', '10px')
+			.style('background', '#fff')
+			.style('border', '1px solid #aaa')
+			.style('border-radius', '4px')
+			.style('box-shadow', '0 2px 8px rgba(0,0,0,0.2)')
+			.style('font-size', '12px');
+
+		const svg = container
+			.append('svg')
+			.attr('width', '100%')
+			.attr('height', height)
+			.attr('viewBox', [0, 0, width, height])
+			.on('click', () => {
+				details.style('display', 'none');
+				link.attr('opacity', 1);
+			});
+
+		const graph = svg.append('g');
+
+		svg
+			.append('defs')
+			.append('marker')
+			.attr('id', 'zwjs-d3-arrow')
+			.attr('viewBox', '0 -5 10 10')
+			.attr('refX', 26)
+			.attr('markerWidth', 6)
+			.attr('markerHeight', 6)
+			.attr('orient', 'auto')
+			.append('path')
+			.attr('d', 'M0,-5L10,0L0,5')
+			.attr('fill', '#999');
+
+		svg.call(
+			ZWJSD3.zoom()
+				.scaleExtent([0.2, 4])
+				.on('zoom', (event) => graph.attr('transform', event.transform))
+		);
+
+		const link = graph
+			.append('g')
+			.selectAll('line')
+			.data(links)
+			.join('line')
+			.attr('stroke', (d) => (d.direct ? '#28a745' : routeColour(d.routeId)))
+			.attr('stroke-width', 2)
+			.attr('marker-end', (d) => (d.destination ? 'url(#zwjs-d3-arrow)' : null));
+
+		const node = graph
+			.append('g')
+			.selectAll('g')
+			.data(nodes)
+			.join('g')
+			.style('cursor', 'grab')
+			.on('click', (event, d) => {
+				event.stopPropagation();
+
+				if (d.id === 1) {
+					link.attr('opacity', 1);
+				} else {
+					link.attr('opacity', (l) => (l.routeId === d.id ? 1 : 0.15));
+				}
+
+				const rows = [
+					['Status', d.status],
+					['Location', d.location],
+					['Manufacturer', d.manufacturer],
+					['Device', d.label],
+					['Firmware', d.firmwareVersion],
+					['Power', d.power],
+					['Security', d.security],
+					['RSSI', d.rssi !== undefined ? `${d.rssi} dBm` : undefined],
+					['RTT', d.rtt !== undefined ? `${d.rtt} ms` : undefined],
+					['Route', d.route?.join(' → ')]
+				].filter((row) => row[1] !== undefined && row[1] !== '');
+
+				details
+					.html(
+						`<div style="font-weight:bold;font-size:14px;margin-bottom:8px">${d.id === 1 ? 'Controller' : `Node ${d.id} - ${d.name}`}</div>` +
+							rows.map((row) => `<div><strong>${row[0]}:</strong> ${row[1]}</div>`).join('')
+					)
+					.style('display', 'block');
+			});
+
+		node
+			.append('circle')
+			.attr('r', 20)
+			.attr('fill', (d) => (d.status === 'Dead' ? '#d9534f' : d.type === 'controller' ? '#5b9bd5' : '#fff'))
+			.attr('stroke', '#777')
+			.attr('stroke-width', 2);
+
+		node
+			.append('text')
+			.attr('text-anchor', 'middle')
+			.attr('dominant-baseline', 'central')
+			.attr('font-family', 'FontAwesome')
+			.attr('font-size', 16)
+			.attr('fill', (d) => (d.status === 'Dead' ? '#fff' : '#000'))
+			.text((d) => (d.type === 'controller' ? '\uf1eb' : d.type === 'mains' ? '\uf1e6' : '\uf240'));
+
+		node
+			.append('text')
+			.attr('text-anchor', 'middle')
+			.attr('y', 36)
+			.attr('font-size', 12)
+			.attr('font-weight', 'bold')
+			.text((d) => (d.id === 1 ? d.name : `${d.id} - ${d.name}`));
+
+		node
+			.append('text')
+			.attr('text-anchor', 'middle')
+			.attr('y', 50)
+			.attr('font-size', 10)
+			.text((d) => d.device);
+
+		ZWJSD3.forceSimulation(nodes)
+			.force(
+				'link',
+				ZWJSD3.forceLink(links)
+					.id((d) => d.id)
+					.distance(120)
+			)
+			.force('charge', ZWJSD3.forceManyBody().strength(-500))
+			.force('center', ZWJSD3.forceCenter(width / 2, height / 2))
+			.force('collision', ZWJSD3.forceCollide().radius(70))
+			.on('tick', () => {
+				link.each(function (d) {
+					const dx = d.target.x - d.source.x;
+					const dy = d.target.y - d.source.y;
+					const length = Math.sqrt(dx * dx + dy * dy) || 1;
+					const ox = (-dy / length) * d.offset * 4;
+					const oy = (dx / length) * d.offset * 4;
+
+					ZWJSD3.select(this)
+						.attr('x1', d.source.x + ox)
+						.attr('y1', d.source.y + oy)
+						.attr('x2', d.target.x + ox)
+						.attr('y2', d.target.y + oy);
+				});
+				node.attr('transform', (d) => `translate(${d.x},${d.y})`);
+			});
+
+		node.call(
+			ZWJSD3.drag()
+				.on('start', (event, d) => {
+					d.fx = d.x;
+					d.fy = d.y;
+					ZWJSD3.select(event.sourceEvent.currentTarget).style('cursor', 'grabbing');
+				})
+				.on('drag', (event, d) => {
+					d.x = d.fx = event.x;
+					d.y = d.fy = event.y;
+					node.attr('transform', (n) => `translate(${n.x},${n.y})`);
+					link.each(function (l) {
+						const dx = l.target.x - l.source.x;
+						const dy = l.target.y - l.source.y;
+						const length = Math.sqrt(dx * dx + dy * dy) || 1;
+						const ox = (-dy / length) * l.offset * 4;
+						const oy = (dx / length) * l.offset * 4;
+
+						ZWJSD3.select(this)
+							.attr('x1', l.source.x + ox)
+							.attr('y1', l.source.y + oy)
+							.attr('x2', l.target.x + ox)
+							.attr('y2', l.target.y + oy);
+					});
+				})
+				.on('end', (event) => ZWJSD3.select(event.sourceEvent.currentTarget).style('cursor', 'grab'))
+		);
+	};
+
+	const RenderMap = async () => {
+		const nodes = requireSuccessfulCall(await Runtime.Get('CONTROLLER', 'getNodes'));
+		const controller = nodes.find((node) => node.isControllerNode);
+		const devices = nodes.filter((node) => !node.isControllerNode);
+
+		const mapNodes = [
+			{
+				id: 1,
+				name: 'Controller',
+				type: 'controller',
+				device: `${controller.deviceConfig?.manufacturer} - ${controller.deviceConfig?.label}`,
+				status: controller.status,
+				manufacturer: controller.deviceConfig?.manufacturer,
+				label: controller.deviceConfig?.label,
+				firmwareVersion: controller.firmwareVersion,
+				power: 'Mains'
+			}
+		];
+		const mapLinks = [];
+
+		devices.forEach((node) => {
+			const repeaters = node.statistics?.lwr?.repeaters || [];
+			const route = [1, ...repeaters, node.nodeId];
+
+			mapNodes.push({
+				id: node.nodeId,
+				name: node.nodeName || 'No Name',
+				type: node.powerSource.type === 'mains' ? 'mains' : 'battery',
+				device: `${node.deviceConfig?.manufacturer} - ${node.deviceConfig?.label}`,
+				status: node.status,
+				location: node.nodeLocation,
+				manufacturer: node.deviceConfig?.manufacturer,
+				label: node.deviceConfig?.label,
+				firmwareVersion: node.firmwareVersion,
+				power:
+					node.powerSource.type === 'battery'
+						? `Battery${node.powerSource.level !== undefined ? ` (${node.powerSource.level}%)` : ''}`
+						: 'Mains',
+				security: node.isSecure ? `S${node.highestSecurityClass}` : 'None',
+				rssi: node.statistics?.lwr?.rssi,
+				rtt: node.statistics?.rtt,
+				route
+			});
+
+			for (let i = 0; i < route.length - 1; i++) {
+				mapLinks.push({
+					source: route[i],
+					target: route[i + 1],
+					routeId: node.nodeId,
+					direct: repeaters.length === 0,
+					destination: i === route.length - 2,
+					offset: 0
+				});
+			}
+		});
+
+		const groups = new Map();
+		mapLinks.forEach((link) => {
+			const key = [link.source, link.target].sort((a, b) => a - b).join('-');
+			if (!groups.has(key)) groups.set(key, []);
+			groups.get(key).push(link);
+		});
+		groups.forEach((links) => {
+			links.forEach((link, index) => (link.offset = index - (links.length - 1) / 2));
+		});
+
+		RenderD3Map('#zwjs-d3', mapNodes, mapLinks);
+	};
+
+	const RenderMapDialog = async () => {
+		const Dialog = $(
+			`<div>
+			<div class="zwjs-hint">The map below is based on statistics for each ZWave Node, specifically the <strong>Last Working Route(s)</strong> to the Node, from the Controller</div>
+			<div class="zwjs-d3" id="zwjs-d3"></div>
+		</div>`
+		);
+
+		Dialog.dialog({
+			title: 'Z-Wave Topology Map',
+			modal: true,
+			width: Math.min($(window).width() - 100, 1200),
+			height: Math.min($(window).height() - 100, 800),
+			resizable: true,
+			close() {
+				Dialog.dialog('destroy').remove();
+			}
+		});
+
+		await RenderMap();
+		CloseTray();
+	};
+
+	/*
+	 * RENDER ACTIONS
+	 */
+
 	const RenderFunctions = {
 		async CheckFUS() {
 			const updates = requireSuccessfulCall(
@@ -1320,42 +1610,6 @@ const ZWaveJS = (function () {
 				label: labelParts.map((part) => part.replace(/ /g, '_').toUpperCase()).join('.'),
 				shape: ViewingValueID
 			};
-		},
-
-		async RenderMap() {
-			const nodes = requireSuccessfulCall(await Runtime.Get('CONTROLLER', 'getNodes'));
-			const controller = nodes.find((node) => node.isControllerNode);
-			const devices = nodes.filter((node) => !node.isControllerNode);
-
-			const nodeLines = [
-				'graph TD',
-				`N0(fa:fa-wifi<br />Controller<br /><span style="font-size:10px">${controller.deviceConfig?.manufacturer} - ${controller.deviceConfig?.label}</span>)`
-			];
-			const routeLines = [];
-
-			devices.forEach((node) => {
-				const name = node.nodeName || 'No Name';
-				const icon = node.powerSource.type === 'mains' ? 'fa-plug' : 'fa-battery-full';
-				const device = `${node.deviceConfig?.manufacturer} - ${node.deviceConfig?.label}`;
-				nodeLines.push(
-					`N${node.nodeId}(fa:${icon}<br />${node.nodeId} - ${name}<br /><span style="font-size:10px">${device}</span>)`
-				);
-
-				const repeaters = node.statistics?.lwr?.repeaters || [];
-				if (repeaters.length) {
-					repeaters.forEach((repeater) => routeLines.push(`N${node.nodeId} <---> N${repeater}`));
-				} else {
-					routeLines.push(`N0 <===> N${node.nodeId}`);
-				}
-			});
-
-			setTimeout(async () => {
-				ZWJSMermaid.initialize({ startOnLoad: false, securityLevel: 'loose', flowchart: { htmlLabels: true } });
-				await ZWJSMermaid.run({ querySelector: '.zwjs-mermaid' });
-				svgPanZoom('.zwjs-mermaid svg', { zoomEnabled: true, controlIconsEnabled: true, panEnabled: true });
-			}, 50);
-
-			return { map: [...nodeLines, ...routeLines].join('\r\n') + '\r\n' };
 		},
 
 		async PrepFailed() {
@@ -2549,6 +2803,7 @@ const ZWaveJS = (function () {
 		ZoomUI,
 		BackupNames,
 		RestoreNames,
-		ZWJSAlert
+		ZWJSAlert,
+		RenderMapDialog
 	};
 })();

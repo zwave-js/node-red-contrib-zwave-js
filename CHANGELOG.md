@@ -11,6 +11,7 @@
 
       - Fix asynchronous message completion handling in Device and Controller nodes.
       - Fix missing message completion handling in the Splitter node.
+      - Fix missing config file for devcies in the UI.
       - Fix Runtime shutdown and driver restart error handling.
       - Fix Node API name and location updates not awaiting the underlying zwave-js operations.
       - Fix notification events losing their originating endpoint information.
@@ -24,6 +25,7 @@
     **Changes**
 
       - Refactored the sidebar JavaScript for improved readability and maintainability.
+      - Completely re-engineered the topology map, providing a clearer, more accurate and more interactive view of Z-Wave network routing than the implementation introduced in v11.
 
   - 11.1.1
 
