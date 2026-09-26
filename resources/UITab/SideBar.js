@@ -1289,17 +1289,23 @@ const ZWaveJS = (function () {
 	 * MAP ACTIONS
 	 */
 
-	const RenderD3Map = (selector, nodes, links) => {
+	const RenderD3Map = (selector, nodes, links, layoutLinks) => {
 		const container = ZWJSD3.select(selector);
 		if (container.empty()) return;
 
 		container.selectAll('*').remove();
-		container.style('position', 'relative');
+		container.style('position', 'relative').style('width', '100%').style('height', '100%');
 
 		const element = container.node();
-		const width = element.clientWidth || 800;
-		const height = Math.max(element.clientHeight, 500);
+		let width = element.clientWidth || 800;
+		let height = element.clientHeight || 500;
 		const routeColour = ZWJSD3.scaleOrdinal(ZWJSD3.schemeTableau10);
+		const nodeMap = new Map(nodes.map((node) => [node.id, node]));
+
+		links.forEach((link) => {
+			link.source = typeof link.source === 'object' ? link.source : nodeMap.get(link.source);
+			link.target = typeof link.target === 'object' ? link.target : nodeMap.get(link.target);
+		});
 
 		const details = container
 			.append('div')
@@ -1319,7 +1325,7 @@ const ZWaveJS = (function () {
 		const svg = container
 			.append('svg')
 			.attr('width', '100%')
-			.attr('height', height)
+			.attr('height', '100%')
 			.attr('viewBox', [0, 0, width, height])
 			.on('click', () => {
 				details.style('display', 'none');
@@ -1365,7 +1371,7 @@ const ZWaveJS = (function () {
 			.on('click', (event, d) => {
 				event.stopPropagation();
 
-				if (d.id === 1) {
+				if (d.type === 'controller') {
 					link.attr('opacity', 1);
 				} else {
 					link.attr('opacity', (l) => (l.routeId === d.id ? 1 : 0.15));
@@ -1386,7 +1392,7 @@ const ZWaveJS = (function () {
 
 				details
 					.html(
-						`<div style="font-weight:bold;font-size:14px;margin-bottom:8px">${d.id === 1 ? 'Controller' : `Node ${d.id} - ${d.name}`}</div>` +
+						`<div style="font-weight:bold;font-size:14px;margin-bottom:8px">${d.type === 'controller' ? `Controller - Node ${d.id}` : `Node ${d.id} - ${d.name}`}</div>` +
 							rows.map((row) => `<div><strong>${row[0]}:</strong> ${row[1]}</div>`).join('')
 					)
 					.style('display', 'block');
@@ -1414,7 +1420,7 @@ const ZWaveJS = (function () {
 			.attr('y', 36)
 			.attr('font-size', 12)
 			.attr('font-weight', 'bold')
-			.text((d) => (d.id === 1 ? d.name : `${d.id} - ${d.name}`));
+			.text((d) => `${d.id} - ${d.name}`);
 
 		node
 			.append('text')
@@ -1423,70 +1429,115 @@ const ZWaveJS = (function () {
 			.attr('font-size', 10)
 			.text((d) => d.device);
 
-		ZWJSD3.forceSimulation(nodes)
+		const Tick = () => {
+			link.each(function (d) {
+				const dx = d.target.x - d.source.x;
+				const dy = d.target.y - d.source.y;
+				const length = Math.sqrt(dx * dx + dy * dy) || 1;
+				const ox = (-dy / length) * d.offset * 4;
+				const oy = (dx / length) * d.offset * 4;
+
+				ZWJSD3.select(this)
+					.attr('x1', d.source.x + ox)
+					.attr('y1', d.source.y + oy)
+					.attr('x2', d.target.x + ox)
+					.attr('y2', d.target.y + oy);
+			});
+			node.attr('transform', (d) => `translate(${d.x},${d.y})`);
+		};
+
+		let simulation = ZWJSD3.forceSimulation(nodes)
 			.force(
 				'link',
-				ZWJSD3.forceLink(links)
+				ZWJSD3.forceLink(layoutLinks)
 					.id((d) => d.id)
-					.distance(120)
+					.distance((d) => (d.direct ? 220 : 90))
+					.strength((d) => (d.direct ? 0.08 : 1))
 			)
-			.force('charge', ZWJSD3.forceManyBody().strength(-500))
+			.force('charge', ZWJSD3.forceManyBody().strength(-100).distanceMax(400))
 			.force('center', ZWJSD3.forceCenter(width / 2, height / 2))
-			.force('collision', ZWJSD3.forceCollide().radius(70))
-			.on('tick', () => {
-				link.each(function (d) {
-					const dx = d.target.x - d.source.x;
-					const dy = d.target.y - d.source.y;
-					const length = Math.sqrt(dx * dx + dy * dy) || 1;
-					const ox = (-dy / length) * d.offset * 4;
-					const oy = (dx / length) * d.offset * 4;
-
-					ZWJSD3.select(this)
-						.attr('x1', d.source.x + ox)
-						.attr('y1', d.source.y + oy)
-						.attr('x2', d.target.x + ox)
-						.attr('y2', d.target.y + oy);
-				});
-				node.attr('transform', (d) => `translate(${d.x},${d.y})`);
-			});
+			.force('collision', ZWJSD3.forceCollide().radius(70).strength(1))
+			.on('tick', Tick);
 
 		node.call(
 			ZWJSD3.drag()
-				.on('start', (event, d) => {
+				.on('start', function (event, d) {
+					simulation.stop();
 					d.fx = d.x;
 					d.fy = d.y;
-					ZWJSD3.select(event.sourceEvent.currentTarget).style('cursor', 'grabbing');
+					ZWJSD3.select(this).style('cursor', 'grabbing');
 				})
 				.on('drag', (event, d) => {
 					d.x = d.fx = event.x;
 					d.y = d.fy = event.y;
-					node.attr('transform', (n) => `translate(${n.x},${n.y})`);
-					link.each(function (l) {
-						const dx = l.target.x - l.source.x;
-						const dy = l.target.y - l.source.y;
-						const length = Math.sqrt(dx * dx + dy * dy) || 1;
-						const ox = (-dy / length) * l.offset * 4;
-						const oy = (dx / length) * l.offset * 4;
-
-						ZWJSD3.select(this)
-							.attr('x1', l.source.x + ox)
-							.attr('y1', l.source.y + oy)
-							.attr('x2', l.target.x + ox)
-							.attr('y2', l.target.y + oy);
-					});
+					Tick();
 				})
-				.on('end', (event) => ZWJSD3.select(event.sourceEvent.currentTarget).style('cursor', 'grab'))
+				.on('end', function (event, d) {
+					d.fx = d.x;
+					d.fy = d.y;
+					ZWJSD3.select(this).style('cursor', 'grab');
+
+					const children = new Set([d.id]);
+					let found = true;
+					while (found) {
+						found = false;
+						layoutLinks.forEach((link) => {
+							const source = typeof link.source === 'object' ? link.source.id : link.source;
+							const target = typeof link.target === 'object' ? link.target.id : link.target;
+							if (children.has(source) && !children.has(target)) {
+								children.add(target);
+								found = true;
+							}
+						});
+					}
+
+					if (children.size === 1) return;
+
+					nodes.forEach((node) => {
+						if (node !== d && children.has(node.id)) {
+							node.fx = null;
+							node.fy = null;
+						}
+						node.vx = 0;
+						node.vy = 0;
+					});
+
+					simulation.stop();
+					simulation = ZWJSD3.forceSimulation(nodes)
+						.force(
+							'link',
+							ZWJSD3.forceLink(layoutLinks)
+								.id((node) => node.id)
+								.distance((link) => (link.direct ? 220 : 90))
+								.strength((link) => (link.direct ? 0.08 : 1))
+						)
+						.force('charge', ZWJSD3.forceManyBody().strength(-100).distanceMax(400))
+						.force('center', ZWJSD3.forceCenter(width / 2, height / 2))
+						.force('collision', ZWJSD3.forceCollide().radius(70).strength(1))
+						.alpha(1)
+						.on('tick', Tick);
+				})
 		);
+
+		new ResizeObserver(() => {
+			width = element.clientWidth;
+			height = element.clientHeight;
+			svg.attr('viewBox', [0, 0, width, height]);
+			simulation
+				.force('center', ZWJSD3.forceCenter(width / 2, height / 2))
+				.alpha(0.3)
+				.restart();
+		}).observe(element);
 	};
 
-	const RenderMap = async () => {
+	const RenderMap = async (target = '#zwjs-d3') => {
 		const nodes = requireSuccessfulCall(await Runtime.Get('CONTROLLER', 'getNodes'));
 		const controller = nodes.find((node) => node.isControllerNode);
 		const devices = nodes.filter((node) => !node.isControllerNode);
 
 		const mapNodes = [
 			{
-				id: 1,
+				id: controller.nodeId,
 				name: 'Controller',
 				type: 'controller',
 				device: `${controller.deviceConfig?.manufacturer} - ${controller.deviceConfig?.label}`,
@@ -1498,10 +1549,11 @@ const ZWaveJS = (function () {
 			}
 		];
 		const mapLinks = [];
+		const layoutLinks = [];
 
 		devices.forEach((node) => {
 			const repeaters = node.statistics?.lwr?.repeaters || [];
-			const route = [1, ...repeaters, node.nodeId];
+			const route = [controller.nodeId, ...repeaters, node.nodeId];
 
 			mapNodes.push({
 				id: node.nodeId,
@@ -1533,6 +1585,12 @@ const ZWaveJS = (function () {
 					offset: 0
 				});
 			}
+
+			layoutLinks.push({
+				source: repeaters.length ? repeaters[repeaters.length - 1] : controller.nodeId,
+				target: node.nodeId,
+				direct: repeaters.length === 0
+			});
 		});
 
 		const groups = new Map();
@@ -1545,30 +1603,34 @@ const ZWaveJS = (function () {
 			links.forEach((link, index) => (link.offset = index - (links.length - 1) / 2));
 		});
 
-		RenderD3Map('#zwjs-d3', mapNodes, mapLinks);
+		RenderD3Map(target, mapNodes, mapLinks, layoutLinks);
 	};
 
 	const RenderMapDialog = async () => {
-		const Dialog = $(
-			`<div>
-			<div class="zwjs-hint">The map below is based on statistics for each ZWave Node, specifically the <strong>Last Working Route(s)</strong> to the Node, from the Controller</div>
-			<div class="zwjs-d3" id="zwjs-d3"></div>
-		</div>`
-		);
+		const MapWindow = window.open('', 'ZWaveJSTopology', 'popup=yes,width=1200,height=800,resizable=yes,scrollbars=no');
+		if (!MapWindow) {
+			ZWJSAlert('The topology map popup was blocked by the browser');
+			return;
+		}
+		MapWindow.document.write(`
+		<!DOCTYPE html>
+		<html style="width:100%;height:100%;margin:0;padding:0;">
+			<head>
+				<title>Z-Wave Topology Map</title>
+				<link rel="stylesheet" href="resources/node-red-contrib-zwave-js/UITab/styles.css">
+				<link rel="stylesheet" href="vendor/font-awesome/css/font-awesome.min.css">
+			</head>
+			<body style="width:100%;height:100%;margin:0;padding:15;overflow:hidden;">
+				<div id="zwjs-d3" style="position:absolute;inset:0;width:100%;height:100%;"></div>
+				<div class="zwjs-hint" style="position:absolute;z-index:10;top:10px;left:10px;max-width:500px;">
+					The map is based on statistics for each Z-Wave Node, specifically the <strong>Last Working Route(s)</strong> to the Node, from the Controller
+				</div>
+			</body>
+		</html>
+	`);
+		MapWindow.document.close();
 
-		Dialog.dialog({
-			title: 'Z-Wave Topology Map',
-			modal: true,
-			width: Math.min($(window).width() - 100, 1200),
-			height: Math.min($(window).height() - 100, 800),
-			resizable: true,
-			close() {
-				Dialog.dialog('destroy').remove();
-			}
-		});
-
-		await RenderMap();
-		CloseTray();
+		await RenderMap($('#zwjs-d3', MapWindow.document)[0]);
 	};
 
 	/*
