@@ -1652,11 +1652,12 @@ const ZWaveJS = (function () {
 			return { Message: getFUSLicenseStatus() };
 		},
 
-		async GetRRCurrentProgress() {
-			const result = await Runtime.Get(undefined, undefined, `zwave-js/ui/${networkId}/rebuildroutesprogress`);
-			if (result.callSuccess && result.response !== false) {
-				commsRebuildRoutesProgress(undefined, { Progress: result.response });
-			}
+		GetRRCurrentProgress() {
+			Runtime.Get(undefined, undefined, `zwave-js/ui/${networkId}/rebuildroutesprogress`).then((result) => {
+				if (result.callSuccess && result.response !== false) {
+					commsRebuildRoutesProgress(undefined, { Progress: result.response });
+				}
+			});
 		},
 
 		async ListSplitters() {
@@ -2402,6 +2403,19 @@ const ZWaveJS = (function () {
 			ZWJSAlert('Region Set Succcessfully');
 		});
 
+	const RestartController = async (Button) => {
+		DisableButton(Button);
+		Runtime.Get('DRIVER', 'restart').then((R) => {
+			if (!R.callSuccess) {
+				EnableButton(Button);
+				ZWJSAlert(R.response);
+			} else {
+				EnableButton(Button);
+				CloseTray();
+			}
+		});
+	};
+
 	const ResetController = async (Button) => {
 		if (
 			await ZWJSConfirm(
@@ -2745,7 +2759,8 @@ const ZWaveJS = (function () {
 					break;
 
 				default:
-					Message = 'The update was successfull, please a few minutes for the Controller to reinitialize';
+					Message = 'The update was successfull, please wait a few moments...';
+					setTimeout(Runtime.Get('DRIVER', 'restart'), 15000);
 			}
 			RenderAdvanced('ZWJS_TPL_Tray-Firmware-Done', undefined, { Message });
 		}
@@ -2866,6 +2881,7 @@ const ZWaveJS = (function () {
 		BackupNames,
 		RestoreNames,
 		ZWJSAlert,
-		RenderMapDialog
+		RenderMapDialog,
+		RestartController
 	};
 })();

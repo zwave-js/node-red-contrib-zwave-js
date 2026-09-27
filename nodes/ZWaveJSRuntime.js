@@ -313,7 +313,7 @@ module.exports = function (RED) {
 							break;
 
 						case 'DRIVER':
-							if (Method === 'Restart') {
+							if (Method === 'restart') {
 								Shutdown()
 									.then(() => {
 										response.json({ callSuccess: true });
