@@ -57,6 +57,11 @@
 	font-size: 12px;
 }
 
+html.nr-theme-dark .zwjs-cc-id {
+	background-color: #555 !important;
+	color: white;
+}
+
 .zwjs-cc-value {
 	background-color: var(--red-ui-palette-header-background);
 	text-align: center;
@@ -155,9 +160,17 @@
 	background-color: lightgray;
 }
 
+html.nr-theme-dark .zwjs-tray-menu > div[child]:not([active]):hover {
+	background-color: #303033;
+}
+
 .zwjs-tray-menu > div[child][active] {
 	background-color: rgb(135, 169, 128);
 	color: white;
+}
+
+html.nr-theme-dark .zwjs-tray-menu > div[child][active] {
+	background-color: #597554;
 }
 
 #zwjs-advanced-content {
@@ -190,9 +203,17 @@ table.zwjs-table[horizontal] tr:first-of-type {
 	width: 150px;
 }
 
+html.nr-theme-dark table.zwjs-table[horizontal] tr:first-of-type {
+	background-color: var(--red-ui-secondary-background);
+}
+
 table.zwjs-table[vertical] td:first-of-type {
 	background-color: lightgray;
 	width: 150px;
+}
+
+html.nr-theme-dark table.zwjs-table[vertical] td:first-of-type {
+	background-color: var(--red-ui-secondary-background);
 }
 
 table.zwjs-table[vertical] td:nth-of-type(2) {
@@ -211,6 +232,18 @@ table.zwjs-table[vertical] td:nth-of-type(2) {
 	border-style: solid;
 	border-width: 1px;
 	border-color: gray;
+}
+
+html.nr-theme-dark .zwjs-fieldset div.zwjs-hint {
+	background-color: #7c773c;
+	color: #000;
+}
+
+html.nr-theme-dark .zwjs-fieldset div.zwjs-hint code {
+	color: #f0f0f0;
+	background-color: rgba(0, 0, 0, 0.35);
+	padding: 0 4px;
+	border-radius: 3px;
 }
 
 .zwjs-fieldset * label {
@@ -244,9 +277,17 @@ table.zwjs-table[vertical] td:nth-of-type(2) {
 	color: white;
 }
 
+html.nr-theme-dark .zwjs-empises[positive] {
+	background-color: #597554;
+}
+
 .zwjs-empises[negative] {
 	background-color: red;
 	color: white;
+}
+
+html.nr-theme-dark .zwjs-empises[negative] {
+	background-color: #7b0202;
 }
 
 .zwjs-empises[warn] {
