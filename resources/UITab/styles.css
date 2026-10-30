@@ -1,3 +1,8 @@
+/*
+ * Dark Mode Overrides 
+ */
+@import url('./styles-dark.css');
+
 :root {
 	--zwave-js-main-color: rgb(46, 145, 205);
 }
@@ -48,6 +53,9 @@
 	font-size: 12px;
 }
 
+/* 
+ * LINK ./styles-dark.css:1
+ */
 .zwjs-cc-id {
 	background-color: var(--red-ui-palette-header-background);
 	padding: 5px;
@@ -55,11 +63,6 @@
 	text-align: center;
 	border-radius: 4px;
 	font-size: 12px;
-}
-
-html.nr-theme-dark .zwjs-cc-id {
-	background-color: #555 !important;
-	color: white;
 }
 
 .zwjs-cc-value {
@@ -156,21 +159,19 @@ html.nr-theme-dark .zwjs-cc-id {
 	cursor: pointer;
 }
 
+/* 
+ * LINK ./styles-dark.css:6
+ */
 .zwjs-tray-menu > div[child]:hover {
 	background-color: lightgray;
 }
 
-html.nr-theme-dark .zwjs-tray-menu > div[child]:not([active]):hover {
-	background-color: #303033;
-}
-
+/* 
+ * LINK ./styles-dark.css:10
+ */
 .zwjs-tray-menu > div[child][active] {
 	background-color: rgb(135, 169, 128);
 	color: white;
-}
-
-html.nr-theme-dark .zwjs-tray-menu > div[child][active] {
-	background-color: #597554;
 }
 
 #zwjs-advanced-content {
@@ -198,22 +199,20 @@ table.zwjs-table[horizontal] tr {
 	background-color: var(--red-ui-palette-header-background);
 }
 
+/* 
+ * LINK ./styles-dark.css:14
+ */
 table.zwjs-table[horizontal] tr:first-of-type {
 	background-color: lightgray;
 	width: 150px;
 }
 
-html.nr-theme-dark table.zwjs-table[horizontal] tr:first-of-type {
-	background-color: var(--red-ui-secondary-background);
-}
-
+/* 
+ * LINK ./styles-dark.css:18
+ */
 table.zwjs-table[vertical] td:first-of-type {
 	background-color: lightgray;
 	width: 150px;
-}
-
-html.nr-theme-dark table.zwjs-table[vertical] td:first-of-type {
-	background-color: var(--red-ui-secondary-background);
 }
 
 table.zwjs-table[vertical] td:nth-of-type(2) {
@@ -224,6 +223,10 @@ table.zwjs-table[vertical] td:nth-of-type(2) {
 	border: none;
 }
 
+/* 
+ * LINK ./styles-dark.css:22
+ * LINK ./styles-dark.css:27
+ */
 .zwjs-fieldset div.zwjs-hint {
 	margin-bottom: 20px;
 	background-color: lightgoldenrodyellow;
@@ -232,18 +235,6 @@ table.zwjs-table[vertical] td:nth-of-type(2) {
 	border-style: solid;
 	border-width: 1px;
 	border-color: gray;
-}
-
-html.nr-theme-dark .zwjs-fieldset div.zwjs-hint {
-	background-color: #7c773c;
-	color: #000;
-}
-
-html.nr-theme-dark .zwjs-fieldset div.zwjs-hint code {
-	color: #f0f0f0;
-	background-color: rgba(0, 0, 0, 0.35);
-	padding: 0 4px;
-	border-radius: 3px;
 }
 
 .zwjs-fieldset * label {
@@ -272,22 +263,20 @@ html.nr-theme-dark .zwjs-fieldset div.zwjs-hint code {
 	border-radius: 4px;
 }
 
+/* 
+ * LINK ./styles-dark.css:34
+ */
 .zwjs-empises[positive] {
 	background-color: rgb(135, 169, 128);
 	color: white;
 }
 
-html.nr-theme-dark .zwjs-empises[positive] {
-	background-color: #597554;
-}
-
+/* 
+ * LINK ./styles-dark.css:38
+ */
 .zwjs-empises[negative] {
 	background-color: red;
 	color: white;
-}
-
-html.nr-theme-dark .zwjs-empises[negative] {
-	background-color: #7b0202;
 }
 
 .zwjs-empises[warn] {
@@ -432,12 +421,6 @@ i.zwjs-state-darkblue {
 
 .zwjs-title:first-of-type {
 	margin-top: 10px;
-}
-
-.zwjs-mermaid svg {
-	height: calc(90vh - 300px) !important;
-	max-width: none !important;
-	width: 100% !important;
 }
 
 img.zwjs-ui-logo {
