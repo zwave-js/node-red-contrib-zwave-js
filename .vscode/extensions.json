@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    "exodiusstudios.comment-anchors",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode"
+  ]
+}
