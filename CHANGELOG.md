@@ -33,6 +33,7 @@
 
       - Refactored the sidebar JavaScript for improved readability and maintainability.
       - Refined the dark mode CSS to improve styling consistency and address visual issues across the interface.
+      - Improved all config editor visuals.
       
   - 11.1.1
 
