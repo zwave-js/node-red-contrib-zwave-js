@@ -10,6 +10,7 @@
     **Bug Fixes**
 
       - Fix asynchronous message completion handling in Device and Controller nodes.
+      - Fix missing nodes.
       - Fix missing message completion handling in the Splitter node.
       - Fix missing config file for devcies in the UI.
       - Fix Runtime shutdown and driver restart error handling.
