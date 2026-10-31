@@ -26,7 +26,7 @@ const ZWaveJS = (function () {
 
 	const STATUS_BOOTLOADER = 'Bootloader ready.';
 	const STATUS_DRIVER_READY = 'Driver ready.';
-	const STALE_NODE_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+	const STALE_NODE_AGE_HOURS = 168; // one week
 	const NO_LOCATION = 'No Location';
 	const ALL_NODES = 'All Nodes';
 
@@ -716,10 +716,6 @@ const ZWaveJS = (function () {
 		$('#zwjs-controller-info').data('info', controller);
 	};
 
-	// Other controllers (Z-Wave Plus role types 0-3) are not listed in the tree.
-	const isListedNode = (node) =>
-		!node.isControllerNode && (node.zwavePlusRoleType === undefined || node.zwavePlusRoleType > 3);
-
 	const renderNodeTree = (nodes) => {
 		const treeData = buildNodeTree(nodes);
 		$('#zwjs-node-list').treeList('data', treeData);
@@ -742,7 +738,7 @@ const ZWaveJS = (function () {
 		try {
 			const allNodes = await fetchNodes();
 			updateControllerSummary(allNodes.find((node) => node.isControllerNode));
-			renderNodeTree(allNodes.filter(isListedNode));
+			renderNodeTree(allNodes.filter((node) => !node.isControllerNode));
 		} catch (error) {
 			reportError(error);
 		} finally {
@@ -763,7 +759,7 @@ const ZWaveJS = (function () {
 	// ---- node state icons ----
 
 	const STATE_ICON_SELECTOR =
-		'span.zwjs-node-state-group i[id^="zwjs-node-state-status"], span.zwjs-node-state-group i[id^="zwjs-node-state-power"]';
+		'span.zwjs-node-state-group i[id^="zwjs-node-state-status"], span.zwjs-node-state-group i[id^="zwjs-node-state-power"], span.zwjs-node-state-group i[id^="zwjs-node-state-interview"]';
 
 	// 0 = all good, 1 = something needs attention (amber), 2 = something is wrong (red)
 	const getGroupSeverity = (group) => {
@@ -827,17 +823,24 @@ const ZWaveJS = (function () {
 		Unknown: ['fa-question-circle', 'zwjs-state-amber', 'Unknown']
 	};
 
+	const getStaleAgeHours = () => {
+		const hours = Number(RED.nodes.node(networkId)?.nodeAgeLimit);
+		return hours > 0 ? hours : STALE_NODE_AGE_HOURS; // falls back if unset, empty, 0, negative or not a number
+	};
+
 	const renderAvailabilityIcon = (node, icon) => {
 		const seenAt = node.lastSeen === undefined ? undefined : formatDateTime(node.lastSeen);
+		const staleAgeHours = getStaleAgeHours();
+
 		const isStale =
 			node.status !== 'Dead' &&
 			node.status !== 'Unknown' &&
 			node.lastSeen !== undefined &&
-			Date.now() - node.lastSeen > STALE_NODE_AGE_MS;
+			(Date.now() - node.lastSeen) / (60 * 60 * 1000) > staleAgeHours;
 
 		if (isStale) {
 			icon.addClass(['fa', 'fa-question-circle', 'zwjs-state-amber']);
-			setTooltip(icon, `${seenAt} : Seen +7 days ago`);
+			setTooltip(icon, `${seenAt} : Not seen for over ${staleAgeHours} hours`);
 			return;
 		}
 

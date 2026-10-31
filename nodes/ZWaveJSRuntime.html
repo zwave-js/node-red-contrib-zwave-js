@@ -10,6 +10,11 @@
 				value: '',
 				required: true
 			},
+			nodeAgeLimit: {
+				value: 168,
+				required: false,
+				validate: Validate
+			},
 			timeouts_ack: {
 				value: '',
 				required: false,
@@ -318,6 +323,13 @@
 		<div class="form-row">
 			<label for="node-config-input-timeouts_serialAPIStarted"><i class="fa fa-clock-o"></i> Serial API</label>
 			<input type="number" id="node-config-input-timeouts_serialAPIStarted" placeholder="Use Default">
+		</div>
+	</fieldset>
+	<fieldset class="zwjs-fs">
+		<legend>Side Bar</legend>
+		<div class="form-row">
+			<label for="node-config-input-nodeAgeLimit"><i class="fa fa-clock-o"></i> Min TS Hrs</label>
+			<input type="number" id="node-config-input-nodeAgeLimit" placeholder="168">
 		</div>
 	</fieldset>
 	<fieldset class="zwjs-fs">

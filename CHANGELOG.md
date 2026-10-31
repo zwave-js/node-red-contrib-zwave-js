@@ -22,11 +22,17 @@
       - Fix various UI spelling, wording, and syntax errors.
       - Fix controller firmware update wording incorrectly referring to the controller as a device.
 
+    **New Features**
+
+      - Completely re-engineered the topology map, providing a clearer, more accurate and more interactive view of Z-Wave network routing than the implementation introduced in v11.
+      - Ability to configure the minimum time since a node last sent traffic before it is flagged for attention.
+      - The interview state icon now indicates when a configuration cannot be found for a device.
+
     **Changes**
 
       - Refactored the sidebar JavaScript for improved readability and maintainability.
-      - Completely re-engineered the topology map, providing a clearer, more accurate and more interactive view of Z-Wave network routing than the implementation introduced in v11.
-
+      - Refined the dark mode CSS to improve styling consistency and address visual issues across the interface.
+      
   - 11.1.1
 
     **Bug Fixes**
