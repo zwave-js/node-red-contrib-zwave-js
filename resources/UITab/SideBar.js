@@ -1346,7 +1346,53 @@ const ZWaveJS = (function () {
 
 	// ---- topology map ----
 
-	const idOf = (end) => (typeof end === 'object' ? end.id : end);
+	const NODE_RADIUS = 20;
+	const LINK_SPACING = 4; // px between parallel links that share the same two nodes
+	const DIMMED_OPACITY = 0.15;
+	const DIRECT_COLOUR = '#28a745';
+	const NODE_TYPE_ICONS = { controller: '\uf1eb', mains: '\uf1e6', battery: '\uf240' }; // FontAwesome glyphs
+	const CONTROLLER_COLOUR = '#5b9bd5';
+	const STATUS_COLOURS = {
+		Alive: '#28a745',
+		Awake: '#28a745',
+		Asleep: '#6c7a89',
+		Dead: '#d9534f',
+		Unknown: '#f0ad4e'
+	};
+
+	// Injected into the map window next to the details card (inline styles cannot do hover or animation).
+	const MAP_CARD_CSS = `
+.zwjs-map-card { display:none; position:absolute; z-index:10; top:12px; right:12px; width:290px; max-height:calc(100% - 24px);
+	overflow:auto; background:#fff; color:#2b2f33; border-radius:10px; font:13px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+	box-shadow:0 10px 30px rgba(0,0,0,.18), 0 1px 3px rgba(0,0,0,.12); animation:zwjs-map-in .18s ease-out; }
+@keyframes zwjs-map-in { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+.zwjs-map-head { display:flex; align-items:center; gap:10px; padding:12px 12px 12px 14px; border-top:4px solid var(--accent);
+	border-radius:10px 10px 0 0; background:linear-gradient(180deg, rgba(0,0,0,.03), transparent); }
+.zwjs-map-icon { flex:none; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+	background:var(--accent); color:#fff; font-family:FontAwesome; font-size:16px; }
+.zwjs-map-heading { flex:1; min-width:0; }
+.zwjs-map-name { font-size:15px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.zwjs-map-sub { font-size:11px; color:#6b7580; }
+.zwjs-map-status { flex:none; padding:2px 9px; border-radius:999px; font-size:11px; font-weight:600; color:var(--accent);
+	background:color-mix(in srgb, var(--accent) 14%, transparent); }
+.zwjs-map-close { flex:none; border:0; background:none; cursor:pointer; font-size:20px; line-height:1; color:#9aa5b1; padding:0 2px; }
+.zwjs-map-close:hover { color:#2b2f33; }
+.zwjs-map-body { padding:4px 14px 14px; }
+.zwjs-map-row { display:flex; justify-content:space-between; gap:12px; padding:6px 0; border-bottom:1px solid #eef0f2; }
+.zwjs-map-row > span:first-child { color:#6b7580; font-size:12px; }
+.zwjs-map-row > span:last-child { text-align:right; font-weight:500; word-break:break-word; }
+.zwjs-map-section { display:flex; justify-content:space-between; margin:12px 0 6px; font-size:11px; font-weight:600;
+	letter-spacing:.06em; text-transform:uppercase; color:#6b7580; }
+.zwjs-map-route { display:flex; flex-wrap:wrap; align-items:center; gap:4px; }
+.zwjs-map-chip { min-width:24px; padding:2px 7px; text-align:center; border-radius:6px; font-weight:600; font-size:12px;
+	background:#eef0f2; color:#2b2f33; }
+.zwjs-map-chip-start { background:var(--controller); color:#fff; }
+.zwjs-map-chip-end { background:var(--accent); color:#fff; }
+.zwjs-map-arrow { color:#9aa5b1; }
+.zwjs-map-empty { color:#9aa5b1; font-style:italic; }
+`;
+
+	let mapResizeObserver; // keeps the layout centred when the map window is resized; replaced on every render
 
 	/** `rootId` plus every node routed through it, so they can be released when it is dragged. */
 	const collectDescendantIds = (rootId, layoutLinks) => {
@@ -1354,9 +1400,10 @@ const ZWaveJS = (function () {
 		let grew = true;
 		while (grew) {
 			grew = false;
+			// forceSimulation has already replaced link.source / link.target ids with the node objects.
 			layoutLinks.forEach((link) => {
-				if (ids.has(idOf(link.source)) && !ids.has(idOf(link.target))) {
-					ids.add(idOf(link.target));
+				if (ids.has(link.source.id) && !ids.has(link.target.id)) {
+					ids.add(link.target.id);
 					grew = true;
 				}
 			});
@@ -1380,7 +1427,6 @@ const ZWaveJS = (function () {
 
 	const getNodeDetailRows = (d) =>
 		[
-			['Status', d.status],
 			['Location', d.location],
 			['Manufacturer', d.manufacturer],
 			['Device', d.label],
@@ -1388,100 +1434,87 @@ const ZWaveJS = (function () {
 			['Power', d.power],
 			['Security', d.security],
 			['RSSI', d.rssi !== undefined ? `${d.rssi} dBm` : undefined],
-			['RTT', d.rtt !== undefined ? `${d.rtt} ms` : undefined],
-			['Route', d.route?.join(' → ')]
+			['RTT', d.rtt !== undefined ? `${d.rtt} ms` : undefined]
 		].filter(([, value]) => value !== undefined && value !== '');
 
-	const renderTopologyGraph = (target, nodes, links, layoutLinks) => {
-		const container = ZWJSD3.select(target);
-		if (container.empty()) return;
+	// The route as a row of node id chips: controller, each repeater, then the destination.
+	const renderRouteSection = (d, nodesById) => {
+		if (d.type === 'controller') return '';
+		if (!d.route) return '<div class="zwjs-map-section">Route</div><div class="zwjs-map-empty">No route recorded yet</div>';
 
-		container.selectAll('*').remove();
-		container.style('position', 'relative').style('width', '100%').style('height', '100%');
-
-		const element = container.node();
-		let width = element.clientWidth || 800;
-		let height = element.clientHeight || 500;
-		const routeColour = ZWJSD3.scaleOrdinal(ZWJSD3.schemeTableau10);
-		const nodesById = new Map(nodes.map((node) => [node.id, node]));
-
-		links.forEach((link) => {
-			link.source = typeof link.source === 'object' ? link.source : nodesById.get(link.source);
-			link.target = typeof link.target === 'object' ? link.target : nodesById.get(link.target);
+		const last = d.route.length - 1;
+		const chips = d.route.map((id, index) => {
+			const role = index === 0 ? 'start' : index === last ? 'end' : 'via';
+			const title = escapeHtml(nodesById.get(id)?.name ?? '');
+			return `<span class="zwjs-map-chip zwjs-map-chip-${role}" title="${title}">${id}</span>`;
 		});
+		const summary = last === 1 ? 'Direct' : `${last - 1} ${last - 1 === 1 ? 'repeater' : 'repeaters'}`;
 
-		const details = container
-			.append('div')
-			.attr(
-				'style',
-				'display:none;position:absolute;z-index:10;top:10px;right:10px;min-width:220px;padding:10px;' +
-					'background:#fff;border:1px solid #aaa;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,0.2);font-size:12px'
-			);
+		return (
+			`<div class="zwjs-map-section"><span>Route</span><span>${summary}</span></div>` +
+			`<div class="zwjs-map-route">${chips.join('<span class="zwjs-map-arrow">→</span>')}</div>`
+		);
+	};
 
-		const svg = container
-			.append('svg')
-			.attr('width', '100%')
-			.attr('height', '100%')
-			.attr('viewBox', [0, 0, width, height]);
-		const graph = svg.append('g');
+	const createDetailsPanel = (container, nodesById) => {
+		container.append('style').text(MAP_CARD_CSS);
+		const panel = container.append('div').attr('class', 'zwjs-map-card');
+		const hide = () => panel.style('display', 'none');
 
+		return {
+			hide,
+			show: (d) => {
+				const isController = d.type === 'controller';
+				const accent = isController ? CONTROLLER_COLOUR : (STATUS_COLOURS[d.status] ?? '#9aa5b1');
+				const rows = getNodeDetailRows(d)
+					.map(([label, value]) => `<div class="zwjs-map-row"><span>${label}</span><span>${escapeHtml(value)}</span></div>`)
+					.join('');
+				const status = d.status ? `<span class="zwjs-map-status">${escapeHtml(d.status)}</span>` : '';
+
+				panel
+					.style('--accent', accent)
+					.style('--controller', CONTROLLER_COLOUR)
+					.html(
+						'<div class="zwjs-map-head">' +
+							`<span class="zwjs-map-icon">${NODE_TYPE_ICONS[d.type]}</span>` +
+							'<div class="zwjs-map-heading">' +
+							`<div class="zwjs-map-name">${escapeHtml(isController ? 'Controller' : d.name)}</div>` +
+							`<div class="zwjs-map-sub">Node ${d.id}</div></div>` +
+							`${status}<button class="zwjs-map-close" title="Close" aria-label="Close">&times;</button></div>` +
+							`<div class="zwjs-map-body">${rows}${renderRouteSection(d, nodesById)}</div>`
+					)
+					.style('display', 'block');
+				panel.select('.zwjs-map-close').on('click', hide);
+			}
+		};
+	};
+
+	// One arrowhead per link colour, so the head matches the line it ends.
+	const createArrowMarkers = (svg, colours, markerId) => {
 		svg
 			.append('defs')
-			.append('marker')
-			.attr('id', 'zwjs-d3-arrow')
+			.selectAll('marker')
+			.data(colours)
+			.join('marker')
+			.attr('id', markerId)
 			.attr('viewBox', '0 -5 10 10')
-			.attr('refX', 26)
+			.attr('refX', 26) // pulls the tip back to the node's edge: (NODE_RADIUS + gap) / marker scale
 			.attr('markerWidth', 6)
 			.attr('markerHeight', 6)
 			.attr('orient', 'auto')
 			.append('path')
 			.attr('d', 'M0,-5L10,0L0,5')
-			.attr('fill', '#999');
+			.attr('fill', (colour) => colour);
+	};
 
-		svg.call(
-			ZWJSD3.zoom()
-				.scaleExtent([0.2, 4])
-				.on('zoom', (event) => graph.attr('transform', event.transform))
-		);
-
-		const linkSelection = graph
-			.append('g')
-			.selectAll('line')
-			.data(links)
-			.join('line')
-			.attr('stroke', (d) => (d.direct ? '#28a745' : routeColour(d.routeId)))
-			.attr('stroke-width', 2)
-			.attr('marker-end', (d) => (d.destination ? 'url(#zwjs-d3-arrow)' : null));
-
-		svg.on('click', () => {
-			details.style('display', 'none');
-			linkSelection.attr('opacity', 1);
-		});
-
-		const nodeSelection = graph
-			.append('g')
-			.selectAll('g')
-			.data(nodes)
-			.join('g')
-			.style('cursor', 'grab')
-			.on('click', (event, d) => {
-				event.stopPropagation();
-				// Highlight the route to the clicked node (the controller has none).
-				linkSelection.attr('opacity', (link) => (d.type === 'controller' || link.routeId === d.id ? 1 : 0.15));
-
-				const title = d.type === 'controller' ? `Controller - Node ${d.id}` : `Node ${d.id} - ${d.name}`;
-				const rows = getNodeDetailRows(d)
-					.map(([label, value]) => `<div><strong>${label}:</strong> ${escapeHtml(value)}</div>`)
-					.join('');
-				details
-					.html(`<div style="font-weight:bold;font-size:14px;margin-bottom:8px">${escapeHtml(title)}</div>${rows}`)
-					.style('display', 'block');
-			});
+	const drawNodes = (graph, nodes) => {
+		const nodeSelection = graph.append('g').selectAll('g').data(nodes).join('g').style('cursor', 'grab');
+		const isDead = (d) => d.status === 'Dead';
 
 		nodeSelection
 			.append('circle')
-			.attr('r', 20)
-			.attr('fill', (d) => (d.status === 'Dead' ? '#d9534f' : d.type === 'controller' ? '#5b9bd5' : '#fff'))
+			.attr('r', NODE_RADIUS)
+			.attr('fill', (d) => (isDead(d) ? '#d9534f' : d.type === 'controller' ? '#5b9bd5' : '#fff'))
 			.attr('stroke', '#777')
 			.attr('stroke-width', 2);
 
@@ -1491,8 +1524,8 @@ const ZWaveJS = (function () {
 			.attr('dominant-baseline', 'central')
 			.attr('font-family', 'FontAwesome')
 			.attr('font-size', 16)
-			.attr('fill', (d) => (d.status === 'Dead' ? '#fff' : '#000'))
-			.text((d) => (d.type === 'controller' ? '\uf1eb' : d.type === 'mains' ? '\uf1e6' : '\uf240'));
+			.attr('fill', (d) => (isDead(d) ? '#fff' : '#000'))
+			.text((d) => NODE_TYPE_ICONS[d.type]);
 
 		nodeSelection
 			.append('text')
@@ -1509,27 +1542,11 @@ const ZWaveJS = (function () {
 			.attr('font-size', 10)
 			.text((d) => d.device);
 
-		const onTick = () => {
-			linkSelection.each(function (d) {
-				const dx = d.target.x - d.source.x;
-				const dy = d.target.y - d.source.y;
-				const length = Math.sqrt(dx * dx + dy * dy) || 1;
-				// Parallel links between the same pair of nodes are fanned out by `offset`.
-				const offsetX = (-dy / length) * d.offset * 4;
-				const offsetY = (dx / length) * d.offset * 4;
+		return nodeSelection;
+	};
 
-				ZWJSD3.select(this)
-					.attr('x1', d.source.x + offsetX)
-					.attr('y1', d.source.y + offsetY)
-					.attr('x2', d.target.x + offsetX)
-					.attr('y2', d.target.y + offsetY);
-			});
-			nodeSelection.attr('transform', (d) => `translate(${d.x},${d.y})`);
-		};
-
-		const simulation = createSimulation(nodes, layoutLinks, width, height, onTick);
-
-		// Dragging pins a node where it is dropped, and lets the nodes routed through it re-settle around it.
+	// Dragging pins a node where it is dropped, and lets the nodes routed through it re-settle around it.
+	const attachDrag = (nodeSelection, nodes, layoutLinks, simulation, onTick) => {
 		nodeSelection.call(
 			ZWJSD3.drag()
 				.on('start', function (event, d) {
@@ -1562,8 +1579,93 @@ const ZWaveJS = (function () {
 					simulation.alpha(1).restart();
 				})
 		);
+	};
 
-		new ResizeObserver(() => {
+	const renderTopologyGraph = (target, nodes, links, layoutLinks) => {
+		const container = ZWJSD3.select(target);
+		if (container.empty()) return;
+
+		container.selectAll('*').remove();
+		container.style('position', 'relative').style('width', '100%').style('height', '100%');
+
+		const element = container.node();
+		let width = element.clientWidth || 800;
+		let height = element.clientHeight || 500;
+
+		const nodesById = new Map(nodes.map((node) => [node.id, node]));
+		const routeColour = ZWJSD3.scaleOrdinal(ZWJSD3.schemeTableau10);
+		const linkColour = (d) => (d.direct ? DIRECT_COLOUR : routeColour(d.routeId));
+		const markerId = (colour) => `zwjs-d3-arrow-${colour.replace('#', '')}`;
+
+		links.forEach((link) => {
+			link.source = nodesById.get(link.source);
+			link.target = nodesById.get(link.target);
+		});
+
+		const details = createDetailsPanel(container, nodesById);
+		const svg = container
+			.append('svg')
+			.attr('width', '100%')
+			.attr('height', '100%')
+			.attr('viewBox', [0, 0, width, height]);
+		const graph = svg.append('g');
+
+		createArrowMarkers(svg, [...new Set(links.map(linkColour))], markerId);
+		svg.call(
+			ZWJSD3.zoom()
+				.scaleExtent([0.2, 4])
+				.on('zoom', (event) => graph.attr('transform', event.transform))
+		);
+
+		const linkSelection = graph
+			.append('g')
+			.selectAll('line')
+			.data(links)
+			.join('line')
+			.attr('stroke', linkColour)
+			.attr('stroke-width', 2)
+			.attr('marker-end', (d) => (d.destination ? `url(#${markerId(linkColour(d))})` : null));
+
+		svg.on('click', () => {
+			details.hide();
+			linkSelection.attr('opacity', 1);
+		});
+
+		const nodeSelection = drawNodes(graph, nodes);
+		nodeSelection.on('click', (event, d) => {
+			event.stopPropagation();
+			// Keep every route that passes through the clicked node, plus its own. All routes start at the
+			// controller, so clicking the controller keeps everything.
+			linkSelection.attr('opacity', (link) =>
+				nodesById.get(link.routeId)?.route?.includes(d.id) ? 1 : DIMMED_OPACITY
+			);
+			details.show(d);
+		});
+
+		const onTick = () => {
+			linkSelection.each(function (d) {
+				// Measure the sideways offset from a fixed direction (lower id to higher id), so two links that run
+				// in opposite directions between the same nodes fan out instead of landing on the same line.
+				const [from, to] = d.source.id < d.target.id ? [d.source, d.target] : [d.target, d.source];
+				const dx = to.x - from.x;
+				const dy = to.y - from.y;
+				const length = Math.hypot(dx, dy) || 1;
+				const offsetX = (-dy / length) * d.offset * LINK_SPACING;
+				const offsetY = (dx / length) * d.offset * LINK_SPACING;
+
+				this.setAttribute('x1', d.source.x + offsetX);
+				this.setAttribute('y1', d.source.y + offsetY);
+				this.setAttribute('x2', d.target.x + offsetX);
+				this.setAttribute('y2', d.target.y + offsetY);
+			});
+			nodeSelection.attr('transform', (d) => `translate(${d.x},${d.y})`);
+		};
+
+		const simulation = createSimulation(nodes, layoutLinks, width, height, onTick);
+		attachDrag(nodeSelection, nodes, layoutLinks, simulation, onTick);
+
+		mapResizeObserver?.disconnect();
+		mapResizeObserver = new ResizeObserver(() => {
 			width = element.clientWidth;
 			height = element.clientHeight;
 			svg.attr('viewBox', [0, 0, width, height]);
@@ -1571,7 +1673,8 @@ const ZWaveJS = (function () {
 				.force('center', ZWJSD3.forceCenter(width / 2, height / 2))
 				.alpha(0.3)
 				.restart();
-		}).observe(element);
+		});
+		mapResizeObserver.observe(element);
 	};
 
 	const describeDevice = (node) =>
@@ -1620,12 +1723,16 @@ const ZWaveJS = (function () {
 		const mapLinks = [];
 		const layoutLinks = [];
 
+		const knownIds = new Set(allNodes.map((node) => node.nodeId));
+
 		allNodes
 			.filter((node) => !node.isControllerNode)
 			.forEach((node) => {
-				const repeaters = node.statistics?.lwr?.repeaters || [];
-				const direct = repeaters.length === 0;
-				const route = [controller.nodeId, ...repeaters, node.nodeId];
+				// No `lwr` means no route has been recorded: that is not the same as talking directly to the controller.
+				const lwr = node.statistics?.lwr;
+				const repeaters = (lwr?.repeaters ?? []).filter((id) => knownIds.has(id));
+				const route = lwr ? [controller.nodeId, ...repeaters, node.nodeId] : undefined;
+				const direct = Boolean(lwr) && repeaters.length === 0;
 
 				mapNodes.push({
 					id: node.nodeId,
@@ -1639,12 +1746,13 @@ const ZWaveJS = (function () {
 					firmwareVersion: node.firmwareVersion,
 					power: describePower(node.powerSource),
 					security: node.isSecure ? `S${node.highestSecurityClass}` : 'None',
-					rssi: node.statistics?.lwr?.rssi,
+					rssi: lwr?.rssi,
 					rtt: node.statistics?.rtt,
 					route
 				});
 
-				for (let i = 0; i < route.length - 1; i++) {
+				// One link per hop. The last hop is the destination and gets the arrowhead.
+				for (let i = 0; route && i < route.length - 1; i++) {
 					mapLinks.push({
 						source: route[i],
 						target: route[i + 1],
@@ -1655,10 +1763,11 @@ const ZWaveJS = (function () {
 					});
 				}
 
+				// Always laid out below its last repeater (or the controller), even when no route is known.
 				layoutLinks.push({
-					source: direct ? controller.nodeId : repeaters[repeaters.length - 1],
+					source: repeaters[repeaters.length - 1] ?? controller.nodeId,
 					target: node.nodeId,
-					direct
+					direct: repeaters.length === 0
 				});
 			});
 
