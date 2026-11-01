@@ -16,8 +16,6 @@ const ZWaveJS = (function () {
 	 *   9. Actions: nodes, associations, inclusion, controller, firmware
 	 *  10. Runtime events (comms) and the public API
 	 *
-	 * Naming: PascalCase functions are the public API, called from inline handlers in the HTML
-	 * templates (see the return statement at the bottom). camelCase functions are internal.
 	 */
 
 	/*
@@ -1361,6 +1359,9 @@ const ZWaveJS = (function () {
 	};
 
 	// Injected into the map window next to the details card (inline styles cannot do hover or animation).
+	const getAccentColour = (d) =>
+		d.type === 'controller' ? CONTROLLER_COLOUR : (STATUS_COLOURS[d.status] ?? '#9aa5b1');
+
 	const MAP_CARD_CSS = `
 .zwjs-map-card { display:none; position:absolute; z-index:10; top:12px; right:12px; width:290px; max-height:calc(100% - 24px);
 	overflow:auto; background:#fff; color:#2b2f33; border-radius:10px; font:13px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -1386,6 +1387,8 @@ const ZWaveJS = (function () {
 .zwjs-map-route { display:flex; flex-wrap:wrap; align-items:center; gap:4px; }
 .zwjs-map-chip { min-width:24px; padding:2px 7px; text-align:center; border-radius:6px; font-weight:600; font-size:12px;
 	background:#eef0f2; color:#2b2f33; }
+.zwjs-map-chip { cursor:pointer; transition:filter .12s; }
+.zwjs-map-chip:hover { filter:brightness(.88); }
 .zwjs-map-chip-start { background:var(--controller); color:#fff; }
 .zwjs-map-chip-end { background:var(--accent); color:#fff; }
 .zwjs-map-arrow { color:var(--route, #9aa5b1); font-weight:700; }
@@ -1440,13 +1443,15 @@ const ZWaveJS = (function () {
 	// The route as a row of node id chips: controller, each repeater, then the destination.
 	const renderRouteSection = (d, nodesById) => {
 		if (d.type === 'controller') return '';
-		if (!d.route) return '<div class="zwjs-map-section">Route</div><div class="zwjs-map-empty">No route recorded yet</div>';
+		if (!d.route)
+			return '<div class="zwjs-map-section">Route</div><div class="zwjs-map-empty">No route recorded yet</div>';
 
 		const last = d.route.length - 1;
 		const chips = d.route.map((id, index) => {
 			const role = index === 0 ? 'start' : index === last ? 'end' : 'via';
-			const title = escapeHtml(nodesById.get(id)?.name ?? '');
-			return `<span class="zwjs-map-chip zwjs-map-chip-${role}" title="${title}">${id}</span>`;
+			const name = nodesById.get(id)?.name;
+			const title = escapeHtml(`Node ${id}${name ? ` - ${name}` : ''}`);
+			return `<span class="zwjs-map-chip zwjs-map-chip-${role}" data-node-id="${id}" title="${title}">${id}</span>`;
 		});
 		const summary = last === 1 ? 'Direct' : `${last - 1} ${last - 1 === 1 ? 'repeater' : 'repeaters'}`;
 
@@ -1456,18 +1461,30 @@ const ZWaveJS = (function () {
 		);
 	};
 
-	const createDetailsPanel = (container, nodesById, routeColourOf) => {
+	const createDetailsPanel = (container, nodesById, routeColourOf, { onSelectNode, onClose }) => {
 		container.append('style').text(MAP_CARD_CSS);
 		const panel = container.append('div').attr('class', 'zwjs-map-card');
 		const hide = () => panel.style('display', 'none');
+
+		// The card's contents are re-rendered on every show(), so clicks are handled once, here, by delegation.
+		panel.on('click', (event) => {
+			if (event.target.closest('.zwjs-map-close')) {
+				onClose();
+				return;
+			}
+			const chip = event.target.closest('[data-node-id]');
+			if (chip) onSelectNode(Number(chip.dataset.nodeId));
+		});
 
 		return {
 			hide,
 			show: (d) => {
 				const isController = d.type === 'controller';
-				const accent = isController ? CONTROLLER_COLOUR : (STATUS_COLOURS[d.status] ?? '#9aa5b1');
+				const accent = getAccentColour(d);
 				const rows = getNodeDetailRows(d)
-					.map(([label, value]) => `<div class="zwjs-map-row"><span>${label}</span><span>${escapeHtml(value)}</span></div>`)
+					.map(
+						([label, value]) => `<div class="zwjs-map-row"><span>${label}</span><span>${escapeHtml(value)}</span></div>`
+					)
 					.join('');
 				const status = d.status ? `<span class="zwjs-map-status">${escapeHtml(d.status)}</span>` : '';
 
@@ -1485,7 +1502,6 @@ const ZWaveJS = (function () {
 							`<div class="zwjs-map-body">${rows}${renderRouteSection(d, nodesById)}</div>`
 					)
 					.style('display', 'block');
-				panel.select('.zwjs-map-close').on('click', hide);
 			}
 		};
 	};
@@ -1511,6 +1527,19 @@ const ZWaveJS = (function () {
 	const drawNodes = (graph, nodes) => {
 		const nodeSelection = graph.append('g').selectAll('g').data(nodes).join('g').style('cursor', 'grab');
 		const isDead = (d) => d.status === 'Dead';
+
+		// Halo behind the node, shown while its details card is open.
+		nodeSelection
+			.append('circle')
+			.attr('class', 'zwjs-map-ring')
+			.attr('r', NODE_RADIUS + 8)
+			.attr('fill', getAccentColour)
+			.attr('fill-opacity', 0.18)
+			.attr('stroke', getAccentColour)
+			.attr('stroke-width', 2.5)
+			.attr('pointer-events', 'none')
+			.style('opacity', 0)
+			.style('transition', 'opacity 0.15s ease');
 
 		nodeSelection
 			.append('circle')
@@ -1605,7 +1634,13 @@ const ZWaveJS = (function () {
 			link.target = nodesById.get(link.target);
 		});
 
-		const details = createDetailsPanel(container, nodesById, nodeRouteColour);
+		const details = createDetailsPanel(container, nodesById, nodeRouteColour, {
+			onSelectNode: (nodeId) => {
+				const node = nodesById.get(nodeId);
+				if (node) selectNode(node);
+			},
+			onClose: () => clearSelection()
+		});
 		const svg = container
 			.append('svg')
 			.attr('width', '100%')
@@ -1629,20 +1664,28 @@ const ZWaveJS = (function () {
 			.attr('stroke-width', 2)
 			.attr('marker-end', (d) => (d.destination ? `url(#${markerId(linkColour(d))})` : null));
 
-		svg.on('click', () => {
-			details.hide();
-			linkSelection.attr('opacity', 1);
-		});
-
 		const nodeSelection = drawNodes(graph, nodes);
-		nodeSelection.on('click', (event, d) => {
-			event.stopPropagation();
-			// Keep every route that passes through the clicked node, plus its own. All routes start at the
-			// controller, so clicking the controller keeps everything.
+
+		// Selecting a node (by clicking it, or a chip in the card) highlights it, shows its card, and keeps only the
+		// routes that pass through it, plus its own. All routes start at the controller, so selecting it keeps everything.
+		const selectNode = (d) => {
+			nodeSelection.select('.zwjs-map-ring').style('opacity', (node) => (node === d ? 1 : 0));
 			linkSelection.attr('opacity', (link) =>
 				nodesById.get(link.routeId)?.route?.includes(d.id) ? 1 : DIMMED_OPACITY
 			);
 			details.show(d);
+		};
+
+		const clearSelection = () => {
+			nodeSelection.select('.zwjs-map-ring').style('opacity', 0);
+			linkSelection.attr('opacity', 1);
+			details.hide();
+		};
+
+		svg.on('click', clearSelection);
+		nodeSelection.on('click', (event, d) => {
+			event.stopPropagation();
+			selectNode(d);
 		});
 
 		const onTick = () => {
@@ -1748,7 +1791,7 @@ const ZWaveJS = (function () {
 					label: node.deviceConfig?.label,
 					firmwareVersion: node.firmwareVersion,
 					power: describePower(node.powerSource),
-					security: node.isSecure ? `S${node.highestSecurityClass}` : 'None',
+					security: node.isSecure ? (SECURITY_CLASSES[node.highestSecurityClass]?.label ?? 'Unknown') : 'None',
 					rssi: lwr?.rssi,
 					rtt: node.statistics?.rtt,
 					route
