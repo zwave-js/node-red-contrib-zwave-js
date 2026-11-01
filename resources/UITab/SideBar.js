@@ -1388,7 +1388,7 @@ const ZWaveJS = (function () {
 	background:#eef0f2; color:#2b2f33; }
 .zwjs-map-chip-start { background:var(--controller); color:#fff; }
 .zwjs-map-chip-end { background:var(--accent); color:#fff; }
-.zwjs-map-arrow { color:#9aa5b1; }
+.zwjs-map-arrow { color:var(--route, #9aa5b1); font-weight:700; }
 .zwjs-map-empty { color:#9aa5b1; font-style:italic; }
 `;
 
@@ -1456,7 +1456,7 @@ const ZWaveJS = (function () {
 		);
 	};
 
-	const createDetailsPanel = (container, nodesById) => {
+	const createDetailsPanel = (container, nodesById, routeColourOf) => {
 		container.append('style').text(MAP_CARD_CSS);
 		const panel = container.append('div').attr('class', 'zwjs-map-card');
 		const hide = () => panel.style('display', 'none');
@@ -1474,6 +1474,7 @@ const ZWaveJS = (function () {
 				panel
 					.style('--accent', accent)
 					.style('--controller', CONTROLLER_COLOUR)
+					.style('--route', isController ? null : routeColourOf(d))
 					.html(
 						'<div class="zwjs-map-head">' +
 							`<span class="zwjs-map-icon">${NODE_TYPE_ICONS[d.type]}</span>` +
@@ -1594,7 +1595,9 @@ const ZWaveJS = (function () {
 
 		const nodesById = new Map(nodes.map((node) => [node.id, node]));
 		const routeColour = ZWJSD3.scaleOrdinal(ZWJSD3.schemeTableau10);
-		const linkColour = (d) => (d.direct ? DIRECT_COLOUR : routeColour(d.routeId));
+		const colourForRoute = (routeId, direct) => (direct ? DIRECT_COLOUR : routeColour(routeId));
+		const linkColour = (d) => colourForRoute(d.routeId, d.direct);
+		const nodeRouteColour = (d) => colourForRoute(d.id, d.route?.length === 2); // two stops = direct
 		const markerId = (colour) => `zwjs-d3-arrow-${colour.replace('#', '')}`;
 
 		links.forEach((link) => {
@@ -1602,7 +1605,7 @@ const ZWaveJS = (function () {
 			link.target = nodesById.get(link.target);
 		});
 
-		const details = createDetailsPanel(container, nodesById);
+		const details = createDetailsPanel(container, nodesById, nodeRouteColour);
 		const svg = container
 			.append('svg')
 			.attr('width', '100%')
