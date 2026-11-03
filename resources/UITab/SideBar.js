@@ -1346,54 +1346,26 @@ const ZWaveJS = (function () {
 
 	const NODE_RADIUS = 20;
 	const LINK_SPACING = 4; // px between parallel links that share the same two nodes
-	const DIMMED_OPACITY = 0.15;
 	const DIRECT_COLOUR = '#28a745';
-	const NODE_TYPE_ICONS = { controller: '\uf1eb', mains: '\uf1e6', battery: '\uf240' }; // FontAwesome glyphs
-	const CONTROLLER_COLOUR = '#5b9bd5';
-	const STATUS_COLOURS = {
-		Alive: '#28a745',
-		Awake: '#28a745',
-		Asleep: '#6c7a89',
-		Dead: '#d9534f',
-		Unknown: '#f0ad4e'
+	const NODE_TYPE_ICONS = { controller: '\uf1eb', mains: '\uf1e6' }; // FontAwesome glyphs
+	// SVG text and the card cannot use the tree's FA classes, so map them to their glyphs.
+	const BATTERY_GLYPHS = {
+		'fa-battery-empty': '\uf244',
+		'fa-battery-quarter': '\uf243',
+		'fa-battery-half': '\uf242',
+		'fa-battery-three-quarters': '\uf241',
+		'fa-battery-full': '\uf240'
 	};
 
-	// Injected into the map window next to the details card (inline styles cannot do hover or animation).
-	const getAccentColour = (d) =>
-		d.type === 'controller' ? CONTROLLER_COLOUR : (STATUS_COLOURS[d.status] ?? '#9aa5b1');
+	// Same level indicator and colour as the node tree's power icon (map.css colours the zwjs-state-* class).
+	const getPowerGlyph = (d) =>
+		d.type === 'battery' ? BATTERY_GLYPHS[getBatteryIcon(d.powerSource?.level)] : NODE_TYPE_ICONS[d.type];
 
-	const MAP_CARD_CSS = `
-.zwjs-map-card { display:none; position:absolute; z-index:10; top:12px; right:12px; width:290px; max-height:calc(100% - 24px);
-	overflow:auto; background:#fff; color:#2b2f33; border-radius:10px; font:13px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-	box-shadow:0 10px 30px rgba(0,0,0,.18), 0 1px 3px rgba(0,0,0,.12); animation:zwjs-map-in .18s ease-out; }
-@keyframes zwjs-map-in { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
-.zwjs-map-head { display:flex; align-items:center; gap:10px; padding:12px 12px 12px 14px; border-top:4px solid var(--accent);
-	border-radius:10px 10px 0 0; background:linear-gradient(180deg, rgba(0,0,0,.03), transparent); }
-.zwjs-map-icon { flex:none; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-	background:var(--accent); color:#fff; font-family:FontAwesome; font-size:16px; }
-.zwjs-map-heading { flex:1; min-width:0; }
-.zwjs-map-name { font-size:15px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.zwjs-map-sub { font-size:11px; color:#6b7580; }
-.zwjs-map-status { flex:none; padding:2px 9px; border-radius:999px; font-size:11px; font-weight:600; color:var(--accent);
-	background:color-mix(in srgb, var(--accent) 14%, transparent); }
-.zwjs-map-close { flex:none; border:0; background:none; cursor:pointer; font-size:20px; line-height:1; color:#9aa5b1; padding:0 2px; }
-.zwjs-map-close:hover { color:#2b2f33; }
-.zwjs-map-body { padding:4px 14px 14px; }
-.zwjs-map-row { display:flex; justify-content:space-between; gap:12px; padding:6px 0; border-bottom:1px solid #eef0f2; }
-.zwjs-map-row > span:first-child { color:#6b7580; font-size:12px; }
-.zwjs-map-row > span:last-child { text-align:right; font-weight:500; word-break:break-word; }
-.zwjs-map-section { display:flex; justify-content:space-between; margin:12px 0 6px; font-size:11px; font-weight:600;
-	letter-spacing:.06em; text-transform:uppercase; color:#6b7580; }
-.zwjs-map-route { display:flex; flex-wrap:wrap; align-items:center; gap:4px; }
-.zwjs-map-chip { min-width:24px; padding:2px 7px; text-align:center; border-radius:6px; font-weight:600; font-size:12px;
-	background:#eef0f2; color:#2b2f33; }
-.zwjs-map-chip { cursor:pointer; transition:filter .12s; }
-.zwjs-map-chip:hover { filter:brightness(.88); }
-.zwjs-map-chip-start { background:var(--controller); color:#fff; }
-.zwjs-map-chip-end { background:var(--accent); color:#fff; }
-.zwjs-map-arrow { color:var(--route, #9aa5b1); font-weight:700; }
-.zwjs-map-empty { color:#9aa5b1; font-style:italic; }
-`;
+	const getPowerState = (d) => {
+		if (d.type === 'battery') return getBatteryColour(d.powerSource ?? {});
+		if (d.type === 'mains') return 'zwjs-state-green';
+		return undefined; // the controller
+	};
 
 	let mapResizeObserver; // keeps the layout centred when the map window is resized; replaced on every render
 
@@ -1462,9 +1434,8 @@ const ZWaveJS = (function () {
 	};
 
 	const createDetailsPanel = (container, nodesById, routeColourOf, { onSelectNode, onClose }) => {
-		container.append('style').text(MAP_CARD_CSS);
 		const panel = container.append('div').attr('class', 'zwjs-map-card');
-		const hide = () => panel.style('display', 'none');
+		const hide = () => panel.attr('open', null);
 
 		// The card's contents are re-rendered on every show(), so clicks are handled once, here, by delegation.
 		panel.on('click', (event) => {
@@ -1480,7 +1451,6 @@ const ZWaveJS = (function () {
 			hide,
 			show: (d) => {
 				const isController = d.type === 'controller';
-				const accent = getAccentColour(d);
 				const rows = getNodeDetailRows(d)
 					.map(
 						([label, value]) => `<div class="zwjs-map-row"><span>${label}</span><span>${escapeHtml(value)}</span></div>`
@@ -1488,20 +1458,22 @@ const ZWaveJS = (function () {
 					.join('');
 				const status = d.status ? `<span class="zwjs-map-status">${escapeHtml(d.status)}</span>` : '';
 
+				const powerState = getPowerState(d);
+
 				panel
-					.style('--accent', accent)
-					.style('--controller', CONTROLLER_COLOUR)
+					.attr('node-type', d.type)
+					.attr('status', d.status ?? null)
 					.style('--route', isController ? null : routeColourOf(d))
 					.html(
 						'<div class="zwjs-map-head">' +
-							`<span class="zwjs-map-icon">${NODE_TYPE_ICONS[d.type]}</span>` +
+							`<span class="zwjs-map-icon${powerState ? ` ${powerState}` : ''}">${getPowerGlyph(d)}</span>` +
 							'<div class="zwjs-map-heading">' +
 							`<div class="zwjs-map-name">${escapeHtml(isController ? 'Controller' : d.name)}</div>` +
 							`<div class="zwjs-map-sub">Node ${d.id}</div></div>` +
 							`${status}<button class="zwjs-map-close" title="Close" aria-label="Close">&times;</button></div>` +
 							`<div class="zwjs-map-body">${rows}${renderRouteSection(d, nodesById)}</div>`
 					)
-					.style('display', 'block');
+					.attr('open', '');
 			}
 		};
 	};
@@ -1524,53 +1496,35 @@ const ZWaveJS = (function () {
 			.attr('fill', (colour) => colour);
 	};
 
+	// map.css styles the nodes from their `node-type`, `status` and `selected` attributes.
 	const drawNodes = (graph, nodes) => {
-		const nodeSelection = graph.append('g').selectAll('g').data(nodes).join('g').style('cursor', 'grab');
-		const isDead = (d) => d.status === 'Dead';
+		const nodeSelection = graph
+			.append('g')
+			.selectAll('g')
+			.data(nodes)
+			.join('g')
+			.attr('class', 'zwjs-map-node')
+			.attr('node-type', (d) => d.type)
+			.attr('status', (d) => d.status ?? null);
 
 		// Halo behind the node, shown while its details card is open.
 		nodeSelection
 			.append('circle')
 			.attr('class', 'zwjs-map-ring')
-			.attr('r', NODE_RADIUS + 8)
-			.attr('fill', getAccentColour)
-			.attr('fill-opacity', 0.18)
-			.attr('stroke', getAccentColour)
-			.attr('stroke-width', 2.5)
-			.attr('pointer-events', 'none')
-			.style('opacity', 0)
-			.style('transition', 'opacity 0.15s ease');
+			.attr('r', NODE_RADIUS + 8);
 
-		nodeSelection
-			.append('circle')
-			.attr('r', NODE_RADIUS)
-			.attr('fill', (d) => (isDead(d) ? '#d9534f' : d.type === 'controller' ? '#5b9bd5' : '#fff'))
-			.attr('stroke', '#777')
-			.attr('stroke-width', 2);
+		nodeSelection.append('circle').attr('class', 'zwjs-map-node-circle').attr('r', NODE_RADIUS);
 
 		nodeSelection
 			.append('text')
-			.attr('text-anchor', 'middle')
-			.attr('dominant-baseline', 'central')
-			.attr('font-family', 'FontAwesome')
-			.attr('font-size', 16)
-			.attr('fill', (d) => (isDead(d) ? '#fff' : '#000'))
-			.text((d) => NODE_TYPE_ICONS[d.type]);
+			.attr('class', (d) => ['zwjs-map-node-icon', getPowerState(d)].filter(Boolean).join(' '))
+			.text(getPowerGlyph);
 
 		nodeSelection
 			.append('text')
-			.attr('text-anchor', 'middle')
+			.attr('class', 'zwjs-map-node-name')
 			.attr('y', 36)
-			.attr('font-size', 12)
-			.attr('font-weight', 'bold')
 			.text((d) => `${d.id} - ${d.name}`);
-
-		nodeSelection
-			.append('text')
-			.attr('text-anchor', 'middle')
-			.attr('y', 50)
-			.attr('font-size', 10)
-			.text((d) => d.device);
 
 		return nodeSelection;
 	};
@@ -1583,7 +1537,7 @@ const ZWaveJS = (function () {
 					simulation.stop();
 					d.fx = d.x;
 					d.fy = d.y;
-					ZWJSD3.select(this).style('cursor', 'grabbing');
+					ZWJSD3.select(this).attr('dragging', '');
 				})
 				.on('drag', (event, d) => {
 					d.x = d.fx = event.x;
@@ -1593,7 +1547,7 @@ const ZWaveJS = (function () {
 				.on('end', function (event, d) {
 					d.fx = d.x;
 					d.fy = d.y;
-					ZWJSD3.select(this).style('cursor', 'grab');
+					ZWJSD3.select(this).attr('dragging', null);
 
 					const descendants = collectDescendantIds(d.id, layoutLinks);
 					if (descendants.size === 1) return;
@@ -1616,7 +1570,6 @@ const ZWaveJS = (function () {
 		if (container.empty()) return;
 
 		container.selectAll('*').remove();
-		container.style('position', 'relative').style('width', '100%').style('height', '100%');
 
 		const element = container.node();
 		let width = element.clientWidth || 800;
@@ -1660,8 +1613,8 @@ const ZWaveJS = (function () {
 			.selectAll('line')
 			.data(links)
 			.join('line')
+			.attr('class', 'zwjs-map-link')
 			.attr('stroke', linkColour)
-			.attr('stroke-width', 2)
 			.attr('marker-end', (d) => (d.destination ? `url(#${markerId(linkColour(d))})` : null));
 
 		const nodeSelection = drawNodes(graph, nodes);
@@ -1669,16 +1622,14 @@ const ZWaveJS = (function () {
 		// Selecting a node (by clicking it, or a chip in the card) highlights it, shows its card, and keeps only the
 		// routes that pass through it, plus its own. All routes start at the controller, so selecting it keeps everything.
 		const selectNode = (d) => {
-			nodeSelection.select('.zwjs-map-ring').style('opacity', (node) => (node === d ? 1 : 0));
-			linkSelection.attr('opacity', (link) =>
-				nodesById.get(link.routeId)?.route?.includes(d.id) ? 1 : DIMMED_OPACITY
-			);
+			nodeSelection.attr('selected', (node) => (node === d ? '' : null));
+			linkSelection.attr('dimmed', (link) => (nodesById.get(link.routeId)?.route?.includes(d.id) ? null : ''));
 			details.show(d);
 		};
 
 		const clearSelection = () => {
-			nodeSelection.select('.zwjs-map-ring').style('opacity', 0);
-			linkSelection.attr('opacity', 1);
+			nodeSelection.attr('selected', null);
+			linkSelection.attr('dimmed', null);
 			details.hide();
 		};
 
@@ -1723,9 +1674,6 @@ const ZWaveJS = (function () {
 		mapResizeObserver.observe(element);
 	};
 
-	const describeDevice = (node) =>
-		`${node.deviceConfig?.manufacturer ?? 'Unknown'} - ${node.deviceConfig?.label ?? 'Unknown'}`;
-
 	const describePower = (powerSource) => {
 		if (powerSource?.type !== 'battery') return 'Mains';
 		return powerSource.level !== undefined ? `Battery (${powerSource.level}%)` : 'Battery';
@@ -1758,7 +1706,6 @@ const ZWaveJS = (function () {
 				id: controller.nodeId,
 				name: 'Controller',
 				type: 'controller',
-				device: describeDevice(controller),
 				status: controller.status,
 				manufacturer: controller.deviceConfig?.manufacturer,
 				label: controller.deviceConfig?.label,
@@ -1784,13 +1731,13 @@ const ZWaveJS = (function () {
 					id: node.nodeId,
 					name: node.nodeName || 'No Name',
 					type: node.powerSource?.type === 'battery' ? 'battery' : 'mains',
-					device: describeDevice(node),
 					status: node.status,
 					location: node.nodeLocation,
 					manufacturer: node.deviceConfig?.manufacturer,
 					label: node.deviceConfig?.label,
 					firmwareVersion: node.firmwareVersion,
 					power: describePower(node.powerSource),
+					powerSource: node.powerSource,
 					security: node.isSecure ? (SECURITY_CLASSES[node.highestSecurityClass]?.label ?? 'Unknown') : 'None',
 					rssi: lwr?.rssi,
 					rtt: node.statistics?.rtt,
@@ -1833,16 +1780,20 @@ const ZWaveJS = (function () {
 			return;
 		}
 
+		// The popup is a separate document, so it only picks up the dark theme if we pass the editor's class across.
+		const theme = document.documentElement.classList.contains('nr-theme-dark') ? 'nr-theme-dark' : '';
+
 		mapWindow.document.write(`<!DOCTYPE html>
-<html style="width:100%;height:100%;margin:0;padding:0;">
+<html class="${theme}">
 	<head>
 		<title>Z-Wave Topology Map</title>
 		<link rel="stylesheet" href="resources/node-red-contrib-zwave-js/UITab/styles.css">
+		<link rel="stylesheet" href="resources/node-red-contrib-zwave-js/UITab/map.css">
 		<link rel="stylesheet" href="vendor/font-awesome/css/font-awesome.min.css">
 	</head>
-	<body style="width:100%;height:100%;margin:0;padding:0;overflow:hidden;">
-		<div id="zwjs-d3" style="position:absolute;inset:0;width:100%;height:100%;"></div>
-		<div class="zwjs-hint" style="position:absolute;z-index:10;top:10px;left:10px;max-width:500px;">
+	<body class="zwjs-map">
+		<div id="zwjs-d3"></div>
+		<div class="zwjs-map-hint">
 			The map is based on statistics for each Z-Wave Node, specifically the <strong>Last Working Route(s)</strong> to the Node, from the Controller
 		</div>
 	</body>
