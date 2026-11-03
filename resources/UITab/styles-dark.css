@@ -1,0 +1,40 @@
+html.nr-theme-dark .zwjs-cc-id {
+	background-color: #555 !important;
+	color: white;
+}
+
+html.nr-theme-dark .zwjs-tray-menu > div[child]:not([active]):hover {
+	background-color: #303033;
+}
+
+html.nr-theme-dark .zwjs-tray-menu > div[child][active] {
+	background-color: #597554;
+}
+
+html.nr-theme-dark table.zwjs-table[horizontal] tr:first-of-type {
+	background-color: var(--red-ui-secondary-background);
+}
+
+html.nr-theme-dark table.zwjs-table[vertical] td:first-of-type {
+	background-color: var(--red-ui-secondary-background);
+}
+
+html.nr-theme-dark .zwjs-fieldset div.zwjs-hint {
+	background-color: #7c773c;
+	color: #000;
+}
+
+html.nr-theme-dark .zwjs-fieldset div.zwjs-hint code {
+	color: #f0f0f0;
+	background-color: rgba(0, 0, 0, 0.35);
+	padding: 0 4px;
+	border-radius: 3px;
+}
+
+html.nr-theme-dark .zwjs-empises[positive] {
+	background-color: #597554;
+}
+
+html.nr-theme-dark .zwjs-empises[negative] {
+	background-color: #7b0202;
+}

@@ -1,0 +1,373 @@
+/*
+ * Dark Mode Overrides 
+ */
+@import url('./map-dark.css');
+
+/*
+ * Map window
+ */
+
+/* 
+ * LINK ./map-dark.css:1
+ */
+.zwjs-map {
+	position: fixed;
+	inset: 0;
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+}
+
+#zwjs-d3 {
+	position: absolute;
+	inset: 0;
+}
+
+.zwjs-map-hint {
+	position: absolute;
+	z-index: 10;
+	top: 10px;
+	left: 10px;
+	max-width: 500px;
+}
+
+/*
+ * Graph: nodes
+ * `node-type` and `status` attributes on the node set its accent colour (halo, card header)
+ */
+
+.zwjs-map-node,
+.zwjs-map-card {
+	--accent: #9aa5b1;
+	--controller: #5b9bd5;
+	cursor: grab;
+}
+
+.zwjs-map-node[status='Alive'],
+.zwjs-map-node[status='Awake'],
+.zwjs-map-card[status='Alive'],
+.zwjs-map-card[status='Awake'] {
+	--accent: #28a745;
+}
+
+.zwjs-map-node[status='Asleep'],
+.zwjs-map-card[status='Asleep'] {
+	--accent: #6c7a89;
+}
+
+.zwjs-map-node[status='Dead'],
+.zwjs-map-card[status='Dead'] {
+	--accent: #d9534f;
+}
+
+.zwjs-map-node[status='Unknown'],
+.zwjs-map-card[status='Unknown'] {
+	--accent: #f0ad4e;
+}
+
+.zwjs-map-node[node-type='controller'],
+.zwjs-map-card[node-type='controller'] {
+	--accent: var(--controller);
+}
+
+.zwjs-map-node[dragging] {
+	cursor: grabbing;
+}
+
+.zwjs-map-ring {
+	fill: var(--accent);
+	fill-opacity: 0.18;
+	stroke: var(--accent);
+	stroke-width: 2.5;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.15s ease;
+}
+
+.zwjs-map-node[selected] .zwjs-map-ring {
+	opacity: 1;
+}
+
+/* 
+ * LINK ./map-dark.css:6
+ */
+.zwjs-map-node-circle {
+	fill: #fff;
+	stroke: #777;
+	stroke-width: 2;
+}
+
+.zwjs-map-node[node-type='controller'] .zwjs-map-node-circle {
+	fill: var(--controller);
+}
+
+.zwjs-map-node[status='Dead'] .zwjs-map-node-circle {
+	fill: #d9534f;
+}
+
+/*
+ * Power glyph: coloured by the same zwjs-state-* class the node tree uses
+ */
+
+.zwjs-map-node-icon {
+	fill: currentColor;
+	color: #000;
+	font-family: FontAwesome;
+	font-size: 16px;
+	text-anchor: middle;
+	dominant-baseline: central;
+}
+
+.zwjs-map-node-icon.zwjs-state-green,
+.zwjs-map-icon.zwjs-state-green {
+	color: green;
+}
+
+.zwjs-map-node-icon.zwjs-state-amber,
+.zwjs-map-icon.zwjs-state-amber {
+	color: orange;
+}
+
+.zwjs-map-node-icon.zwjs-state-red,
+.zwjs-map-icon.zwjs-state-red {
+	color: red;
+}
+
+.zwjs-map-node[status='Dead'] .zwjs-map-node-icon {
+	color: #fff;
+}
+
+/* 
+ * LINK ./map-dark.css:11
+ */
+.zwjs-map-node-name {
+	text-anchor: middle;
+	font-size: 12px;
+	font-weight: bold;
+}
+
+/*
+ * Graph: links
+ */
+
+.zwjs-map-link {
+	stroke-width: 2;
+}
+
+.zwjs-map-link[dimmed] {
+	opacity: 0.15;
+}
+
+/*
+ * Details card
+ */
+
+/* 
+ * LINK ./map-dark.css:15
+ */
+.zwjs-map-card {
+	display: none;
+	position: absolute;
+	z-index: 10;
+	top: 12px;
+	right: 12px;
+	width: 290px;
+	max-height: calc(100% - 24px);
+	overflow: auto;
+	background: #fff;
+	color: #2b2f33;
+	border-radius: 10px;
+	font: 13px/1.45 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18), 0 1px 3px rgba(0, 0, 0, 0.12);
+	animation: zwjs-map-in 0.18s ease-out;
+	cursor: auto;
+}
+
+.zwjs-map-card[open] {
+	display: block;
+}
+
+@keyframes zwjs-map-in {
+	from {
+		opacity: 0;
+		transform: translateY(-6px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/* 
+ * LINK ./map-dark.css:21
+ */
+.zwjs-map-head {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 12px 12px 12px 14px;
+	border-top: 4px solid var(--accent);
+	border-radius: 10px 10px 0 0;
+	background: linear-gradient(180deg, rgba(0, 0, 0, 0.03), transparent);
+}
+
+/* 
+ * LINK ./map-dark.css:25
+ */
+.zwjs-map-icon {
+	flex: none;
+	width: 34px;
+	height: 34px;
+	box-sizing: border-box;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 2px solid var(--accent);
+	background: color-mix(in srgb, var(--accent) 12%, #fff);
+	color: var(--controller);
+	font-family: FontAwesome;
+	font-size: 16px;
+}
+
+.zwjs-map-heading {
+	flex: 1;
+	min-width: 0;
+}
+
+.zwjs-map-name {
+	font-size: 15px;
+	font-weight: 600;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* 
+ * LINK ./map-dark.css:29
+ */
+.zwjs-map-sub {
+	font-size: 11px;
+	color: #6b7580;
+}
+
+.zwjs-map-status {
+	flex: none;
+	padding: 2px 9px;
+	border-radius: 999px;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--accent);
+	background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.zwjs-map-close {
+	flex: none;
+	border: 0;
+	background: none;
+	cursor: pointer;
+	font-size: 20px;
+	line-height: 1;
+	color: #9aa5b1;
+	padding: 0 2px;
+}
+
+/* 
+ * LINK ./map-dark.css:33
+ */
+.zwjs-map-close:hover {
+	color: #2b2f33;
+}
+
+.zwjs-map-body {
+	padding: 4px 14px 14px;
+}
+
+/* 
+ * LINK ./map-dark.css:37
+ */
+.zwjs-map-row {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 6px 0;
+	border-bottom: 1px solid #eef0f2;
+}
+
+/* 
+ * LINK ./map-dark.css:41
+ */
+.zwjs-map-row > span:first-child {
+	color: #6b7580;
+	font-size: 12px;
+}
+
+.zwjs-map-row > span:last-child {
+	text-align: right;
+	font-weight: 500;
+	word-break: break-word;
+}
+
+/* 
+ * LINK ./map-dark.css:45
+ */
+.zwjs-map-section {
+	display: flex;
+	justify-content: space-between;
+	margin: 12px 0 6px;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: #6b7580;
+}
+
+.zwjs-map-route {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px;
+}
+
+/* 
+ * LINK ./map-dark.css:49
+ */
+.zwjs-map-chip {
+	min-width: 24px;
+	padding: 2px 7px;
+	text-align: center;
+	border-radius: 6px;
+	font-weight: 600;
+	font-size: 12px;
+	background: #eef0f2;
+	color: #2b2f33;
+	cursor: pointer;
+	transition: filter 0.12s;
+}
+
+/* 
+ * LINK ./map-dark.css:54
+ */
+.zwjs-map-chip:hover {
+	filter: brightness(0.88);
+}
+
+.zwjs-map-chip-start {
+	background: var(--controller);
+	color: #fff;
+}
+
+.zwjs-map-chip-end {
+	background: var(--accent);
+	color: #fff;
+}
+
+.zwjs-map-arrow {
+	color: var(--route, #9aa5b1);
+	font-weight: 700;
+}
+
+.zwjs-map-empty {
+	color: #9aa5b1;
+	font-style: italic;
+}

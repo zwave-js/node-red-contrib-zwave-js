@@ -1,0 +1,56 @@
+html.nr-theme-dark .zwjs-map {
+	background-color: #232323;
+	color: #ddd;
+}
+
+html.nr-theme-dark .zwjs-map-node-circle {
+	fill: #333;
+	stroke: #999;
+}
+
+html.nr-theme-dark .zwjs-map-node-name {
+	fill: #ddd;
+}
+
+html.nr-theme-dark .zwjs-map-card {
+	background: #2b2b2e;
+	color: #ddd;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+html.nr-theme-dark .zwjs-map-head {
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent);
+}
+
+html.nr-theme-dark .zwjs-map-icon {
+	background: color-mix(in srgb, var(--accent) 18%, #2b2b2e);
+}
+
+html.nr-theme-dark .zwjs-map-sub {
+	color: #9aa5b1;
+}
+
+html.nr-theme-dark .zwjs-map-close:hover {
+	color: #fff;
+}
+
+html.nr-theme-dark .zwjs-map-row {
+	border-bottom-color: #3a3a3d;
+}
+
+html.nr-theme-dark .zwjs-map-row > span:first-child {
+	color: #9aa5b1;
+}
+
+html.nr-theme-dark .zwjs-map-section {
+	color: #9aa5b1;
+}
+
+html.nr-theme-dark .zwjs-map-chip:not(.zwjs-map-chip-start):not(.zwjs-map-chip-end) {
+	background: #3a3a3d;
+	color: #ddd;
+}
+
+html.nr-theme-dark .zwjs-map-chip:hover {
+	filter: brightness(1.25);
+}

@@ -14,7 +14,7 @@ const process = async function (DriverInstance, Method, NodeID, Value, Args) {
 	if (Method === 'setName') {
 		Node.name = Value;
 		if (Node.supportsCC(CommandClasses['Node Naming and Location'])) {
-			Node.commandClasses['Node Naming and Location'].setName(Value);
+			await Node.commandClasses['Node Naming and Location'].setName(Value);
 		}
 		return Value;
 	}
@@ -22,7 +22,7 @@ const process = async function (DriverInstance, Method, NodeID, Value, Args) {
 	if (Method === 'setLocation') {
 		Node.location = Value;
 		if (Node.supportsCC(CommandClasses['Node Naming and Location'])) {
-			Node.commandClasses['Node Naming and Location'].setLocation(Value);
+			await Node.commandClasses['Node Naming and Location'].setLocation(Value);
 		}
 		return Value;
 	}
