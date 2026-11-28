@@ -170,6 +170,22 @@ module.exports = function (RED) {
 			self.context().global.set(`${Name}`, undefined);
 		};
 
+		// The deployed settings the sidebar needs. Keys are only reported as present or not: never sent.
+		const getUISettings = () => {
+			const hasKey = (key) => /^[0-9a-fA-F]{32}$/.test(self.config[key] ?? '');
+			return {
+				nodeAgeLimit: self.config.nodeAgeLimit,
+				serialPort: self.config.serialPort,
+				hasFirmwareApiKey: Boolean(self.config.apiKeys_firmwareUpdateService),
+				hasS0Key: hasKey('securityKeys_S0_Legacy'),
+				hasAllS2Keys: [
+					'securityKeys_S2_AccessControl',
+					'securityKeys_S2_Authenticated',
+					'securityKeys_S2_Unauthenticated'
+				].every(hasKey)
+			};
+		};
+
 		// Create HTTP API
 		const createHTTPAPI = (resetHTTP) => {
 			if (resetHTTP) {
@@ -180,7 +196,11 @@ module.exports = function (RED) {
 			RED.comms.publish('zwave-js/ui/global/addnetwork', { name: self.config.name, id: self.id }, false);
 
 			RED.httpAdmin.get(`/zwave-js/ui/${self.id}/status`, RED.auth.needsPermission('flows.write'), (_, response) => {
-				response.json({ callSuccess: true, response: lastStatus });
+				response.json({
+					callSuccess: true,
+					response: lastStatus,
+					settings: getUISettings()
+				});
 			});
 
 			RED.httpAdmin.get(
@@ -313,12 +333,15 @@ module.exports = function (RED) {
 							break;
 
 						case 'DRIVER':
-							if (Method === 'Restart') {
-								Shutdown().then(() => {
-									RED.comms.publish('zwave-js/ui/global/removenetwork', { id: self.id }, false);
-									response.json({ callSuccess: true });
-									Startup(true);
-								});
+							if (Method === 'restart') {
+								Shutdown()
+									.then(() => {
+										response.json({ callSuccess: true });
+										Startup(true);
+									})
+									.catch((Error) => {
+										response.json({ callSuccess: false, response: Error.message });
+									});
 								break;
 							}
 
@@ -461,9 +484,13 @@ module.exports = function (RED) {
 			removeHTTPAPI();
 			controllerNodes = {};
 			deviceNodes = {};
-			Shutdown().then(() => {
-				done();
-			});
+			Shutdown()
+				.then(() => {
+					done();
+				})
+				.catch((Error) => {
+					done(Error);
+				});
 		});
 
 		// S2 Callbacks
@@ -1271,6 +1298,7 @@ module.exports = function (RED) {
 						event: event_Notification.redEventName,
 						timestamp: Timestamp,
 						nodeId: Endpoint.nodeId,
+						endpoint: Endpoint.index,
 						nodeName: Node.name,
 						nodeLocation: Node.location,
 						eventBody: { ccId: CC, args: Args }

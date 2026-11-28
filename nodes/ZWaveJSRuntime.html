@@ -1,176 +1,206 @@
 <script type="text/javascript">
-	const ZWJSRuntimeNodeSettings = {
-		category: 'config',
-		defaults: {
-			name: {
-				value: 'ZWave JS Runtime',
-				required: true
+	(function () {
+		const ZWJSRuntimeNodeSettings = {
+			category: 'config',
+			defaults: {
+				name: {
+					value: 'ZWave JS Runtime',
+					required: true
+				},
+				serialPort: {
+					value: '',
+					required: true
+				},
+				nodeAgeLimit: {
+					value: 168,
+					required: false,
+					validate: Validate
+				},
+				timeouts_ack: {
+					value: '',
+					required: false,
+					validate: Validate
+				},
+				timeouts_response: {
+					value: '',
+					required: false,
+					validate: Validate
+				},
+				timeouts_sendDataCallback: {
+					value: '',
+					required: false,
+					validate: Validate
+				},
+				timeouts_report: {
+					value: '',
+					required: false,
+					validate: Validate
+				},
+				timeouts_serialAPIStarted: {
+					value: '',
+					required: false,
+					validate: Validate
+				},
+				preferences_scales_temperature: {
+					value: '0',
+					required: true
+				},
+				preferences_scales_humidity: {
+					value: '0',
+					required: true
+				},
+				logConfig_level: {
+					value: 'off',
+					required: true
+				},
+				LogConfig_nodeFilter: {
+					value: '',
+					required: false
+				},
+				storage_deviceConfigPriorityDir: {
+					value: '',
+					required: false
+				},
+				storage_deviceConfigExternalDir: {
+					value: '',
+					required: false
+				},
+				storage_throttle: {
+					value: 'normal',
+					required: true
+				},
+				disableOptimisticValueUpdate: {
+					value: true,
+					required: true
+				},
+				enableSoftReset: {
+					value: true,
+					required: true
+				},
+				interview_queryAllUserCodes: {
+					value: false,
+					required: true
+				},
+				apiKeys_firmwareUpdateService: {
+					value: '',
+					required: false
+				},
+				enableStatistics: {
+					value: false,
+					required: true
+				},
+				enableGlobalAPI: {
+					value: false,
+					required: true
+				},
+				globalAPIName: {
+					value: '',
+					required: false
+				},
+				securityKeys_S0_Legacy: {
+					value: '',
+					required: false,
+					validate: ValidateKey
+				},
+				securityKeys_S2_Unauthenticated: {
+					value: '',
+					required: false,
+					validate: ValidateKey
+				},
+				securityKeys_S2_Authenticated: {
+					value: '',
+					required: false,
+					validate: ValidateKey
+				},
+				securityKeys_S2_AccessControl: {
+					value: '',
+					required: false,
+					validate: ValidateKey
+				},
+				securityKeys_S2LR_Authenticated: {
+					value: '',
+					required: false,
+					validate: ValidateKey
+				},
+				securityKeys_S2LR_AccessControl: {
+					value: '',
+					required: false,
+					validate: ValidateKey
+				}
 			},
-			serialPort: {
-				value: '',
-				required: true
+			label: function () {
+				return this.name;
 			},
-			timeouts_ack: {
-				value: '',
-				required: false,
-				validate: Validate
-			},
-			timeouts_response: {
-				value: '',
-				required: false,
-				validate: Validate
-			},
-			timeouts_sendDataCallback: {
-				value: '',
-				required: false,
-				validate: Validate
-			},
-			timeouts_report: {
-				value: '',
-				required: false,
-				validate: Validate
-			},
-			timeouts_serialAPIStarted: {
-				value: '',
-				required: false,
-				validate: Validate
-			},
-			preferences_scales_temperature: {
-				value: '0',
-				required: true
-			},
-			preferences_scales_humidity: {
-				value: '0',
-				required: true
-			},
-			logConfig_level: {
-				value: 'off',
-				required: true
-			},
-			LogConfig_nodeFilter: {
-				value: '',
-				required: false
-			},
-			storage_deviceConfigPriorityDir: {
-				value: '',
-				required: false
-			},
-			storage_deviceConfigExternalDir: {
-				value: '',
-				required: false
-			},
-			storage_throttle: {
-				value: 'normal',
-				required: true
-			},
-			disableOptimisticValueUpdate: {
-				value: true,
-				required: true
-			},
-			enableSoftReset: {
-				value: true,
-				required: true
-			},
-			interview_queryAllUserCodes: {
-				value: false,
-				required: true
-			},
-			apiKeys_firmwareUpdateService: {
-				value: '',
-				required: false
-			},
-			enableStatistics: {
-				value: false,
-				required: true
-			},
-			enableGlobalAPI: {
-				value: false,
-				required: true
-			},
-			globalAPIName: {
-				value: '',
-				required: false
-			},
-			securityKeys_S0_Legacy: {
-				value: '',
-				required: false
-			},
-			securityKeys_S2_Unauthenticated: {
-				value: '',
-				required: false
-			},
-			securityKeys_S2_Authenticated: {
-				value: '',
-				required: false
-			},
-			securityKeys_S2_AccessControl: {
-				value: '',
-				required: false
-			},
-			securityKeys_S2LR_Authenticated: {
-				value: '',
-				required: false
-			},
-			securityKeys_S2LR_AccessControl: {
-				value: '',
-				required: false
-			}
-		},
-		label: function () {
-			return this.name;
-		},
-		oneditprepare: prepEditor
-	};
+			oneditprepare: prepEditor
+		};
 
-	RED.nodes.registerType('zwavejs-runtime', ZWJSRuntimeNodeSettings);
+		RED.nodes.registerType('zwavejs-runtime', ZWJSRuntimeNodeSettings);
 
-	function Validate(v) {
-		if (v.length) {
-			return !isNaN(v);
+		// A security key is optional, but if given must be 16 bytes of hex (32 characters).
+		function ValidateKey(v) {
+			return /^([0-9a-fA-F]{32})?$/.test(v ?? '');
 		}
-		return true;
-	}
 
-	function prepEditor() {
-		const node = this;
-		$.getJSON('zwave-js/ui/global/getports', (data) => {
-			if (data.callSuccess) {
-				data.response.forEach((SP) => {
-					$('#node-config-input-serialPort').append(new Option(SP, SP));
-				});
-				if (node.serialPort) {
-					if (!data.response.includes(node.serialPort)) {
-						$('#node-config-input-serialPort').append(new Option(node.serialPort, node.serialPort));
-					}
-					$('#node-config-input-serialPort').val(node.serialPort);
-				}
-			} else {
-				if (node.serialPort) {
-					$('#node-config-input-serialPort').append(new Option(node.serialPort, node.serialPort));
-					$('#node-config-input-serialPort').val(node.serialPort);
-				}
+		function Validate(v) {
+			if (v.length) {
+				return !isNaN(v);
 			}
-		});
-	}
+			return true;
+		}
 
-	function genKey() {
-		const bytes = new Uint8Array(16);
-		window.crypto.getRandomValues(bytes);
-		const hexKey = [...bytes].map((x) => x.toString(16).padStart(2, '0')).join('');
-		$(event.target).prev().val(hexKey);
-	}
+		function prepEditor() {
+			const node = this;
 
-	function handleCustomSerial(el) {
-		const select = $(el);
-		if (select.val() !== 'Custom') return;
-		const port = prompt('Please provide serial port path or tcp:// string');
-		if (!port || !port.trim()) return;
+			// Bound here rather than inline in the template, so these functions can stay private to this script.
+			let lastPort = node.serialPort || '';
+			$('#node-config-input-serialPort').on('change', function () {
+				lastPort = handleCustomSerial(this, lastPort);
+			});
+			$('.zwjs-genkey').on('click', genKey);
 
-		const cleanPort = port.trim();
-		const option = new Option(cleanPort, cleanPort, true, true);
+			$.getJSON('zwave-js/ui/global/getports', (data) => {
+				if (data.callSuccess) {
+					data.response.forEach((SP) => {
+						$('#node-config-input-serialPort').append(new Option(SP, SP));
+					});
+					if (node.serialPort) {
+						if (!data.response.includes(node.serialPort)) {
+							$('#node-config-input-serialPort').append(new Option(node.serialPort, node.serialPort));
+						}
+						$('#node-config-input-serialPort').val(node.serialPort);
+					}
+				} else {
+					if (node.serialPort) {
+						$('#node-config-input-serialPort').append(new Option(node.serialPort, node.serialPort));
+						$('#node-config-input-serialPort').val(node.serialPort);
+					}
+				}
+			});
+		}
 
-		select.append(option);
-	}
+		function genKey(event) {
+			const bytes = new Uint8Array(16);
+			window.crypto.getRandomValues(bytes);
+			const hexKey = [...bytes].map((x) => x.toString(16).padStart(2, '0')).join('');
+			$(event.currentTarget).prev().val(hexKey);
+		}
+
+		// Returns the port now selected, so a cancelled custom path can fall back to it next time.
+		function handleCustomSerial(el, previousPort) {
+			const select = $(el);
+			if (select.val() !== 'Custom') return select.val();
+
+			const port = prompt('Please provide a serial port path or tcp:// address');
+			if (!port || !port.trim()) {
+				select.val(previousPort);
+				return previousPort;
+			}
+
+			const cleanPort = port.trim();
+			select.append(new Option(cleanPort, cleanPort, true, true));
+			return cleanPort;
+		}
+	})();
 </script>
 
 <!-- prettier-ignore -->
@@ -183,9 +213,9 @@
 		</div>
 		<div class="form-row">
 			<label for="node-config-input-serialPort"><i class="fa fa-terminal"></i> Serial Port</label>
-			<select id="node-config-input-serialPort" onchange="handleCustomSerial(this)">
+			<select id="node-config-input-serialPort">
 				<option value="">Select Port</option>
-				<option value="Custom">--Use Custom Path --</option>
+				<option value="Custom">-- Use Custom Path --</option>
 			</select>
 		</div>
 		<div class="form-row">
@@ -197,30 +227,30 @@
 		<legend>Security Keys</legend>
 		<div class="form-row">
 			<label for="node-config-input-securityKeys_S0_Legacy"><i class="fa fa-lock"></i> S0</label>
-			<input type="text" id="node-config-input-securityKeys_S0_Legacy" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()" style="display:unset; width:90px">Generate</button>
+			<input type="text" id="node-config-input-securityKeys_S0_Legacy" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button zwjs-genkey" style="display:unset; width:90px">Generate</button>
 		</div>
 		<div class="form-row">
 			<label for="node-config-input-securityKeys_S2_Unauthenticated"><i class="fa fa-lock"></i> S2 UAuth</label>
-			<input type="text" id="node-config-input-securityKeys_S2_Unauthenticated" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()" style="display:unset; width:90px">Generate</button>
+			<input type="text" id="node-config-input-securityKeys_S2_Unauthenticated" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button zwjs-genkey" style="display:unset; width:90px">Generate</button>
 		</div>
 		<div class="form-row">
 			<label for="node-config-input-securityKeys_S2_Authenticated"><i class="fa fa-lock"></i> S2 Auth</label>
-			<input type="text" id="node-config-input-securityKeys_S2_Authenticated" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()" style="display:unset; width:90px">Generate</button>
+			<input type="text" id="node-config-input-securityKeys_S2_Authenticated" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button zwjs-genkey" style="display:unset; width:90px">Generate</button>
 		</div>
 		<div class="form-row">
 			<label for="node-config-input-securityKeys_S2_AccessControl"><i class="fa fa-lock"></i> S2 Acc Ctrl</label>
-			<input type="text" id="node-config-input-securityKeys_S2_AccessControl" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()" style="display:unset; width:90px">Generate</button>
+			<input type="text" id="node-config-input-securityKeys_S2_AccessControl" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button zwjs-genkey" style="display:unset; width:90px">Generate</button>
 		</div>
 	</fieldset>
 	<fieldset class="zwjs-fs">
 		<legend>Security Keys (Long Range)</legend>
 		<div class="form-row">
 			<label for="node-config-input-securityKeys_S2LR_Authenticated"><i class="fa fa-lock"></i> S2 Auth</label>
-			<input type="text" id="node-config-input-securityKeys_S2LR_Authenticated" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()" style="display:unset; width:90px">Generate</button>
+			<input type="text" id="node-config-input-securityKeys_S2LR_Authenticated" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button zwjs-genkey" style="display:unset; width:90px">Generate</button>
 		</div>
 		<div class="form-row">
 			<label for="node-config-input-securityKeys_S2LR_AccessControl"><i class="fa fa-lock"></i> S2 Acc Ctrl</label>
-			<input type="text" id="node-config-input-securityKeys_S2LR_AccessControl" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button" onclick="genKey()" style="display:unset; width:90px">Generate</button>
+			<input type="text" id="node-config-input-securityKeys_S2LR_AccessControl" style="width:calc(100% - 240px)"> <button class="ui-button ui-corner-all ui-widget zwavejs-full-width-button zwjs-genkey" style="display:unset; width:90px">Generate</button>
 		</div>
 	</fieldset>
 	<fieldset class="zwjs-fs">
@@ -281,7 +311,7 @@
 			<input type="text" id="node-config-input-storage_deviceConfigExternalDir" placeholder="Use Default">
 		</div>
 		<div class="form-row">
-			<label for="node-config-input-storage_deviceConfigPriorityDir"><i class="fa fa-folder"></i> Pri'y CFG Dir</label>
+			<label for="node-config-input-storage_deviceConfigPriorityDir"><i class="fa fa-folder"></i> Priority CFG Dir</label>
 			<input type="text" id="node-config-input-storage_deviceConfigPriorityDir">
 		</div>
 		<div class="form-row">
@@ -321,9 +351,16 @@
 		</div>
 	</fieldset>
 	<fieldset class="zwjs-fs">
+		<legend>Side Bar</legend>
+		<div class="form-row">
+			<label for="node-config-input-nodeAgeLimit"><i class="fa fa-clock-o"></i> Min TS Hrs</label>
+			<input type="number" id="node-config-input-nodeAgeLimit" placeholder="168">
+		</div>
+	</fieldset>
+	<fieldset class="zwjs-fs">
 		<legend>Global API Access</legend>
 		<div class="form-tips" id="node-tip">
-			Enabling this option, will expose an untethered instance of the Zwave Device collection in Global Context, that can be used in <code>Function</code> nodes. Care should be taken here, and a read up on the zwave-js documentation is highly encouraged before accessing any methods. Misuse can result in a crashed Driver Instance.
+			Enabling this option will expose an untethered instance of the Z-Wave device collection in the global context, which can be used in <code>Function</code> nodes. Care should be taken, and reviewing the zwave-js documentation is highly recommended before accessing any methods. Misuse can cause the driver instance to crash.
 		</div>
 		<br />
 		<div class="form-row">
@@ -331,7 +368,7 @@
 			<input type="checkbox" id="node-config-input-enableGlobalAPI">
 		</div>
 		<div class="form-row">
-			<label for="node-config-input-globalAPIName"><i class="fa fa-tag"></i> Identifiyer</label>
+			<label for="node-config-input-globalAPIName"><i class="fa fa-tag"></i> Identifier</label>
 			<input type="text" id="node-config-input-globalAPIName">
 		</div>
 	</fieldset>
@@ -339,5 +376,5 @@
 
 <!-- prettier-ignore -->
 <script type="text/markdown" data-help-name="zwavejs-runtime">
-	<p>A ZWave JS Driver Runtime Instance</p>
+	<p>A Z-Wave JS driver runtime instance.</p>
 </script>

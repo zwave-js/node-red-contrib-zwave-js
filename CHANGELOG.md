@@ -1,5 +1,43 @@
   # node-red-contrib-zwave-js Change Log
 
+ - 11.2.0
+
+      V11.2 is primarily about tidying things up following the ground-up rebuild that came with V11.
+      As a result, you will see quite a few bug fixes here, although their individual impact is relatively small.
+      In addition, some of the changes introduced in V11, such as the network map, have been redesigned and improved.
+      And, of course, there are some new features too.
+
+    **Bug Fixes**
+
+      - Fix asynchronous message completion handling in Device and Controller nodes.
+      - Fix missing nodes.
+      - Fix missing message completion handling in the Splitter node.
+      - Fix missing config file for devcies in the UI.
+      - Fix Runtime shutdown and driver restart error handling.
+      - Fix Node API name and location updates not awaiting the underlying zwave-js operations.
+      - Fix notification events losing their originating endpoint information.
+      - Fix Sidebar wake-up events not being received due to a mismatched event topic.
+      - Fix duplicate network removal notifications when restarting the Z-Wave driver.
+      - Fix live value updates from other Z-Wave nodes being applied to the currently selected node.
+      - Fix malformed HTML attributes and template markup in the Sidebar UI.
+      - Fix various UI spelling, wording, and syntax errors.
+      - Fix controller firmware update wording incorrectly referring to the controller as a device.
+
+    **New Features**
+
+      - Completely re-engineered the topology map, providing a clearer, more accurate and more interactive view of Z-Wave network routing than the implementation introduced in v11.
+      - Ability to configure the minimum time since a node last sent traffic before it is flagged for attention.
+      - The interview state icon now indicates when a configuration cannot be found for a device.
+
+    **Changes**
+
+      - Refactored the sidebar JavaScript for improved readability and maintainability.
+      - Refined the dark mode CSS to improve styling consistency and address visual issues across the interface.
+      - Improved all config editor visuals.
+
+    **DISCLAIMER:**  
+      - AI (Claude) assisted with these changes, I have checked over the changes, and made corrections where necessary and In line with our AI Policy.
+      
   - 11.1.1
 
     **Bug Fixes**

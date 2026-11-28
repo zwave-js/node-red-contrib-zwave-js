@@ -41,11 +41,13 @@ module.exports = (RED) => {
 
 		self.runtime.registerControllerNode(self.id, callback);
 
-		const sendResponse = (msg, Req, Result, send, NodesCollection) => {
+		const sendResponse = (msg, Req, Result, send, NodesCollection, Done) => {
 			const Return = getProfile(Req.cmd.method, Result, NodesCollection, Req.cmd.id);
 			if (Return && Return.Type === 'RESPONSE') {
 				send({ ...msg, payload: Return.Event });
 			}
+
+			Done();
 		};
 
 		self.on('close', (_, done) => {
@@ -82,24 +84,22 @@ module.exports = (RED) => {
 					self.runtime
 						.driverCommand(Req.cmd.method, Req.cmdProperties?.args)
 						.then((Result) => {
-							sendResponse(msg, Req, Result, send, Req.cmdProperties?.nodeId);
+							sendResponse(msg, Req, Result, send, Req.cmdProperties?.nodeId, done);
 						})
 						.catch((Error) => {
-							self.error(Error, msg);
+							done(Error);
 						});
-					done();
 					break;
 
 				case 'CONTROLLER':
 					self.runtime
 						.controllerCommand(Req.cmd.method, Req.cmdProperties?.args)
 						.then((Result) => {
-							sendResponse(msg, Req, Result, send, Req.cmdProperties?.nodeId);
+							sendResponse(msg, Req, Result, send, Req.cmdProperties?.nodeId, done);
 						})
 						.catch((Error) => {
-							self.error(Error, msg);
+							done(Error);
 						});
-					done();
 					break;
 
 				case 'CC':
@@ -113,13 +113,11 @@ module.exports = (RED) => {
 							Req.cmdProperties.args
 						)
 						.then((Result) => {
-							sendResponse(msg, Req, Result, send, Req.cmdProperties?.nodeId);
+							sendResponse(msg, Req, Result, send, Req.cmdProperties?.nodeId, done);
 						})
 						.catch((Error) => {
-							self.error(Error, msg);
+							done(Error);
 						});
-					done();
-
 					break;
 
 				case 'VALUE':
@@ -132,25 +130,22 @@ module.exports = (RED) => {
 							Req.cmdProperties.setValueOptions
 						)
 						.then((Result) => {
-							sendResponse(msg, Req, Result, send, Req.cmdProperties?.nodeId);
+							sendResponse(msg, Req, Result, send, Req.cmdProperties?.nodeId, done);
 						})
 						.catch((Error) => {
-							self.error(Error, msg);
+							done(Error);
 						});
-					done();
-
 					break;
 
 				case 'NODE':
 					self.runtime
 						.nodeCommand(Req.cmd.method, Req.cmdProperties.nodeId, Req.cmdProperties.value)
 						.then((Result) => {
-							sendResponse(msg, Req, Result, send, Req.cmdProperties?.nodeId);
+							sendResponse(msg, Req, Result, send, Req.cmdProperties?.nodeId, done);
 						})
 						.catch((Error) => {
-							self.error(Error, msg);
+							done(Error);
 						});
-					done();
 
 					break;
 			}

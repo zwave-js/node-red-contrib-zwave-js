@@ -87,6 +87,7 @@ The Device Node
     event: 'NOTIFICATION',
     timestamp: number,
     nodeId: number,
+    endpoint: number,
     nodeName: string,
     nodeLocation: string,
     eventBody: {

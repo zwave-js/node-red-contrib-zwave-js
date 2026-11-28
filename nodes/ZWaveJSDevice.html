@@ -1,160 +1,148 @@
 <script type="text/javascript">
-	const ZWJSDeviceNodeSettings = {
-		category: 'ZWave JS',
-		color: 'rgb(46,145,205)',
-		defaults: {
-			name: {
-				value: 'ZWave Device',
-				required: true
+	(function () {
+		const ZWJSDeviceNodeSettings = {
+			category: 'ZWave JS',
+			color: 'rgb(46,145,205)',
+			defaults: {
+				name: {
+					value: 'ZWave Device',
+					required: true
+				},
+				runtimeId: {
+					value: '',
+					required: true,
+					type: 'zwavejs-runtime'
+				},
+				nodeMode: {
+					value: 'All',
+					required: true
+				},
+				filteredNodeId: {
+					value: '',
+					required: false
+				},
+				defaultNode: {
+					value: '',
+					required: false
+				},
+				dataMode: {
+					value: 'SR',
+					required: true
+				},
+				hideStatus: {
+					value: false,
+					required: false
+				},
+				outputs: { value: 1 },
+				inputs: { value: 1 }
 			},
-			runtimeId: {
-				value: '',
-				required: true,
-				type: 'zwavejs-runtime'
+			inputs: 1,
+			outputs: 1,
+			icon: 'Device.svg',
+			label: function () {
+				return this.name;
 			},
-			nodeMode: {
-				value: 'All',
-				required: true
-			},
-			filteredNodeId: {
-				value: '',
-				required: false
-			},
-			defaultNode: {
-				value: '',
-				required: false
-			},
-			dataMode: {
-				value: 'SR',
-				required: true
-			},
-			hideStatus: {
-				value: false,
-				required: false
-			},
-			outputs: { value: 1 },
-			inputs: { value: 1 }
-		},
-		inputs: 1,
-		outputs: 1,
-		icon: 'Device.svg',
-		label: function () {
-			return this.name;
-		},
-		paletteLabel: 'Device',
-		oneditprepare: Prep,
-		oneditsave: Save
-	};
-
-	RED.nodes.registerType('zwavejs-device', ZWJSDeviceNodeSettings);
-
-	function Save() {
-		switch ($('#node-input-dataMode').val()) {
-			case 'SR':
-				this.inputs = 1;
-				this.outputs = 1;
-				break;
-
-			case 'R':
-				this.inputs = 0;
-				this.outputs = 1;
-				break;
-
-			case 'S':
-				this.inputs = 1;
-				this.outputs = 0;
-				break;
-		}
-	}
-
-	function Prep() {
-		const self = this;
-
-		const Get = (ID) => {
-			$.getJSON(`zwave-js/ui/${ID}/CONTROLLER/getNodes`, (data) => {
-				if (data.callSuccess) {
-					const Nodes = [];
-
-					const SortedNodes = data.response.filter((N) => !N.isControllerNode).sort((a, b) => a.nodeId - b.nodeId);
-
-					// Group nodes by location
-					const Groups = new Map();
-
-					SortedNodes.forEach((N) => {
-						const Location = N.nodeLocation || 'No Location';
-
-						if (!Groups.has(Location)) {
-							Groups.set(Location, []);
-						}
-
-						Groups.get(Location).push(N);
-					});
-
-					// Sort groups by the lowest Node ID in each group
-					const SortedGroups = [...Groups.entries()].sort((a, b) => a[1][0].nodeId - b[1][0].nodeId);
-
-					// Build the options
-					SortedGroups.forEach(([Location, GroupNodes]) => {
-						Nodes.push({
-							value: `ZWJS-LOC:${Location}`,
-							label: Location.toUpperCase()
-						});
-
-						GroupNodes.forEach((N) => {
-							Nodes.push({
-								value: `${N.nodeId}`,
-								label: `${N.nodeId} - ${N.nodeName || 'No Name'}`,
-								location: Location
-							});
-						});
-					});
-
-					const input = $('#node-input-filteredNodeId');
-					const output =  $('#node-input-defaultNode');
-
-					output.typedInput({
-						type: 'nodes',
-						types: [
-							{
-								value: 'nodes',
-								multiple: true,
-								options: Nodes
-							}
-						]
-					});
-
-					input.typedInput({
-						type: 'nodes',
-						types: [
-							{
-								value: 'nodes',
-								multiple: true,
-								options: Nodes
-							}
-						]
-					});
-				} else {
-					ZWaveJS.ZWJSAlert(data.response);
-				}
-			});
+			paletteLabel: 'Device',
+			oneditprepare: Prep,
+			oneditsave: Save
 		};
 
-		if (self.runtimeId) {
-			Get(self.runtimeId);
+		RED.nodes.registerType('zwavejs-device', ZWJSDeviceNodeSettings);
+
+		function Save() {
+			switch ($('#node-input-dataMode').val()) {
+				case 'SR':
+					this.inputs = 1;
+					this.outputs = 1;
+					break;
+
+				case 'R':
+					this.inputs = 0;
+					this.outputs = 1;
+					break;
+
+				case 'S':
+					this.inputs = 1;
+					this.outputs = 0;
+					break;
+			}
 		}
 
-		$('#node-input-runtimeId').on('change', function () {
-			Get($(this).val());
-		});
+		function Prep() {
+			const self = this;
+			let pickersCreated = false;
 
-		$('#node-input-nodeMode').on('change', function () {
-			if ($(this).val() === 'All') {
-				$('#node-input-filteredNodeId-div').fadeOut(150);
-			} else {
-				$('#node-input-filteredNodeId-div').fadeIn(150);
+			const Get = (ID) => {
+				$.getJSON(`zwave-js/ui/${ID}/CONTROLLER/getNodes`, (data) => {
+					if (data.callSuccess) {
+						const Nodes = [];
+
+						const SortedNodes = data.response.filter((N) => !N.isControllerNode).sort((a, b) => a.nodeId - b.nodeId);
+
+						// Group nodes by location
+						const Groups = new Map();
+
+						SortedNodes.forEach((N) => {
+							const Location = N.nodeLocation || 'No Location';
+
+							if (!Groups.has(Location)) {
+								Groups.set(Location, []);
+							}
+
+							Groups.get(Location).push(N);
+						});
+
+						// Sort groups by the lowest Node ID in each group
+						const SortedGroups = [...Groups.entries()].sort((a, b) => a[1][0].nodeId - b[1][0].nodeId);
+
+						// Build the options
+						SortedGroups.forEach(([Location, GroupNodes]) => {
+							Nodes.push({
+								value: `ZWJS-LOC:${Location}`,
+								label: Location.toUpperCase()
+							});
+
+							GroupNodes.forEach((N) => {
+								Nodes.push({
+									value: `${N.nodeId}`,
+									label: `${N.nodeId} - ${N.nodeName || 'No Name'}`,
+									location: Location
+								});
+							});
+						});
+
+						const types = [{ value: 'nodes', multiple: true, options: Nodes }];
+
+						// Created once; when the runtime changes, only the list of nodes is swapped.
+						[$('#node-input-filteredNodeId'), $('#node-input-defaultNode')].forEach((picker) => {
+							if (pickersCreated) picker.typedInput('types', types);
+							else picker.typedInput({ type: 'nodes', types });
+						});
+						pickersCreated = true;
+					} else {
+						ZWaveJS.ZWJSAlert(data.response);
+					}
+				});
+			};
+
+			if (self.runtimeId) {
+				Get(self.runtimeId);
 			}
-		});
-	}
+
+			$('#node-input-runtimeId').on('change', function () {
+				Get($(this).val());
+			});
+
+			$('#node-input-nodeMode').on('change', function () {
+				if ($(this).val() === 'All') {
+					$('#node-input-filteredNodeId-div').fadeOut(150);
+				} else {
+					$('#node-input-filteredNodeId-div').fadeIn(150);
+				}
+			});
+			$('#node-input-filteredNodeId-div').toggle($('#node-input-nodeMode').val() !== 'All');
+		}
+	})();
 </script>
 
 <!-- prettier-ignore -->
@@ -176,7 +164,7 @@
 	</fieldset>
 	<fieldset class="zwjs-fs">
 		<legend>Operating Mode</legend>
-			<div class="form-row">
+		<div class="form-row">
 			<label for="node-input-dataMode"><i class="fa fa-exchange"></i> Data Mode</label>
 			<select id="node-input-dataMode">
 				<option value="SR">Send/Receive</option>
@@ -207,14 +195,14 @@
 		</div>
 	</fieldset>
 	<div class="form-tips" id="node-tip">
-		<strong>Note : </strong>To use Message Broadcasting set <code>nodeId</code> to an array of Nodes [2,3,4,5].<br />
-		<strong>Message Broadcasting</strong> is only supported for use with <code>setValue</code>.<br /><br />
-		If Default Nodes for outgoing messages is multiple, Broadcasting will be used for the message.
+		<strong>Note:</strong> To use message broadcasting, set <code>nodeId</code> to an array of nodes [2, 3, 4, 5].<br />
+		<strong>Message broadcasting</strong> is only supported for use with <code>setValue</code>.<br /><br />
+		If multiple default nodes are selected for outgoing messages, broadcasting will be used.
 	</div>
 	
 </script>
 
 <!-- prettier-ignore -->
 <script type="text/markdown" data-help-name="zwavejs-device">
-	<p>A ZWave JS device allowing control of one or many devices</p>
+	<p>A Z-Wave JS device for controlling one or more devices.</p>
 </script>

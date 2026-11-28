@@ -56,11 +56,12 @@ module.exports = (RED) => {
 			done();
 		});
 
-		const sendResponse = (msg, Req, Result, send, NodeID) => {
+		const sendResponse = (msg, Req, Result, send, NodeID, Done) => {
 			const Return = getProfile(Req.cmd.method, Result, NodeID, Req.cmd.id);
 			if (Return && Return.Type === 'RESPONSE') {
 				send({ ...msg, payload: Return.Event });
 			}
+			Done();
 		};
 
 		self.on('input', (msg, send, done) => {
@@ -99,10 +100,10 @@ module.exports = (RED) => {
 							Req.cmdProperties.args
 						)
 						.then((Result) => {
-							sendResponse(msg, Req, Result, send, Req.cmdProperties.nodeId);
+							sendResponse(msg, Req, Result, send, Req.cmdProperties.nodeId, done);
 						})
 						.catch((Error) => {
-							self.error(Error, msg);
+							done(Error);
 						});
 
 					callback({
@@ -127,10 +128,10 @@ module.exports = (RED) => {
 							Req.cmdProperties.setValueOptions
 						)
 						.then((Result) => {
-							sendResponse(msg, Req, Result, send, Req.cmdProperties.nodeId);
+							sendResponse(msg, Req, Result, send, Req.cmdProperties.nodeId, done);
 						})
 						.catch((Error) => {
-							self.error(Error, msg);
+							done(Error);
 						});
 
 					callback({
@@ -149,10 +150,10 @@ module.exports = (RED) => {
 					self.runtime
 						.nodeCommand(Req.cmd.method, Req.cmdProperties.nodeId, Req.cmdProperties.value)
 						.then((Result) => {
-							sendResponse(msg, Req, Result, send, Req.cmdProperties.nodeId);
+							sendResponse(msg, Req, Result, send, Req.cmdProperties.nodeId, done);
 						})
 						.catch((Error) => {
-							self.error(Error, msg);
+							done(Error);
 						});
 
 					callback({
