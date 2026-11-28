@@ -34,31 +34,51 @@
                 <input id="zwjs-cc-value-new"  type="color" value="#{{currentValue}}">
             {{/eq}}
 
+            {{#eq type "string"}}
+                <input id="zwjs-cc-value-new" type="text" value="{{currentValue}}">
+            {{/eq}}
+
             {{#eq type "duration"}}
                 {{#editor "zwjs-cc-value-new"}}{{{json currentValue}}}{{/editor}}
             {{/eq}}
+
             {{#eq type "any"}}
                 {{#editor "zwjs-cc-value-new"}}{{{json currentValue}}}{{/editor}}
             {{/eq}}
+
+            {{#eq type "string[]"}}
+                {{#editor "zwjs-cc-value-new"}}{{{json currentValue}}}{{/editor}}
+            {{/eq}}
+
+            {{#eq type "number[]"}}
+                {{#editor "zwjs-cc-value-new"}}{{{json currentValue}}}{{/editor}}
+            {{/eq}}
+
+            {{#eq type "boolean[]"}}
+                {{#editor "zwjs-cc-value-new"}}{{{json currentValue}}}{{/editor}}
+            {{/eq}}
+            
             <button onclick="ZWaveJS.UpdateValue(this,'{{encode valueId}}')">Send Update</button>
             
         </div>
 
         {{#if states}}
-            <div>
-                <div class="zwjs-hint">This property also has a set list of values</div>
+            {{#eq type "number"}}
+                <div>
+                    <div class="zwjs-hint">This property also has a set list of values</div>
 
-                <select id="zwjs-cc-value-new-defined"> 
+                    <select id="zwjs-cc-value-new-defined"> 
 
-                    {{#select currentValue}}
-                        <option value="">Select Value</option>
-                        {{#each states}}
-                            <option value="{{@key}}">{{this}}</option>
-                        {{/each}}
-                    {{/select}}
-                </select>
-                <button onclick="ZWaveJS.UpdateValue(this,'{{encode valueId}}', true)">Send Update</button>
-            </div>
+                        {{#select currentValue}}
+                            <option value="">Select Value</option>
+                            {{#each states}}
+                                <option value="{{@key}}">{{this}}</option>
+                            {{/each}}
+                        {{/select}}
+                    </select>
+                    <button onclick="ZWaveJS.UpdateValue(this,'{{encode valueId}}', true)">Send Update</button>
+                </div>
+            {{/eq}}
         {{/if}}
 
 

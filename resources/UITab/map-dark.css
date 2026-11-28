@@ -15,7 +15,9 @@ html.nr-theme-dark .zwjs-map-node-name {
 html.nr-theme-dark .zwjs-map-card {
 	background: #2b2b2e;
 	color: #ddd;
-	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+	box-shadow:
+		0 10px 30px rgba(0, 0, 0, 0.5),
+		0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 html.nr-theme-dark .zwjs-map-head {

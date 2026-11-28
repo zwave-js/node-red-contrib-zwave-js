@@ -177,8 +177,15 @@
 	background: #fff;
 	color: #2b2f33;
 	border-radius: 10px;
-	font: 13px/1.45 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18), 0 1px 3px rgba(0, 0, 0, 0.12);
+	font:
+		13px/1.45 system-ui,
+		-apple-system,
+		'Segoe UI',
+		Roboto,
+		sans-serif;
+	box-shadow:
+		0 10px 30px rgba(0, 0, 0, 0.18),
+		0 1px 3px rgba(0, 0, 0, 0.12);
 	animation: zwjs-map-in 0.18s ease-out;
 	cursor: auto;
 }

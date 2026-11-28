@@ -570,11 +570,11 @@ const ZWaveJS = (function () {
 		select.parent().toggle(options.length >= 3);
 	};
 
-	// Polls until the runtime has a status for the network (or the user picks another network).
+	// Polls until the runtime has a status for the network (or the user picks another network); resolves to the full reply.
 	const waitForNetworkStatus = async (targetNetworkId) => {
 		while (networkId === targetNetworkId) {
 			const result = await raw.getPath('status');
-			if (result?.response !== undefined) return result.response;
+			if (result?.response !== undefined) return result;
 			await delay(500);
 		}
 		return undefined;
@@ -603,8 +603,12 @@ const ZWaveJS = (function () {
 		setSubscription(true);
 
 		try {
-			const status = await waitForNetworkStatus(selected);
-			if (networkId === selected && status !== undefined) applyNetworkStatus(status);
+			const result = await waitForNetworkStatus(selected);
+			if (networkId === selected && result !== undefined) {
+				networkSettings = result.settings ?? {};
+				staleAgeHours = toStaleAgeHours(networkSettings.nodeAgeLimit);
+				applyNetworkStatus(result.response);
+			}
 		} catch (error) {
 			reportError(error);
 		}
@@ -631,6 +635,8 @@ const ZWaveJS = (function () {
 			$('#zwjs-controller-info').text('No Network Selected');
 			$('#zwjs-controller-status').empty();
 			networkId = undefined;
+			networkSettings = {};
+			staleAgeHours = STALE_NODE_AGE_HOURS;
 		}
 	};
 
@@ -821,14 +827,17 @@ const ZWaveJS = (function () {
 		Unknown: ['fa-question-circle', 'zwjs-state-amber', 'Unknown']
 	};
 
-	const getStaleAgeHours = () => {
-		const hours = Number(RED.nodes.node(networkId)?.nodeAgeLimit);
+	// The selected runtime's deployed settings, set each time a network is selected (see NetworkSelected).
+	let networkSettings = {};
+	let staleAgeHours = STALE_NODE_AGE_HOURS;
+
+	const toStaleAgeHours = (value) => {
+		const hours = Number(value);
 		return hours > 0 ? hours : STALE_NODE_AGE_HOURS; // falls back if unset, empty, 0, negative or not a number
 	};
 
 	const renderAvailabilityIcon = (node, icon) => {
 		const seenAt = node.lastSeen === undefined ? undefined : formatDateTime(node.lastSeen);
-		const staleAgeHours = getStaleAgeHours();
 
 		const isStale =
 			node.status !== 'Dead' &&
@@ -1205,6 +1214,8 @@ const ZWaveJS = (function () {
 			}
 			case 'checkbox':
 				return editor.prop('checked');
+			case 'text':
+				return editor.val();
 			case 'color':
 				return editor.val().substring(1);
 			default:
@@ -1327,6 +1338,8 @@ const ZWaveJS = (function () {
 
 	const RenderAdvanced = async (templateId, target, dataSource, writeTarget) => {
 		try {
+			codeEditor?.destroy();
+			codeEditor = undefined;
 			const render = getAdvancedTemplate(templateId);
 			const data = await resolveAdvancedPanelData(dataSource);
 			$(writeTarget || '#zwjs-advanced-content')
@@ -1811,22 +1824,14 @@ const ZWaveJS = (function () {
 	 */
 
 	const getFirmwareLicenseMessage = () => {
-		if (RED.nodes.node(networkId)?.apiKeys_firmwareUpdateService) return undefined;
+		if (networkSettings.hasFirmwareApiKey) return undefined;
 		return "<strong>Non-Commercial</strong><br /><br />As no API key has been provided, you're confirming the environment is <strong>Non-Commercial</strong>.<br />An API Key for the Firmware Update Service is required for Commercial installs.";
 	};
 
 	// Disables the inclusion strategies the network's configured security keys cannot support.
 	const applyInclusionAvailability = () => {
-		const config = RED.nodes.node(networkId);
-		if (!config) return;
-
-		const hasKey = (key) => (config[key] || '').length >= 32;
-		const hasS0 = hasKey('securityKeys_S0_Legacy');
-		const hasAllS2 = [
-			'securityKeys_S2_AccessControl',
-			'securityKeys_S2_Authenticated',
-			'securityKeys_S2_Unauthenticated'
-		].every(hasKey);
+		const { hasS0Key: hasS0, hasAllS2Keys: hasAllS2 } = networkSettings;
+		if (hasS0 === undefined) return; // settings not known yet: leave every option available
 
 		const radio = (value) => $(`input[type="radio"][name="ZWJS_IS"][value="${value}"]`);
 		const disable = (values) =>
@@ -1939,7 +1944,7 @@ const ZWaveJS = (function () {
 			const versions = await runtime.getPath('version');
 			return {
 				configuration: $('#zwjs-network option:selected').text(),
-				serialPort: RED.nodes.node(networkId)?.serialPort,
+				serialPort: networkSettings.serialPort,
 				...versions,
 				...getControllerData()
 			};

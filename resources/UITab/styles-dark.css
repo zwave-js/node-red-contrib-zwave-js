@@ -38,3 +38,7 @@ html.nr-theme-dark .zwjs-empises[positive] {
 html.nr-theme-dark .zwjs-empises[negative] {
 	background-color: #7b0202;
 }
+
+html.nr-theme-dark .zwjs-empises[warn] {
+	background-color: #9a6200;
+}

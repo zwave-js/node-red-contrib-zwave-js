@@ -279,6 +279,9 @@ table.zwjs-table[vertical] td:nth-of-type(2) {
 	color: white;
 }
 
+/* 
+ * LINK ./styles-dark.css:42
+ */
 .zwjs-empises[warn] {
 	background-color: orange;
 	color: white;

@@ -5,7 +5,7 @@
 <script type="text/javascript" src="resources/node-red-contrib-zwave-js/HB/dist/handlebars.min.js"></script>
 
 <script type="module">
-	import * as ZWJSD3 from '/resources/node-red-contrib-zwave-js/D3/d3.js';
+	import * as ZWJSD3 from './resources/node-red-contrib-zwave-js/D3/d3.js';
 	window.ZWJSD3 = ZWJSD3;
 </script>
 
@@ -591,7 +591,7 @@
 								<span class="zwjs-empises" style="display:block" {{#eq update.channel "beta"}}warn{{else}}positive{{/eq}}>{{update.channel}}</span>
 							</td>
 							<td style="text-align:center;">{{update.normalizedVersion}}</td>
-							<td style="text-align:center;"><a href="#" onclick='ZWaveJS.ZWJSAlert({{{json update.changelog}}})'>View Change Log</a>
+							<td style="text-align:center;"><a href="#" data-changelog="{{update.changelog}}" onclick="ZWaveJS.ZWJSAlert(this.dataset.changelog); return false;">View Change Log</a>
 							</td>
 							<td style="text-align:center;">
 							{{#eq nodeKey "1"}}

@@ -1,32 +1,34 @@
 <script type="text/javascript">
-	const ZWJSControllerNodeSettings = {
-		category: 'ZWave JS',
-		color: 'rgb(46,145,205)',
-		defaults: {
-			name: {
-				value: 'ZWave Controller',
-				required: true
+	(function () {
+		const ZWJSControllerNodeSettings = {
+			category: 'ZWave JS',
+			color: 'rgb(46,145,205)',
+			defaults: {
+				name: {
+					value: 'ZWave Controller',
+					required: true
+				},
+				hideStatus: {
+					value: false,
+					required: false
+				},
+				runtimeId: {
+					value: '',
+					required: true,
+					type: 'zwavejs-runtime'
+				}
 			},
-			hideStatus: {
-				value: false,
-				required: false
+			inputs: 1,
+			outputs: 1,
+			icon: 'Controller.png',
+			label: function () {
+				return this.name;
 			},
-			runtimeId: {
-				value: '',
-				required: true,
-				type: 'zwavejs-runtime'
-			}
-		},
-		inputs: 1,
-		outputs: 1,
-		icon: 'Controller.png',
-		label: function () {
-			return this.name;
-		},
-		paletteLabel: 'Controller'
-	};
+			paletteLabel: 'Controller'
+		};
 
-	RED.nodes.registerType('zwavejs-controller', ZWJSControllerNodeSettings);
+		RED.nodes.registerType('zwavejs-controller', ZWJSControllerNodeSettings);
+	})();
 </script>
 
 <!-- prettier-ignore -->

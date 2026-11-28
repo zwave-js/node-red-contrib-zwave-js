@@ -170,6 +170,22 @@ module.exports = function (RED) {
 			self.context().global.set(`${Name}`, undefined);
 		};
 
+		// The deployed settings the sidebar needs. Keys are only reported as present or not: never sent.
+		const getUISettings = () => {
+			const hasKey = (key) => /^[0-9a-fA-F]{32}$/.test(self.config[key] ?? '');
+			return {
+				nodeAgeLimit: self.config.nodeAgeLimit,
+				serialPort: self.config.serialPort,
+				hasFirmwareApiKey: Boolean(self.config.apiKeys_firmwareUpdateService),
+				hasS0Key: hasKey('securityKeys_S0_Legacy'),
+				hasAllS2Keys: [
+					'securityKeys_S2_AccessControl',
+					'securityKeys_S2_Authenticated',
+					'securityKeys_S2_Unauthenticated'
+				].every(hasKey)
+			};
+		};
+
 		// Create HTTP API
 		const createHTTPAPI = (resetHTTP) => {
 			if (resetHTTP) {
@@ -180,7 +196,11 @@ module.exports = function (RED) {
 			RED.comms.publish('zwave-js/ui/global/addnetwork', { name: self.config.name, id: self.id }, false);
 
 			RED.httpAdmin.get(`/zwave-js/ui/${self.id}/status`, RED.auth.needsPermission('flows.write'), (_, response) => {
-				response.json({ callSuccess: true, response: lastStatus });
+				response.json({
+					callSuccess: true,
+					response: lastStatus,
+					settings: getUISettings()
+				});
 			});
 
 			RED.httpAdmin.get(
