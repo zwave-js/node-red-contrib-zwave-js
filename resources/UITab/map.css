@@ -206,7 +206,7 @@
 }
 
 /* 
- * LINK ./map-dark.css:21
+ * LINK ./map-dark.css:23
  */
 .zwjs-map-head {
 	display: flex;
@@ -219,7 +219,7 @@
 }
 
 /* 
- * LINK ./map-dark.css:25
+ * LINK ./map-dark.css:27
  */
 .zwjs-map-icon {
 	flex: none;
@@ -251,7 +251,7 @@
 }
 
 /* 
- * LINK ./map-dark.css:29
+ * LINK ./map-dark.css:31
  */
 .zwjs-map-sub {
 	font-size: 11px;
@@ -280,7 +280,7 @@
 }
 
 /* 
- * LINK ./map-dark.css:33
+ * LINK ./map-dark.css:35
  */
 .zwjs-map-close:hover {
 	color: #2b2f33;
@@ -291,7 +291,7 @@
 }
 
 /* 
- * LINK ./map-dark.css:37
+ * LINK ./map-dark.css:39
  */
 .zwjs-map-row {
 	display: flex;
@@ -302,7 +302,7 @@
 }
 
 /* 
- * LINK ./map-dark.css:41
+ * LINK ./map-dark.css:43
  */
 .zwjs-map-row > span:first-child {
 	color: #6b7580;
@@ -316,7 +316,7 @@
 }
 
 /* 
- * LINK ./map-dark.css:45
+ * LINK ./map-dark.css:47
  */
 .zwjs-map-section {
 	display: flex;
@@ -337,7 +337,7 @@
 }
 
 /* 
- * LINK ./map-dark.css:49
+ * LINK ./map-dark.css:51
  */
 .zwjs-map-chip {
 	min-width: 24px;
@@ -353,7 +353,7 @@
 }
 
 /* 
- * LINK ./map-dark.css:54
+ * LINK ./map-dark.css:56
  */
 .zwjs-map-chip:hover {
 	filter: brightness(0.88);
